@@ -11,10 +11,12 @@ import { loginSchema, quickSignupSchema, type LoginFormValues, type QuickSignupF
 
 export default function LoginPage() {
   const { brand } = siteContent;
-  const { login } = useAuth();
+  const { login, completeMfaLogin } = useAuth();
   const navigate = useNavigate();
   const [apiError, setApiError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [mfaToken, setMfaToken] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
 
   const {
     register: registerLogin,
@@ -42,8 +44,28 @@ export default function LoginPage() {
     setApiError('');
     setSubmitting(true);
     try {
-      const dashboardPath = await login(values);
-      navigate(dashboardPath);
+      const result = await login(values);
+      if (typeof result === 'object' && 'requiresMfa' in result && result.requiresMfa) {
+        setMfaToken(result.mfaToken);
+        return;
+      }
+      if (typeof result === 'string') {
+        navigate(result);
+      }
+    } catch (err) {
+      setApiError(parseApiError(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const onMfaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setApiError('');
+    setSubmitting(true);
+    try {
+      const path = await completeMfaLogin(mfaToken, mfaCode);
+      navigate(path);
     } catch (err) {
       setApiError(parseApiError(err));
     } finally {
@@ -97,6 +119,26 @@ export default function LoginPage() {
                         <Link to="/register">Sign up for free</Link>
                       </p>
                     </div>
+                    {mfaToken ? (
+                      <form onSubmit={onMfaSubmit} noValidate>
+                        {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
+                        <p className="sp_bottom_15">Enter your MFA backup code to continue.</p>
+                        <div className="login__form">
+                          <input
+                            className="common__login__input"
+                            placeholder="MFA code"
+                            value={mfaCode}
+                            onChange={(e) => setMfaCode(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="login__button">
+                          <button type="submit" className="default__button auth-submit-btn" disabled={submitting}>
+                            {submitting ? 'Verifying...' : 'Verify & Log In'}
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
                     <form onSubmit={handleLoginSubmit(onLogin)} noValidate autoComplete="off">
                       {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
                       <div className="login__form">
@@ -133,7 +175,7 @@ export default function LoginPage() {
                           <label htmlFor="rememberMe">Remember me</label>
                         </div>
                         <div className="text-end login__form__link">
-                          <Link to="/help">Forgot password?</Link>
+                          <Link to="/forgot-password">Forgot password?</Link>
                         </div>
                       </div>
                       <div className="login__button">
@@ -146,6 +188,7 @@ export default function LoginPage() {
                         </button>
                       </div>
                     </form>
+                    )}
                   </div>
                 </div>
               </div>

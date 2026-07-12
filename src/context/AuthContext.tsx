@@ -6,7 +6,8 @@ import * as authService from '@/services/auth.service';
 interface AuthContextValue {
   user: ApiUser | null;
   loading: boolean;
-  login: (input: LoginInput) => Promise<string>;
+  login: (input: LoginInput) => Promise<string | { requiresMfa: boolean; mfaToken: string }>;
+  completeMfaLogin: (mfaToken: string, code: string) => Promise<string>;
   register: (input: RegisterInput) => Promise<string>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -40,6 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (input: LoginInput) => {
     const result = await authService.login(input);
+    if (authService.isMfaLoginResponse(result)) {
+      return { requiresMfa: true, mfaToken: result.mfaToken };
+    }
+    persistTokens(result.tokens.accessToken, result.tokens.refreshToken);
+    setUser(result.user);
+    return authService.getDashboardPathForRoles(result.user.roles);
+  }, []);
+
+  const completeMfaLogin = useCallback(async (mfaToken: string, code: string) => {
+    const result = await authService.verifyMfaLogin(mfaToken, code);
     persistTokens(result.tokens.accessToken, result.tokens.refreshToken);
     setUser(result.user);
     return authService.getDashboardPathForRoles(result.user.roles);
@@ -58,8 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, loading, login, register, logout, refreshUser }),
-    [user, loading, login, register, logout, refreshUser],
+    () => ({ user, loading, login, completeMfaLogin, register, logout, refreshUser }),
+    [user, loading, login, completeMfaLogin, register, logout, refreshUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

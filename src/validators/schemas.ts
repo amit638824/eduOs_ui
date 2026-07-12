@@ -85,6 +85,14 @@ export const quickSignupSchema = yup.object({
   password: passwordSchema,
 });
 
+export const createTestApiSchema = yup.object({
+  title: yup.string().required('Exam title is required').trim().min(3).max(255),
+  duration: yup.string().required('Duration is required'),
+  description: yup.string().trim().max(2000).optional().default(''),
+});
+
+export type CreateTestApiFormValues = yup.InferType<typeof createTestApiSchema>;
+
 export const createTestSchema = yup.object({
   title: yup.string().required('Exam title is required').trim().min(3).max(255),
   slug: yup
@@ -122,6 +130,19 @@ export const searchSchema = yup.object({
   query: yup.string().trim().min(2, 'Enter at least 2 characters').max(100).required('Search is required'),
 });
 
+export const forgotPasswordSchema = yup.object({
+  email: yup.string().required('Email is required').email('Enter a valid email'),
+});
+
+export const resetPasswordSchema = yup.object({
+  token: yup.string().required('Reset token is required'),
+  password: passwordSchema,
+  confirmPassword: yup
+    .string()
+    .required('Please confirm your password')
+    .oneOf([yup.ref('password')], 'Passwords must match'),
+});
+
 export type LoginFormValues = yup.InferType<typeof loginSchema>;
 export type RegisterFormValues = yup.InferType<typeof registerSchema>;
 export type NewsletterFormValues = yup.InferType<typeof newsletterSchema>;
@@ -134,3 +155,5 @@ export type CreateTestVideoFormValues = yup.InferType<typeof createTestVideoSche
 export type BecomeTeacherFormValues = yup.InferType<typeof becomeTeacherSchema>;
 export type QuickSignupFormValues = yup.InferType<typeof quickSignupSchema>;
 export type SearchFormValues = yup.InferType<typeof searchSchema>;
+export type ForgotPasswordFormValues = yup.InferType<typeof forgotPasswordSchema>;
+export type ResetPasswordFormValues = yup.InferType<typeof resetPasswordSchema>;

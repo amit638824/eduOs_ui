@@ -6,23 +6,23 @@ import type { DashboardCounter, DashboardTableRow } from '@/types/dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { buildProfileFields } from '@/data/dashboardNavigation';
 import { useOrganization } from '@/hooks/useOrganization';
-import { organizationService } from '@/services';
+import { organizationService, platformService } from '@/services';
+import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
+import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import {
   becomeTeacherSchema,
   createTestSchema,
   createTestVideoSchema,
   organizationSchema,
   passwordChangeSchema,
-  profileSettingsSchema,
   socialLinksSchema,
   type BecomeTeacherFormValues,
   type CreateTestFormValues,
   type CreateTestVideoFormValues,
   type OrganizationFormValues,
   type PasswordChangeFormValues,
-  type ProfileSettingsFormValues,
   type SocialLinksFormValues,
 } from '@/validators/schemas';
 import {
@@ -587,113 +587,6 @@ export function DashboardAnnouncementsContent() {
   );
 }
 
-function ProfileSettingsForm({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user']> }) {
-  const [message, setMessage] = useState('');
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<ProfileSettingsFormValues>({
-    resolver: yupResolver(profileSettingsSchema),
-    defaultValues: {
-      firstName: user.firstName ?? '',
-      lastName: user.lastName ?? '',
-      email: user.email ?? '',
-      phone: user.phone ?? '',
-      bio: 'Student preparing for SAT, ACT, and AP exams on EduTest Pro — a TechWagger EdTech product.',
-    },
-  });
-
-  const onSubmit = () => {
-    setMessage('Profile updated successfully.');
-  };
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-xl-6 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="firstName">First Name</label>
-              <input
-                id="firstName"
-                type="text"
-                className={inputClassName('', !!errors.firstName)}
-                {...register('firstName')}
-              />
-              <FormError message={errors.firstName?.message} />
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-6 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="lastName">Last Name</label>
-              <input
-                id="lastName"
-                type="text"
-                className={inputClassName('', !!errors.lastName)}
-                {...register('lastName')}
-              />
-              <FormError message={errors.lastName?.message} />
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-6 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                className={inputClassName('', !!errors.email)}
-                {...register('email')}
-              />
-              <FormError message={errors.email?.message} />
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-6 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="phone">Phone</label>
-              <input
-                id="phone"
-                type="tel"
-                className={inputClassName('', !!errors.phone)}
-                {...register('phone')}
-              />
-              <FormError message={errors.phone?.message} />
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-12 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="bio">Bio</label>
-              <textarea
-                id="bio"
-                rows={4}
-                className={inputClassName('', !!errors.bio)}
-                {...register('bio')}
-              />
-              <FormError message={errors.bio?.message} />
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-12">
-          <div className="dashboard__form__button">
-            <button type="submit" className="default__button">
-              Update Info
-            </button>
-          </div>
-        </div>
-      </div>
-    </form>
-  );
-}
-
 function OrganizationSettingsForm({
   organization,
   onSaved,
@@ -779,6 +672,7 @@ function OrganizationSettingsForm({
 
 function PasswordChangeForm() {
   const [message, setMessage] = useState('');
+  const [apiError, setApiError] = useState('');
   const {
     register,
     handleSubmit,
@@ -789,13 +683,21 @@ function PasswordChangeForm() {
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
   });
 
-  const onSubmit = () => {
-    setMessage('Password updated successfully.');
-    reset();
+  const onSubmit = async (values: PasswordChangeFormValues) => {
+    setApiError('');
+    setMessage('');
+    try {
+      await authService.changePassword(values.currentPassword, values.newPassword);
+      setMessage('Password updated successfully.');
+      reset();
+    } catch (err) {
+      setApiError(parseApiError(err));
+    }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
       {message && <p className="form-success sp_bottom_15">{message}</p>}
       <div className="row">
         <div className="col-xl-12 sp_bottom_20">
@@ -854,17 +756,32 @@ function PasswordChangeForm() {
 
 function SocialLinksForm() {
   const [message, setMessage] = useState('');
+  const [apiError, setApiError] = useState('');
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<SocialLinksFormValues>({
     resolver: yupResolver(socialLinksSchema),
     defaultValues: { facebook: '', twitter: '', linkedin: '', instagram: '' },
   });
 
-  const onSubmit = () => {
-    setMessage('Social links saved successfully.');
+  useEffect(() => {
+    platformService.getSettings(['social_links']).then((rows) => {
+      const social = rows.find((r) => r.key === 'social_links')?.value as SocialLinksFormValues | undefined;
+      if (social) reset(social);
+    }).catch(() => undefined);
+  }, [reset]);
+
+  const onSubmit = async (values: SocialLinksFormValues) => {
+    setApiError('');
+    try {
+      await platformService.upsertSetting('social_links', values);
+      setMessage('Social links saved successfully.');
+    } catch (err) {
+      setApiError(parseApiError(err));
+    }
   };
 
   const fields = [
@@ -876,6 +793,7 @@ function SocialLinksForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
       {message && <p className="form-success sp_bottom_15">{message}</p>}
       <div className="row">
         {fields.map((field) => (
@@ -1205,7 +1123,7 @@ export function DashboardSettingsContent() {
           <DashboardTabButtons tabs={tabs} active={activeTab} onChange={setActiveTab} />
         </div>
         <div className="col-xl-12">
-          {activeTab === 'Profile' && <ProfileSettingsForm user={user} />}
+          {activeTab === 'Profile' && <ProfileSettingsApiForm />}
           {activeTab === 'Organization' && isAdmin && (
             <OrganizationSettingsForm organization={organization} onSaved={refresh} />
           )}

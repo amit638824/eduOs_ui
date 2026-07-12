@@ -1,32 +1,47 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+  QuestionBankPanel,
+  TestsListPanel,
+  StudentTestsPanel,
+  AttemptsListPanel,
+  ResultsPanel,
+  CreateTestPanel,
+  ExamAttemptPage,
+  ExamResultPage,
+  ProfileSettingsApiForm,
+} from '@/components/dashboard/examination/ExaminationPanels';
 import {
   DashboardCounters,
   DashboardFeedbackTable,
   DashboardProfileContent,
   DashboardMessageContent,
-  DashboardCoursesContent,
   DashboardWishlistContent,
-  DashboardQuizAttemptsContent,
   DashboardAssignmentsContent,
-  DashboardReviewsContent,
   DashboardOrderHistoryContent,
   DashboardAnnouncementsContent,
-  DashboardSettingsContent,
-  DashboardCreateCourseContent,
   DashboardBecomeInstructorContent,
+  DashboardSettingsContent,
 } from '@/components/dashboard/content/DashboardContent';
 import { feedbackRows } from '@/data/dashboardData';
 import { useOrganization } from '@/hooks/useOrganization';
+import { examinationService } from '@/services';
+import type { OrgAnalytics } from '@/types/examination';
 
 export function StudentDashboardHome() {
+  const [stats, setStats] = useState<OrgAnalytics | null>(null);
+
+  useEffect(() => {
+    examinationService.getAnalyticsOverview().then(setStats).catch(() => setStats(null));
+  }, []);
+
   return (
     <>
       <DashboardCounters
         title="Summary"
         counters={[
-          { value: '12', suffix: '+', label: 'Enrolled Tests', icon: '/img/counter/counter__1.png' },
-          { value: '08', suffix: '+', label: 'Active Tests', icon: '/img/counter/counter__2.png' },
-          { value: '05', label: 'Completed Tests', icon: '/img/counter/counter__3.png' },
+          { value: String(stats?.tests ?? '—'), label: 'Live Tests', icon: '/img/counter/counter__1.png' },
+          { value: String(stats?.attempts ?? '—'), label: 'Total Attempts', icon: '/img/counter/counter__2.png' },
+          { value: String(stats?.results ?? '—'), label: 'Results', icon: '/img/counter/counter__3.png' },
         ]}
       />
       <DashboardFeedbackTable title="Recent Test Feedbacks" rows={feedbackRows} />
@@ -35,14 +50,20 @@ export function StudentDashboardHome() {
 }
 
 export function TeacherDashboardHome() {
+  const [stats, setStats] = useState<OrgAnalytics | null>(null);
+
+  useEffect(() => {
+    examinationService.getAnalyticsOverview().then(setStats).catch(() => setStats(null));
+  }, []);
+
   return (
     <>
       <DashboardCounters
         title="Teacher Dashboard"
         counters={[
-          { value: '18', suffix: '+', label: 'Tests Created', icon: '/img/counter/counter__1.png' },
-          { value: '2.4k', suffix: '+', label: 'Total Students', icon: '/img/counter/counter__2.png' },
-          { value: '4.8', label: 'Avg Rating', icon: '/img/counter/counter__3.png' },
+          { value: String(stats?.tests ?? '—'), label: 'Tests', icon: '/img/counter/counter__1.png' },
+          { value: String(stats?.questions ?? '—'), label: 'Questions', icon: '/img/counter/counter__2.png' },
+          { value: String(stats?.attempts ?? '—'), label: 'Attempts', icon: '/img/counter/counter__3.png' },
         ]}
       />
       <DashboardFeedbackTable title="Top Performing Tests" rows={feedbackRows} />
@@ -52,33 +73,34 @@ export function TeacherDashboardHome() {
 
 export function AdminDashboardHome() {
   const { organization, branches, organizations, loading, error } = useOrganization();
+  const [examStats, setExamStats] = useState<OrgAnalytics | null>(null);
+
+  useEffect(() => {
+    examinationService.getAnalyticsOverview().then(setExamStats).catch(() => setExamStats(null));
+  }, []);
 
   const counters = useMemo(() => {
+    if (examStats) {
+      return [
+        { value: String(examStats.students), label: 'Students', icon: '/img/counter/counter__1.png' },
+        { value: String(examStats.tests), label: 'Tests', icon: '/img/counter/counter__2.png' },
+        { value: String(examStats.questions), label: 'Questions', icon: '/img/counter/counter__3.png' },
+        { value: String(examStats.attempts), label: 'Attempts', icon: '/img/counter/counter__4.png' },
+      ];
+    }
     if (organization) {
       return [
-        {
-          value: String(branches.length),
-          label: 'Branches',
-          icon: '/img/counter/counter__1.png',
-        },
-        {
-          value: String(organizations.length || 1),
-          label: 'Organizations',
-          icon: '/img/counter/counter__2.png',
-        },
-        {
-          value: organization.isActive ? 'Active' : 'Inactive',
-          label: 'Org Status',
-          icon: '/img/counter/counter__3.png',
-        },
+        { value: String(branches.length), label: 'Branches', icon: '/img/counter/counter__1.png' },
+        { value: String(organizations.length || 1), label: 'Organizations', icon: '/img/counter/counter__2.png' },
+        { value: organization.isActive ? 'Active' : 'Inactive', label: 'Org Status', icon: '/img/counter/counter__3.png' },
       ];
     }
     return [
-      { value: '—', label: 'Branches', icon: '/img/counter/counter__1.png' },
-      { value: '—', label: 'Organizations', icon: '/img/counter/counter__2.png' },
-      { value: '—', label: 'Org Status', icon: '/img/counter/counter__3.png' },
+      { value: '—', label: 'Students', icon: '/img/counter/counter__1.png' },
+      { value: '—', label: 'Tests', icon: '/img/counter/counter__2.png' },
+      { value: '—', label: 'Questions', icon: '/img/counter/counter__3.png' },
     ];
-  }, [organization, branches.length, organizations.length]);
+  }, [organization, branches.length, organizations.length, examStats]);
 
   const tableRows = useMemo(() => {
     if (branches.length) {
@@ -113,14 +135,19 @@ export function AdminDashboardHome() {
 export {
   DashboardProfileContent,
   DashboardMessageContent,
-  DashboardCoursesContent,
   DashboardWishlistContent,
-  DashboardQuizAttemptsContent,
   DashboardAssignmentsContent,
-  DashboardReviewsContent,
   DashboardOrderHistoryContent,
   DashboardAnnouncementsContent,
-  DashboardSettingsContent,
-  DashboardCreateCourseContent,
   DashboardBecomeInstructorContent,
+  DashboardSettingsContent,
+  QuestionBankPanel,
+  TestsListPanel,
+  StudentTestsPanel,
+  AttemptsListPanel,
+  ResultsPanel,
+  CreateTestPanel,
+  ExamAttemptPage,
+  ExamResultPage,
+  ProfileSettingsApiForm,
 };
