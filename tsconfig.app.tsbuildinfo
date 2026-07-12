@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/layout/darkmodeswitcher.tsx","./src/components/layout/layout.tsx","./src/components/layout/preloader.tsx","./src/hooks/useaos.ts","./src/hooks/useedurockscripts.ts","./src/hooks/usetheme.ts","./src/pages/homepage.tsx","./src/pages/homepagecontent.tsx"],"version":"5.8.3"}

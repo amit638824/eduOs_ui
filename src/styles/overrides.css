@@ -1,0 +1,34 @@
+/* ── EduTest Pro custom overrides (template CSS stays in /public/css) ── */
+
+.service__img .service__icon.icofont {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  font-size: 2rem !important;
+  color: var(--primaryColor, #5f2ded);
+}
+
+.headerarea__login {
+  margin-right: 12px;
+}
+
+.headerarea__login a {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: none;
+}
+
+.headerarea__login a:hover {
+  color: var(--primaryColor, #5f2ded);
+}
+
+/* Dark mode switcher — ensure button is clickable above overlays */
+.mode_switcher.my_switcher {
+  z-index: 99999;
+}
+
+.mode_switcher.my_switcher button {
+  cursor: pointer;
+}
