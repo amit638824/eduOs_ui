@@ -1,9 +1,29 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import { mainNavigation } from '@/data/navigation';
 import { siteContent } from '@/data/siteContent';
+import { FormError, inputClassName } from '@/components/ui/FormField';
+import { searchSchema, type SearchFormValues } from '@/validators/schemas';
 
 export default function MobileMenu() {
   const { social } = siteContent;
+  const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<SearchFormValues>({
+    resolver: yupResolver(searchSchema),
+    defaultValues: { query: '' },
+  });
+
+  const onSearch = (values: SearchFormValues) => {
+    navigate(`/exams?search=${encodeURIComponent(values.query)}`);
+    reset();
+  };
 
   return (
     <div className="mobile-off-canvas-active">
@@ -12,8 +32,14 @@ export default function MobileMenu() {
       </a>
       <div className="header-mobile-aside-wrap">
         <div className="mobile-search">
-          <form className="search-form" onSubmit={(e) => e.preventDefault()}>
-            <input type="text" placeholder="Search practice tests…" />
+          <form className="search-form" onSubmit={handleSubmit(onSearch)} noValidate>
+            <input
+              type="text"
+              placeholder="Search practice tests…"
+              className={inputClassName('', !!errors.query)}
+              {...register('query')}
+            />
+            <FormError message={errors.query?.message} />
             <button type="submit" className="button-search">
               <i className="icofont icofont-search-2" />
             </button>

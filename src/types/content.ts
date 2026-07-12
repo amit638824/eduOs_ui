@@ -86,6 +86,12 @@ export interface SiteContent {
     logo: string;
     logoFooter: string;
   };
+  parentCompany: {
+    name: string;
+    tagline: string;
+    website: string;
+    description: string;
+  };
   contact: {
     phone: string;
     email: string;
@@ -105,6 +111,7 @@ export interface SiteContent {
     highlight: string;
     description: string;
     experienceYears: number;
+    experienceLabel: string;
     features: string[];
   };
   counters: CounterStat[];
@@ -158,7 +165,7 @@ export interface SiteContent {
     usefulLinks: { label: string; href: string }[];
     examLinks: { label: string; href: string }[];
     recentPosts: FooterPost[];
-    copyright: { year: string; brand: string };
+    copyright: { year: string; brand: string; product: string };
     social: SocialLink[];
   };
 }

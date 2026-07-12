@@ -5,7 +5,7 @@ import RegisterSection from '@/components/home/RegisterSection';
 export default function RegisterPage() {
   return (
     <>
-      <Breadcrumb title="Sign Up" variant="compact" />
+      <Breadcrumb title="Sign Up" />
       <RegisterSection variant="auth" />
       <div className="container auth-page-footer">
         <div className="row">

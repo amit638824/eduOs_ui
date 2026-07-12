@@ -1,11 +1,30 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import type { DashboardCounter, DashboardTableRow } from '@/types/dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { buildProfileFields } from '@/data/dashboardNavigation';
 import { useOrganization } from '@/hooks/useOrganization';
 import { organizationService } from '@/services';
 import { parseApiError } from '@/lib/errors';
+import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
+import {
+  becomeTeacherSchema,
+  createTestSchema,
+  createTestVideoSchema,
+  organizationSchema,
+  passwordChangeSchema,
+  profileSettingsSchema,
+  socialLinksSchema,
+  type BecomeTeacherFormValues,
+  type CreateTestFormValues,
+  type CreateTestVideoFormValues,
+  type OrganizationFormValues,
+  type PasswordChangeFormValues,
+  type ProfileSettingsFormValues,
+  type SocialLinksFormValues,
+} from '@/validators/schemas';
 import {
   dashboardCourses,
   messageContacts,
@@ -568,6 +587,601 @@ export function DashboardAnnouncementsContent() {
   );
 }
 
+function ProfileSettingsForm({ user }: { user: NonNullable<ReturnType<typeof useAuth>['user']> }) {
+  const [message, setMessage] = useState('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ProfileSettingsFormValues>({
+    resolver: yupResolver(profileSettingsSchema),
+    defaultValues: {
+      firstName: user.firstName ?? '',
+      lastName: user.lastName ?? '',
+      email: user.email ?? '',
+      phone: user.phone ?? '',
+      bio: 'Student preparing for SAT, ACT, and AP exams on EduTest Pro — a TechWagger EdTech product.',
+    },
+  });
+
+  const onSubmit = () => {
+    setMessage('Profile updated successfully.');
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="row">
+        <div className="col-xl-6 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="firstName">First Name</label>
+              <input
+                id="firstName"
+                type="text"
+                className={inputClassName('', !!errors.firstName)}
+                {...register('firstName')}
+              />
+              <FormError message={errors.firstName?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-6 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="lastName">Last Name</label>
+              <input
+                id="lastName"
+                type="text"
+                className={inputClassName('', !!errors.lastName)}
+                {...register('lastName')}
+              />
+              <FormError message={errors.lastName?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-6 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                className={inputClassName('', !!errors.email)}
+                {...register('email')}
+              />
+              <FormError message={errors.email?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-6 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="phone">Phone</label>
+              <input
+                id="phone"
+                type="tel"
+                className={inputClassName('', !!errors.phone)}
+                {...register('phone')}
+              />
+              <FormError message={errors.phone?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="bio">Bio</label>
+              <textarea
+                id="bio"
+                rows={4}
+                className={inputClassName('', !!errors.bio)}
+                {...register('bio')}
+              />
+              <FormError message={errors.bio?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12">
+          <div className="dashboard__form__button">
+            <button type="submit" className="default__button">
+              Update Info
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function OrganizationSettingsForm({
+  organization,
+  onSaved,
+}: {
+  organization: ReturnType<typeof useOrganization>['organization'];
+  onSaved: () => Promise<void>;
+}) {
+  const [apiError, setApiError] = useState('');
+  const [message, setMessage] = useState('');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<OrganizationFormValues>({
+    resolver: yupResolver(organizationSchema),
+    defaultValues: { name: '', slug: '' },
+  });
+
+  useEffect(() => {
+    if (organization) {
+      reset({ name: organization.name, slug: organization.slug });
+    }
+  }, [organization, reset]);
+
+  const onSubmit = async (values: OrganizationFormValues) => {
+    if (!organization) return;
+    setApiError('');
+    setMessage('');
+    try {
+      await organizationService.updateOrganization(organization.id, values);
+      setMessage('Organization updated successfully.');
+      await onSaved();
+    } catch (err) {
+      setApiError(parseApiError(err));
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="row">
+        <div className="col-xl-6 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="orgName">Organization Name</label>
+              <input
+                id="orgName"
+                type="text"
+                className={inputClassName('', !!errors.name)}
+                {...register('name')}
+              />
+              <FormError message={errors.name?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-6 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="orgSlug">Slug</label>
+              <input
+                id="orgSlug"
+                type="text"
+                className={inputClassName('', !!errors.slug)}
+                {...register('slug')}
+              />
+              <FormError message={errors.slug?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12">
+          <div className="dashboard__form__button">
+            <button type="submit" className="default__button" disabled={!organization}>
+              Save Organization
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function PasswordChangeForm() {
+  const [message, setMessage] = useState('');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<PasswordChangeFormValues>({
+    resolver: yupResolver(passwordChangeSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
+
+  const onSubmit = () => {
+    setMessage('Password updated successfully.');
+    reset();
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="row">
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="currentPass">Current Password</label>
+              <PasswordInput
+                id="currentPass"
+                hasError={!!errors.currentPassword}
+                autoComplete="off"
+                {...register('currentPassword')}
+              />
+              <FormError message={errors.currentPassword?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="newPass">New Password</label>
+              <PasswordInput
+                id="newPass"
+                hasError={!!errors.newPassword}
+                autoComplete="new-password"
+                {...register('newPassword')}
+              />
+              <FormError message={errors.newPassword?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="confirmPass">Confirm Password</label>
+              <PasswordInput
+                id="confirmPass"
+                hasError={!!errors.confirmPassword}
+                autoComplete="new-password"
+                {...register('confirmPassword')}
+              />
+              <FormError message={errors.confirmPassword?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12">
+          <div className="dashboard__form__button">
+            <button type="submit" className="default__button">
+              Update Password
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function SocialLinksForm() {
+  const [message, setMessage] = useState('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SocialLinksFormValues>({
+    resolver: yupResolver(socialLinksSchema),
+    defaultValues: { facebook: '', twitter: '', linkedin: '', instagram: '' },
+  });
+
+  const onSubmit = () => {
+    setMessage('Social links saved successfully.');
+  };
+
+  const fields = [
+    { id: 'facebook', label: 'Facebook' },
+    { id: 'twitter', label: 'Twitter' },
+    { id: 'linkedin', label: 'LinkedIn' },
+    { id: 'instagram', label: 'Instagram' },
+  ] as const;
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="row">
+        {fields.map((field) => (
+          <div key={field.id} className="col-xl-6 sp_bottom_20">
+            <div className="dashboard__form__wraper">
+              <div className="dashboard__form__input">
+                <label htmlFor={field.id}>{field.label} URL</label>
+                <input
+                  id={field.id}
+                  type="url"
+                  placeholder={`https://${field.id}.com/...`}
+                  className={inputClassName('', !!errors[field.id])}
+                  {...register(field.id)}
+                />
+                <FormError message={errors[field.id]?.message} />
+              </div>
+            </div>
+          </div>
+        ))}
+        <div className="col-xl-12">
+          <div className="dashboard__form__button">
+            <button type="submit" className="default__button">
+              Save Social Links
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function CreateTestInfoForm() {
+  const [message, setMessage] = useState('');
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateTestFormValues>({
+    resolver: yupResolver(createTestSchema),
+    defaultValues: {
+      title: '',
+      slug: '',
+      category: 'sat',
+      duration: '90',
+      description: '',
+    },
+  });
+
+  const onSubmit = () => {
+    setMessage('Exam info saved successfully.');
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="become__instructor__form">
+        <div className="row">
+          <div className="col-xl-12 sp_bottom_20">
+            <div className="dashboard__form__wraper">
+              <div className="dashboard__form__input">
+                <label htmlFor="examTitle">Exam Title</label>
+                <input
+                  id="examTitle"
+                  type="text"
+                  placeholder="e.g. SAT Math Practice Test 1"
+                  className={inputClassName('', !!errors.title)}
+                  {...register('title')}
+                />
+                <FormError message={errors.title?.message} />
+              </div>
+            </div>
+          </div>
+          <div className="col-xl-12 sp_bottom_20">
+            <div className="dashboard__form__wraper">
+              <div className="dashboard__form__input">
+                <label htmlFor="examSlug">Exam Slug</label>
+                <input
+                  id="examSlug"
+                  type="text"
+                  placeholder="sat-math-practice-1"
+                  className={inputClassName('', !!errors.slug)}
+                  {...register('slug')}
+                />
+                <FormError message={errors.slug?.message} />
+              </div>
+            </div>
+          </div>
+          <div className="col-xl-6 col-lg-6 sp_bottom_20">
+            <div className="dashboard__select__heading">
+              <span>Category</span>
+            </div>
+            <div className="dashboard__selector">
+              <select className="form-select" {...register('category')}>
+                <option value="sat">SAT & ACT</option>
+                <option value="ap">AP Exams</option>
+                <option value="state">State Assessment</option>
+                <option value="cert">Certification</option>
+              </select>
+              <FormError message={errors.category?.message} />
+            </div>
+          </div>
+          <div className="col-xl-6 col-lg-6 sp_bottom_20">
+            <div className="dashboard__select__heading">
+              <span>Duration (minutes)</span>
+            </div>
+            <div className="dashboard__selector">
+              <select className="form-select" {...register('duration')}>
+                <option value="60">60 min</option>
+                <option value="90">90 min</option>
+                <option value="120">120 min</option>
+                <option value="180">180 min</option>
+              </select>
+              <FormError message={errors.duration?.message} />
+            </div>
+          </div>
+          <div className="col-xl-12 sp_bottom_20">
+            <div className="dashboard__form__wraper">
+              <div className="dashboard__form__input">
+                <label htmlFor="aboutExam">About Exam</label>
+                <textarea
+                  id="aboutExam"
+                  rows={6}
+                  placeholder="Exam description..."
+                  className={inputClassName('', !!errors.description)}
+                  {...register('description')}
+                />
+                <FormError message={errors.description?.message} />
+              </div>
+            </div>
+          </div>
+          <div className="col-xl-12">
+            <div className="dashboard__form__button create__course__margin">
+              <button type="submit" className="default__button">
+                Update Info
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function CreateTestVideoForm() {
+  const [message, setMessage] = useState('');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<CreateTestVideoFormValues>({
+    resolver: yupResolver(createTestVideoSchema),
+    defaultValues: { videoUrl: '' },
+  });
+
+  const onSubmit = () => {
+    setMessage('Video URL saved successfully.');
+    reset();
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="become__instructor__form">
+        <div className="row">
+          <div className="col-xl-12 sp_bottom_20">
+            <div className="dashboard__form__wraper">
+              <div className="dashboard__form__input">
+                <label htmlFor="videoUrl">Add Your Video URL</label>
+                <input
+                  id="videoUrl"
+                  type="text"
+                  placeholder="Add your Video URL here"
+                  className={inputClassName('', !!errors.videoUrl)}
+                  {...register('videoUrl')}
+                />
+                <FormError message={errors.videoUrl?.message} />
+              </div>
+            </div>
+          </div>
+          <div className="col-xl-12">
+            <div className="dashboard__form__button">
+              <button type="submit" className="default__button">
+                Save Video
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+function BecomeTeacherForm() {
+  const [message, setMessage] = useState('');
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<BecomeTeacherFormValues>({
+    resolver: yupResolver(becomeTeacherSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      agreeToPrivacy: false,
+    },
+  });
+
+  const onSubmit = () => {
+    setMessage('Application submitted successfully.');
+    reset();
+  };
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} noValidate>
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="row">
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="fi">First Name</label>
+              <input
+                id="fi"
+                type="text"
+                placeholder="John"
+                className={inputClassName('', !!errors.firstName)}
+                {...register('firstName')}
+              />
+              <FormError message={errors.firstName?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="ln">Last Name</label>
+              <input
+                id="ln"
+                type="text"
+                placeholder="Doe"
+                className={inputClassName('', !!errors.lastName)}
+                {...register('lastName')}
+              />
+              <FormError message={errors.lastName?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="em">Email</label>
+              <input
+                id="em"
+                type="email"
+                placeholder="Email"
+                className={inputClassName('', !!errors.email)}
+                {...register('email')}
+              />
+              <FormError message={errors.email?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="dashboard__form__wraper">
+            <div className="dashboard__form__input">
+              <label htmlFor="ph">Phone</label>
+              <input
+                id="ph"
+                type="tel"
+                placeholder="Phone"
+                className={inputClassName('', !!errors.phone)}
+                {...register('phone')}
+              />
+              <FormError message={errors.phone?.message} />
+            </div>
+          </div>
+        </div>
+        <div className="col-xl-12 sp_bottom_20">
+          <div className="become__instructor__check">
+            <input
+              className="become__instructor__check__input"
+              type="checkbox"
+              id="privacyCheck"
+              {...register('agreeToPrivacy')}
+            />
+            <label className="become__instructor__check__label" htmlFor="privacyCheck">
+              You agree to our friendly <Link to="/privacy">Privacy policy</Link>.
+            </label>
+          </div>
+          <FormError message={errors.agreeToPrivacy?.message} />
+        </div>
+        <div className="col-xl-12">
+          <div className="dashboard__form__button">
+            <button type="submit" className="default__button">
+              Submit Application
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  );
+}
+
 export function DashboardSettingsContent() {
   const { user } = useAuth();
   const { organization, refresh } = useOrganization();
@@ -578,34 +1192,8 @@ export function DashboardSettingsContent() {
     ? ['Profile', 'Organization', 'Password', 'Social Icon']
     : ['Profile', 'Password', 'Social Icon'];
   const [activeTab, setActiveTab] = useState('Profile');
-  const [orgName, setOrgName] = useState('');
-  const [orgSlug, setOrgSlug] = useState('');
-  const [orgMessage, setOrgMessage] = useState('');
-  const [orgError, setOrgError] = useState('');
 
-  useEffect(() => {
-    if (organization) {
-      setOrgName(organization.name);
-      setOrgSlug(organization.slug);
-    }
-  }, [organization]);
-
-  const handleOrgSave = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!organization) return;
-    setOrgError('');
-    setOrgMessage('');
-    try {
-      await organizationService.updateOrganization(organization.id, {
-        name: orgName,
-        slug: orgSlug,
-      });
-      setOrgMessage('Organization updated successfully.');
-      await refresh();
-    } catch (err) {
-      setOrgError(parseApiError(err));
-    }
-  };
+  if (!user) return null;
 
   return (
     <div className="dashboard__content__wraper">
@@ -617,160 +1205,12 @@ export function DashboardSettingsContent() {
           <DashboardTabButtons tabs={tabs} active={activeTab} onChange={setActiveTab} />
         </div>
         <div className="col-xl-12">
-          {activeTab === 'Profile' && (
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="row">
-                <div className="col-xl-6 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="firstName">First Name</label>
-                      <input id="firstName" type="text" defaultValue={user?.firstName ?? ''} />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-6 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="lastName">Last Name</label>
-                      <input id="lastName" type="text" defaultValue={user?.lastName ?? ''} />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-6 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="email">Email</label>
-                      <input id="email" type="email" defaultValue={user?.email ?? ''} />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-6 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="phone">Phone</label>
-                      <input id="phone" type="tel" defaultValue={user?.phone ?? ''} />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-12 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="bio">Bio</label>
-                      <textarea id="bio" rows={4} defaultValue="US high school student preparing for SAT and AP exams." />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-12">
-                  <div className="dashboard__form__button">
-                    <button type="submit" className="default__button">
-                      Update Info
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-          )}
+          {activeTab === 'Profile' && <ProfileSettingsForm user={user} />}
           {activeTab === 'Organization' && isAdmin && (
-            <form onSubmit={handleOrgSave}>
-              {orgError && <p className="login__error sp_bottom_15">{orgError}</p>}
-              {orgMessage && <p className="login__hint sp_bottom_15">{orgMessage}</p>}
-              <div className="row">
-                <div className="col-xl-6 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="orgName">Organization Name</label>
-                      <input
-                        id="orgName"
-                        type="text"
-                        value={orgName || organization?.name || ''}
-                        onChange={(e) => setOrgName(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-6 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="orgSlug">Slug</label>
-                      <input
-                        id="orgSlug"
-                        type="text"
-                        value={orgSlug || organization?.slug || ''}
-                        onChange={(e) => setOrgSlug(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-12">
-                  <div className="dashboard__form__button">
-                    <button type="submit" className="default__button" disabled={!organization}>
-                      Save Organization
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
+            <OrganizationSettingsForm organization={organization} onSaved={refresh} />
           )}
-          {activeTab === 'Password' && (
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="row">
-                <div className="col-xl-12 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="currentPass">Current Password</label>
-                      <input id="currentPass" type="password" />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-12 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="newPass">New Password</label>
-                      <input id="newPass" type="password" />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-12 sp_bottom_20">
-                  <div className="dashboard__form__wraper">
-                    <div className="dashboard__form__input">
-                      <label htmlFor="confirmPass">Confirm Password</label>
-                      <input id="confirmPass" type="password" />
-                    </div>
-                  </div>
-                </div>
-                <div className="col-xl-12">
-                  <div className="dashboard__form__button">
-                    <button type="submit" className="default__button">
-                      Update Password
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-          )}
-          {activeTab === 'Social Icon' && (
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="row">
-                {['Facebook', 'Twitter', 'LinkedIn', 'Instagram'].map((social) => (
-                  <div key={social} className="col-xl-6 sp_bottom_20">
-                    <div className="dashboard__form__wraper">
-                      <div className="dashboard__form__input">
-                        <label htmlFor={social}>{social} URL</label>
-                        <input id={social} type="url" placeholder={`https://${social.toLowerCase()}.com/...`} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div className="col-xl-12">
-                  <div className="dashboard__form__button">
-                    <button type="submit" className="default__button">
-                      Save Social Links
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
-          )}
+          {activeTab === 'Password' && <PasswordChangeForm />}
+          {activeTab === 'Social Icon' && <SocialLinksForm />}
         </div>
       </div>
     </div>
@@ -795,67 +1235,7 @@ export function DashboardCreateCourseContent() {
             </h2>
             <div id="courseInfo" className="accordion-collapse collapse show" data-bs-parent="#createCourseAccordion">
               <div className="accordion-body">
-                <div className="become__instructor__form">
-                  <div className="row">
-                    <div className="col-xl-12 sp_bottom_20">
-                      <div className="dashboard__form__wraper">
-                        <div className="dashboard__form__input">
-                          <label htmlFor="examTitle">Exam Title</label>
-                          <input id="examTitle" type="text" placeholder="e.g. SAT Math Practice Test 1" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-xl-12 sp_bottom_20">
-                      <div className="dashboard__form__wraper">
-                        <div className="dashboard__form__input">
-                          <label htmlFor="examSlug">Exam Slug</label>
-                          <input id="examSlug" type="text" placeholder="sat-math-practice-1" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-xl-6 col-lg-6 sp_bottom_20">
-                      <div className="dashboard__select__heading">
-                        <span>Category</span>
-                      </div>
-                      <div className="dashboard__selector">
-                        <select className="form-select" defaultValue="sat">
-                          <option value="sat">SAT & ACT</option>
-                          <option value="ap">AP Exams</option>
-                          <option value="state">State Assessment</option>
-                          <option value="cert">Certification</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="col-xl-6 col-lg-6 sp_bottom_20">
-                      <div className="dashboard__select__heading">
-                        <span>Duration (minutes)</span>
-                      </div>
-                      <div className="dashboard__selector">
-                        <select className="form-select" defaultValue="90">
-                          <option value="60">60 min</option>
-                          <option value="90">90 min</option>
-                          <option value="120">120 min</option>
-                          <option value="180">180 min</option>
-                        </select>
-                      </div>
-                    </div>
-                    <div className="col-xl-12 sp_bottom_20">
-                      <div className="dashboard__form__wraper">
-                        <div className="dashboard__form__input">
-                          <label htmlFor="aboutExam">About Exam</label>
-                          <textarea id="aboutExam" rows={6} placeholder="Exam description..." />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-xl-12">
-                      <div className="dashboard__form__button create__course__margin">
-                        <button type="button" className="default__button">
-                          Update Info
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <CreateTestInfoForm />
               </div>
             </div>
           </div>
@@ -872,25 +1252,7 @@ export function DashboardCreateCourseContent() {
             </h2>
             <div id="courseVideo" className="accordion-collapse collapse" data-bs-parent="#createCourseAccordion">
               <div className="accordion-body">
-                <div className="become__instructor__form">
-                  <div className="row">
-                    <div className="col-xl-12 sp_bottom_20">
-                      <div className="dashboard__form__wraper">
-                        <div className="dashboard__form__input">
-                          <label htmlFor="videoUrl">Add Your Video URL</label>
-                          <input id="videoUrl" type="text" placeholder="Add your Video URL here" />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="col-xl-12">
-                      <div className="dashboard__form__button">
-                        <button type="button" className="default__button">
-                          Save Video
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <CreateTestVideoForm />
               </div>
             </div>
           </div>
@@ -904,7 +1266,7 @@ export function DashboardBecomeInstructorContent() {
   const rules = [
     'Valid teaching certification or subject expertise',
     'Experience creating exam prep content',
-    'Commitment to US curriculum standards',
+    'Commitment to curriculum and assessment standards',
     'Ability to proctor online exams',
     'Strong communication with students',
   ];
@@ -919,8 +1281,9 @@ export function DashboardBecomeInstructorContent() {
           <div className="become__instructor__text">
             <h3 className="become__instructor__small__heading">Become an Instructor</h3>
             <p>
-              Join EduTest Pro and help US students prepare for SAT, ACT, AP, and state assessments. Share your
-              expertise through practice exams, quizzes, and proctored sessions.
+              Join EduTest Pro — built by TechWagger — and help students prepare for SAT, ACT, AP, and
+              state assessments. Share your expertise through practice exams, quizzes, and proctored
+              sessions.
             </p>
             <h3 className="become__instructor__small__heading">Instructor Rules</h3>
             <p>All instructors must meet our quality and compliance standards for online exam preparation.</p>
@@ -940,40 +1303,7 @@ export function DashboardBecomeInstructorContent() {
         </div>
         <div className="col-xl-6 col-lg-6 col-md-12 col-12">
           <div className="become__instructor__form">
-            <form onSubmit={(e) => e.preventDefault()}>
-              <div className="row">
-                {[
-                  { id: 'fi', label: 'First Name', placeholder: 'John' },
-                  { id: 'ln', label: 'Last Name', placeholder: 'Doe' },
-                  { id: 'em', label: 'Email', placeholder: 'Email' },
-                  { id: 'ph', label: 'Phone', placeholder: 'Phone' },
-                ].map((field) => (
-                  <div key={field.id} className="col-xl-12 sp_bottom_20">
-                    <div className="dashboard__form__wraper">
-                      <div className="dashboard__form__input">
-                        <label htmlFor={field.id}>{field.label}</label>
-                        <input id={field.id} type="text" placeholder={field.placeholder} />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <div className="col-xl-12 sp_bottom_20">
-                  <div className="become__instructor__check">
-                    <input className="become__instructor__check__input" type="checkbox" id="privacyCheck" />
-                    <label className="become__instructor__check__label" htmlFor="privacyCheck">
-                      You agree to our friendly <Link to="/privacy">Privacy policy</Link>.
-                    </label>
-                  </div>
-                </div>
-                <div className="col-xl-12">
-                  <div className="dashboard__form__button">
-                    <button type="submit" className="default__button">
-                      Submit Application
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
+            <BecomeTeacherForm />
           </div>
         </div>
       </div>

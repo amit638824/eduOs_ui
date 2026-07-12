@@ -66,7 +66,7 @@ export const dashboardCourses: DashboardCourseItem[] = [
 
 export const messageContacts = [
   { name: 'Dr. Sarah Mitchell', preview: 'Your SAT practice results are ready.', time: '12 min', img: '/img/teacher/teacher__1.png' },
-  { name: 'EduTest Support', preview: 'Welcome to EduTest Pro!', time: '4:35pm', img: '/img/teacher/teacher__2.png' },
+  { name: 'TechWagger Support', preview: 'Welcome to EduTest Pro!', time: '4:35pm', img: '/img/teacher/teacher__2.png' },
   { name: 'Julia Jones', preview: 'New AP mock exam available.', time: '1:40pm', img: '/img/teacher/teacher__3.png' },
   { name: 'Michael Torres', preview: 'Proctoring session confirmed.', time: '3:20am', img: '/img/teacher/teacher__4.png' },
   { name: 'Bradshaw', preview: 'Hey, How are you?', time: '12 min', img: '/img/teacher/teacher__5.png' },
@@ -83,7 +83,7 @@ export const profileFields = [
   {
     label: 'Biography',
     value:
-      'US high school student preparing for SAT, ACT, and AP exams. Focused on math and science sections with regular practice tests on EduTest Pro.',
+      'Student preparing for SAT, ACT, and AP exams. Focused on math and science sections with regular practice tests on EduTest Pro by TechWagger.',
   },
 ];
 

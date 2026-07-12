@@ -30,7 +30,7 @@ export default function BlogPostPage() {
                   {post.author && <p>{post.author}</p>}
                   <p>
                     {post.excerpt ??
-                      'Read the latest US exam prep insights, testing strategies, and platform updates from EduTest Pro.'}
+                      'Read the latest EdTech insights, testing strategies, and platform updates from the TechWagger team behind EduTest Pro.'}
                   </p>
                   <Link className="default__button sp_top_20" to="/blog">
                     Back to Blog

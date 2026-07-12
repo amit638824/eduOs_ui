@@ -10,16 +10,19 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@reduxjs/toolkit": "^2.8.2",
     "aos": "^2.3.4",
     "axios": "^1.9.0",
     "react": "^19.1.0",
     "react-countup": "^6.5.3",
     "react-dom": "^19.1.0",
+    "react-hook-form": "^7.81.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.1",
     "react-type-animation": "^3.2.0",
-    "redux-persist": "^6.0.0"
+    "redux-persist": "^6.0.0",
+    "yup": "^1.7.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.8",

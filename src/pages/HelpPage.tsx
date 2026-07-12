@@ -2,7 +2,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import { siteContent } from '@/data/siteContent';
 
 export default function HelpPage() {
-  const { contact } = siteContent;
+  const { contact, parentCompany } = siteContent;
 
   return (
     <>
@@ -11,11 +11,20 @@ export default function HelpPage() {
         <div className="row">
           <div className="col-xl-8 offset-xl-2">
             <h3>How can we help?</h3>
-            <p>Contact our US support team for login, exam access, and school onboarding help.</p>
+            <p>
+              Contact the {parentCompany.name} EdTech support team for login, exam access, and school
+              onboarding help. EduTest Pro is built and supported by {parentCompany.name} from India.
+            </p>
             <ul>
               <li>Phone: {contact.phone}</li>
               <li>Email: {contact.email}</li>
               <li>Address: {contact.address}</li>
+              <li>
+                Parent company:{' '}
+                <a href={parentCompany.website} target="_blank" rel="noreferrer">
+                  {parentCompany.name}
+                </a>
+              </li>
             </ul>
             <p>For password resets, use your registered email or contact support.</p>
           </div>

@@ -1,7 +1,7 @@
 import { siteContent } from '@/data/siteContent';
 
 export default function AboutSection() {
-  const { about } = siteContent;
+  const { about, parentCompany } = siteContent;
 
   return (
     <div className="aboutarea__2 sp_top_30">
@@ -19,7 +19,7 @@ export default function AboutSection() {
                 <div className="aboutarea__counter">
                   <span className="counter">{about.experienceYears}</span> +
                 </div>
-                <p>YEARS SERVING US EDUCATORS</p>
+                <p>{about.experienceLabel}</p>
               </div>
             </div>
           </div>
@@ -35,6 +35,13 @@ export default function AboutSection() {
               </div>
               <div className="aboutarea__para aboutarea__para__2">
                 <p>{about.description}</p>
+                <p className="sp_top_15">
+                  A product of{' '}
+                  <a href={parentCompany.website} target="_blank" rel="noreferrer">
+                    {parentCompany.name}
+                  </a>{' '}
+                  — {parentCompany.tagline}.
+                </p>
               </div>
               <div className="aboutarea__list__2">
                 <ul>

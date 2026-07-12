@@ -222,51 +222,92 @@
   margin-bottom: 24px;
 }
 
-/* ── Auth pages: compact breadcrumb + tighter layout ── */
+/* ── Breadcrumb: equal height on all pages ── */
 
-.breadcrumbarea--auth {
+.breadcrumbarea {
   padding-top: 48px;
-  padding-bottom: 36px;
+  padding-bottom: 40px;
+  min-height: 148px;
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumbarea > .container {
+  width: 100%;
+}
+
+@media (min-width: 992px) and (max-width: 1365px) {
+  .breadcrumbarea {
+    padding-top: 48px;
+    padding-bottom: 40px;
+    min-height: 148px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .breadcrumbarea {
+    padding-top: 44px;
+    padding-bottom: 36px;
+    min-height: 132px;
+  }
 }
 
 @media (max-width: 767px) {
-  .breadcrumbarea--auth {
+  .breadcrumbarea {
     padding-top: 36px;
     padding-bottom: 28px;
+    min-height: 112px;
   }
 }
 
-.breadcrumbarea--auth .breadcrumb__content__wraper .breadcrumb__title h2 {
+.breadcrumb__content__wraper .breadcrumb__title h2 {
   font-size: 36px;
-  line-height: 1.2;
-  margin-bottom: 6px;
+  line-height: 1.25;
+  margin-bottom: 8px;
+}
+
+@media (min-width: 992px) and (max-width: 1365px) {
+  .breadcrumb__content__wraper .breadcrumb__title h2 {
+    font-size: 36px;
+    line-height: 1.25;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  .breadcrumb__content__wraper .breadcrumb__title h2 {
+    font-size: 32px;
+    line-height: 1.25;
+  }
 }
 
 @media (max-width: 767px) {
-  .breadcrumbarea--auth .breadcrumb__content__wraper .breadcrumb__title h2 {
+  .breadcrumb__content__wraper .breadcrumb__title h2 {
     font-size: 28px;
+    line-height: 1.2;
   }
 }
 
-.breadcrumbarea--auth .breadcrumb__inner ul li {
+.breadcrumb__inner ul li {
   font-size: 14px;
 }
 
-.shape__icon__2--compact .shape__icon__img {
+.breadcrumbarea .shape__icon__2 .shape__icon__img {
   opacity: 0.45;
   transform: scale(0.65);
 }
 
-.shape__icon__2--compact .shape__icon__img.shape__icon__img__1 {
+.breadcrumbarea .shape__icon__2 .shape__icon__img.shape__icon__img__1 {
   bottom: 8px;
   left: 8%;
 }
 
-.shape__icon__2--compact .shape__icon__img.shape__icon__img__2,
-.shape__icon__2--compact .shape__icon__img.shape__icon__img__3,
-.shape__icon__2--compact .shape__icon__img.shape__icon__img__4 {
+.breadcrumbarea .shape__icon__2 .shape__icon__img.shape__icon__img__2,
+.breadcrumbarea .shape__icon__2 .shape__icon__img.shape__icon__img__3,
+.breadcrumbarea .shape__icon__2 .shape__icon__img.shape__icon__img__4 {
   display: none;
 }
+
+/* ── Auth pages: tighter layout below breadcrumb ── */
 
 .auth-page-section {
   padding-top: 48px;
@@ -299,4 +340,143 @@
 .login__hint {
   font-size: 13px;
   color: var(--contentColor, #666);
+}
+
+/* ── Form validation ── */
+
+.form-error {
+  color: #e74c3c;
+  font-size: 13px;
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.input-error,
+.common__login__input.input-error,
+.register__input.input-error,
+.dashboard__form__input input.input-error,
+.dashboard__form__input textarea.input-error,
+.footerarea__newsletter__input input.input-error,
+.search-form input.input-error {
+  border-color: #e74c3c !important;
+  box-shadow: 0 0 0 1px rgba(231, 76, 60, 0.15);
+}
+
+.form-success {
+  color: #27ae60;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+/* ── Auth form buttons & register layout ── */
+
+.auth-submit-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 25px;
+  font-weight: 600;
+  font-size: 15px;
+  font-family: inherit;
+  line-height: 1.4;
+  cursor: pointer;
+  border-radius: var(--borderRadius, 5px);
+  transition: var(--transition, 0.3s ease);
+}
+
+.auth-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loginarea__wraper form .login__button .auth-submit-btn {
+  width: 100%;
+}
+
+.registerarea__form .register-field {
+  margin-bottom: 4px;
+}
+
+.registerarea__form .register__label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--blackColor2, #1f2235);
+}
+
+.registerarea__form .register__optional {
+  font-weight: 400;
+  color: var(--contentColor, #666);
+  font-size: 13px;
+}
+
+.registerarea__form form .register__input {
+  margin-bottom: 6px;
+}
+
+.registerarea__form .register-field .form-error {
+  margin-bottom: 14px;
+}
+
+.registerarea__form form .registerarea__button {
+  margin-top: 8px;
+}
+
+.registerarea__form form .registerarea__button .auth-submit-btn {
+  width: 100%;
+}
+
+.is_dark .registerarea__form .register__label {
+  color: var(--whiteColor, #fff);
+}
+
+/* ── Password show/hide toggle ── */
+
+.password-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.password-input-wrap input {
+  width: 100%;
+  padding-right: 48px !important;
+}
+
+.password-input-toggle {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: var(--contentColor, #666);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-input-toggle:hover {
+  color: var(--primaryColor, #5f2ded);
+}
+
+.password-input-toggle i {
+  font-size: 18px;
+}
+
+.loginarea__wraper .password-input-wrap .common__login__input {
+  padding-right: 48px !important;
+}
+
+.registerarea__form .password-input-wrap .register__input {
+  padding-right: 48px !important;
+}
+
+.dashboard__form__input .password-input-wrap input {
+  padding-right: 48px !important;
 }

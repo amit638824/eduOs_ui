@@ -3,55 +3,63 @@ import type { SiteContent } from '@/types/content';
 export const siteContent: SiteContent = {
   brand: {
     name: 'EduTest Pro',
-    tagline: 'America\'s Trusted Online Examination Platform',
+    tagline: 'EdTech Platform by TechWagger',
     logo: '/img/logo/logo_1.png',
     logoFooter: '/img/logo/logo_2.png',
   },
+  parentCompany: {
+    name: 'TechWagger',
+    tagline: 'Innovation Into Reality',
+    website: 'https://techwagger.com/',
+    description:
+      'TechWagger is an Indian technology company specializing in cloud, AI, software engineering, and EdTech solutions. EduTest Pro is built and maintained by the TechWagger EdTech team in Lucknow, India.',
+  },
   contact: {
-    phone: '+1 (800) 555-0198',
-    email: 'support@edutestpro.com',
-    address: '1200 Market Street, Suite 400, San Francisco, CA 94103, USA',
+    phone: '+91 8840 622 729',
+    email: 'hello@techwagger.com',
+    address: 'L-3/141, Vinay Khand, Gomti Nagar, Lucknow, UP – 226010, India',
   },
   social: [
     { platform: 'Facebook', icon: 'icofont-facebook', href: 'https://facebook.com' },
     { platform: 'Twitter', icon: 'icofont-twitter', href: 'https://twitter.com' },
     { platform: 'Instagram', icon: 'icofont-instagram', href: 'https://instagram.com' },
-    { platform: 'YouTube', icon: 'icofont-youtube-play', href: 'https://youtube.com' },
+    { platform: 'LinkedIn', icon: 'icofont-linkedin', href: 'https://linkedin.com' },
   ],
   hero: {
-    badge: 'Online Assessment Platform',
-    title: 'Secure Online Testing Trusted by 50,000+ US Students',
+    badge: 'A TechWagger EdTech Product',
+    title: 'Secure Online Testing Built by India\'s Trusted Technology Partner',
     description:
-      'Deliver proctored exams, SAT & ACT practice tests, and classroom assessments built for American schools, universities, and certification programs.',
+      'EduTest Pro delivers proctored exams, SAT & ACT practice tests, and classroom assessments — engineered by TechWagger for schools, universities, and certification programs worldwide.',
     primaryCta: { label: 'Browse Practice Tests', href: '/exams' },
-    secondaryCta: { label: 'See How It Works', href: '/about' },
+    secondaryCta: { label: 'About TechWagger', href: '/about' },
   },
   about: {
     badge: 'About EduTest Pro',
-    title: 'Welcome to America\'s',
-    highlight: 'Online Exam',
+    title: 'India-Built',
+    highlight: 'Global EdTech',
     description:
-      'EduTest Pro helps K-12 districts, colleges, and training centers across the United States run secure, scalable online examinations with real-time proctoring and instant scoring.',
-    experienceYears: 12,
+      'EduTest Pro is the dedicated education platform from TechWagger — an Indian company helping K-12 districts, colleges, and training centers run secure, scalable online examinations with real-time proctoring and instant scoring.',
+    experienceYears: 10,
+    experienceLabel: 'YEARS OF TECH INNOVATION',
     features: [
-      'FERPA-compliant student data protection',
+      'Built on TechWagger cloud & security expertise',
       'Timed exams with auto-grading & analytics',
-      'Live proctoring for high-stakes US assessments',
+      'Live proctoring for high-stakes assessments',
     ],
   },
   counters: [
     { value: 850, suffix: '+', label: 'Practice Exams', icon: '/img/counter/counter__1.png' },
-    { value: 50000, suffix: '+', label: 'US Students', icon: '/img/counter/counter__2.png' },
+    { value: 50000, suffix: '+', label: 'Global Learners', icon: '/img/counter/counter__2.png' },
     { value: 2500, suffix: '+', label: 'Certified Instructors', icon: '/img/counter/counter__3.png' },
-    { value: 48, suffix: '', label: 'States Covered', icon: '/img/counter/counter__4.png' },
+    { value: 15, suffix: '+', label: 'Countries Served', icon: '/img/counter/counter__4.png' },
   ],
   subjects: {
     badge: 'Exam Categories',
-    title: 'Practice Tests & Assessments\nFor Every US Learner',
+    title: 'Practice Tests & Assessments\nFor Every Learner',
     description:
-      'From SAT and ACT prep to state standards and professional certification, EduTest Pro covers the exams American students take most.',
+      'From SAT and ACT prep to state standards and professional certification, EduTest Pro — powered by TechWagger — covers the exams students take most.',
     secondaryDescription:
-      'Schools in California, Texas, New York, and nationwide use our platform for secure remote testing with detailed performance reports.',
+      'Schools and institutions across the US, India, and beyond use our platform for secure remote testing with detailed performance reports.',
     items: [
       {
         title: 'SAT & ACT Prep',
@@ -195,7 +203,7 @@ export const siteContent: SiteContent = {
     title: 'Create Your Account & Get Free Access to',
     highlight: '600+',
     count: '600+',
-    videoText: 'Start practicing for US exams from anywhere — home, library, or campus.',
+    videoText: 'Start practicing for exams from anywhere — powered by TechWagger\'s secure EdTech platform.',
     formTitle: 'Create Your Free Student Account',
   },
   pricing: {
@@ -244,47 +252,47 @@ export const siteContent: SiteContent = {
           { text: 'Live proctoring suite', included: true },
           { text: 'LMS integration (Canvas, Blackboard)', included: true },
           { text: 'Custom exam builder', included: true },
-          { text: 'Dedicated US account manager', included: true },
+          { text: 'Dedicated account manager', included: true },
         ],
         cta: 'Contact Sales',
       },
     ],
   },
   testimonials: {
-    badge: 'Student Stories',
-    title: 'What US Students Say\nAbout Us',
+    badge: 'Client Stories',
+    title: 'What Educators & Partners\nSay About Us',
     description:
-      'Thousands of students across America use EduTest Pro to prepare for high-stakes exams with confidence.',
+      'Institutions and learners trust EduTest Pro — built by TechWagger\'s EdTech team with the same delivery excellence behind our global technology projects.',
     items: [
       {
         quote:
-          '"EduTest Pro\'s SAT practice tests felt exactly like the real digital SAT. I raised my score by 180 points in 8 weeks."',
-        name: 'Emily Johnson',
-        role: 'High School Senior, Austin, TX',
+          '"TechWagger built our online assessment platform with incredible attention to security and scale. EduTest Pro handles thousands of concurrent exam sessions flawlessly."',
+        name: 'Dr. Stacey Schulte Potter',
+        role: 'Director of Project Management, Henson Group',
         image: '/img/about/about_5.png',
       },
       {
         quote:
-          '"Our district switched to EduTest Pro for state benchmark testing. Setup was easy and the proctoring tools are top-notch."',
-        name: 'Michael Torres',
-        role: 'Assessment Coordinator, Los Angeles USD',
+          '"As an EdTech product from an Indian technology partner, EduTest Pro combines world-class engineering with practical classroom needs. Our teachers love the analytics."',
+        name: 'A B Nithin',
+        role: 'Founder, apisod.ai',
         image: '/img/about/about_5.png',
       },
     ],
   },
   blog: {
-    badge: 'Exam Tips & News',
-    title: 'Latest US Testing Insights',
+    badge: 'EdTech Insights',
+    title: 'Latest From TechWagger EdTech',
     posts: [
       {
         slug: 'digital-sat-2026',
-        title: '2026 Digital SAT: What Every US Student Needs to Know',
+        title: '2026 Digital SAT: What Every Student Needs to Know',
         date: '15',
         month: 'Mar',
         image: '/img/blog/blog_1.png',
-        author: 'By Dr. Sarah Mitchell',
+        author: 'By TechWagger EdTech Team',
         excerpt:
-          'The College Board\'s fully digital SAT is now standard nationwide. Here\'s how to prepare with timed online practice...',
+          'The College Board\'s fully digital SAT is now standard worldwide. Here\'s how EduTest Pro helps students prepare with timed online practice...',
         featured: true,
       },
       {
@@ -295,8 +303,8 @@ export const siteContent: SiteContent = {
         image: '/img/blog/blog_3.png',
       },
       {
-        slug: 'texas-proctoring',
-        title: 'How Texas Schools Are Using Online Proctoring',
+        slug: 'edtech-cloud-security',
+        title: 'How TechWagger Powers Secure Online Proctoring',
         date: '01',
         month: 'Mar',
         image: '/img/blog/blog_4.png',
@@ -308,19 +316,20 @@ export const siteContent: SiteContent = {
       title: 'Still You Need Our',
       titleHighlight: 'Support',
       description:
-        'Get exam prep tips, platform updates, and US testing news delivered to your inbox every week.',
+        'Get exam prep tips, platform updates, and EdTech news from the TechWagger team delivered to your inbox.',
       placeholder: 'Enter your email here',
       buttonText: 'Subscribe Now',
     },
     about:
-      'EduTest Pro is a US-based online examination platform helping students, educators, and institutions deliver secure, scalable assessments from coast to coast.',
+      'EduTest Pro is an EdTech product of TechWagger — an Indian technology company transforming education through secure, scalable online assessments. Innovation Into Reality.',
     hours: {
-      title: 'Support Hours (PST)',
-      weekdays: 'Mon – Fri (8:00 AM – 6:00 PM)',
+      title: 'Support Hours (IST)',
+      weekdays: 'Mon – Fri (9:00 AM – 6:00 PM IST)',
       weekend: 'Saturday – Limited Support',
     },
     usefulLinks: [
       { label: 'About Us', href: '/about' },
+      { label: 'TechWagger', href: 'https://techwagger.com/' },
       { label: 'For Schools', href: '/schools' },
       { label: 'Become a Teacher', href: '/dashboard/become-a-teacher' },
       { label: 'Help Center', href: '/help' },
@@ -349,17 +358,16 @@ export const siteContent: SiteContent = {
       {
         image: '/img/footer/footer__3.png',
         date: '01 Mar 2026',
-        title: 'Online Proctoring Tips',
-        href: '/blog/texas-proctoring',
+        title: 'Secure Online Proctoring',
+        href: '/blog/edtech-cloud-security',
       },
     ],
-    copyright: { year: '2026', brand: 'EduTest Pro' },
+    copyright: { year: '2026', brand: 'TechWagger', product: 'EduTest Pro' },
     social: [
       { platform: 'Facebook', icon: 'icofont-facebook', href: 'https://facebook.com' },
       { platform: 'Twitter', icon: 'icofont-twitter', href: 'https://twitter.com' },
-      { platform: 'Vimeo', icon: 'icofont-vimeo', href: 'https://vimeo.com' },
       { platform: 'LinkedIn', icon: 'icofont-linkedin', href: 'https://linkedin.com' },
-      { platform: 'Skype', icon: 'icofont-skype', href: 'https://skype.com' },
+      { platform: 'YouTube', icon: 'icofont-youtube-play', href: 'https://youtube.com' },
     ],
   },
 };

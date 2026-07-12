@@ -1,34 +1,63 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 import Breadcrumb from '@/components/ui/Breadcrumb';
+import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
 import { useAuth } from '@/context/AuthContext';
 import { parseApiError } from '@/lib/errors';
+import { siteContent } from '@/data/siteContent';
+import { loginSchema, quickSignupSchema, type LoginFormValues, type QuickSignupFormValues } from '@/validators/schemas';
 
 export default function LoginPage() {
+  const { brand } = siteContent;
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('student1@edutech.com');
-  const [password, setPassword] = useState('Password@123');
-  const [error, setError] = useState('');
+  const [apiError, setApiError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
+  const {
+    register: registerLogin,
+    handleSubmit: handleLoginSubmit,
+    formState: { errors: loginErrors },
+  } = useForm<LoginFormValues>({
+    resolver: yupResolver(loginSchema),
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
+    defaultValues: { email: '', password: '' },
+  });
+
+  const {
+    register: registerSignup,
+    handleSubmit: handleSignupSubmit,
+    formState: { errors: signupErrors },
+  } = useForm<QuickSignupFormValues>({
+    resolver: yupResolver(quickSignupSchema),
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
+    defaultValues: { fullName: '', email: '', password: '' },
+  });
+
+  const onLogin = async (values: LoginFormValues) => {
+    setApiError('');
     setSubmitting(true);
     try {
-      const dashboardPath = await login({ email, password });
+      const dashboardPath = await login(values);
       navigate(dashboardPath);
     } catch (err) {
-      setError(parseApiError(err));
+      setApiError(parseApiError(err));
     } finally {
       setSubmitting(false);
     }
   };
 
+  const onQuickSignup = () => {
+    navigate('/register');
+  };
+
   return (
     <>
-      <Breadcrumb title="Log In" variant="compact" />
+      <Breadcrumb title="Log In" />
       <div className="loginarea auth-page-section">
         <div className="container">
           <div className="row">
@@ -62,35 +91,41 @@ export default function LoginPage() {
                 <div className="col-xl-8 col-md-8 offset-md-2">
                   <div className="loginarea__wraper">
                     <div className="login__heading">
-                      <h5 className="login__title">Login to EduTest Pro</h5>
+                      <h5 className="login__title">Login to {brand.name}</h5>
                       <p className="login__description">
                         Don&apos;t have an account?{' '}
                         <Link to="/register">Sign up for free</Link>
                       </p>
                     </div>
-                    <form onSubmit={handleLogin}>
-                      {error && <p className="login__error sp_bottom_15">{error}</p>}
+                    <form onSubmit={handleLoginSubmit(onLogin)} noValidate autoComplete="off">
+                      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
                       <div className="login__form">
-                        <label className="form__label">Email address</label>
+                        <label className="form__label" htmlFor="loginEmail">
+                          Email address
+                        </label>
                         <input
-                          className="common__login__input"
+                          id="loginEmail"
+                          className={inputClassName('common__login__input', !!loginErrors.email)}
                           type="email"
-                          placeholder="student1@edutech.com"
-                          value={email}
-                          onChange={(e) => setEmail(e.target.value)}
-                          required
+                          placeholder="you@example.com"
+                          autoComplete="off"
+                          {...registerLogin('email')}
                         />
+                        <FormError message={loginErrors.email?.message} />
                       </div>
                       <div className="login__form">
-                        <label className="form__label">Password</label>
-                        <input
-                          className="common__login__input"
-                          type="password"
-                          placeholder="Password@123"
-                          value={password}
-                          onChange={(e) => setPassword(e.target.value)}
-                          required
+                        <label className="form__label" htmlFor="loginPassword">
+                          Password
+                        </label>
+                        <PasswordInput
+                          id="loginPassword"
+                          inputClass="common__login__input"
+                          hasError={!!loginErrors.password}
+                          placeholder="Enter your password"
+                          autoComplete="off"
+                          {...registerLogin('password')}
                         />
+                        <FormError message={loginErrors.password?.message} />
                       </div>
                       <div className="login__form d-flex justify-content-between flex-wrap gap-2">
                         <div className="form__check">
@@ -102,14 +137,15 @@ export default function LoginPage() {
                         </div>
                       </div>
                       <div className="login__button">
-                        <button type="submit" className="default__button" disabled={submitting}>
+                        <button
+                          type="submit"
+                          className="default__button auth-submit-btn"
+                          disabled={submitting}
+                        >
                           {submitting ? 'Logging in...' : 'Log In'}
                         </button>
                       </div>
                     </form>
-                    <p className="login__hint sp_top_15">
-                      Demo: student1@edutech.com · teacher1@edutech.com · orgadmin@edutech.com
-                    </p>
                   </div>
                 </div>
               </div>
@@ -123,23 +159,51 @@ export default function LoginPage() {
                         Already registered? <Link to="/login">Log in</Link>
                       </p>
                     </div>
-                    <form onSubmit={(e) => e.preventDefault()}>
+                    <form onSubmit={handleSignupSubmit(onQuickSignup)} noValidate autoComplete="off">
                       <div className="login__form">
-                        <label className="form__label">Full name</label>
-                        <input className="common__login__input" type="text" placeholder="Your full name" />
+                        <label className="form__label" htmlFor="signupFullName">
+                          Full name
+                        </label>
+                        <input
+                          id="signupFullName"
+                          className={inputClassName('common__login__input', !!signupErrors.fullName)}
+                          type="text"
+                          placeholder="Your full name"
+                          {...registerSignup('fullName')}
+                        />
+                        <FormError message={signupErrors.fullName?.message} />
                       </div>
                       <div className="login__form">
-                        <label className="form__label">Email</label>
-                        <input className="common__login__input" type="email" placeholder="you@school.edu" />
+                        <label className="form__label" htmlFor="signupEmail">
+                          Email
+                        </label>
+                        <input
+                          id="signupEmail"
+                          className={inputClassName('common__login__input', !!signupErrors.email)}
+                          type="email"
+                          placeholder="you@school.edu"
+                          {...registerSignup('email')}
+                        />
+                        <FormError message={signupErrors.email?.message} />
                       </div>
                       <div className="login__form">
-                        <label className="form__label">Password</label>
-                        <input className="common__login__input" type="password" placeholder="Create password" />
+                        <label className="form__label" htmlFor="signupPassword">
+                          Password
+                        </label>
+                        <PasswordInput
+                          id="signupPassword"
+                          inputClass="common__login__input"
+                          hasError={!!signupErrors.password}
+                          placeholder="Create password"
+                          autoComplete="new-password"
+                          {...registerSignup('password')}
+                        />
+                        <FormError message={signupErrors.password?.message} />
                       </div>
                       <div className="login__button">
-                        <Link className="default__button" to="/register">
+                        <button type="submit" className="default__button auth-submit-btn">
                           Sign Up Free
-                        </Link>
+                        </button>
                       </div>
                     </form>
                   </div>

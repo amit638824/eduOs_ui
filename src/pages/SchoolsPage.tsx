@@ -3,7 +3,7 @@ import Breadcrumb from '@/components/ui/Breadcrumb';
 import { siteContent } from '@/data/siteContent';
 
 export default function SchoolsPage() {
-  const { about } = siteContent;
+  const { about, parentCompany } = siteContent;
 
   return (
     <>
@@ -18,13 +18,14 @@ export default function SchoolsPage() {
                 </div>
                 <div className="aboutarea__headding heading__underline">
                   <h2>
-                    Secure Online Testing for <span>US Schools</span>
+                    Secure Online Testing for <span>Schools &amp; Institutions</span>
                   </h2>
                 </div>
                 <div className="aboutarea__para aboutarea__para__2">
                   <p>
-                    EduTest Pro helps American school districts deliver state benchmarks, classroom quizzes,
-                    and high-stakes exams with live proctoring, instant grading, and FERPA-compliant reporting.
+                    EduTest Pro — an EdTech product of {parentCompany.name} — helps school districts
+                    deliver state benchmarks, classroom quizzes, and high-stakes exams with live
+                    proctoring, instant grading, and secure cloud infrastructure.
                   </p>
                 </div>
                 <div className="aboutarea__list__2">

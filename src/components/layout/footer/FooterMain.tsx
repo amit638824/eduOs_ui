@@ -39,7 +39,13 @@ export default function FooterMain() {
               <ul>
                 {footer.usefulLinks.map((link) => (
                   <li key={link.href}>
-                    <Link to={link.href}>{link.label}</Link>
+                    {link.href.startsWith('http') ? (
+                      <a href={link.href} target="_blank" rel="noreferrer">
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link to={link.href}>{link.label}</Link>
+                    )}
                   </li>
                 ))}
               </ul>
