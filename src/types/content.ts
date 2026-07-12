@@ -1,3 +1,16 @@
+export interface FooterPost {
+  image: string;
+  date: string;
+  title: string;
+  href: string;
+}
+
+export interface SocialLink {
+  platform: string;
+  icon: string;
+  href: string;
+}
+
 export interface NavItem {
   label: string;
   href: string;
@@ -132,10 +145,19 @@ export interface SiteContent {
     posts: BlogPost[];
   };
   footer: {
+    newsletter: {
+      title: string;
+      titleHighlight: string;
+      description: string;
+      placeholder: string;
+      buttonText: string;
+    };
     about: string;
     hours: { title: string; weekdays: string; weekend: string };
     usefulLinks: { label: string; href: string }[];
     examLinks: { label: string; href: string }[];
-    copyright: string;
+    recentPosts: FooterPost[];
+    copyright: { year: string; brand: string };
+    social: SocialLink[];
   };
 }

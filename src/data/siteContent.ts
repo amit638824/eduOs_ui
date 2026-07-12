@@ -301,6 +301,14 @@ export const siteContent: SiteContent = {
     ],
   },
   footer: {
+    newsletter: {
+      title: 'Still You Need Our',
+      titleHighlight: 'Support',
+      description:
+        'Get exam prep tips, platform updates, and US testing news delivered to your inbox every week.',
+      placeholder: 'Enter your email here',
+      buttonText: 'Subscribe Now',
+    },
     about:
       'EduTest Pro is a US-based online examination platform helping students, educators, and institutions deliver secure, scalable assessments from coast to coast.',
     hours: {
@@ -322,6 +330,33 @@ export const siteContent: SiteContent = {
       { label: 'NCLEX & Nursing', href: '/exams/nclex' },
       { label: 'IT Certifications', href: '/exams/it' },
     ],
-    copyright: 'Copyright © 2026 EduTest Pro. All Rights Reserved.',
+    recentPosts: [
+      {
+        image: '/img/footer/footer__1.png',
+        date: '15 Mar 2026',
+        title: 'Digital SAT Prep Guide',
+        href: '/blog/digital-sat-2026',
+      },
+      {
+        image: '/img/footer/footer__2.png',
+        date: '08 Mar 2026',
+        title: 'Beat Test Anxiety',
+        href: '/blog/test-anxiety-tips',
+      },
+      {
+        image: '/img/footer/footer__3.png',
+        date: '01 Mar 2026',
+        title: 'Online Proctoring Tips',
+        href: '/blog/texas-proctoring',
+      },
+    ],
+    copyright: { year: '2026', brand: 'EduTest Pro' },
+    social: [
+      { platform: 'Facebook', icon: 'icofont-facebook', href: 'https://facebook.com' },
+      { platform: 'Twitter', icon: 'icofont-twitter', href: 'https://twitter.com' },
+      { platform: 'Vimeo', icon: 'icofont-vimeo', href: 'https://vimeo.com' },
+      { platform: 'LinkedIn', icon: 'icofont-linkedin', href: 'https://linkedin.com' },
+      { platform: 'Skype', icon: 'icofont-skype', href: 'https://skype.com' },
+    ],
   },
 };

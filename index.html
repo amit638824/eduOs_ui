@@ -10,6 +10,29 @@
       content="EduTest Pro — America's trusted online examination platform for SAT, ACT, AP, state assessments, and professional certification practice tests."
     />
     <title>EduTest Pro | Online Examination Platform for US Students</title>
+
+    <!-- Edurock template CSS (served from /public) -->
+    <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/animate.min.css" />
+    <link rel="stylesheet" href="/css/aos.min.css" />
+    <link rel="stylesheet" href="/css/magnific-popup.css" />
+    <link rel="stylesheet" href="/css/icofont.min.css" />
+    <link rel="stylesheet" href="/css/slick.css" />
+    <link rel="stylesheet" href="/css/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+
+    <script>
+      (function () {
+        var stored = localStorage.getItem('theme-color');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored === 'dark' || (!stored && prefersDark)) {
+          document.documentElement.classList.add('is_dark');
+        }
+        if (stored === 'light') {
+          document.documentElement.classList.remove('is_dark');
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

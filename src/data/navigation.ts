@@ -19,8 +19,10 @@ export const mainNavigation: NavItem[] = [
     href: '/dashboard/student-dashboard',
     children: [
       { label: 'Student Dashboard', href: '/dashboard/student-dashboard' },
-      { label: 'My Exam Results', href: '/dashboard/student-enrolled-courses' },
-      { label: 'Instructor Portal', href: '/dashboard/instructor-dashboard' },
+      { label: 'My Profile', href: '/dashboard/student-profile' },
+      { label: 'My Tests', href: '/dashboard/student-enrolled-courses' },
+      { label: 'My Attempts', href: '/dashboard/student-my-quiz-attempts' },
+      { label: 'Teacher Portal', href: '/dashboard/teacher-dashboard' },
       { label: 'Admin Panel', href: '/dashboard/admin-dashboard' },
     ],
   },

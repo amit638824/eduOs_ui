@@ -1,13 +1,24 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import { siteContent } from '@/data/siteContent';
 import { mainNavigation } from '@/data/navigation';
+import { useAuth } from '@/context/AuthContext';
+import { getDefaultDashboardPath } from '@/utils/dashboardRole';
 
 export default function Header() {
   const { brand } = siteContent;
+  const { pathname } = useLocation();
+  const { user, logout } = useAuth();
+  const isDashboard = pathname.startsWith('/dashboard');
+  const headerVariant = isDashboard ? 'headerarea__3' : 'headerarea__2';
+  const dashboardPath = user ? getDefaultDashboardPath(user.roles) : '/dashboard/student-dashboard';
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <header>
-      <div className="headerarea headerarea__2 header__sticky header__area">
+      <div className={`headerarea ${headerVariant} header__sticky header__area`}>
         <div className="container desktop__menu__wrapper">
           <div className="row">
             <div className="col-xl-2 col-lg-2 col-md-6">
@@ -59,14 +70,31 @@ export default function Header() {
 
             <div className="col-xl-3 col-lg-3 col-md-6">
               <div className="headerarea__right">
-                <div className="headerarea__login">
-                  <Link to="/login">Login</Link>
-                </div>
-                <div className="headerarea__button">
-                  <Link className="default__button" to="/register">
-                    Sign Up Free
-                  </Link>
-                </div>
+                {user ? (
+                  <>
+                    <div className="headerarea__login">
+                      <Link to={dashboardPath}>
+                        {user.firstName} {user.lastName}
+                      </Link>
+                    </div>
+                    <div className="headerarea__button">
+                      <button type="button" className="default__button header-logout-btn" onClick={handleLogout}>
+                        Logout
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="headerarea__login">
+                      <Link to="/login">Login</Link>
+                    </div>
+                    <div className="headerarea__button">
+                      <Link className="default__button" to="/register">
+                        Sign Up Free
+                      </Link>
+                    </div>
+                  </>
+                )}
                 <div className="mobile-off-canvas">
                   <a className="mobile-aside-button" href="#">
                     <i className="icofont-navigation-menu" />

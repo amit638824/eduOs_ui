@@ -1,8 +1,3 @@
-import TopBar from '@/components/layout/TopBar';
-import Header from '@/components/layout/Header';
-import MobileMenu from '@/components/layout/MobileMenu';
-import ThemeShadow from '@/components/layout/ThemeShadow';
-import Footer from '@/components/layout/Footer';
 import HeroSection from '@/components/home/HeroSection';
 import BrandSection from '@/components/home/BrandSection';
 import AboutSection from '@/components/home/AboutSection';
@@ -17,10 +12,6 @@ import BlogSection from '@/components/home/BlogSection';
 export default function HomePage() {
   return (
     <>
-      <TopBar />
-      <Header />
-      <MobileMenu />
-      <ThemeShadow />
       <HeroSection />
       <BrandSection />
       <AboutSection />
@@ -31,7 +22,6 @@ export default function HomePage() {
       <PricingSection />
       <TestimonialsSection />
       <BlogSection />
-      <Footer />
     </>
   );
 }
