@@ -98,7 +98,7 @@ export default function LoginPage() {
                           <label htmlFor="rememberMe">Remember me</label>
                         </div>
                         <div className="text-end login__form__link">
-                          <a href="#!">Forgot password?</a>
+                          <Link to="/help">Forgot password?</Link>
                         </div>
                       </div>
                       <div className="login__button">

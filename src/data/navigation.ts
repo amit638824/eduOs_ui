@@ -8,12 +8,14 @@ export const mainNavigation: NavItem[] = [
     children: [
       { label: 'SAT & ACT Prep', href: '/exams/sat-act' },
       { label: 'AP Exams', href: '/exams/ap', badge: 'Popular' },
+      { label: 'AP & IB Exams', href: '/exams/ap-ib' },
       { label: 'State Assessments', href: '/exams/state' },
       { label: 'Certifications', href: '/exams/certification' },
     ],
   },
   { label: 'For Schools', href: '/schools' },
   { label: 'Pricing', href: '/pricing' },
+  { label: 'About', href: '/about' },
   {
     label: 'Dashboard',
     href: '/dashboard/student-dashboard',

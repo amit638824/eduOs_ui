@@ -62,6 +62,12 @@ export default function MobileMenu() {
                 <li>
                   <Link to="/dashboard/student-dashboard">Student Dashboard</Link>
                 </li>
+                <li>
+                  <Link to="/dashboard/teacher-dashboard">Teacher Dashboard</Link>
+                </li>
+                <li>
+                  <Link to="/dashboard/admin-dashboard">Admin Panel</Link>
+                </li>
               </ul>
             </div>
           </div>

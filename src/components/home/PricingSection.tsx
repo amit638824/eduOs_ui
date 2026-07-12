@@ -42,7 +42,7 @@ export default function PricingSection() {
                   </ul>
                 </div>
                 <div className={`pricingarea__button${plan.highlighted ? ' pricingarea__button__2' : ''}`}>
-                  <Link className="default__button" to="/register">
+                  <Link className="default__button" to={plan.name === 'INSTITUTION' ? '/schools' : '/register'}>
                     {plan.cta}
                   </Link>
                 </div>

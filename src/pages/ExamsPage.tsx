@@ -1,13 +1,19 @@
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import ExamGridSection from '@/components/home/ExamGridSection';
 import SubjectsSection from '@/components/home/SubjectsSection';
+import type { ExamCategorySlug } from '@/utils/routes';
 
-export default function ExamsPage() {
+interface ExamsPageProps {
+  category?: ExamCategorySlug;
+  title?: string;
+}
+
+export default function ExamsPage({ category, title = 'Practice Tests' }: ExamsPageProps) {
   return (
     <>
-      <Breadcrumb title="Practice Tests" />
+      <Breadcrumb title={title} />
       <SubjectsSection />
-      <ExamGridSection />
+      <ExamGridSection activeCategory={category} />
     </>
   );
 }

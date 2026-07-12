@@ -277,6 +277,7 @@ export const siteContent: SiteContent = {
     title: 'Latest US Testing Insights',
     posts: [
       {
+        slug: 'digital-sat-2026',
         title: '2026 Digital SAT: What Every US Student Needs to Know',
         date: '15',
         month: 'Mar',
@@ -287,12 +288,14 @@ export const siteContent: SiteContent = {
         featured: true,
       },
       {
+        slug: 'test-anxiety-tips',
         title: '5 Ways to Beat Test Anxiety Before Exam Day',
         date: '08',
         month: 'Mar',
         image: '/img/blog/blog_3.png',
       },
       {
+        slug: 'texas-proctoring',
         title: 'How Texas Schools Are Using Online Proctoring',
         date: '01',
         month: 'Mar',
@@ -319,7 +322,7 @@ export const siteContent: SiteContent = {
     usefulLinks: [
       { label: 'About Us', href: '/about' },
       { label: 'For Schools', href: '/schools' },
-      { label: 'Become an Instructor', href: '/instructor' },
+      { label: 'Become a Teacher', href: '/dashboard/become-a-teacher' },
       { label: 'Help Center', href: '/help' },
       { label: 'Privacy Policy', href: '/privacy' },
     ],

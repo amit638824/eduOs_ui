@@ -1,8 +1,22 @@
 import { Link } from 'react-router-dom';
 import { siteContent } from '@/data/siteContent';
+import type { ExamCategorySlug } from '@/utils/routes';
 
-export default function ExamGridSection() {
+const categoryFilterMap: Record<ExamCategorySlug, string> = {
+  'sat-act': 'filter-sat',
+  ap: 'filter-ap',
+  'ap-ib': 'filter-ap',
+  state: 'filter-state',
+  certification: 'filter-cert',
+  nclex: 'filter-cert',
+  it: 'filter-cert',
+};
+
+export default function ExamGridSection({ activeCategory }: { activeCategory?: ExamCategorySlug }) {
   const { exams } = siteContent;
+  const items = activeCategory
+    ? exams.items.filter((exam) => exam.filterClass === categoryFilterMap[activeCategory])
+    : exams.items;
 
   return (
     <div className="gridarea gridarea__2">
@@ -35,7 +49,7 @@ export default function ExamGridSection() {
         </div>
 
         <div className="row grid" data-aos="fade-up">
-          {exams.items.map((exam) => (
+          {items.map((exam) => (
             <div
               key={exam.id}
               className={`col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 grid-item ${exam.filterClass}`}
@@ -80,7 +94,7 @@ export default function ExamGridSection() {
                     )}
                   </div>
                   <div className="gridarea__bottom">
-                    <Link to="/instructor-details">
+                    <Link to="/dashboard/teacher-dashboard">
                       <div className="gridarea__small__img">
                         <img loading="lazy" src={exam.instructorImg} alt={exam.instructor} />
                         <div className="gridarea__small__content">

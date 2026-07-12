@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { siteContent } from '@/data/siteContent';
 import SectionTitle from '@/components/ui/SectionTitle';
 
@@ -18,7 +19,9 @@ export default function BlogSection() {
             <div className="col-xl-8 col-lg-8" data-aos="fade-up">
               <div className="blogarea__content__wraper">
                 <div className="blogarea__img">
-                  <img loading="lazy" src={featured.image} alt={featured.title} />
+                  <Link to={`/blog/${featured.slug}`}>
+                    <img loading="lazy" src={featured.image} alt={featured.title} />
+                  </Link>
                   <div className="blogarea__date">
                     {featured.date}
                     <span>{featured.month}</span>
@@ -26,7 +29,7 @@ export default function BlogSection() {
                 </div>
                 <div className="blogarea__text__wraper">
                   <h3>
-                    <a href="#">{featured.title}</a>
+                    <Link to={`/blog/${featured.slug}`}>{featured.title}</Link>
                   </h3>
                   {featured.excerpt && (
                     <div className="blogarea__para">
@@ -52,9 +55,11 @@ export default function BlogSection() {
 
           <div className="col-xl-4 col-lg-4" data-aos="fade-up">
             {rest.map((post) => (
-              <div key={post.title} className="blogarea__content__wraper">
+              <div key={post.slug} className="blogarea__content__wraper">
                 <div className="blogarea__img">
-                  <img loading="lazy" src={post.image} alt={post.title} />
+                  <Link to={`/blog/${post.slug}`}>
+                    <img loading="lazy" src={post.image} alt={post.title} />
+                  </Link>
                   <div className="blogarea__date small__date">
                     {post.date}
                     <span>{post.month}</span>
@@ -62,7 +67,7 @@ export default function BlogSection() {
                 </div>
                 <div className="blogarea__text__wraper blogarea__text__wraper__2">
                   <h3>
-                    <a href="#">{post.title}</a>
+                    <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                   </h3>
                 </div>
               </div>
