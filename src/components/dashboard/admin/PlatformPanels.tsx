@@ -301,37 +301,69 @@ export function UsersManagementPanel() {
 
   return (
     <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title"><h4>User Management</h4></div>
+      <div className="dashboard__section__title">
+        <h4>User Management</h4>
+        <span className="badge bg-primary">{users.length} users</span>
+      </div>
       {error && <p className="login__error sp_bottom_15">{error}</p>}
       {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <form onSubmit={handleSubmit(onSubmit)} className="sp_bottom_30">
-        <div className="row">
-          <div className="col-md-3 sp_bottom_15">
-            <input className="register__input" placeholder="First name" {...register('firstName')} />
-            <FormError message={errors.firstName?.message} />
+
+      <div className="edtp-form-card">
+        <h5>Add New User</h5>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="row g-3">
+            <div className="col-md-6 col-lg-3">
+              <input className="register__input" placeholder="First name" {...register('firstName')} />
+              <FormError message={errors.firstName?.message} />
+            </div>
+            <div className="col-md-6 col-lg-3">
+              <input className="register__input" placeholder="Last name" {...register('lastName')} />
+              <FormError message={errors.lastName?.message} />
+            </div>
+            <div className="col-md-6 col-lg-3">
+              <input className="register__input" placeholder="Email" {...register('email')} />
+              <FormError message={errors.email?.message} />
+            </div>
+            <div className="col-md-6 col-lg-2">
+              <select className="form-select" {...register('role')}>
+                <option value="student">Student</option>
+                <option value="teacher">Teacher</option>
+                <option value="org_admin">Org Admin</option>
+              </select>
+            </div>
+            <div className="col-md-6 col-lg-3">
+              <input className="register__input" type="password" placeholder="Password" {...register('password')} />
+              <FormError message={errors.password?.message} />
+            </div>
+            <div className="col-md-6 col-lg-2 d-flex align-items-start">
+              <button type="submit" className="default__button w-100">Add User</button>
+            </div>
           </div>
-          <div className="col-md-3 sp_bottom_15">
-            <input className="register__input" placeholder="Last name" {...register('lastName')} />
+        </form>
+      </div>
+
+      <div className="edtp-user-grid d-lg-none">
+        {users.map((u) => (
+          <div key={u.id} className="edtp-user-card">
+            <div className="edtp-user-card__avatar">
+              {(u.first_name?.[0] ?? 'U').toUpperCase()}
+            </div>
+            <div className="edtp-user-card__name">{u.first_name} {u.last_name}</div>
+            <div className="edtp-user-card__email">{u.email}</div>
+            <div className="edtp-user-card__meta">
+              {(u.roles as string[]).map((r) => (
+                <span key={r} className="edtp-badge edtp-badge--role">{r}</span>
+              ))}
+              <span className={`edtp-badge ${u.status === 'active' ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
+                {u.status}
+              </span>
+            </div>
           </div>
-          <div className="col-md-3 sp_bottom_15">
-            <input className="register__input" placeholder="Email" {...register('email')} />
-          </div>
-          <div className="col-md-2 sp_bottom_15">
-            <select className="form-select" {...register('role')}>
-              <option value="student">Student</option>
-              <option value="teacher">Teacher</option>
-              <option value="org_admin">Org Admin</option>
-            </select>
-          </div>
-          <div className="col-md-3 sp_bottom_15">
-            <input className="register__input" type="password" placeholder="Password" {...register('password')} />
-          </div>
-          <div className="col-md-2">
-            <button type="submit" className="default__button">Add User</button>
-          </div>
-        </div>
-      </form>
-      <div className="dashboard__table table-responsive">
+        ))}
+        {users.length === 0 && <p>No users found.</p>}
+      </div>
+
+      <div className="dashboard__table table-responsive d-none d-lg-block">
         <table>
           <thead>
             <tr><th>Name</th><th>Email</th><th>Roles</th><th>Status</th></tr>
@@ -342,9 +374,16 @@ export function UsersManagementPanel() {
                 <td>{u.first_name} {u.last_name}</td>
                 <td>{u.email}</td>
                 <td>{(u.roles as string[]).join(', ')}</td>
-                <td>{u.status}</td>
+                <td>
+                  <span className={`edtp-badge ${u.status === 'active' ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
+                    {u.status}
+                  </span>
+                </td>
               </tr>
             ))}
+            {users.length === 0 && (
+              <tr><td colSpan={4}>No users found.</td></tr>
+            )}
           </tbody>
         </table>
       </div>

@@ -55,7 +55,7 @@ export function DashboardCounters({
       </div>
       <div className="row">
         {counters.map((counter) => (
-          <div key={counter.label} className="col-xl-4 col-lg-6 col-md-12 col-12">
+          <div key={counter.label} className="col-xl-3 col-lg-4 col-md-6 col-12">
             <div className="dashboard__single__counter">
               <div className="counterarea__text__wraper">
                 <div className="counter__img">

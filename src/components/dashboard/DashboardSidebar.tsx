@@ -5,9 +5,10 @@ import DashboardIcon from './DashboardIcon';
 interface DashboardSidebarProps {
   sections: DashboardNavSection[];
   onLogout: () => void;
+  onNavigate?: () => void;
 }
 
-export default function DashboardSidebar({ sections, onLogout }: DashboardSidebarProps) {
+export default function DashboardSidebar({ sections, onLogout, onNavigate }: DashboardSidebarProps) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -38,6 +39,7 @@ export default function DashboardSidebar({ sections, onLogout }: DashboardSideba
                       to={item.href}
                       className={({ isActive }) => (isActive ? 'active' : undefined)}
                       end
+                      onClick={onNavigate}
                     >
                       <DashboardIcon name={item.icon} />
                       {item.label}

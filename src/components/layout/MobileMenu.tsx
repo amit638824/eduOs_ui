@@ -1,14 +1,19 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { mainNavigation } from '@/data/navigation';
+import { resolveHeaderNavigation, buildAccountLinks } from '@/data/navigation';
 import { siteContent } from '@/data/siteContent';
+import { useAuth } from '@/context/AuthContext';
 import { FormError, inputClassName } from '@/components/ui/FormField';
 import { searchSchema, type SearchFormValues } from '@/validators/schemas';
 
 export default function MobileMenu() {
   const { social } = siteContent;
   const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { user, logout } = useAuth();
+  const navItems = resolveHeaderNavigation(user, pathname);
+  const accountLinks = buildAccountLinks(user);
 
   const {
     register,
@@ -23,6 +28,15 @@ export default function MobileMenu() {
   const onSearch = (values: SearchFormValues) => {
     navigate(`/exams?search=${encodeURIComponent(values.query)}`);
     reset();
+  };
+
+  const handleAccountAction = async (link: (typeof accountLinks)[number]) => {
+    if (link.action === 'logout') {
+      await logout();
+      navigate('/login');
+      return;
+    }
+    navigate(link.href);
   };
 
   return (
@@ -50,9 +64,9 @@ export default function MobileMenu() {
           <div className="mobile-navigation">
             <nav>
               <ul className="mobile-menu">
-                {mainNavigation.map((item) => (
+                {navItems.map((item) => (
                   <li
-                    key={item.href}
+                    key={`${item.href}-${item.label}`}
                     className={item.children ? 'menu-item-has-children' : undefined}
                   >
                     <Link to={item.href}>{item.label}</Link>
@@ -75,25 +89,26 @@ export default function MobileMenu() {
         <div className="mobile-curr-lang-wrap">
           <div className="single-mobile-curr-lang">
             <a className="mobile-account-active" href="#">
-              My Account <i className="icofont-thin-down" />
+              {user ? `Hi, ${user.firstName}` : 'My Account'}{' '}
+              <i className="icofont-thin-down" />
             </a>
             <div className="lang-curr-dropdown account-dropdown-active">
               <ul>
-                <li>
-                  <Link to="/login">Login</Link>
-                </li>
-                <li>
-                  <Link to="/register">Create Account</Link>
-                </li>
-                <li>
-                  <Link to="/dashboard/student-dashboard">Student Dashboard</Link>
-                </li>
-                <li>
-                  <Link to="/dashboard/teacher-dashboard">Teacher Dashboard</Link>
-                </li>
-                <li>
-                  <Link to="/dashboard/admin-dashboard">Admin Panel</Link>
-                </li>
+                {accountLinks.map((link) => (
+                  <li key={link.label}>
+                    {link.action === 'logout' ? (
+                      <button
+                        type="button"
+                        className="dashboard-nav-logout mobile-account-logout"
+                        onClick={() => handleAccountAction(link)}
+                      >
+                        {link.label}
+                      </button>
+                    ) : (
+                      <Link to={link.href}>{link.label}</Link>
+                    )}
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

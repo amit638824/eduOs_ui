@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   QuestionBankPanel,
   TestsListPanel,
@@ -36,6 +37,33 @@ export function StudentDashboardHome() {
 
   return (
     <>
+      <div className="dashboard__content__wraper">
+        <div className="dashboard__section__title">
+          <h4>Quick Actions</h4>
+        </div>
+        <div className="edtp-quick-actions">
+          <Link to="/dashboard/student-enrolled-courses" className="edtp-quick-action">
+            <i className="icofont-book-alt" />
+            My Tests
+          </Link>
+          <Link to="/dashboard/student-my-quiz-attempts" className="edtp-quick-action">
+            <i className="icofont-ui-clock" />
+            Attempts
+          </Link>
+          <Link to="/dashboard/student-reviews" className="edtp-quick-action">
+            <i className="icofont-certificate-alt-1" />
+            Results
+          </Link>
+          <Link to="/dashboard/student-wishlist" className="edtp-quick-action">
+            <i className="icofont-wallet" />
+            Wallet
+          </Link>
+          <Link to="/exams" className="edtp-quick-action">
+            <i className="icofont-search" />
+            Browse
+          </Link>
+        </div>
+      </div>
       <DashboardCounters
         title="Summary"
         counters={[

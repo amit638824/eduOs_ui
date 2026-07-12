@@ -23,10 +23,10 @@ export function buildDashboardProfile(user: ApiUser, role: DashboardRole): Dashb
       image: resolveImageUrl(user.avatarUrl) || defaultImages.student,
       innerClass: 'student__dashboard__inner',
       stats: [
-        { icon: 'icofont-book-alt', text: 'Tests Enrolled' },
-        { icon: 'icofont-certificate-alt-1', text: 'Results Available' },
+        { icon: 'icofont-book-alt', text: 'My Tests & Enrollment' },
+        { icon: 'icofont-certificate-alt-1', text: 'Results & Rank' },
       ],
-      cta: { label: 'Browse Practice Tests', href: '/exams' },
+      cta: { label: 'Start a Test', href: `${base}/student-enrolled-courses` },
     },
     teacher: {
       role: 'teacher',
@@ -41,7 +41,7 @@ export function buildDashboardProfile(user: ApiUser, role: DashboardRole): Dashb
       image: resolveImageUrl(user.avatarUrl) || defaultImages.admin,
       innerClass: 'admin__dashboard__inner',
       showRating: true,
-      cta: { label: 'Manage Organization', href: `${base}/admin-settings` },
+      cta: { label: 'Manage Users', href: `${base}/admin-users` },
     },
   };
 
@@ -50,24 +50,26 @@ export function buildDashboardProfile(user: ApiUser, role: DashboardRole): Dashb
 
 const logoutItem = { label: 'Logout', href: '/login', icon: 'logout', action: 'logout' as const };
 
+/**
+ * Phase 1 sidebar menus — only modules that exist in the platform.
+ * Student / Teacher / Admin items match doc walkthrough scenes.
+ */
 export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): DashboardNavSection[] {
   const name = fullName(user);
 
   if (role === 'teacher') {
     return [
       {
-        title: `Welcome, ${name}`,
+        title: `Teacher — ${name}`,
         items: [
           { label: 'Dashboard', href: `${base}/teacher-dashboard`, icon: 'home' },
           { label: 'My Profile', href: `${base}/teacher-profile`, icon: 'user' },
-          { label: 'Messages', href: `${base}/teacher-message`, icon: 'message' },
-          { label: 'My Tests', href: `${base}/teacher-course`, icon: 'monitor' },
+          { label: 'Notifications', href: `${base}/teacher-message`, icon: 'message' },
           { label: 'Question Bank', href: `${base}/question-bank`, icon: 'quiz' },
+          { label: 'My Tests', href: `${base}/teacher-course`, icon: 'monitor' },
           { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
-          { label: 'Attempts', href: `${base}/teacher-quiz-attempts`, icon: 'quiz' },
-          { label: 'Assignments', href: `${base}/teacher-assignments`, icon: 'assignment' },
-          { label: 'Announcements', href: `${base}/teacher-announcments`, icon: 'announcement' },
-          { label: 'Analytics', href: `${base}/teacher-reviews`, icon: 'star' },
+          { label: 'Test Attempts', href: `${base}/teacher-quiz-attempts`, icon: 'quiz' },
+          { label: 'Reports & Analytics', href: `${base}/teacher-reviews`, icon: 'star' },
         ],
       },
       {
@@ -84,18 +86,18 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
   if (role === 'admin') {
     return [
       {
-        title: `Welcome, ${name}`,
+        title: `Admin — ${name}`,
         items: [
           { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
           { label: 'My Profile', href: `${base}/admin-profile`, icon: 'user' },
-          { label: 'Messages', href: `${base}/admin-message`, icon: 'message' },
-          { label: 'Tests', href: `${base}/admin-course`, icon: 'course' },
+          { label: 'Notifications', href: `${base}/admin-message`, icon: 'message' },
+          { label: 'All Tests', href: `${base}/admin-course`, icon: 'course' },
           { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
-          { label: 'Attempts', href: `${base}/admin-quiz-attempts`, icon: 'quiz' },
+          { label: 'All Attempts', href: `${base}/admin-quiz-attempts`, icon: 'quiz' },
           { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },
           { label: 'Payments', href: `${base}/admin-wishlist`, icon: 'cart' },
-          { label: 'Users', href: `${base}/admin-users`, icon: 'user' },
-          { label: 'Audit Logs', href: `${base}/admin-audit`, icon: 'quiz' },
+          { label: 'User Management', href: `${base}/admin-users`, icon: 'user' },
+          { label: 'Audit Logs', href: `${base}/admin-audit`, icon: 'assignment' },
         ],
       },
       {
@@ -104,7 +106,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
         items: [
           { label: 'Org Structure', href: `${base}/admin-org`, icon: 'course' },
           { label: 'Branding', href: `${base}/admin-branding`, icon: 'settings' },
-          { label: 'Sessions', href: `${base}/admin-sessions`, icon: 'monitor' },
+          { label: 'Sessions & MFA', href: `${base}/admin-sessions`, icon: 'monitor' },
           { label: 'Settings', href: `${base}/admin-settings`, icon: 'settings' },
           logoutItem,
         ],
@@ -114,16 +116,15 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
 
   return [
     {
-      title: `Welcome, ${name}`,
+      title: `Student — ${name}`,
       items: [
         { label: 'Dashboard', href: `${base}/student-dashboard`, icon: 'home' },
         { label: 'My Profile', href: `${base}/student-profile`, icon: 'user' },
-        { label: 'Messages', href: `${base}/student-message`, icon: 'message' },
+        { label: 'Notifications', href: `${base}/student-message`, icon: 'message' },
         { label: 'My Tests', href: `${base}/student-enrolled-courses`, icon: 'bookmark' },
         { label: 'My Attempts', href: `${base}/student-my-quiz-attempts`, icon: 'quiz' },
-        { label: 'Wallet', href: `${base}/student-wishlist`, icon: 'cart' },
         { label: 'Results', href: `${base}/student-reviews`, icon: 'star' },
-        { label: 'Assignments', href: `${base}/student-assignments`, icon: 'assignment' },
+        { label: 'Wallet', href: `${base}/student-wishlist`, icon: 'cart' },
         { label: 'Settings', href: `${base}/student-settings`, icon: 'settings' },
         logoutItem,
       ],

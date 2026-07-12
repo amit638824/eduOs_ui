@@ -1,19 +1,22 @@
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { siteContent } from '@/data/siteContent';
-import { mainNavigation } from '@/data/navigation';
+import { resolveHeaderNavigation } from '@/data/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getDefaultDashboardPath } from '@/utils/dashboardRole';
 
 export default function Header() {
   const { brand } = siteContent;
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuth();
   const isDashboard = pathname.startsWith('/dashboard');
   const headerVariant = isDashboard ? 'headerarea__3' : 'headerarea__2';
-  const dashboardPath = user ? getDefaultDashboardPath(user.roles) : '/dashboard/student-dashboard';
+  const dashboardPath = user ? getDefaultDashboardPath(user.roles) : '/login';
+  const navItems = resolveHeaderNavigation(user, pathname);
 
   const handleLogout = async () => {
     await logout();
+    navigate('/login');
   };
 
   return (
@@ -24,7 +27,7 @@ export default function Header() {
             <div className="col-xl-2 col-lg-2 col-md-6">
               <div className="headerarea__left">
                 <div className="headerarea__left__logo">
-                  <Link to="/">
+                  <Link to={user ? dashboardPath : '/'}>
                     <img loading="lazy" src={brand.logo} alt={brand.name} />
                   </Link>
                 </div>
@@ -35,8 +38,8 @@ export default function Header() {
               <div className="headerarea__main__menu">
                 <nav>
                   <ul>
-                    {mainNavigation.map((item) => (
-                      <li key={item.href}>
+                    {navItems.map((item) => (
+                      <li key={`${item.href}-${item.label}`}>
                         {item.children ? (
                           <>
                             <Link className="headerarea__has__dropdown" to={item.href}>
@@ -73,8 +76,8 @@ export default function Header() {
                 {user ? (
                   <>
                     <div className="headerarea__login">
-                      <Link to={dashboardPath}>
-                        {user.firstName} {user.lastName}
+                      <Link to={dashboardPath} title="Go to dashboard">
+                        {user.firstName}
                       </Link>
                     </div>
                     <div className="headerarea__button">

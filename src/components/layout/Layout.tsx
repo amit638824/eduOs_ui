@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Preloader from './Preloader';
 import DarkModeSwitcher from './DarkModeSwitcher';
 import TopBar from './TopBar';
@@ -10,26 +10,38 @@ import Footer from './Footer';
 import { useAos } from '@/hooks/useAos';
 import { useEdurockScripts } from '@/hooks/useEdurockScripts';
 
+const AUTH_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
+
 export default function Layout() {
   useAos();
   useEdurockScripts();
+  const { pathname } = useLocation();
+  const isDashboard = pathname.startsWith('/dashboard');
+  const isAuthPage = AUTH_PATHS.includes(pathname);
 
   useEffect(() => {
     document.body.classList.add('body__wrapper');
-    return () => document.body.classList.remove('body__wrapper');
-  }, []);
+    if (isDashboard) {
+      document.body.classList.add('dashboard-layout-active');
+    } else {
+      document.body.classList.remove('dashboard-layout-active');
+    }
+    return () => {
+      document.body.classList.remove('body__wrapper', 'dashboard-layout-active');
+    };
+  }, [isDashboard]);
 
   return (
     <>
       <Preloader />
       <DarkModeSwitcher />
       <main className="main_wrapper overflow-hidden">
-        <TopBar />
+        {!isDashboard && !isAuthPage && <TopBar />}
         <Header />
         <MobileMenu />
         <ThemeShadow />
         <Outlet />
-        <Footer />
+        {!isDashboard && !isAuthPage && <Footer />}
       </main>
     </>
   );
