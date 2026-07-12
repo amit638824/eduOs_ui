@@ -30,4 +30,6 @@ export const env = {
     measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
     fcmPublicKey: import.meta.env.VITE_FIREBASE_FCM_PUBLIC_KEY,
   },
+
+  razorpayKeyId: import.meta.env.VITE_RAZORPAY_KEY_ID as string | undefined,
 } as const;

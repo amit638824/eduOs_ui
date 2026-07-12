@@ -89,24 +89,98 @@ export function NotificationsPanel() {
   );
 }
 
-export function PaymentsPanel() {
+export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) {
+  const { user } = useAuth();
   const [payments, setPayments] = useState<Awaited<ReturnType<typeof platformService.listPayments>>['data']>([]);
   const [wallet, setWallet] = useState<Record<string, unknown> | null>(null);
+  const [paymentConfig, setPaymentConfig] = useState<Awaited<ReturnType<typeof platformService.getPaymentConfig>> | null>(null);
+  const [amount, setAmount] = useState('500');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [paying, setPaying] = useState(false);
+
+  const load = async () => {
+    const [list, w] = await Promise.all([
+      platformService.listPayments(1, 30),
+      platformService.getWallet(),
+    ]);
+    setPayments(list.data);
+    setWallet(w);
+  };
 
   useEffect(() => {
-    Promise.all([platformService.listPayments(1, 30), platformService.getWallet()])
-      .then(([list, w]) => {
-        setPayments(list.data);
-        setWallet(w);
-      })
+    Promise.all([load(), platformService.getPaymentConfig()])
+      .then(([, config]) => setPaymentConfig(config))
       .catch((err) => setError(parseApiError(err)));
   }, []);
 
+  useEffect(() => {
+    if (!allowTopUp || paymentConfig?.gateway !== 'razorpay') return;
+    if (document.querySelector('script[data-razorpay]')) return;
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.dataset.razorpay = 'true';
+    document.body.appendChild(script);
+  }, [allowTopUp, paymentConfig?.gateway]);
+
+  const handleTopUp = async () => {
+    setError('');
+    setMessage('');
+    const numAmount = Number(amount);
+    if (!numAmount || numAmount < 1) {
+      setError('Enter a valid amount (min ₹1).');
+      return;
+    }
+    if (!window.Razorpay) {
+      setError('Payment gateway is loading. Please try again.');
+      return;
+    }
+    setPaying(true);
+    try {
+      const order = await platformService.createRazorpayOrder(numAmount);
+      const rzp = new window.Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: 'EduTest Pro',
+        description: 'Wallet Top-up',
+        order_id: order.orderId,
+        prefill: {
+          email: user?.email,
+          name: user ? `${user.firstName} ${user.lastName}` : undefined,
+        },
+        theme: { color: '#2563eb' },
+        modal: { ondismiss: () => setPaying(false) },
+        handler: async (response) => {
+          try {
+            await platformService.verifyRazorpayPayment({
+              paymentId: order.paymentId,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+            setMessage('Payment successful! Wallet updated.');
+            await load();
+          } catch (err) {
+            setError(parseApiError(err));
+          } finally {
+            setPaying(false);
+          }
+        },
+      });
+      rzp.open();
+    } catch (err) {
+      setError(parseApiError(err));
+      setPaying(false);
+    }
+  };
+
   return (
     <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title"><h4>Payments & Wallet</h4></div>
+      <div className="dashboard__section__title"><h4>{allowTopUp ? 'My Wallet' : 'Payments & Wallet'}</h4></div>
       {error && <p className="login__error sp_bottom_15">{error}</p>}
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
       {wallet && (
         <div className="row sp_bottom_30">
           <div className="col-md-4">
@@ -126,6 +200,35 @@ export function PaymentsPanel() {
             </div>
           </div>
         </div>
+      )}
+      {allowTopUp && paymentConfig?.gateway === 'razorpay' && (
+        <div className="sp_bottom_30">
+          <h5 className="sp_bottom_15">Add money to wallet</h5>
+          <div className="d-flex flex-wrap gap-2 align-items-center">
+            <input
+              className="register__input"
+              type="number"
+              min={1}
+              step={1}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="Amount in INR"
+              style={{ maxWidth: 180 }}
+            />
+            <button
+              type="button"
+              className="default__button"
+              onClick={handleTopUp}
+              disabled={paying}
+            >
+              {paying ? 'Processing…' : 'Pay with Razorpay'}
+            </button>
+          </div>
+          <p className="mt-2"><small>Secure payment via Razorpay (test mode).</small></p>
+        </div>
+      )}
+      {allowTopUp && paymentConfig?.gateway === 'demo' && (
+        <p className="sp_bottom_20">Payment gateway is not configured on the server.</p>
       )}
       <div className="dashboard__table table-responsive">
         <table>

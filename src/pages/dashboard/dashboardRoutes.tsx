@@ -19,7 +19,6 @@ import {
   TeacherDashboardHome,
   AdminDashboardHome,
   DashboardProfileContent,
-  DashboardWishlistContent,
   DashboardAssignmentsContent,
   DashboardAnnouncementsContent,
   DashboardSettingsContent,
@@ -72,7 +71,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/student-profile" element={dash('student', <DashboardProfileContent />)} />
     <Route path="/dashboard/student-message" element={dash('student', <NotificationsPanel />)} />
     <Route path="/dashboard/student-enrolled-courses" element={dash('student', <StudentTestsPanel />)} />
-    <Route path="/dashboard/student-wishlist" element={dash('student', <DashboardWishlistContent />)} />
+    <Route path="/dashboard/student-wishlist" element={dash('student', <PaymentsPanel allowTopUp />)} />
     <Route path="/dashboard/student-reviews" element={dash('student', <ResultsPanel />)} />
     <Route path="/dashboard/student-my-quiz-attempts" element={dash('student', <AttemptsListPanel title="My Attempts" />)} />
     <Route path="/dashboard/student-assignments" element={dash('student', <DashboardAssignmentsContent />)} />

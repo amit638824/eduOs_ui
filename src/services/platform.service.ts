@@ -101,6 +101,42 @@ export async function getWallet() {
   return data.data;
 }
 
+export interface PaymentConfig {
+  razorpayKeyId: string | null;
+  currency: string;
+  gateway: 'razorpay' | 'demo';
+}
+
+export interface RazorpayOrder {
+  paymentId: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+}
+
+export async function getPaymentConfig() {
+  const { data } = await api.get<ApiResponse<PaymentConfig>>(`${base}/payments/config`);
+  return data.data;
+}
+
+export async function createRazorpayOrder(amount: number) {
+  const { data } = await api.post<ApiResponse<RazorpayOrder>>(`${base}/payments/create-order`, {
+    amount,
+  });
+  return data.data;
+}
+
+export async function verifyRazorpayPayment(input: {
+  paymentId: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+}) {
+  const { data } = await api.post<ApiResponse<unknown>>(`${base}/payments/verify`, input);
+  return data.data;
+}
+
 export async function listUsers(page = 1, limit = 20, search?: string) {
   const { data } = await api.get<PaginatedResponse<PlatformUser>>(`${base}/users`, {
     params: { page, limit, search },
