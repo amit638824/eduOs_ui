@@ -51,7 +51,7 @@ export default function DashboardSidebar({
                       onClick={handleLogout}
                     >
                       <DashboardIcon name={item.icon} />
-                      {!collapsed && <span>{item.label}</span>}
+                      <span className="sca-db-nav-item__label">{item.label}</span>
                     </button>
                   ) : (
                     <NavLink
@@ -64,7 +64,7 @@ export default function DashboardSidebar({
                       onClick={onNavigate}
                     >
                       <DashboardIcon name={item.icon} />
-                      {!collapsed && <span>{item.label}</span>}
+                      <span className="sca-db-nav-item__label">{item.label}</span>
                     </NavLink>
                   )}
                 </li>
