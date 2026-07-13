@@ -3,6 +3,7 @@ import { siteContent } from '@/data/siteContent';
 import { resolveHeaderNavigation } from '@/data/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getDefaultDashboardPath } from '@/utils/dashboardRole';
+import HamburgerIcon from '@/components/ui/HamburgerIcon';
 
 export default function Header() {
   const { brand } = siteContent;
@@ -40,30 +41,9 @@ export default function Header() {
                   <ul>
                     {navItems.map((item) => (
                       <li key={`${item.href}-${item.label}`}>
-                        {item.children ? (
-                          <>
-                            <Link className="headerarea__has__dropdown" to={item.href}>
-                              {item.label}
-                              <i className="icofont-rounded-down" />
-                            </Link>
-                            <ul className="headerarea__submenu">
-                              {item.children.map((child) => (
-                                <li key={child.href}>
-                                  <Link to={child.href}>
-                                    {child.label}
-                                    {child.badge && (
-                                      <span className="mega__menu__label">{child.badge}</span>
-                                    )}
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
-                          </>
-                        ) : (
-                          <NavLink to={item.href} end={item.href === '/'}>
-                            {item.label}
-                          </NavLink>
-                        )}
+                        <NavLink to={item.href} end={item.href === '/'}>
+                          {item.label}
+                        </NavLink>
                       </li>
                     ))}
                   </ul>
@@ -99,8 +79,8 @@ export default function Header() {
                   </>
                 )}
                 <div className="mobile-off-canvas">
-                  <a className="mobile-aside-button" href="#">
-                    <i className="icofont-navigation-menu" />
+                  <a className="mobile-aside-button sca-hamburger-btn" href="#" aria-label="Open menu">
+                    <HamburgerIcon />
                   </a>
                 </div>
               </div>

@@ -5,6 +5,7 @@ import { resolveHeaderNavigation, buildAccountLinks } from '@/data/navigation';
 import { siteContent } from '@/data/siteContent';
 import { useAuth } from '@/context/AuthContext';
 import { FormError, inputClassName } from '@/components/ui/FormField';
+import HamburgerIcon from '@/components/ui/HamburgerIcon';
 import { searchSchema, type SearchFormValues } from '@/validators/schemas';
 
 export default function MobileMenu() {
@@ -41,8 +42,8 @@ export default function MobileMenu() {
 
   return (
     <div className="mobile-off-canvas-active">
-      <a className="mobile-aside-close" href="#">
-        <i className="icofont icofont-close-line" />
+      <a className="mobile-aside-close sca-hamburger-btn sca-hamburger-btn--close" href="#" aria-label="Close menu">
+        <HamburgerIcon open />
       </a>
       <div className="header-mobile-aside-wrap">
         <div className="mobile-search">
@@ -65,20 +66,8 @@ export default function MobileMenu() {
             <nav>
               <ul className="mobile-menu">
                 {navItems.map((item) => (
-                  <li
-                    key={`${item.href}-${item.label}`}
-                    className={item.children ? 'menu-item-has-children' : undefined}
-                  >
+                  <li key={`${item.href}-${item.label}`}>
                     <Link to={item.href}>{item.label}</Link>
-                    {item.children && (
-                      <ul className="dropdown">
-                        {item.children.map((child) => (
-                          <li key={child.href}>
-                            <Link to={child.href}>{child.label}</Link>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
                   </li>
                 ))}
               </ul>

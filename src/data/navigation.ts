@@ -1,70 +1,17 @@
 import type { ApiUser } from '@/types/api';
 import type { NavItem } from '@/types/content';
-import { getDefaultDashboardPath, resolveDashboardRole } from '@/utils/dashboardRole';
+import { getDefaultDashboardPath } from '@/utils/dashboardRole';
 
-const base = '/dashboard';
-
-/** Shown to everyone WITHOUT login — marketing / public site only */
+/** Public site header — flat links only (no dropdowns) */
 export const publicNavigation: NavItem[] = [
   { label: 'Home', href: '/' },
-  {
-    label: 'Online Tests',
-    href: '/exams',
-    children: [
-      { label: 'Hardware & Networking', href: '/exams/hardware-networking' },
-      { label: 'Computer Application', href: '/exams/computer-application', badge: 'Popular' },
-      { label: 'Diploma & Certificate', href: '/exams/diploma' },
-      { label: 'CCC & O Level', href: '/exams/govt-it' },
-      { label: 'Programming', href: '/exams/programming' },
-    ],
-  },
+  { label: 'Online Tests', href: '/exams' },
   { label: 'For Institutes', href: '/schools' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'About', href: '/about' },
 ];
 
-/** Compact links when logged-in user is on public pages (not inside /dashboard) */
-export function buildAuthenticatedPublicNav(user: ApiUser): NavItem[] {
-  const role = resolveDashboardRole(user.roles);
-  const dashboardRoot = getDefaultDashboardPath(user.roles);
-
-  if (role === 'admin') {
-    return [
-      { label: 'My Dashboard', href: dashboardRoot },
-      { label: 'Users', href: `${base}/admin-users` },
-      { label: 'Reports', href: `${base}/admin-reviews` },
-      { label: 'Payments', href: `${base}/admin-wishlist` },
-    ];
-  }
-
-  if (role === 'teacher') {
-    return [
-      { label: 'My Dashboard', href: dashboardRoot },
-      { label: 'Question Bank', href: `${base}/question-bank` },
-      { label: 'My Tests', href: `${base}/teacher-course` },
-      { label: 'Create Test', href: `${base}/create-test` },
-    ];
-  }
-
-  return [
-    { label: 'My Dashboard', href: dashboardRoot },
-    { label: 'My Tests', href: `${base}/student-enrolled-courses` },
-    { label: 'My Attempts', href: `${base}/student-my-quiz-attempts` },
-    { label: 'Results', href: `${base}/student-reviews` },
-    { label: 'Wallet', href: `${base}/student-wishlist` },
-  ];
-}
-
-/** Inside /dashboard — header shows only exit + role shortcuts (sidebar has full menu) */
-export function buildDashboardHeaderNav(user: ApiUser): NavItem[] {
-  return [
-    { label: 'Back to Website', href: '/' },
-    { label: 'Online Tests', href: '/exams' },
-    ...buildAuthenticatedPublicNav(user).filter((item) => item.label !== 'My Dashboard'),
-  ];
-}
-
-/** Resolve which nav items appear in site header */
+/** Resolve flat nav items for the marketing site header */
 export function resolveHeaderNavigation(
   user: ApiUser | null,
   pathname: string,
@@ -76,13 +23,20 @@ export function resolveHeaderNavigation(
   }
 
   if (onDashboard) {
-    return buildDashboardHeaderNav(user);
+    return [
+      { label: 'Back to Website', href: '/' },
+      { label: 'Online Tests', href: '/exams' },
+      { label: 'Dashboard', href: getDefaultDashboardPath(user.roles) },
+    ];
   }
 
-  return [...publicNavigation, ...buildAuthenticatedPublicNav(user)];
+  return [
+    ...publicNavigation,
+    { label: 'Dashboard', href: getDefaultDashboardPath(user.roles) },
+  ];
 }
 
-/** Mobile "My Account" dropdown links */
+/** Mobile drawer account links */
 export interface AccountLink {
   label: string;
   href: string;
@@ -97,18 +51,20 @@ export function buildAccountLinks(user: ApiUser | null): AccountLink[] {
     ];
   }
 
-  const role = resolveDashboardRole(user.roles);
   const dashboardRoot = getDefaultDashboardPath(user.roles);
+  const roleSegment = dashboardRoot.includes('admin')
+    ? 'admin'
+    : dashboardRoot.includes('teacher')
+      ? 'teacher'
+      : 'student';
 
-  const links: AccountLink[] = [
+  return [
     { label: 'My Dashboard', href: dashboardRoot },
-    { label: 'My Profile', href: `${base}/${role === 'admin' ? 'admin' : role === 'teacher' ? 'teacher' : 'student'}-profile` },
-    { label: 'Account Settings', href: `${base}/${role === 'admin' ? 'admin' : role === 'teacher' ? 'teacher' : 'student'}-settings` },
+    { label: 'My Profile', href: `/dashboard/${roleSegment}-profile` },
+    { label: 'Account Settings', href: `/dashboard/${roleSegment}-settings` },
     { label: 'Logout', href: '/login', action: 'logout' },
   ];
-
-  return links;
 }
 
-/** @deprecated Use resolveHeaderNavigation — kept for any legacy imports */
+/** @deprecated Use resolveHeaderNavigation */
 export const mainNavigation = publicNavigation;

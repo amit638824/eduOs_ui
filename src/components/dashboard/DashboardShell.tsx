@@ -95,6 +95,7 @@ function DashboardShellInner({
         <DashboardTopBar
           profile={profile}
           role={role}
+          menuOpen={mobileOpen}
           onToggleMenu={handleToggleMenu}
         />
         <div className="sca-dashboard__content">

@@ -3,14 +3,16 @@ import { useTheme } from '@/context/ThemeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
 import DashboardBreadcrumb from './DashboardBreadcrumb';
 import DashboardRoleTabs from './DashboardRoleTabs';
+import HamburgerIcon from '@/components/ui/HamburgerIcon';
 
 interface DashboardTopBarProps {
   profile: DashboardProfile;
   role: DashboardRole;
   onToggleMenu: () => void;
+  menuOpen?: boolean;
 }
 
-export default function DashboardTopBar({ profile, role, onToggleMenu }: DashboardTopBarProps) {
+export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen = false }: DashboardTopBarProps) {
   const { isDark, toggleTheme } = useTheme();
 
   return (
@@ -18,11 +20,12 @@ export default function DashboardTopBar({ profile, role, onToggleMenu }: Dashboa
       <div className="sca-db-header__left">
         <button
           type="button"
-          className="sca-db-icon-btn sca-db-icon-btn--menu"
+          className="sca-db-icon-btn sca-db-icon-btn--menu sca-hamburger-btn"
           onClick={onToggleMenu}
           aria-label="Toggle sidebar menu"
+          aria-expanded={menuOpen}
         >
-          <i className="icofont-navigation-menu" />
+          <HamburgerIcon open={menuOpen} />
         </button>
         <DashboardBreadcrumb />
       </div>
