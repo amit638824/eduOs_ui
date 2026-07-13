@@ -4,6 +4,7 @@ import { examinationService } from '@/services';
 import { parseApiError } from '@/lib/errors';
 import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { useExamProctoring } from '@/hooks/useExamProctoring';
+import { siteContent } from '@/data/siteContent';
 import type { AttemptQuestion, ExamSecurityConfig, TestAttempt } from '@/types/examination';
 import '@/styles/exam-player.css';
 
@@ -28,9 +29,17 @@ type AttemptData = TestAttempt & {
   tab_switch_count?: number;
 };
 
+type PaletteStatus = 'not-viewed' | 'not-attempted' | 'answered' | 'review' | 'review-answered';
+
+const OPTION_LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 function formatTime(seconds: number): string {
-  const m = Math.floor(seconds / 60);
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
+  if (h > 0) {
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
@@ -41,6 +50,35 @@ function isAnswered(q: AttemptQuestion): boolean {
   return false;
 }
 
+function getPaletteStatus(
+  q: AttemptQuestion,
+  idx: number,
+  currentIdx: number,
+  visitedSet: Set<string>,
+  reviewSet: Set<string>,
+): { status: PaletteStatus; isCurrent: boolean } {
+  const isCurrent = idx === currentIdx;
+  const answered = isAnswered(q);
+  const review = reviewSet.has(q.question_id);
+  const visited = visitedSet.has(q.question_id);
+
+  if (answered && review) return { status: 'review-answered', isCurrent };
+  if (review) return { status: 'review', isCurrent };
+  if (answered) return { status: 'answered', isCurrent };
+  if (visited) return { status: 'not-attempted', isCurrent };
+  return { status: 'not-viewed', isCurrent };
+}
+
+function paletteClass(status: PaletteStatus, isCurrent: boolean) {
+  return [
+    'exam-palette-btn',
+    `exam-palette-btn--${status}`,
+    isCurrent ? 'exam-palette-btn--current' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+}
+
 export default function ExamAttemptPlayer() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
@@ -48,14 +86,18 @@ export default function ExamAttemptPlayer() {
   const [error, setError] = useState('');
   const [examStarted, setExamStarted] = useState(false);
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [visitedSet, setVisitedSet] = useState<Set<string>>(new Set());
   const [reviewSet, setReviewSet] = useState<Set<string>>(new Set());
   const [remaining, setRemaining] = useState(0);
   const [tabWarnings, setTabWarnings] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [warning, setWarning] = useState('');
+  const [saveMsg, setSaveMsg] = useState('');
   const [pageLoading, setPageLoading] = useState(true);
 
   const config = attempt?.config ?? DEFAULT_CONFIG;
+  const questions = attempt?.questions ?? [];
+  const current = questions[currentIdx];
 
   const load = useCallback(async (silent = false) => {
     if (!attemptId) return;
@@ -66,6 +108,13 @@ export default function ExamAttemptPlayer() {
       setRemaining(data.remaining_seconds ?? data.duration_minutes * 60);
       setTabWarnings(data.tab_switch_count ?? 0);
       setError('');
+      setVisitedSet((prev) => {
+        const next = new Set(prev);
+        (data.questions ?? []).forEach((q: AttemptQuestion) => {
+          if (isAnswered(q)) next.add(q.question_id);
+        });
+        return next;
+      });
     } catch (err) {
       const msg = parseApiError(err);
       if (msg.includes('TIME_EXPIRED')) {
@@ -83,6 +132,20 @@ export default function ExamAttemptPlayer() {
   }, [load]);
 
   useDashboardLoadingEffect(pageLoading || submitting);
+
+  const goToQuestion = (idx: number) => {
+    setCurrentIdx(idx);
+    const q = questions[idx];
+    if (q) {
+      setVisitedSet((prev) => new Set(prev).add(q.question_id));
+    }
+  };
+
+  useEffect(() => {
+    if (current?.question_id) {
+      setVisitedSet((prev) => new Set(prev).add(current.question_id));
+    }
+  }, [current?.question_id]);
 
   const handleAutoSubmit = useCallback(async () => {
     if (!attemptId || submitting) return;
@@ -127,20 +190,30 @@ export default function ExamAttemptPlayer() {
       return;
     }
     setExamStarted(true);
+    if (questions[0]) {
+      setVisitedSet((prev) => new Set(prev).add(questions[0].question_id));
+    }
     void examinationService.logProctoringEvent(attemptId!, 'exam_started');
   };
 
-  const selectOption = async (questionId: string, optionId: string, current?: string[], multi = false) => {
+  const flashSave = () => {
+    setSaveMsg('Answer saved');
+    window.setTimeout(() => setSaveMsg(''), 2000);
+  };
+
+  const selectOption = async (questionId: string, optionId: string, currentSelected?: string[], multi = false) => {
     if (!attemptId) return;
     let selected: string[];
     if (multi) {
-      selected = current?.includes(optionId)
-        ? current.filter((id) => id !== optionId)
-        : [...(current ?? []), optionId];
+      selected = currentSelected?.includes(optionId)
+        ? currentSelected.filter((id) => id !== optionId)
+        : [...(currentSelected ?? []), optionId];
     } else {
       selected = [optionId];
     }
     await examinationService.saveAnswer(attemptId, questionId, { selectedOptionIds: selected });
+    setVisitedSet((prev) => new Set(prev).add(questionId));
+    flashSave();
     await load(true);
   };
 
@@ -148,6 +221,19 @@ export default function ExamAttemptPlayer() {
     if (!attemptId) return;
     const answer = field === 'text' ? { text: value } : { value: Number(value) };
     await examinationService.saveAnswer(attemptId, questionId, answer);
+    setVisitedSet((prev) => new Set(prev).add(questionId));
+    flashSave();
+    await load(true);
+  };
+
+  const clearCurrentAnswer = async () => {
+    if (!attemptId || !current) return;
+    await examinationService.saveAnswer(attemptId, current.question_id, {
+      selectedOptionIds: [],
+      text: '',
+      value: null,
+    });
+    flashSave();
     await load(true);
   };
 
@@ -165,18 +251,28 @@ export default function ExamAttemptPlayer() {
     }
   };
 
-  const toggleReview = (questionId: string) => {
+  const toggleReview = () => {
+    if (!current) return;
     setReviewSet((prev) => {
       const next = new Set(prev);
-      if (next.has(questionId)) next.delete(questionId);
-      else next.add(questionId);
+      if (next.has(current.question_id)) next.delete(current.question_id);
+      else next.add(current.question_id);
       return next;
     });
+    setVisitedSet((prev) => new Set(prev).add(current.question_id));
   };
 
-  const questions = attempt?.questions ?? [];
-  const current = questions[currentIdx];
-  const answeredCount = useMemo(() => questions.filter(isAnswered).length, [questions]);
+  const counts = useMemo(() => {
+    let answered = 0;
+    let review = 0;
+    let notVisited = 0;
+    questions.forEach((q) => {
+      if (isAnswered(q)) answered += 1;
+      if (reviewSet.has(q.question_id)) review += 1;
+      if (!visitedSet.has(q.question_id)) notVisited += 1;
+    });
+    return { answered, review, notVisited };
+  }, [questions, reviewSet, visitedSet]);
 
   if (error && !attempt) return <p className="login__error">{error}</p>;
   if (!attempt) return null;
@@ -216,81 +312,80 @@ export default function ExamAttemptPlayer() {
 
   const selected = current.answer?.selectedOptionIds ?? [];
   const isMulti = current.type === 'msq';
-  const inputType = isMulti ? 'checkbox' : 'radio';
 
   return (
     <div className="exam-player-overlay">
-      <div className="exam-player-topbar">
-        <div>
+      <header className="exam-player-topbar">
+        <div className="exam-player-topbar__brand">
+          <img src={siteContent.brand.logo} alt={siteContent.brand.name} />
+          <span>Online Exam</span>
+        </div>
+        <div className="exam-player-topbar__center">
           <h4>{attempt.test_title}</h4>
           <small>
-            Q {currentIdx + 1}/{questions.length} · Answered: {answeredCount}
+            Question {currentIdx + 1} of {questions.length}
           </small>
         </div>
-        <div className={`exam-timer${remaining <= 300 ? ' exam-timer--warning' : ''}`}>
-          {formatTime(remaining)}
+        <div className="exam-player-topbar__right">
+          <span className="exam-timer-label">Time Left</span>
+          <div className={`exam-timer${remaining <= 300 ? ' exam-timer--warning' : ''}`}>
+            {formatTime(remaining)}
+          </div>
         </div>
-      </div>
+      </header>
 
       {(warning || tabWarnings > 0) && (
-        <div className="exam-warning-banner" style={{ margin: '12px 20px 0' }}>
+        <div className="exam-warning-banner">
           {warning || `Tab switches: ${tabWarnings}/${config.maxTabSwitches}`}
         </div>
       )}
 
       <div className="exam-player-body">
-        <aside className="exam-palette">
-          <h6>Question Palette</h6>
-          <div className="exam-palette-grid">
-            {questions.map((q, i) => {
-              let cls = 'exam-palette-btn';
-              if (i === currentIdx) cls += ' exam-palette-btn--active';
-              else if (reviewSet.has(q.question_id)) cls += ' exam-palette-btn--review';
-              else if (isAnswered(q)) cls += ' exam-palette-btn--answered';
-              return (
-                <button key={q.question_id} type="button" className={cls} onClick={() => setCurrentIdx(i)}>
-                  {i + 1}
-                </button>
-              );
-            })}
-          </div>
-          <div className="exam-legend">
-            <span><i style={{ background: '#dcfce7' }} /> Answered</span>
-            <span><i style={{ background: '#fef9c3' }} /> Review</span>
-            <span><i style={{ background: '#2563eb' }} /> Current</span>
-          </div>
-        </aside>
-
         <main className="exam-main">
-          <h5>
-            Question {currentIdx + 1}{' '}
-            <small className="text-muted">
-              ({current.type} · {current.marks} mark{current.marks !== 1 ? 's' : ''})
-            </small>
-          </h5>
-          <p className="sp_top_15 sp_bottom_20">{current.content?.text}</p>
+          <div className="exam-main__head">
+            <h5>
+              Question No. {currentIdx + 1}{' '}
+              <small>({current.marks} mark{current.marks !== 1 ? 's' : ''})</small>
+            </h5>
+            <span className="exam-qtype-badge">
+              {current.type === 'mcq' ? 'Single Choice' : current.type.replace('_', ' ')}
+            </span>
+          </div>
+
+          <p className="exam-question-text">{current.content?.text}</p>
 
           {(current.type === 'mcq' || current.type === 'msq' || current.type === 'true_false') && (
-            <ul className="list-unstyled">
-              {current.options.map((opt) => (
-                <li key={opt.id} className="sp_bottom_12">
-                  <label style={{ cursor: 'pointer', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-                    <input
-                      type={inputType}
-                      name={current.question_id}
-                      checked={selected.includes(opt.id)}
-                      onChange={() => selectOption(current.question_id, opt.id, selected, isMulti)}
-                    />
-                    <span>{opt.content?.text}</span>
-                  </label>
-                </li>
-              ))}
+            <ul className="exam-options">
+              {current.options.map((opt, optIdx) => {
+                const isSelected = selected.includes(opt.id);
+                return (
+                  <li key={opt.id}>
+                    <label
+                      className={`exam-option${isSelected ? ' exam-option--selected' : ''}`}
+                    >
+                      <input
+                        type={isMulti ? 'checkbox' : 'radio'}
+                        name={current.question_id}
+                        checked={isSelected}
+                        onChange={() =>
+                          selectOption(current.question_id, opt.id, selected, isMulti)
+                        }
+                      />
+                      <span className="exam-option__label">
+                        {OPTION_LETTERS[optIdx] ?? optIdx + 1}
+                      </span>
+                      <span className="exam-option__text">{opt.content?.text}</span>
+                    </label>
+                  </li>
+                );
+              })}
             </ul>
           )}
 
           {current.type === 'fill_blank' && (
             <input
-              className="register__input"
+              className="exam-text-input"
+              key={current.question_id}
               defaultValue={current.answer?.text ?? ''}
               onBlur={(e) => saveTextAnswer(current.question_id, e.target.value, 'text')}
               placeholder="Type your answer"
@@ -299,7 +394,8 @@ export default function ExamAttemptPlayer() {
 
           {(current.type === 'integer' || current.type === 'numerical') && (
             <input
-              className="register__input"
+              className="exam-text-input"
+              key={current.question_id}
               type="number"
               step={current.type === 'numerical' ? '0.01' : '1'}
               defaultValue={current.answer?.value ?? ''}
@@ -308,41 +404,113 @@ export default function ExamAttemptPlayer() {
             />
           )}
 
+          {saveMsg && (
+            <p style={{ marginTop: 12, fontSize: '0.875rem', color: '#16a34a' }}>{saveMsg}</p>
+          )}
+
           <div className="exam-nav-actions">
             <button
               type="button"
-              className="dashboard__small__btn__2"
+              className="exam-btn exam-btn--outline"
               disabled={currentIdx === 0}
-              onClick={() => setCurrentIdx((i) => i - 1)}
+              onClick={() => goToQuestion(currentIdx - 1)}
             >
-              Previous
+              ← Previous
             </button>
             <button
               type="button"
-              className="dashboard__small__btn__2"
+              className="exam-btn exam-btn--primary"
+              onClick={() => flashSave()}
+            >
+              Save
+            </button>
+            <button type="button" className="exam-btn exam-btn--outline" onClick={toggleReview}>
+              {reviewSet.has(current.question_id) ? 'Unmark Review' : 'Review Later'}
+            </button>
+            <button type="button" className="exam-btn exam-btn--ghost" onClick={clearCurrentAnswer}>
+              Clear Selection
+            </button>
+            <button
+              type="button"
+              className="exam-btn exam-btn--outline"
               disabled={currentIdx >= questions.length - 1}
-              onClick={() => setCurrentIdx((i) => i + 1)}
+              onClick={() => goToQuestion(currentIdx + 1)}
             >
-              Next
+              Next →
             </button>
             <button
               type="button"
-              className="dashboard__small__btn__2"
-              onClick={() => toggleReview(current.question_id)}
-            >
-              {reviewSet.has(current.question_id) ? 'Unmark Review' : 'Mark for Review'}
-            </button>
-            <button
-              type="button"
-              className="default__button"
+              className="exam-btn exam-btn--danger"
               disabled={submitting}
               onClick={submit}
-              style={{ marginLeft: 'auto' }}
             >
-              {submitting ? 'Submitting...' : 'Submit Test'}
+              {submitting ? 'Submitting...' : 'Finish Test'}
             </button>
           </div>
         </main>
+
+        <aside className="exam-palette">
+          <div className="exam-palette__head">
+            <h6>Question Palette</h6>
+            <div className="exam-palette__summary">
+              <div className="exam-palette__stat">
+                <strong>{counts.answered}</strong>
+                <span>Answered</span>
+              </div>
+              <div className="exam-palette__stat">
+                <strong>{counts.review}</strong>
+                <span>Review</span>
+              </div>
+              <div className="exam-palette__stat">
+                <strong>{counts.notVisited}</strong>
+                <span>Not Visited</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="exam-palette__grid-wrap">
+            <div className="exam-palette-grid">
+              {questions.map((q, i) => {
+                const { status, isCurrent } = getPaletteStatus(
+                  q,
+                  i,
+                  currentIdx,
+                  visitedSet,
+                  reviewSet,
+                );
+                return (
+                  <button
+                    key={q.question_id}
+                    type="button"
+                    className={paletteClass(status, isCurrent)}
+                    onClick={() => goToQuestion(i)}
+                    title={`Question ${i + 1}`}
+                  >
+                    {i + 1}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="exam-palette__legend">
+            <h6>Legend</h6>
+            <div className="exam-legend">
+              <span><i className="leg-not-viewed" /> Not viewed yet</span>
+              <span><i className="leg-not-attempted" /> Visited, not answered</span>
+              <span><i className="leg-answered" /> Answered</span>
+              <span><i className="leg-review" /> Marked for review</span>
+              <span><i className="leg-review-answered" /> Answered + review</span>
+              <span><i className="leg-current" /> Current question</span>
+            </div>
+          </div>
+
+          <div className="exam-palette__footer">
+            <button type="button" className="exam-btn exam-btn--danger" disabled={submitting} onClick={submit}>
+              Finish Test
+            </button>
+          </div>
+        </aside>
       </div>
     </div>
   );

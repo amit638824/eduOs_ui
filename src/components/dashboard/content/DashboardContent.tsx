@@ -5,7 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import type { DashboardCounter, DashboardTableRow } from '@/types/dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
-import { buildProfileFields } from '@/data/dashboardNavigation';
+import DashboardProfilePage from '@/components/dashboard/DashboardProfilePage';
 import { useOrganization } from '@/hooks/useOrganization';
 import { organizationService, platformService } from '@/services';
 import * as authService from '@/services/auth.service';
@@ -129,36 +129,7 @@ export function DashboardFeedbackTable({
 }
 
 export function DashboardProfileContent() {
-  const { user } = useAuth();
-  if (!user) return null;
-
-  const fields = buildProfileFields(user);
-
-  return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>My Profile</h4>
-      </div>
-      <div className="row">
-        {fields.map((field, index) => (
-          <div key={field.label} className="col-12">
-            <div className="row">
-              <div className="col-lg-4 col-md-4">
-                <div className={`dashboard__form${index > 0 ? ' dashboard__form__margin' : ''}`}>
-                  {field.label}
-                </div>
-              </div>
-              <div className="col-lg-8 col-md-8">
-                <div className={`dashboard__form${index > 0 ? ' dashboard__form__margin' : ''}`}>
-                  {field.value}
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  return <DashboardProfilePage />;
 }
 
 export function DashboardMessageContent() {

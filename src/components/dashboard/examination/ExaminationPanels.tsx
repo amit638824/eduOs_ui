@@ -727,7 +727,7 @@ export function ExamResultPage() {
   );
 }
 
-export function ProfileSettingsApiForm() {
+export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }) {
   const { user, refreshUser } = useAuth();
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
@@ -758,6 +758,7 @@ export function ProfileSettingsApiForm() {
         });
         await refreshUser();
         setMessage('Profile updated successfully.');
+        onSuccess?.();
       } catch (err) {
         setApiError(parseApiError(err));
       }
