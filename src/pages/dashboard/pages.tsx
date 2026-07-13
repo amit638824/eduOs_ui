@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
+import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import {
   QuestionBankPanel,
   TestsListPanel,
@@ -31,10 +32,18 @@ import type { OrgAnalytics, StudentStats } from '@/types/examination';
 
 export function StudentDashboardHome() {
   const [stats, setStats] = useState<StudentStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    examinationService.getMyStats().then(setStats).catch(() => setStats(null));
+    setLoading(true);
+    examinationService
+      .getMyStats()
+      .then(setStats)
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading);
 
   return (
     <>
@@ -85,10 +94,18 @@ export function StudentDashboardHome() {
 
 export function TeacherDashboardHome() {
   const [stats, setStats] = useState<OrgAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    examinationService.getAnalyticsOverview().then(setStats).catch(() => setStats(null));
+    setLoading(true);
+    examinationService
+      .getAnalyticsOverview()
+      .then(setStats)
+      .catch(() => setStats(null))
+      .finally(() => setLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading);
 
   return (
     <>
@@ -112,10 +129,18 @@ export function TeacherDashboardHome() {
 export function AdminDashboardHome() {
   const { organization, branches, organizations, loading, error } = useOrganization();
   const [examStats, setExamStats] = useState<OrgAnalytics | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
-    examinationService.getAnalyticsOverview().then(setExamStats).catch(() => setExamStats(null));
+    setStatsLoading(true);
+    examinationService
+      .getAnalyticsOverview()
+      .then(setExamStats)
+      .catch(() => setExamStats(null))
+      .finally(() => setStatsLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading || statsLoading);
 
   const counters = useMemo(() => {
     if (examStats) {

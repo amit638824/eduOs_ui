@@ -1,6 +1,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTheme } from '@/context/ThemeContext';
+import { DashboardLoadingProvider, useDashboardLoading } from '@/context/DashboardLoadingContext';
 import type { DashboardNavSection, DashboardProfile, DashboardRole } from '@/types/dashboard';
+import LoaderInner from '@/components/ui/LoaderInner';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardTopBar from './DashboardTopBar';
 
@@ -21,7 +23,29 @@ export default function DashboardShell({
   onLogout,
   children,
 }: DashboardShellProps) {
+  return (
+    <DashboardLoadingProvider>
+      <DashboardShellInner
+        role={role}
+        profile={profile}
+        navigation={navigation}
+        onLogout={onLogout}
+      >
+        {children}
+      </DashboardShellInner>
+    </DashboardLoadingProvider>
+  );
+}
+
+function DashboardShellInner({
+  role,
+  profile,
+  navigation,
+  onLogout,
+  children,
+}: DashboardShellProps) {
   const { isDark } = useTheme();
+  const { loading } = useDashboardLoading();
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem(COLLAPSE_KEY);
     return stored === null ? true : stored === '1';
@@ -73,7 +97,10 @@ export default function DashboardShell({
           role={role}
           onToggleMenu={handleToggleMenu}
         />
-        <div className="sca-dashboard__content">{children}</div>
+        <div className="sca-dashboard__content">
+          {loading && <LoaderInner />}
+          {children}
+        </div>
       </div>
 
       <button

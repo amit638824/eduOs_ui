@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { examinationService } from '@/services';
 import { parseApiError } from '@/lib/errors';
+import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { useExamProctoring } from '@/hooks/useExamProctoring';
 import type { AttemptQuestion, ExamSecurityConfig, TestAttempt } from '@/types/examination';
 import '@/styles/exam-player.css';
@@ -52,11 +53,13 @@ export default function ExamAttemptPlayer() {
   const [tabWarnings, setTabWarnings] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [warning, setWarning] = useState('');
+  const [pageLoading, setPageLoading] = useState(true);
 
   const config = attempt?.config ?? DEFAULT_CONFIG;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (silent = false) => {
     if (!attemptId) return;
+    if (!silent) setPageLoading(true);
     try {
       const data = await examinationService.getAttempt(attemptId);
       setAttempt(data as AttemptData);
@@ -70,12 +73,16 @@ export default function ExamAttemptPlayer() {
         return;
       }
       setError(msg);
+    } finally {
+      if (!silent) setPageLoading(false);
     }
   }, [attemptId, navigate]);
 
   useEffect(() => {
-    load();
+    void load();
   }, [load]);
+
+  useDashboardLoadingEffect(pageLoading || submitting);
 
   const handleAutoSubmit = useCallback(async () => {
     if (!attemptId || submitting) return;
@@ -134,14 +141,14 @@ export default function ExamAttemptPlayer() {
       selected = [optionId];
     }
     await examinationService.saveAnswer(attemptId, questionId, { selectedOptionIds: selected });
-    await load();
+    await load(true);
   };
 
   const saveTextAnswer = async (questionId: string, value: string, field: 'text' | 'value') => {
     if (!attemptId) return;
     const answer = field === 'text' ? { text: value } : { value: Number(value) };
     await examinationService.saveAnswer(attemptId, questionId, answer);
-    await load();
+    await load(true);
   };
 
   const submit = async () => {
@@ -172,7 +179,7 @@ export default function ExamAttemptPlayer() {
   const answeredCount = useMemo(() => questions.filter(isAnswered).length, [questions]);
 
   if (error && !attempt) return <p className="login__error">{error}</p>;
-  if (!attempt) return <p>Loading exam...</p>;
+  if (!attempt) return null;
 
   if (!examStarted) {
     return (

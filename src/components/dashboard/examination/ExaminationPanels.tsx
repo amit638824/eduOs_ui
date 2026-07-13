@@ -8,6 +8,7 @@ import { FormError, inputClassName } from '@/components/ui/FormField';
 import { createTestApiSchema, type CreateTestApiFormValues } from '@/validators/schemas';
 import type { ExamResult, ExamTest, Question, TestAttempt } from '@/types/examination';
 import { useAuth } from '@/context/AuthContext';
+import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
 import ExamAttemptPlayer from './ExamAttemptPlayer';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
@@ -22,6 +23,7 @@ export function QuestionBankPanel() {
   const [opt2, setOpt2] = useState('');
   const [correct, setCorrect] = useState('1');
   const [message, setMessage] = useState('');
+  const withLoader = useDashboardLoader();
 
   const load = async () => {
     setLoading(true);
@@ -40,34 +42,38 @@ export function QuestionBankPanel() {
     load();
   }, []);
 
+  useDashboardLoadingEffect(loading);
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage('');
-    try {
-      const created = await examinationService.createQuestion({
-        type: questionType,
-        content: { text: newQ },
-        marks: 1,
-        difficulty: 2,
-        options:
-          questionType === 'fill_blank'
-            ? [{ content: { text: opt1 }, isCorrect: true }]
-            : questionType === 'integer' || questionType === 'numerical'
-              ? [{ content: { value: Number(opt1) || 0 }, isCorrect: true }]
-              : [
-                  { content: { text: opt1 }, isCorrect: correct === '1' },
-                  { content: { text: opt2 }, isCorrect: correct === '2' },
-                ],
-      });
-      await examinationService.approveQuestion(created.id);
-      setNewQ('');
-      setOpt1('');
-      setOpt2('');
-      setMessage('Question created and approved.');
-      await load();
-    } catch (err) {
-      setError(parseApiError(err));
-    }
+    await withLoader(async () => {
+      try {
+        const created = await examinationService.createQuestion({
+          type: questionType,
+          content: { text: newQ },
+          marks: 1,
+          difficulty: 2,
+          options:
+            questionType === 'fill_blank'
+              ? [{ content: { text: opt1 }, isCorrect: true }]
+              : questionType === 'integer' || questionType === 'numerical'
+                ? [{ content: { value: Number(opt1) || 0 }, isCorrect: true }]
+                : [
+                    { content: { text: opt1 }, isCorrect: correct === '1' },
+                    { content: { text: opt2 }, isCorrect: correct === '2' },
+                  ],
+        });
+        await examinationService.approveQuestion(created.id);
+        setNewQ('');
+        setOpt1('');
+        setOpt2('');
+        setMessage('Question created and approved.');
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
   };
 
   return (
@@ -115,32 +121,28 @@ export function QuestionBankPanel() {
           </div>
         </div>
       </form>
-      {loading ? (
-        <p>Loading questions...</p>
-      ) : (
-        <div className="dashboard__table table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Question</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Marks</th>
+      <div className="dashboard__table table-responsive">
+        <table>
+          <thead>
+            <tr>
+              <th>Question</th>
+              <th>Type</th>
+              <th>Status</th>
+              <th>Marks</th>
+            </tr>
+          </thead>
+          <tbody>
+            {questions.map((q) => (
+              <tr key={q.id}>
+                <td>{q.content?.text ?? '—'}</td>
+                <td>{q.type}</td>
+                <td>{q.status}</td>
+                <td>{q.marks}</td>
               </tr>
-            </thead>
-            <tbody>
-              {questions.map((q) => (
-                <tr key={q.id}>
-                  <td>{q.content?.text ?? '—'}</td>
-                  <td>{q.type}</td>
-                  <td>{q.status}</td>
-                  <td>{q.marks}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -148,22 +150,30 @@ export function QuestionBankPanel() {
 export function TestsListPanel({ title }: { title: string }) {
   const [tests, setTests] = useState<ExamTest[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const withLoader = useDashboardLoader();
 
   useEffect(() => {
+    setLoading(true);
     examinationService
       .listTests(1, 50)
       .then((res) => setTests(res.data))
-      .catch((err) => setError(parseApiError(err)));
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setLoading(false));
   }, []);
 
+  useDashboardLoadingEffect(loading);
+
   const publish = async (id: string) => {
-    try {
-      await examinationService.publishTest(id);
-      const res = await examinationService.listTests(1, 50);
-      setTests(res.data);
-    } catch (err) {
-      setError(parseApiError(err));
-    }
+    await withLoader(async () => {
+      try {
+        await examinationService.publishTest(id);
+        const res = await examinationService.listTests(1, 50);
+        setTests(res.data);
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
   };
 
   return (
@@ -217,13 +227,18 @@ export function StudentTestsPanel() {
   const [tests, setTests] = useState<ExamTest[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
   useEffect(() => {
+    setPageLoading(true);
     examinationService
       .listMyAssignedTests()
       .then(setTests)
-      .catch((err) => setError(parseApiError(err)));
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setPageLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading || pageLoading);
 
   const start = async (testId: string) => {
     setLoading(true);
@@ -311,13 +326,18 @@ export function AttemptsListPanel({ title }: { title: string }) {
   const navigate = useNavigate();
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     examinationService
       .listAttempts(1, 50)
       .then((res) => setAttempts(res.data))
-      .catch((err) => setError(parseApiError(err)));
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading);
 
   return (
     <div className="dashboard__content__wraper">
@@ -371,13 +391,18 @@ export function AttemptsListPanel({ title }: { title: string }) {
 export function ResultsPanel() {
   const [results, setResults] = useState<ExamResult[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     examinationService
       .listMyResults()
       .then(setResults)
-      .catch((err) => setError(parseApiError(err)));
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading);
 
   return (
     <div className="dashboard__content__wraper">
@@ -426,6 +451,7 @@ export function ResultsPanel() {
 export function CreateTestPanel() {
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
+  const withLoader = useDashboardLoader();
   const {
     register,
     handleSubmit,
@@ -443,19 +469,21 @@ export function CreateTestPanel() {
   const onSubmit = async (values: CreateTestApiFormValues) => {
     setApiError('');
     setMessage('');
-    try {
-      await examinationService.createTest({
-        title: values.title,
-        description: values.description,
-        durationMinutes: Number(values.duration),
-        passingMarks: 2,
-        instructions: 'Read all questions carefully before submitting.',
-      });
-      setMessage('Test created as draft. Add questions from Question Bank, then publish from Tests list.');
-      reset();
-    } catch (err) {
-      setApiError(parseApiError(err));
-    }
+    await withLoader(async () => {
+      try {
+        await examinationService.createTest({
+          title: values.title,
+          description: values.description,
+          durationMinutes: Number(values.duration),
+          passingMarks: 2,
+          instructions: 'Read all questions carefully before submitting.',
+        });
+        setMessage('Test created as draft. Add questions from Question Bank, then publish from Tests list.');
+        reset();
+      } catch (err) {
+        setApiError(parseApiError(err));
+      }
+    });
   };
 
   return (
@@ -501,17 +529,22 @@ export function ExamResultPage() {
   const { attemptId } = useParams();
   const [result, setResult] = useState<ExamResult | null>(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!attemptId) return;
+    setLoading(true);
     examinationService
       .getResult(attemptId)
       .then(setResult)
-      .catch((err) => setError(parseApiError(err)));
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setLoading(false));
   }, [attemptId]);
 
+  useDashboardLoadingEffect(loading);
+
   if (error) return <p className="login__error">{error}</p>;
-  if (!result) return <p>Loading result...</p>;
+  if (!result) return null;
 
   return (
     <div className="dashboard__content__wraper">
@@ -576,6 +609,7 @@ export function ProfileSettingsApiForm() {
   const { user, refreshUser } = useAuth();
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
+  const withLoader = useDashboardLoader();
   const {
     register,
     handleSubmit,
@@ -593,17 +627,19 @@ export function ProfileSettingsApiForm() {
 
   const onSubmit = async (values: ProfileSettingsFormValues) => {
     setApiError('');
-    try {
-      await examinationService.updateProfile({
-        firstName: values.firstName,
-        lastName: values.lastName,
-        phone: values.phone,
-      });
-      await refreshUser();
-      setMessage('Profile updated successfully.');
-    } catch (err) {
-      setApiError(parseApiError(err));
-    }
+    await withLoader(async () => {
+      try {
+        await examinationService.updateProfile({
+          firstName: values.firstName,
+          lastName: values.lastName,
+          phone: values.phone,
+        });
+        await refreshUser();
+        setMessage('Profile updated successfully.');
+      } catch (err) {
+        setApiError(parseApiError(err));
+      }
+    });
   };
 
   if (!user) return null;

@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { DashboardCounter, DashboardTableRow } from '@/types/dashboard';
 import { useAuth } from '@/context/AuthContext';
+import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { buildProfileFields } from '@/data/dashboardNavigation';
 import { useOrganization } from '@/hooks/useOrganization';
 import { organizationService, platformService } from '@/services';
@@ -599,6 +600,7 @@ function OrganizationSettingsForm({
 }) {
   const [apiError, setApiError] = useState('');
   const [message, setMessage] = useState('');
+  const withLoader = useDashboardLoader();
   const {
     register,
     handleSubmit,
@@ -619,13 +621,15 @@ function OrganizationSettingsForm({
     if (!organization) return;
     setApiError('');
     setMessage('');
-    try {
-      await organizationService.updateOrganization(organization.id, values);
-      setMessage('Organization updated successfully.');
-      await onSaved();
-    } catch (err) {
-      setApiError(parseApiError(err));
-    }
+    await withLoader(async () => {
+      try {
+        await organizationService.updateOrganization(organization.id, values);
+        setMessage('Organization updated successfully.');
+        await onSaved();
+      } catch (err) {
+        setApiError(parseApiError(err));
+      }
+    });
   };
 
   return (
@@ -676,6 +680,7 @@ function OrganizationSettingsForm({
 function PasswordChangeForm() {
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
+  const withLoader = useDashboardLoader();
   const {
     register,
     handleSubmit,
@@ -689,13 +694,15 @@ function PasswordChangeForm() {
   const onSubmit = async (values: PasswordChangeFormValues) => {
     setApiError('');
     setMessage('');
-    try {
-      await authService.changePassword(values.currentPassword, values.newPassword);
-      setMessage('Password updated successfully.');
-      reset();
-    } catch (err) {
-      setApiError(parseApiError(err));
-    }
+    await withLoader(async () => {
+      try {
+        await authService.changePassword(values.currentPassword, values.newPassword);
+        setMessage('Password updated successfully.');
+        reset();
+      } catch (err) {
+        setApiError(parseApiError(err));
+      }
+    });
   };
 
   return (
@@ -760,6 +767,8 @@ function PasswordChangeForm() {
 function SocialLinksForm() {
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const withLoader = useDashboardLoader();
   const {
     register,
     handleSubmit,
@@ -771,20 +780,28 @@ function SocialLinksForm() {
   });
 
   useEffect(() => {
-    platformService.getSettings(['social_links']).then((rows) => {
-      const social = rows.find((r) => r.key === 'social_links')?.value as SocialLinksFormValues | undefined;
-      if (social) reset(social);
-    }).catch(() => undefined);
+    setLoading(true);
+    platformService.getSettings(['social_links'])
+      .then((rows) => {
+        const social = rows.find((r) => r.key === 'social_links')?.value as SocialLinksFormValues | undefined;
+        if (social) reset(social);
+      })
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, [reset]);
+
+  useDashboardLoadingEffect(loading);
 
   const onSubmit = async (values: SocialLinksFormValues) => {
     setApiError('');
-    try {
-      await platformService.upsertSetting('social_links', values);
-      setMessage('Social links saved successfully.');
-    } catch (err) {
-      setApiError(parseApiError(err));
-    }
+    await withLoader(async () => {
+      try {
+        await platformService.upsertSetting('social_links', values);
+        setMessage('Social links saved successfully.');
+      } catch (err) {
+        setApiError(parseApiError(err));
+      }
+    });
   };
 
   const fields = [
@@ -1105,7 +1122,7 @@ function BecomeTeacherForm() {
 
 export function DashboardSettingsContent() {
   const { user } = useAuth();
-  const { organization, refresh } = useOrganization();
+  const { organization, refresh, loading: orgLoading } = useOrganization();
   const isAdmin = user?.roles.some((r) =>
     ['super_admin', 'org_admin', 'branch_admin'].includes(r),
   );
@@ -1113,6 +1130,8 @@ export function DashboardSettingsContent() {
     ? ['Profile', 'Organization', 'Password', 'Social Icon']
     : ['Profile', 'Password', 'Social Icon'];
   const [activeTab, setActiveTab] = useState('Profile');
+
+  useDashboardLoadingEffect(orgLoading && activeTab === 'Organization');
 
   if (!user) return null;
 

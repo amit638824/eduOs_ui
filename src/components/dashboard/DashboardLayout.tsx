@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { buildDashboardNavigation, buildDashboardProfile } from '@/data/dashboardNavigation';
 import { canAccessDashboardRole } from '@/utils/dashboardRole';
 import DashboardShell from './DashboardShell';
-import Preloader from '@/components/layout/Preloader';
+import Loader from '@/components/ui/Loader';
 
 interface DashboardLayoutProps {
   role: DashboardRole;
@@ -16,7 +16,7 @@ export default function DashboardLayout({ role, children }: DashboardLayoutProps
   const { user, loading, logout } = useAuth();
 
   if (loading) {
-    return <Preloader />;
+    return <Loader />;
   }
 
   if (!user) {

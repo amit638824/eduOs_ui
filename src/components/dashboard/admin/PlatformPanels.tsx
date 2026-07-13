@@ -7,14 +7,18 @@ import { parseApiError } from '@/lib/errors';
 import { FormError, inputClassName } from '@/components/ui/FormField';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
+import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
   const [items, setItems] = useState<Awaited<ReturnType<typeof platformService.listNotifications>>['data']>([]);
   const [error, setError] = useState('');
   const [unread, setUnread] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const withLoader = useDashboardLoader();
 
   const load = async () => {
+    setLoading(true);
     try {
       const [list, count] = await Promise.all([
         platformService.listNotifications(1, 30),
@@ -24,21 +28,29 @@ export function NotificationsPanel() {
       setUnread(count);
     } catch (err) {
       setError(parseApiError(err));
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
+  useDashboardLoadingEffect(loading);
+
   const markRead = async (id: string) => {
-    await platformService.markNotificationRead(id);
-    await load();
+    await withLoader(async () => {
+      await platformService.markNotificationRead(id);
+      await load();
+    });
   };
 
   const markAll = async () => {
-    await platformService.markAllNotificationsRead();
-    await load();
+    await withLoader(async () => {
+      await platformService.markAllNotificationsRead();
+      await load();
+    });
   };
 
   return (
@@ -98,6 +110,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [paying, setPaying] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
     const [list, w] = await Promise.all([
@@ -109,10 +122,14 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
   };
 
   useEffect(() => {
+    setLoading(true);
     Promise.all([load(), platformService.getPaymentConfig()])
       .then(([, config]) => setPaymentConfig(config))
-      .catch((err) => setError(parseApiError(err)));
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading || paying);
 
   useEffect(() => {
     if (!allowTopUp || paymentConfig?.gateway !== 'razorpay') return;
@@ -271,32 +288,41 @@ export function UsersManagementPanel() {
   const [users, setUsers] = useState<Awaited<ReturnType<typeof platformService.listUsers>>['data']>([]);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const withLoader = useDashboardLoader();
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateUserForm>({
     resolver: yupResolver(createUserSchema),
     defaultValues: { email: '', password: '', firstName: '', lastName: '', role: 'student' },
   });
 
   const load = async () => {
+    setLoading(true);
     try {
       const res = await platformService.listUsers(1, 50);
       setUsers(res.data);
     } catch (err) {
       setError(parseApiError(err));
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
+
+  useDashboardLoadingEffect(loading);
 
   const onSubmit = async (values: CreateUserForm) => {
     setError('');
-    try {
-      await platformService.createUser(values);
-      setMessage('User created.');
-      reset();
-      await load();
-    } catch (err) {
-      setError(parseApiError(err));
-    }
+    await withLoader(async () => {
+      try {
+        await platformService.createUser(values);
+        setMessage('User created.');
+        reset();
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
   };
 
   return (
@@ -397,31 +423,50 @@ export function ReportsPanel() {
   const [report, setReport] = useState<Record<string, unknown> | null>(null);
   const [overview, setOverview] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [reportLoading, setReportLoading] = useState(false);
+  const withLoader = useDashboardLoader();
 
   useEffect(() => {
-    examinationService.listTests(1, 50).then((r) => setTests(r.data)).catch(() => undefined);
-    platformService.getOrgOverviewReport().then(setOverview).catch(() => undefined);
+    setLoading(true);
+    Promise.all([
+      examinationService.listTests(1, 50).then((r) => setTests(r.data)),
+      platformService.getOrgOverviewReport().then(setOverview),
+    ])
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading || reportLoading);
 
   const loadReport = async (testId: string) => {
     setSelected(testId);
+    if (!testId) {
+      setReport(null);
+      return;
+    }
+    setReportLoading(true);
     try {
       const data = await platformService.getTestReport(testId);
       setReport(data);
     } catch (err) {
       setError(parseApiError(err));
+    } finally {
+      setReportLoading(false);
     }
   };
 
   const exportCsv = async () => {
     if (!selected) return;
-    const blob = await platformService.exportTestReport(selected);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `test-report-${selected}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    await withLoader(async () => {
+      const blob = await platformService.exportTestReport(selected);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `test-report-${selected}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
   };
 
   return (
@@ -479,12 +524,17 @@ export function ReportsPanel() {
 export function AuditLogPanel() {
   const [logs, setLogs] = useState<Awaited<ReturnType<typeof platformService.listAuditLogs>>['data']>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     platformService.listAuditLogs(1, 50)
       .then((r) => setLogs(r.data))
-      .catch((err) => setError(parseApiError(err)));
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setLoading(false));
   }, []);
+
+  useDashboardLoadingEffect(loading);
 
   return (
     <div className="dashboard__content__wraper">
@@ -517,40 +567,51 @@ export function SessionsSecurityPanel() {
   const [sessions, setSessions] = useState<Record<string, unknown>[]>([]);
   const [mfaInfo, setMfaInfo] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const withLoader = useDashboardLoader();
 
   const load = async () => {
+    setLoading(true);
     try {
       const data = await platformService.listSessions();
       setSessions(data);
     } catch (err) {
       setError(parseApiError(err));
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { void load(); }, []);
+
+  useDashboardLoadingEffect(loading);
 
   const revoke = async (id: string) => {
-    await platformService.revokeSession(id);
-    await load();
+    await withLoader(async () => {
+      await platformService.revokeSession(id);
+      await load();
+    });
   };
 
   const toggleMfa = async (enable: boolean) => {
-    try {
-      if (enable) {
-        const result = await platformService.enableMfa();
-        if (result.devBackupCode) {
-          setMfaInfo(`MFA enabled. Backup code (dev): ${result.devBackupCode}`);
+    await withLoader(async () => {
+      try {
+        if (enable) {
+          const result = await platformService.enableMfa();
+          if (result.devBackupCode) {
+            setMfaInfo(`MFA enabled. Backup code (dev): ${result.devBackupCode}`);
+          } else {
+            setMfaInfo('MFA enabled.');
+          }
         } else {
-          setMfaInfo('MFA enabled.');
+          await platformService.disableMfa();
+          setMfaInfo('MFA disabled.');
         }
-      } else {
-        await platformService.disableMfa();
-        setMfaInfo('MFA disabled.');
+        await refreshUser();
+      } catch (err) {
+        setError(parseApiError(err));
       }
-      await refreshUser();
-    } catch (err) {
-      setError(parseApiError(err));
-    }
+    });
   };
 
   return (
@@ -591,43 +652,60 @@ export function SessionsSecurityPanel() {
 }
 
 export function OrgStructurePanel() {
-  const { branches } = useOrganization();
+  const { branches, loading: orgLoading } = useOrganization();
   const [branchId, setBranchId] = useState('');
   const [departments, setDepartments] = useState<Awaited<ReturnType<typeof platformService.listDepartments>>['data']>([]);
   const [sessions, setSessions] = useState<Awaited<ReturnType<typeof platformService.listAcademicSessions>>['data']>([]);
   const [deptName, setDeptName] = useState('');
   const [sessionName, setSessionName] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [deptLoading, setDeptLoading] = useState(false);
+  const withLoader = useDashboardLoader();
 
   useEffect(() => {
     if (branches[0] && !branchId) setBranchId(branches[0].id);
-    platformService.listAcademicSessions(1, 20).then((r) => setSessions(r.data)).catch(() => undefined);
+    setLoading(true);
+    platformService.listAcademicSessions(1, 20)
+      .then((r) => setSessions(r.data))
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, [branches, branchId]);
 
   useEffect(() => {
     if (!branchId) return;
-    platformService.listDepartments(branchId).then((r) => setDepartments(r.data)).catch((err) => setError(parseApiError(err)));
+    setDeptLoading(true);
+    platformService.listDepartments(branchId)
+      .then((r) => setDepartments(r.data))
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setDeptLoading(false));
   }, [branchId]);
+
+  useDashboardLoadingEffect(orgLoading || loading || deptLoading);
 
   const addDept = async () => {
     if (!branchId || !deptName) return;
-    await platformService.createDepartment(branchId, { name: deptName });
-    setDeptName('');
-    const r = await platformService.listDepartments(branchId);
-    setDepartments(r.data);
+    await withLoader(async () => {
+      await platformService.createDepartment(branchId, { name: deptName });
+      setDeptName('');
+      const r = await platformService.listDepartments(branchId);
+      setDepartments(r.data);
+    });
   };
 
   const addSession = async () => {
-    const year = new Date().getFullYear();
-    await platformService.createAcademicSession({
-      name: sessionName || `${year}-${year + 1}`,
-      startDate: `${year}-04-01`,
-      endDate: `${year + 1}-03-31`,
-      isCurrent: true,
+    await withLoader(async () => {
+      const year = new Date().getFullYear();
+      await platformService.createAcademicSession({
+        name: sessionName || `${year}-${year + 1}`,
+        startDate: `${year}-04-01`,
+        endDate: `${year + 1}-03-31`,
+        isCurrent: true,
+      });
+      const r = await platformService.listAcademicSessions();
+      setSessions(r.data);
+      setSessionName('');
     });
-    const r = await platformService.listAcademicSessions();
-    setSessions(r.data);
-    setSessionName('');
   };
 
   return (
@@ -665,9 +743,12 @@ export function TestBuilderPanel() {
   const [questions, setQuestions] = useState<{ id: string; content?: { text?: string } }[]>([]);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const withLoader = useDashboardLoader();
 
   const load = async () => {
     if (!testId) return;
+    setLoading(true);
     try {
       const [t, q] = await Promise.all([
         examinationService.getTest(testId),
@@ -677,23 +758,31 @@ export function TestBuilderPanel() {
       setQuestions(q.data);
     } catch (err) {
       setError(parseApiError(err));
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, [testId]);
+  useEffect(() => { void load(); }, [testId]);
+
+  useDashboardLoadingEffect(loading);
 
   const addQuestion = async (questionId: string) => {
     if (!testId) return;
-    await examinationService.addQuestionToTest(testId, questionId);
-    setMessage('Question added to test.');
-    await load();
+    await withLoader(async () => {
+      await examinationService.addQuestionToTest(testId, questionId);
+      setMessage('Question added to test.');
+      await load();
+    });
   };
 
   const publish = async () => {
     if (!testId) return;
-    await examinationService.publishTest(testId);
-    setMessage('Test published.');
-    await load();
+    await withLoader(async () => {
+      await examinationService.publishTest(testId);
+      setMessage('Test published.');
+      await load();
+    });
   };
 
   if (!testId) {
@@ -749,20 +838,30 @@ export function BrandingSettingsPanel() {
   const [facebook, setFacebook] = useState('');
   const [twitter, setTwitter] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const withLoader = useDashboardLoader();
 
   useEffect(() => {
-    platformService.getSettings(['social_links', 'exam_rules']).then((rows) => {
-      const social = rows.find((r) => r.key === 'social_links')?.value as Record<string, string> | undefined;
-      if (social) {
-        setFacebook(social.facebook ?? '');
-        setTwitter(social.twitter ?? '');
-      }
-    }).catch(() => undefined);
+    setLoading(true);
+    platformService.getSettings(['social_links', 'exam_rules'])
+      .then((rows) => {
+        const social = rows.find((r) => r.key === 'social_links')?.value as Record<string, string> | undefined;
+        if (social) {
+          setFacebook(social.facebook ?? '');
+          setTwitter(social.twitter ?? '');
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
   }, []);
 
+  useDashboardLoadingEffect(loading);
+
   const save = async () => {
-    await platformService.upsertSetting('social_links', { facebook, twitter, linkedin: '', instagram: '' });
-    setMessage('Settings saved.');
+    await withLoader(async () => {
+      await platformService.upsertSetting('social_links', { facebook, twitter, linkedin: '', instagram: '' });
+      setMessage('Settings saved.');
+    });
   };
 
   return (
