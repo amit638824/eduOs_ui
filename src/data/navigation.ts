@@ -52,11 +52,7 @@ export function buildAccountLinks(user: ApiUser | null): AccountLink[] {
   }
 
   const dashboardRoot = getDefaultDashboardPath(user.roles);
-  const roleSegment = dashboardRoot.includes('admin')
-    ? 'admin'
-    : dashboardRoot.includes('teacher')
-      ? 'teacher'
-      : 'student';
+  const roleSegment = dashboardRoot.includes('admin') ? 'admin' : 'student';
 
   return [
     { label: 'My Dashboard', href: dashboardRoot },

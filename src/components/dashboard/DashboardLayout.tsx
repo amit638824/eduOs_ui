@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import type { DashboardRole } from '@/types/dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { buildDashboardNavigation, buildDashboardProfile } from '@/data/dashboardNavigation';
-import { canAccessDashboardRole } from '@/utils/dashboardRole';
+import { canAccessDashboardRole, getDefaultDashboardPath } from '@/utils/dashboardRole';
 import DashboardShell from './DashboardShell';
 import Loader from '@/components/ui/Loader';
 
@@ -24,13 +24,7 @@ export default function DashboardLayout({ role, children }: DashboardLayoutProps
   }
 
   if (!canAccessDashboardRole(user.roles, role)) {
-    const fallback =
-      user.roles.some((r) => ['super_admin', 'org_admin', 'branch_admin'].includes(r))
-        ? '/dashboard/admin-dashboard'
-        : user.roles.some((r) => ['teacher', 'examiner', 'evaluator'].includes(r))
-          ? '/dashboard/teacher-dashboard'
-          : '/dashboard/student-dashboard';
-    return <Navigate to={fallback} replace />;
+    return <Navigate to={getDefaultDashboardPath(user.roles)} replace />;
   }
 
   const profile = buildDashboardProfile(user, role);

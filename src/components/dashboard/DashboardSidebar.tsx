@@ -40,6 +40,9 @@ export default function DashboardSidebar({
       <nav className="sca-db-sidebar__nav">
         {sections.map((section, index) => (
           <div key={`nav-${index}`} className="sca-db-sidebar__group">
+            {section.title && !collapsed && (
+              <div className="sca-db-sidebar__section-title">{section.title}</div>
+            )}
             <ul>
               {section.items.map((item) => (
                 <li key={item.href}>

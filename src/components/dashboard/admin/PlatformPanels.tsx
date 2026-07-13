@@ -8,6 +8,7 @@ import { FormError, inputClassName } from '@/components/ui/FormField';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
+import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
@@ -739,8 +740,17 @@ export function OrgStructurePanel() {
 
 export function TestBuilderPanel() {
   const { testId } = useParams();
-  const [test, setTest] = useState<Record<string, unknown> | null>(null);
-  const [questions, setQuestions] = useState<{ id: string; content?: { text?: string } }[]>([]);
+  const [test, setTest] = useState<{
+    title?: string;
+    status?: string;
+    duration_minutes?: number;
+    total_marks?: number;
+    questions?: { question_id: string; type?: string; content?: { text?: string }; marks?: number }[];
+    assignments?: { student_id: string; first_name: string; last_name: string; email: string }[];
+  } | null>(null);
+  const [bankQuestions, setBankQuestions] = useState<{ id: string; content?: { text?: string }; type?: string }[]>([]);
+  const [students, setStudents] = useState<Awaited<ReturnType<typeof examinationService.listAssignableStudents>>['data']>([]);
+  const [selectedStudent, setSelectedStudent] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -749,13 +759,16 @@ export function TestBuilderPanel() {
   const load = async () => {
     if (!testId) return;
     setLoading(true);
+    setError('');
     try {
-      const [t, q] = await Promise.all([
+      const [t, q, s] = await Promise.all([
         examinationService.getTest(testId),
         examinationService.listQuestions(1, 100, 'approved'),
+        examinationService.listAssignableStudents(1, 100),
       ]);
-      setTest(t as unknown as Record<string, unknown>);
-      setQuestions(q.data);
+      setTest(t as typeof test);
+      setBankQuestions(q.data);
+      setStudents(s.data.filter((st) => st.status === 'active'));
     } catch (err) {
       setError(parseApiError(err));
     } finally {
@@ -767,70 +780,201 @@ export function TestBuilderPanel() {
 
   useDashboardLoadingEffect(loading);
 
+  const testQuestions = test?.questions ?? [];
+  const assignments = test?.assignments ?? [];
+  const assignedIds = new Set(assignments.map((a) => a.student_id));
+  const isLive = test?.status === 'live';
+  const activeStep = isLive ? 5 : testQuestions.length > 0 ? 4 : 3;
+
   const addQuestion = async (questionId: string) => {
     if (!testId) return;
+    setMessage('');
     await withLoader(async () => {
-      await examinationService.addQuestionToTest(testId, questionId);
-      setMessage('Question added to test.');
-      await load();
+      try {
+        await examinationService.addQuestionToTest(testId, questionId);
+        setMessage('Question added to test.');
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
     });
   };
 
   const publish = async () => {
     if (!testId) return;
+    setMessage('');
     await withLoader(async () => {
-      await examinationService.publishTest(testId);
-      setMessage('Test published.');
-      await load();
+      try {
+        await examinationService.publishTest(testId);
+        setMessage('Test published! Now assign students below.');
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const assignStudent = async () => {
+    if (!testId || !selectedStudent) return;
+    setMessage('');
+    await withLoader(async () => {
+      try {
+        await examinationService.assignTestToStudent(testId, selectedStudent);
+        setMessage('Test assigned to student successfully.');
+        setSelectedStudent('');
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const assignAllStudents = async () => {
+    if (!testId) return;
+    const unassigned = students.filter((s) => !assignedIds.has(s.student_id));
+    if (!unassigned.length) {
+      setMessage('All students are already assigned.');
+      return;
+    }
+    setMessage('');
+    await withLoader(async () => {
+      try {
+        for (const s of unassigned) {
+          await examinationService.assignTestToStudent(testId, s.student_id);
+        }
+        setMessage(`Assigned to ${unassigned.length} student(s).`);
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
     });
   };
 
   if (!testId) {
     return (
       <div className="dashboard__content__wraper">
-        <p>Select a draft test from <Link to="/dashboard/teacher-course">My Tests</Link> to build it.</p>
+        <p>Select a draft test from <Link to="/dashboard/admin-course">All Tests</Link> to build it.</p>
       </div>
     );
   }
 
-  const testQuestions = (test?.questions as { question_id: string }[]) ?? [];
-
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>Test Builder — {test?.title as string}</h4>
-        <span>Status: {test?.status as string}</span>
+    <>
+      <div className="dashboard__content__wraper sp_bottom_20">
+        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h4 className="mb-1">Test Builder — {test?.title}</h4>
+            <p className="mb-0 text-muted" style={{ fontSize: '0.875rem' }}>
+              {test?.duration_minutes} min · {test?.total_marks ?? 0} marks · Status:{' '}
+              <span className={`edtp-badge ${isLive ? 'edtp-badge--active' : 'edtp-badge--role'}`}>{test?.status}</span>
+            </p>
+          </div>
+          <Link to="/dashboard/admin-course" className="dashboard__small__btn__2">← All Tests</Link>
+        </div>
       </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <h5 className="sp_bottom_15">Questions in test ({testQuestions.length})</h5>
-      <ul className="sp_bottom_30">
-        {testQuestions.map((tq, i) => (
-          <li key={tq.question_id}>Q{i + 1}: {tq.question_id}</li>
-        ))}
-      </ul>
-      <h5 className="sp_bottom_15">Add from question bank</h5>
-      <div className="dashboard__table table-responsive sp_bottom_20">
-        <table>
-          <thead><tr><th>Question</th><th /></tr></thead>
-          <tbody>
-            {questions.filter((q) => !testQuestions.some((tq) => tq.question_id === q.id)).map((q) => (
-              <tr key={q.id}>
-                <td>{q.content?.text}</td>
-                <td>
-                  <button type="button" className="default__button small-btn" onClick={() => addQuestion(q.id)}>
-                    Add
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <AdminExamGuide activeStep={activeStep} compact />
+      <div className="dashboard__content__wraper">
+        {error && <p className="login__error sp_bottom_15">{error}</p>}
+        {message && <p className="form-success sp_bottom_15">{message}</p>}
+
+        <div className="sca-exam-builder-grid">
+          <section className="edtp-form-card">
+            <h5>Questions in this test ({testQuestions.length})</h5>
+            {testQuestions.length === 0 ? (
+              <p className="text-muted mb-0">No questions yet. Add from the question bank on the right.</p>
+            ) : (
+              <ol className="sca-exam-builder-qlist">
+                {testQuestions.map((tq, i) => (
+                  <li key={tq.question_id}>
+                    <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
+                    <span>{tq.content?.text ?? 'Question'}</span>
+                    <span className="edtp-badge edtp-badge--role">{tq.type}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+            {!isLive && testQuestions.length > 0 && (
+              <button type="button" className="default__button sp_top_15" onClick={publish}>
+                Publish Test
+              </button>
+            )}
+          </section>
+
+          {!isLive && (
+            <section className="edtp-form-card">
+              <h5>Add from Question Bank</h5>
+              <div className="dashboard__table table-responsive">
+                <table>
+                  <thead><tr><th>Question</th><th>Type</th><th /></tr></thead>
+                  <tbody>
+                    {bankQuestions
+                      .filter((q) => !testQuestions.some((tq) => tq.question_id === q.id))
+                      .map((q) => (
+                        <tr key={q.id}>
+                          <td>{q.content?.text}</td>
+                          <td>{q.type}</td>
+                          <td>
+                            <button type="button" className="default__button small-btn" onClick={() => addQuestion(q.id)}>
+                              Add
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    {bankQuestions.length === 0 && (
+                      <tr><td colSpan={3}>No approved questions. <Link to="/dashboard/admin-question-bank">Add questions</Link> first.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {isLive && (
+            <section className="edtp-form-card">
+              <h5>Assign to Students</h5>
+              <p className="text-muted" style={{ fontSize: '0.875rem' }}>
+                Students only see tests assigned to them under My Tests.
+              </p>
+              <div className="d-flex flex-wrap gap-2 sp_bottom_15">
+                <select
+                  className="form-select"
+                  style={{ maxWidth: 320 }}
+                  value={selectedStudent}
+                  onChange={(e) => setSelectedStudent(e.target.value)}
+                >
+                  <option value="">Select student…</option>
+                  {students
+                    .filter((s) => !assignedIds.has(s.student_id))
+                    .map((s) => (
+                      <option key={s.student_id} value={s.student_id}>
+                        {s.first_name} {s.last_name} ({s.email})
+                      </option>
+                    ))}
+                </select>
+                <button type="button" className="default__button" disabled={!selectedStudent} onClick={assignStudent}>
+                  Assign
+                </button>
+                <button type="button" className="dashboard__small__btn__2" onClick={assignAllStudents}>
+                  Assign All Students
+                </button>
+              </div>
+              <h6>Assigned ({assignments.length})</h6>
+              {assignments.length === 0 ? (
+                <p className="text-muted mb-0">No students assigned yet.</p>
+              ) : (
+                <ul className="sca-exam-builder-assignees">
+                  {assignments.map((a) => (
+                    <li key={a.student_id}>
+                      {a.first_name} {a.last_name} <small className="text-muted">({a.email})</small>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
+        </div>
       </div>
-      {(test?.status as string) === 'draft' && testQuestions.length > 0 && (
-        <button type="button" className="default__button" onClick={publish}>Publish Test</button>
-      )}
-    </div>
+    </>
   );
 }
 

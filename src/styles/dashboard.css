@@ -136,6 +136,15 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   border-top: 1px solid var(--db-sidebar-border);
 }
 
+.sca-db-sidebar__section-title {
+  padding: 4px 14px 8px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.35);
+}
+
 .sca-db-sidebar__group ul {
   list-style: none;
   margin: 0;
@@ -686,6 +695,145 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   border-radius: 10px;
   padding: 18px;
   margin-bottom: 20px;
+}
+
+.sca-exam-guide {
+  margin: 0 clamp(16px, 3vw, 28px) 20px;
+  padding: 18px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--db-border);
+  background: var(--db-card);
+}
+
+.sca-exam-guide--compact {
+  margin: 0 0 20px;
+}
+
+.sca-exam-guide__header h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+}
+
+.sca-exam-guide__header p {
+  margin: 0 0 14px;
+  font-size: 0.8125rem;
+  color: var(--db-muted);
+}
+
+.sca-exam-guide__steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sca-exam-guide__link {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--db-border);
+  background: var(--db-input-bg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.sca-exam-guide__link:hover {
+  border-color: var(--db-accent);
+}
+
+.sca-exam-guide__step--active .sca-exam-guide__link {
+  border-color: var(--db-accent);
+  background: var(--db-accent-soft);
+}
+
+.sca-exam-guide__step--done .sca-exam-guide__num {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.sca-exam-guide__num {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: var(--db-accent-soft);
+  color: var(--db-accent);
+}
+
+.sca-exam-guide__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sca-exam-guide__text strong {
+  font-size: 0.8125rem;
+}
+
+.sca-exam-guide__text small {
+  font-size: 0.6875rem;
+  color: var(--db-muted);
+}
+
+.sca-exam-builder-grid {
+  display: grid;
+  gap: 20px;
+}
+
+@media (min-width: 992px) {
+  .sca-exam-builder-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .sca-exam-builder-grid > section:first-child {
+    grid-column: 1 / -1;
+  }
+}
+
+.sca-exam-builder-qlist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sca-exam-builder-qlist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--db-border);
+}
+
+.sca-exam-builder-qlist__num {
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--db-accent);
+  min-width: 28px;
+}
+
+.sca-exam-builder-assignees {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.sca-exam-builder-assignees li {
+  margin-bottom: 6px;
+}
+
+.edtp-badge--inactive {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--db-muted);
 }
 
 /* Bootstrap grid fix inside dashboard */

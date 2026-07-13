@@ -89,6 +89,39 @@ export async function publishTest(id: string) {
   return data.data;
 }
 
+export async function assignTestToStudent(testId: string, studentId: string) {
+  const { data } = await api.post<ApiResponse<unknown>>(`${base}/tests/${testId}/assign`, {
+    studentId,
+  });
+  return data.data;
+}
+
+export interface AssignableStudent {
+  student_id: string;
+  user_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  status: string;
+}
+
+export interface TestAssignment {
+  id: string;
+  student_id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  scheduled_at?: string;
+  created_at: string;
+}
+
+export async function listAssignableStudents(page = 1, limit = 100) {
+  const { data } = await api.get<PaginatedResponse<AssignableStudent>>(`${base}/students`, {
+    params: { page, limit },
+  });
+  return data;
+}
+
 export async function startAttempt(testId: string) {
   const { data } = await api.post<ApiResponse<TestAttempt>>(`${base}/tests/${testId}/start`);
   return data.data;

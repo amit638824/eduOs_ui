@@ -93,7 +93,7 @@ export default function ExamGridSection({ activeCategory }: { activeCategory?: E
                     )}
                   </div>
                   <div className="gridarea__bottom">
-                    <Link to="/dashboard/teacher-dashboard">
+                    <Link to="/exams">
                       <div className="gridarea__small__img">
                         <img loading="lazy" src={exam.instructorImg} alt={exam.instructor} />
                         <div className="gridarea__small__content">

@@ -3,6 +3,8 @@ import { Navigate, Route } from 'react-router-dom';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import type { DashboardRole } from '@/types/dashboard';
 import { useAuth } from '@/context/AuthContext';
+import { getDefaultDashboardPath } from '@/utils/dashboardRole';
+import Loader from '@/components/ui/Loader';
 import {
   NotificationsPanel,
   PaymentsPanel,
@@ -16,13 +18,10 @@ import {
 } from '@/components/dashboard/admin/PlatformPanels';
 import {
   StudentDashboardHome,
-  TeacherDashboardHome,
   AdminDashboardHome,
   DashboardProfileContent,
   DashboardAssignmentsContent,
-  DashboardAnnouncementsContent,
   DashboardSettingsContent,
-  DashboardBecomeInstructorContent,
   QuestionBankPanel,
   TestsListPanel,
   StudentTestsPanel,
@@ -37,36 +36,48 @@ function dash(role: DashboardRole, children: ReactNode) {
   return <DashboardLayout role={role}>{children}</DashboardLayout>;
 }
 
-function RoleAwareDash({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
-  const role: DashboardRole = user?.roles.some((r) => r === 'org_admin' || r === 'super_admin')
-    ? 'admin'
-    : 'teacher';
-  return dash(role, children);
+function DashboardRootRedirect() {
+  const { user, loading } = useAuth();
+  if (loading) return <Loader />;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Navigate to={getDefaultDashboardPath(user.roles)} replace />;
 }
 
 export const dashboardRouteElements = (
   <>
-    <Route path="/dashboard" element={<Navigate to="/dashboard/student-dashboard" replace />} />
+    <Route path="/dashboard" element={<DashboardRootRedirect />} />
 
-    {/* Legacy instructor URLs → teacher */}
-    <Route path="/dashboard/instructor-dashboard" element={<Navigate to="/dashboard/teacher-dashboard" replace />} />
-    <Route path="/dashboard/instructor-profile" element={<Navigate to="/dashboard/teacher-profile" replace />} />
-    <Route path="/dashboard/instructor-message" element={<Navigate to="/dashboard/teacher-message" replace />} />
-    <Route path="/dashboard/instructor-course" element={<Navigate to="/dashboard/teacher-course" replace />} />
-    <Route path="/dashboard/instructor-quiz-attempts" element={<Navigate to="/dashboard/teacher-quiz-attempts" replace />} />
-    <Route path="/dashboard/instructor-assignments" element={<Navigate to="/dashboard/teacher-assignments" replace />} />
-    <Route path="/dashboard/instructor-announcments" element={<Navigate to="/dashboard/teacher-announcments" replace />} />
-    <Route path="/dashboard/instructor-reviews" element={<Navigate to="/dashboard/teacher-reviews" replace />} />
-    <Route path="/dashboard/instructor-settings" element={<Navigate to="/dashboard/teacher-settings" replace />} />
-    <Route path="/dashboard/instructor-wishlist" element={<Navigate to="/dashboard/teacher-reviews" replace />} />
-    <Route path="/dashboard/instructor-my-quiz-attempts" element={<Navigate to="/dashboard/teacher-quiz-attempts" replace />} />
-    <Route path="/dashboard/instructor-order-history" element={<Navigate to="/dashboard/teacher-reviews" replace />} />
-    <Route path="/dashboard/instructor-enrolled-courses" element={<Navigate to="/dashboard/teacher-course" replace />} />
-    <Route path="/dashboard/create-course" element={<Navigate to="/dashboard/create-test" replace />} />
-    <Route path="/dashboard/become-an-instructor" element={<Navigate to="/dashboard/become-a-teacher" replace />} />
+    {/* Legacy instructor / teacher URLs → student experience */}
+    <Route path="/dashboard/instructor-dashboard" element={<Navigate to="/dashboard/student-dashboard" replace />} />
+    <Route path="/dashboard/instructor-profile" element={<Navigate to="/dashboard/student-profile" replace />} />
+    <Route path="/dashboard/instructor-message" element={<Navigate to="/dashboard/student-message" replace />} />
+    <Route path="/dashboard/instructor-course" element={<Navigate to="/dashboard/student-enrolled-courses" replace />} />
+    <Route path="/dashboard/instructor-quiz-attempts" element={<Navigate to="/dashboard/student-my-quiz-attempts" replace />} />
+    <Route path="/dashboard/instructor-assignments" element={<Navigate to="/dashboard/student-assignments" replace />} />
+    <Route path="/dashboard/instructor-announcments" element={<Navigate to="/dashboard/student-dashboard" replace />} />
+    <Route path="/dashboard/instructor-reviews" element={<Navigate to="/dashboard/student-reviews" replace />} />
+    <Route path="/dashboard/instructor-settings" element={<Navigate to="/dashboard/student-settings" replace />} />
+    <Route path="/dashboard/instructor-wishlist" element={<Navigate to="/dashboard/student-wishlist" replace />} />
+    <Route path="/dashboard/instructor-my-quiz-attempts" element={<Navigate to="/dashboard/student-my-quiz-attempts" replace />} />
+    <Route path="/dashboard/instructor-order-history" element={<Navigate to="/dashboard/student-reviews" replace />} />
+    <Route path="/dashboard/instructor-enrolled-courses" element={<Navigate to="/dashboard/student-enrolled-courses" replace />} />
+    <Route path="/dashboard/create-course" element={<Navigate to="/dashboard/admin-course" replace />} />
+    <Route path="/dashboard/become-an-instructor" element={<Navigate to="/dashboard/student-dashboard" replace />} />
 
-    {/* Student */}
+    <Route path="/dashboard/teacher-dashboard" element={<Navigate to="/dashboard/student-dashboard" replace />} />
+    <Route path="/dashboard/teacher-profile" element={<Navigate to="/dashboard/student-profile" replace />} />
+    <Route path="/dashboard/teacher-message" element={<Navigate to="/dashboard/student-message" replace />} />
+    <Route path="/dashboard/teacher-course" element={<Navigate to="/dashboard/student-enrolled-courses" replace />} />
+    <Route path="/dashboard/teacher-quiz-attempts" element={<Navigate to="/dashboard/student-my-quiz-attempts" replace />} />
+    <Route path="/dashboard/teacher-assignments" element={<Navigate to="/dashboard/student-assignments" replace />} />
+    <Route path="/dashboard/teacher-announcments" element={<Navigate to="/dashboard/student-dashboard" replace />} />
+    <Route path="/dashboard/teacher-reviews" element={<Navigate to="/dashboard/student-reviews" replace />} />
+    <Route path="/dashboard/teacher-settings" element={<Navigate to="/dashboard/student-settings" replace />} />
+    <Route path="/dashboard/create-test" element={dash('admin', <CreateTestPanel />)} />
+    <Route path="/dashboard/question-bank" element={<Navigate to="/dashboard/admin-question-bank" replace />} />
+    <Route path="/dashboard/become-a-teacher" element={<Navigate to="/dashboard/student-dashboard" replace />} />
+
+    {/* Student (also used by teachers) */}
     <Route path="/dashboard/student-dashboard" element={dash('student', <StudentDashboardHome />)} />
     <Route path="/dashboard/student-profile" element={dash('student', <DashboardProfileContent />)} />
     <Route path="/dashboard/student-message" element={dash('student', <NotificationsPanel />)} />
@@ -79,21 +90,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/exam/:testId/attempt/:attemptId" element={dash('student', <ExamAttemptPage />)} />
     <Route path="/dashboard/exam-result/:attemptId" element={dash('student', <ExamResultPage />)} />
 
-    {/* Teacher */}
-    <Route path="/dashboard/teacher-dashboard" element={dash('teacher', <TeacherDashboardHome />)} />
-    <Route path="/dashboard/teacher-profile" element={dash('teacher', <DashboardProfileContent />)} />
-    <Route path="/dashboard/teacher-message" element={dash('teacher', <NotificationsPanel />)} />
-    <Route path="/dashboard/teacher-course" element={dash('teacher', <TestsListPanel title="My Tests" />)} />
-    <Route path="/dashboard/teacher-quiz-attempts" element={dash('teacher', <AttemptsListPanel title="Test Attempts" />)} />
-    <Route path="/dashboard/teacher-assignments" element={dash('teacher', <DashboardAssignmentsContent />)} />
-    <Route path="/dashboard/teacher-announcments" element={dash('teacher', <DashboardAnnouncementsContent />)} />
-    <Route path="/dashboard/teacher-reviews" element={dash('teacher', <ReportsPanel />)} />
-    <Route path="/dashboard/teacher-settings" element={dash('teacher', <DashboardSettingsContent />)} />
-    <Route path="/dashboard/create-test" element={dash('teacher', <CreateTestPanel />)} />
-    <Route path="/dashboard/question-bank" element={dash('teacher', <QuestionBankPanel />)} />
-    <Route path="/dashboard/become-a-teacher" element={dash('teacher', <DashboardBecomeInstructorContent />)} />
-
-    <Route path="/dashboard/test-builder/:testId" element={<RoleAwareDash><TestBuilderPanel /></RoleAwareDash>} />
+    <Route path="/dashboard/test-builder/:testId" element={dash('admin', <TestBuilderPanel />)} />
 
     {/* Admin */}
     <Route path="/dashboard/admin-dashboard" element={dash('admin', <AdminDashboardHome />)} />

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
+import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import {
   QuestionBankPanel,
@@ -181,8 +182,9 @@ export function AdminDashboardHome() {
       <DashboardPageHeader
         badge="Admin Portal"
         title={organization ? organization.name : 'Admin Dashboard'}
-        subtitle="Manage users, tests, payments, reports and organization settings."
+        subtitle="Manage exams, users, payments and organization settings."
       />
+      <AdminExamGuide />
       {error && (
         <div className="dashboard__content__wraper sp_bottom_20">
           <p className="login__error">{error}</p>

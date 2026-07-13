@@ -12,13 +12,33 @@ import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/Dashboa
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
 import ExamAttemptPlayer from './ExamAttemptPlayer';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
+import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
+
+type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
+
+const QUESTION_TYPE_LABELS: Record<QuestionType, string> = {
+  mcq: 'MCQ',
+  msq: 'MSQ',
+  true_false: 'True / False',
+  fill_blank: 'Fill in the Blank',
+  integer: 'Integer',
+  numerical: 'Numerical',
+};
+
+function needsTwoOptions(type: QuestionType) {
+  return type === 'mcq' || type === 'msq';
+}
+
+function needsAnswerOnly(type: QuestionType) {
+  return type === 'fill_blank' || type === 'integer' || type === 'numerical';
+}
 
 export function QuestionBankPanel() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [newQ, setNewQ] = useState('');
-  const [questionType, setQuestionType] = useState<'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical'>('mcq');
+  const [questionType, setQuestionType] = useState<QuestionType>('mcq');
   const [opt1, setOpt1] = useState('');
   const [opt2, setOpt2] = useState('');
   const [correct, setCorrect] = useState('1');
@@ -44,6 +64,25 @@ export function QuestionBankPanel() {
 
   useDashboardLoadingEffect(loading);
 
+  const buildOptions = () => {
+    if (questionType === 'true_false') {
+      return [
+        { content: { text: 'True' }, isCorrect: correct === 'true' },
+        { content: { text: 'False' }, isCorrect: correct === 'false' },
+      ];
+    }
+    if (questionType === 'fill_blank') {
+      return [{ content: { text: opt1 }, isCorrect: true }];
+    }
+    if (questionType === 'integer' || questionType === 'numerical') {
+      return [{ content: { value: Number(opt1) || 0 }, isCorrect: true }];
+    }
+    return [
+      { content: { text: opt1 }, isCorrect: correct === '1' },
+      { content: { text: opt2 }, isCorrect: correct === '2' },
+    ];
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage('');
@@ -54,21 +93,14 @@ export function QuestionBankPanel() {
           content: { text: newQ },
           marks: 1,
           difficulty: 2,
-          options:
-            questionType === 'fill_blank'
-              ? [{ content: { text: opt1 }, isCorrect: true }]
-              : questionType === 'integer' || questionType === 'numerical'
-                ? [{ content: { value: Number(opt1) || 0 }, isCorrect: true }]
-                : [
-                    { content: { text: opt1 }, isCorrect: correct === '1' },
-                    { content: { text: opt2 }, isCorrect: correct === '2' },
-                  ],
+          options: buildOptions(),
         });
         await examinationService.approveQuestion(created.id);
         setNewQ('');
         setOpt1('');
         setOpt2('');
-        setMessage('Question created and approved.');
+        setCorrect('1');
+        setMessage(`${QUESTION_TYPE_LABELS[questionType]} question created and approved.`);
         await load();
       } catch (err) {
         setError(parseApiError(err));
@@ -77,73 +109,127 @@ export function QuestionBankPanel() {
   };
 
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>Question Bank</h4>
-      </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <form onSubmit={handleCreate} className="sp_bottom_30">
-        <div className="row">
-          <div className="col-xl-3 sp_bottom_15">
-            <select className="form-select" value={questionType} onChange={(e) => setQuestionType(e.target.value as typeof questionType)}>
-              <option value="mcq">MCQ</option>
-              <option value="msq">MSQ</option>
-              <option value="true_false">True/False</option>
-              <option value="fill_blank">Fill Blank</option>
-              <option value="integer">Integer</option>
-              <option value="numerical">Numerical</option>
-            </select>
-          </div>
-          <div className="col-xl-12 sp_bottom_15">
-            <input
-              className="register__input"
-              placeholder="Question text"
-              value={newQ}
-              onChange={(e) => setNewQ(e.target.value)}
-              required
-            />
-          </div>
-          <div className="col-xl-5 sp_bottom_15">
-            <input className="register__input" placeholder="Option 1" value={opt1} onChange={(e) => setOpt1(e.target.value)} required />
-          </div>
-          <div className="col-xl-5 sp_bottom_15">
-            <input className="register__input" placeholder="Option 2" value={opt2} onChange={(e) => setOpt2(e.target.value)} required />
-          </div>
-          <div className="col-xl-2 sp_bottom_15">
-            <select className="form-select" value={correct} onChange={(e) => setCorrect(e.target.value)}>
-              <option value="1">Opt 1 correct</option>
-              <option value="2">Opt 2 correct</option>
-            </select>
-          </div>
-          <div className="col-xl-12">
-            <button type="submit" className="default__button">Add MCQ Question</button>
-          </div>
+    <>
+      <DashboardPageHeader
+        badge="Step 1"
+        title="Question Bank"
+        subtitle="Create and approve questions before adding them to any test."
+      />
+      <AdminExamGuide activeStep={1} compact />
+      <div className="dashboard__content__wraper">
+        <div className="dashboard__section__title">
+          <h4>Add Question</h4>
         </div>
-      </form>
-      <div className="dashboard__table table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Question</th>
-              <th>Type</th>
-              <th>Status</th>
-              <th>Marks</th>
-            </tr>
-          </thead>
-          <tbody>
-            {questions.map((q) => (
-              <tr key={q.id}>
-                <td>{q.content?.text ?? '—'}</td>
-                <td>{q.type}</td>
-                <td>{q.status}</td>
-                <td>{q.marks}</td>
+        {error && <p className="login__error sp_bottom_15">{error}</p>}
+        {message && <p className="form-success sp_bottom_15">{message}</p>}
+        <form onSubmit={handleCreate} className="edtp-form-card sp_bottom_30">
+          <div className="row g-3">
+            <div className="col-md-4">
+              <label className="form-label">Question Type</label>
+              <select
+                className="form-select"
+                value={questionType}
+                onChange={(e) => {
+                  setQuestionType(e.target.value as QuestionType);
+                  setOpt1('');
+                  setOpt2('');
+                  setCorrect('1');
+                }}
+              >
+                {(Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]).map((t) => (
+                  <option key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</option>
+                ))}
+              </select>
+            </div>
+            <div className="col-12">
+              <label className="form-label">Question Text</label>
+              <input
+                className="register__input"
+                placeholder="Enter the question"
+                value={newQ}
+                onChange={(e) => setNewQ(e.target.value)}
+                required
+              />
+            </div>
+            {questionType === 'true_false' && (
+              <div className="col-md-4">
+                <label className="form-label">Correct Answer</label>
+                <select className="form-select" value={correct} onChange={(e) => setCorrect(e.target.value)}>
+                  <option value="true">True</option>
+                  <option value="false">False</option>
+                </select>
+              </div>
+            )}
+            {needsAnswerOnly(questionType) && (
+              <div className="col-md-6">
+                <label className="form-label">
+                  {questionType === 'fill_blank' ? 'Correct Answer' : 'Correct Value'}
+                </label>
+                <input
+                  className="register__input"
+                  placeholder={questionType === 'fill_blank' ? 'Answer text' : 'Numeric value'}
+                  value={opt1}
+                  onChange={(e) => setOpt1(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            {needsTwoOptions(questionType) && (
+              <>
+                <div className="col-md-5">
+                  <label className="form-label">Option 1</label>
+                  <input className="register__input" value={opt1} onChange={(e) => setOpt1(e.target.value)} required />
+                </div>
+                <div className="col-md-5">
+                  <label className="form-label">Option 2</label>
+                  <input className="register__input" value={opt2} onChange={(e) => setOpt2(e.target.value)} required />
+                </div>
+                <div className="col-md-2">
+                  <label className="form-label">Correct</label>
+                  <select className="form-select" value={correct} onChange={(e) => setCorrect(e.target.value)}>
+                    <option value="1">Option 1</option>
+                    <option value="2">Option 2</option>
+                  </select>
+                </div>
+              </>
+            )}
+            <div className="col-12">
+              <button type="submit" className="default__button">
+                Add {QUESTION_TYPE_LABELS[questionType]} Question
+              </button>
+            </div>
+          </div>
+        </form>
+        <div className="dashboard__section__title">
+          <h4>Approved Questions ({questions.length})</h4>
+        </div>
+        <div className="dashboard__table table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Question</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Marks</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {questions.map((q) => (
+                <tr key={q.id}>
+                  <td>{q.content?.text ?? '—'}</td>
+                  <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
+                  <td>{q.status}</td>
+                  <td>{q.marks}</td>
+                </tr>
+              ))}
+              {questions.length === 0 && (
+                <tr><td colSpan={4}>No questions yet. Add your first question above.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -153,13 +239,17 @@ export function TestsListPanel({ title }: { title: string }) {
   const [loading, setLoading] = useState(true);
   const withLoader = useDashboardLoader();
 
-  useEffect(() => {
+  const load = () => {
     setLoading(true);
     examinationService
       .listTests(1, 50)
       .then((res) => setTests(res.data))
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
   }, []);
 
   useDashboardLoadingEffect(loading);
@@ -168,57 +258,78 @@ export function TestsListPanel({ title }: { title: string }) {
     await withLoader(async () => {
       try {
         await examinationService.publishTest(id);
-        const res = await examinationService.listTests(1, 50);
-        setTests(res.data);
+        load();
       } catch (err) {
         setError(parseApiError(err));
       }
     });
   };
 
+  const statusBadge = (status: string) => {
+    const cls =
+      status === 'live' ? 'edtp-badge--active' : status === 'draft' ? 'edtp-badge--role' : 'edtp-badge--inactive';
+    return <span className={`edtp-badge ${cls}`}>{status}</span>;
+  };
+
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>{title}</h4>
-        <Link to="/dashboard/create-test">Create Test</Link>
-      </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      <div className="dashboard__table table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Status</th>
-              <th>Duration</th>
-              <th>Marks</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {tests.map((t) => (
-              <tr key={t.id}>
-                <td>{t.title}</td>
-                <td>{t.status}</td>
-                <td>{t.duration_minutes} min</td>
-                <td>{t.total_marks ?? '—'}</td>
-                <td>
-                  {t.status === 'draft' && (
-                    <>
-                      <Link to={`/dashboard/test-builder/${t.id}`} className="dashboard__small__btn__2 me-2">
-                        Build
-                      </Link>
-                      <button type="button" className="dashboard__small__btn__2" onClick={() => publish(t.id)}>
-                        Publish
-                      </button>
-                    </>
-                  )}
-                </td>
+    <>
+      <DashboardPageHeader
+        badge="Step 3–5"
+        title={title}
+        subtitle="Build draft tests, publish when ready, then assign students so they can attempt."
+      />
+      <AdminExamGuide activeStep={3} compact />
+      <div className="dashboard__content__wraper">
+        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <h4 className="mb-0">Test List</h4>
+          <Link to="/dashboard/create-test" className="default__button small-btn">+ Create Test</Link>
+        </div>
+        {error && <p className="login__error sp_bottom_15">{error}</p>}
+        <div className="dashboard__table table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Duration</th>
+                <th>Marks</th>
+                <th>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {tests.map((t) => (
+                <tr key={t.id}>
+                  <td>{t.title}</td>
+                  <td>{statusBadge(t.status)}</td>
+                  <td>{t.duration_minutes} min</td>
+                  <td>{t.total_marks ?? '—'}</td>
+                  <td className="text-nowrap">
+                    {t.status === 'draft' && (
+                      <>
+                        <Link to={`/dashboard/test-builder/${t.id}`} className="dashboard__small__btn__2 me-2">
+                          Build
+                        </Link>
+                        <button type="button" className="dashboard__small__btn__2" onClick={() => publish(t.id)}>
+                          Publish
+                        </button>
+                      </>
+                    )}
+                    {t.status === 'live' && (
+                      <Link to={`/dashboard/test-builder/${t.id}`} className="dashboard__small__btn__2">
+                        Manage & Assign
+                      </Link>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {tests.length === 0 && (
+                <tr><td colSpan={5}>No tests yet. <Link to="/dashboard/create-test">Create your first test</Link>.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 
@@ -449,6 +560,7 @@ export function ResultsPanel() {
 }
 
 export function CreateTestPanel() {
+  const navigate = useNavigate();
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
   const withLoader = useDashboardLoader();
@@ -471,15 +583,15 @@ export function CreateTestPanel() {
     setMessage('');
     await withLoader(async () => {
       try {
-        await examinationService.createTest({
+        const test = await examinationService.createTest({
           title: values.title,
           description: values.description,
           durationMinutes: Number(values.duration),
-          passingMarks: 2,
-          instructions: 'Read all questions carefully before submitting.',
+          passingMarks: 40,
+          instructions: 'Read all questions carefully. Do not switch tabs during the exam.',
         });
-        setMessage('Test created as draft. Add questions from Question Bank, then publish from Tests list.');
         reset();
+        navigate(`/dashboard/test-builder/${test.id}`);
       } catch (err) {
         setApiError(parseApiError(err));
       }
@@ -487,37 +599,47 @@ export function CreateTestPanel() {
   };
 
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>Create Test</h4>
-      </div>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <form onSubmit={handleSubmit(onSubmit)} noValidate>
-        <div className="row">
-          <div className="col-xl-12 sp_bottom_20">
-            <label htmlFor="examTitle">Exam Title</label>
-            <input id="examTitle" className={inputClassName('register__input', !!errors.title)} {...register('title')} />
-            <FormError message={errors.title?.message} />
-          </div>
-          <div className="col-xl-6 sp_bottom_20">
-            <label htmlFor="duration">Duration (minutes)</label>
-            <select id="duration" className="form-select" {...register('duration')}>
-              <option value="30">30</option>
-              <option value="60">60</option>
-              <option value="90">90</option>
-            </select>
-          </div>
-          <div className="col-xl-12 sp_bottom_20">
-            <label htmlFor="aboutExam">Description</label>
-            <textarea id="aboutExam" rows={4} className={inputClassName('register__input', !!errors.description)} {...register('description')} />
-          </div>
-          <div className="col-xl-12">
-            <button type="submit" className="default__button auth-submit-btn">Save Test</button>
-          </div>
+    <>
+      <DashboardPageHeader
+        badge="Step 2"
+        title="Create Test"
+        subtitle="Save a draft exam, then add questions from the Question Bank in the next step."
+      />
+      <AdminExamGuide activeStep={2} compact />
+      <div className="dashboard__content__wraper">
+        <div className="dashboard__section__title">
+          <h4>New Exam Draft</h4>
         </div>
-      </form>
-    </div>
+        {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
+        {message && <p className="form-success sp_bottom_15">{message}</p>}
+        <form onSubmit={handleSubmit(onSubmit)} noValidate className="edtp-form-card">
+          <div className="row g-3">
+            <div className="col-12">
+              <label htmlFor="examTitle">Exam Title</label>
+              <input id="examTitle" className={inputClassName('register__input', !!errors.title)} {...register('title')} />
+              <FormError message={errors.title?.message} />
+            </div>
+            <div className="col-md-6">
+              <label htmlFor="duration">Duration (minutes)</label>
+              <select id="duration" className="form-select" {...register('duration')}>
+                <option value="15">15</option>
+                <option value="30">30</option>
+                <option value="60">60</option>
+                <option value="90">90</option>
+                <option value="120">120</option>
+              </select>
+            </div>
+            <div className="col-12">
+              <label htmlFor="aboutExam">Description (optional)</label>
+              <textarea id="aboutExam" rows={3} className={inputClassName('register__input', !!errors.description)} {...register('description')} />
+            </div>
+            <div className="col-12">
+              <button type="submit" className="default__button auth-submit-btn">Save &amp; Build Test</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </>
   );
 }
 

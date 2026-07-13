@@ -10,28 +10,27 @@ export function resolveDashboardRole(apiRoles: string[]): DashboardRole {
   return 'student';
 }
 
+/** Sidebar/layout role — teachers share the student dashboard experience */
+export function resolveLayoutRole(apiRoles: string[]): Extract<DashboardRole, 'admin' | 'student'> {
+  if (apiRoles.some((r) => ADMIN_ROLES.includes(r as ApiRole))) return 'admin';
+  return 'student';
+}
+
 export function getRoleFromPath(pathname: string): DashboardRole {
-  if (pathname.includes('/admin-')) return 'admin';
-  if (
-    pathname.includes('/teacher-') ||
-    pathname.includes('/create-test') ||
-    pathname.includes('/become-a-teacher')
-  ) {
-    return 'teacher';
+  if (pathname.includes('/admin-') || pathname.includes('/create-test') || pathname.includes('/test-builder')) {
+    return 'admin';
   }
   return 'student';
 }
 
 export function canAccessDashboardRole(userRoles: string[], layoutRole: DashboardRole): boolean {
-  const userRole = resolveDashboardRole(userRoles);
-  if (userRole === 'admin') return true;
-  if (userRole === 'teacher') return layoutRole !== 'admin';
+  const allowed = resolveLayoutRole(userRoles);
+  if (allowed === 'admin') return layoutRole === 'admin';
   return layoutRole === 'student';
 }
 
 export function getDefaultDashboardPath(apiRoles: string[]): string {
-  const role = resolveDashboardRole(apiRoles);
-  if (role === 'admin') return '/dashboard/admin-dashboard';
-  if (role === 'teacher') return '/dashboard/teacher-dashboard';
-  return '/dashboard/student-dashboard';
+  return resolveLayoutRole(apiRoles) === 'admin'
+    ? '/dashboard/admin-dashboard'
+    : '/dashboard/student-dashboard';
 }

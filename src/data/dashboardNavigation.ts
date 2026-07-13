@@ -33,7 +33,7 @@ export function buildDashboardProfile(user: ApiUser, role: DashboardRole): Dashb
       greeting: 'Hello',
       image: resolveImageUrl(user.avatarUrl) || defaultImages.teacher,
       showRating: true,
-      cta: { label: 'Create New Test', href: `${base}/create-test` },
+      cta: { label: 'My Tests', href: `${base}/student-enrolled-courses` },
     },
     admin: {
       role: 'admin',
@@ -41,7 +41,7 @@ export function buildDashboardProfile(user: ApiUser, role: DashboardRole): Dashb
       image: resolveImageUrl(user.avatarUrl) || defaultImages.admin,
       innerClass: 'admin__dashboard__inner',
       showRating: true,
-      cta: { label: 'Manage Users', href: `${base}/admin-users` },
+      cta: { label: 'Create Test', href: `${base}/create-test` },
     },
   };
 
@@ -51,49 +51,39 @@ export function buildDashboardProfile(user: ApiUser, role: DashboardRole): Dashb
 const logoutItem = { label: 'Logout', href: '/login', icon: 'logout', action: 'logout' as const };
 
 /**
- * Phase 1 sidebar menus — only modules that exist in the platform.
- * Student / Teacher / Admin items match doc walkthrough scenes.
+ * Phase 1 sidebar — admin exam flow first, platform settings grouped below.
  */
 export function buildDashboardNavigation(_user: ApiUser, role: DashboardRole): DashboardNavSection[] {
-  if (role === 'teacher') {
-    return [
-      {
-        title: '',
-        items: [
-          { label: 'Dashboard', href: `${base}/teacher-dashboard`, icon: 'home' },
-          { label: 'My Profile', href: `${base}/teacher-profile`, icon: 'user' },
-          { label: 'Notifications', href: `${base}/teacher-message`, icon: 'message' },
-          { label: 'Question Bank', href: `${base}/question-bank`, icon: 'quiz' },
-          { label: 'My Tests', href: `${base}/teacher-course`, icon: 'monitor' },
-          { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
-          { label: 'Test Attempts', href: `${base}/teacher-quiz-attempts`, icon: 'quiz' },
-          { label: 'Reports', href: `${base}/teacher-reviews`, icon: 'star' },
-          { label: 'Settings', href: `${base}/teacher-settings`, icon: 'settings' },
-          logoutItem,
-        ],
-      },
-    ];
-  }
-
   if (role === 'admin') {
     return [
       {
-        title: '',
+        title: 'Examinations',
         items: [
           { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
+          { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
+          { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
+          { label: 'All Tests', href: `${base}/admin-course`, icon: 'monitor' },
+          { label: 'Attempts', href: `${base}/admin-quiz-attempts`, icon: 'assignment' },
+          { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },
+        ],
+      },
+      {
+        title: 'Management',
+        items: [
+          { label: 'Users', href: `${base}/admin-users`, icon: 'user' },
+          { label: 'Payments', href: `${base}/admin-wishlist`, icon: 'cart' },
+          { label: 'Organization', href: `${base}/admin-org`, icon: 'course' },
+          { label: 'Audit Logs', href: `${base}/admin-audit`, icon: 'assignment' },
+          { label: 'Sessions', href: `${base}/admin-sessions`, icon: 'monitor' },
+          { label: 'Branding', href: `${base}/admin-branding`, icon: 'settings' },
+          { label: 'Settings', href: `${base}/admin-settings`, icon: 'settings' },
+        ],
+      },
+      {
+        title: 'Account',
+        items: [
           { label: 'My Profile', href: `${base}/admin-profile`, icon: 'user' },
           { label: 'Notifications', href: `${base}/admin-message`, icon: 'message' },
-          { label: 'All Tests', href: `${base}/admin-course`, icon: 'course' },
-          { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
-          { label: 'All Attempts', href: `${base}/admin-quiz-attempts`, icon: 'quiz' },
-          { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },
-          { label: 'Payments', href: `${base}/admin-wishlist`, icon: 'cart' },
-          { label: 'Users', href: `${base}/admin-users`, icon: 'user' },
-          { label: 'Audit Logs', href: `${base}/admin-audit`, icon: 'assignment' },
-          { label: 'Organization', href: `${base}/admin-org`, icon: 'course' },
-          { label: 'Branding', href: `${base}/admin-branding`, icon: 'settings' },
-          { label: 'Sessions', href: `${base}/admin-sessions`, icon: 'monitor' },
-          { label: 'Settings', href: `${base}/admin-settings`, icon: 'settings' },
           logoutItem,
         ],
       },

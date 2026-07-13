@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
 import DashboardBreadcrumb from './DashboardBreadcrumb';
-import DashboardRoleTabs from './DashboardRoleTabs';
 import HamburgerIcon from '@/components/ui/HamburgerIcon';
 
 interface DashboardTopBarProps {
@@ -28,10 +27,6 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
           <HamburgerIcon open={menuOpen} />
         </button>
         <DashboardBreadcrumb />
-      </div>
-
-      <div className="sca-db-header__center">
-        <DashboardRoleTabs activeRole={role} />
       </div>
 
       <div className="sca-db-header__right">
