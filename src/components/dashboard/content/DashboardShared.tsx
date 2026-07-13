@@ -11,9 +11,10 @@ export function DashboardFilterRow() {
         <div className="dashboard__selector">
           <select className="form-select" defaultValue="all">
             <option value="all">All</option>
-            <option value="sat">SAT & ACT</option>
-            <option value="ap">AP Exams</option>
-            <option value="staar">State Assessment</option>
+            <option value="hardware">Hardware & Networking</option>
+            <option value="software">Computer Application</option>
+            <option value="diploma">Diploma Course</option>
+            <option value="govt">CCC / O Level</option>
           </select>
         </div>
       </div>

@@ -11,18 +11,16 @@ export default function PrivacyPage() {
         <div className="row">
           <div className="col-xl-8 offset-xl-2">
             <p>
-              EduTest Pro, an EdTech product of {parentCompany.name} (India), protects student data in
-              line with applicable privacy standards including FERPA-aligned practices for US
-              institutions. We collect account information, exam attempt data, and usage analytics only
-              to deliver and improve our testing platform.
+              {parentCompany.name} protects student data in line with applicable Indian privacy
+              standards. We collect account information, exam attempt data, and usage analytics only
+              to deliver online tests, results, and academy services.
             </p>
             <p>
-              We do not sell personal data. Schools and institutions control organization-level access
-              through admin roles. Data is processed on secure cloud infrastructure managed by{' '}
-              {parentCompany.name}. Contact support to request data export or deletion.
+              We do not sell personal data. Institutes control organization-level access through
+              admin roles. Contact us to request data export or deletion.
             </p>
             <p>
-              Learn more about our parent company at{' '}
+              Learn more at{' '}
               <a href={parentCompany.website} target="_blank" rel="noreferrer">
                 {parentCompany.website}
               </a>

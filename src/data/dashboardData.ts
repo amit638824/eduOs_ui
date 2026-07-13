@@ -17,112 +17,104 @@ export interface DashboardCourseItem {
 
 export const dashboardCourses: DashboardCourseItem[] = [
   {
-    title: 'SAT Practice Test — Full Length',
+    title: 'PC Hardware & Networking — Mock Test',
     img: '/img/grid/grid_1.png',
-    badge: 'SAT',
+    badge: 'Certificate',
     badgeClass: 'blue__color',
-    lessons: '4 Sections',
-    duration: '3 hr 15 min',
-    price: '$49.00',
-    originalPrice: '/$89.00',
+    lessons: '50 Questions',
+    duration: '60 min',
+    price: '₹0.00',
+    originalPrice: '/₹199.00',
     free: true,
-    instructor: 'Dr. Sarah Mitchell',
+    instructor: 'SCA Faculty',
     instructorImg: '/img/grid/grid_small_2.jpg',
     rating: 5,
-    reviews: 124,
+    reviews: 428,
     showHeart: true,
   },
   {
-    title: 'AP Calculus AB Mock Exam',
-    img: '/img/grid/grid_3.png',
-    badge: 'AP',
-    badgeClass: 'pink__color',
-    lessons: '2 Sections',
-    duration: '2 hr 10 min',
-    price: '$39.00',
-    originalPrice: '/$67.00',
-    instructor: 'Michael Torres',
+    title: 'CCC Online Practice Exam',
+    img: '/img/grid/grid_4.png',
+    badge: 'CCC',
+    badgeClass: 'green__color',
+    lessons: '100 Questions',
+    duration: '90 min',
+    price: '₹0.00',
+    instructor: 'SCA Faculty',
     instructorImg: '/img/grid/grid_small_3.jpg',
     rating: 5,
-    reviews: 88,
+    reviews: 567,
     showHeart: true,
   },
   {
-    title: 'Texas STAAR Algebra I',
-    img: '/img/grid/grid_5.png',
-    badge: 'STAAR',
-    badgeClass: 'green__color',
-    lessons: '1 Section',
-    duration: '1 hr 40 min',
-    price: '$29.00',
-    originalPrice: '/$49.00',
-    instructor: 'Julia Jones',
+    title: 'Network Administration — Diploma Test',
+    img: '/img/grid/grid_3.png',
+    badge: 'Diploma',
+    badgeClass: 'pink__color',
+    lessons: '60 Questions',
+    duration: '90 min',
+    price: '₹49.00',
+    originalPrice: '/₹149.00',
+    instructor: 'SCA Faculty',
     instructorImg: '/img/grid/grid_small_1.jpg',
     rating: 5,
-    reviews: 56,
+    reviews: 189,
     showHeart: true,
   },
 ];
 
 export const messageContacts = [
-  { name: 'Dr. Sarah Mitchell', preview: 'Your SAT practice results are ready.', time: '12 min', img: '/img/teacher/teacher__1.png' },
-  { name: 'TechWagger Support', preview: 'Welcome to EduTest Pro!', time: '4:35pm', img: '/img/teacher/teacher__2.png' },
-  { name: 'Julia Jones', preview: 'New AP mock exam available.', time: '1:40pm', img: '/img/teacher/teacher__3.png' },
-  { name: 'Michael Torres', preview: 'Proctoring session confirmed.', time: '3:20am', img: '/img/teacher/teacher__4.png' },
-  { name: 'Bradshaw', preview: 'Hey, How are you?', time: '12 min', img: '/img/teacher/teacher__5.png' },
+  { name: 'SCA Admin', preview: 'Your online test result is ready.', time: '12 min', img: '/img/teacher/teacher__1.png' },
+  { name: 'Super Computer Academy', preview: 'Welcome to the online exam portal!', time: '4:35pm', img: '/img/teacher/teacher__2.png' },
+  { name: 'Faculty — Networking', preview: 'New CCC mock test uploaded.', time: '1:40pm', img: '/img/teacher/teacher__3.png' },
 ];
 
 export const profileFields = [
-  { label: 'Registration Date', value: 'January 20, 2026 9:00 PM' },
-  { label: 'First Name', value: 'Alex' },
-  { label: 'Last Name', value: 'Johnson' },
-  { label: 'Username', value: 'alexjohnson' },
-  { label: 'Email', value: 'alex@school.edu' },
-  { label: 'Phone Number', value: '+1 (555) 123-4567' },
-  { label: 'Expert', value: 'SAT & AP Exams' },
+  { label: 'Registration Date', value: 'January 20, 2026 9:00 AM' },
+  { label: 'First Name', value: 'Arjun' },
+  { label: 'Last Name', value: 'Mehta' },
+  { label: 'Username', value: 'student1' },
+  { label: 'Email', value: 'student1@edutech.com' },
+  { label: 'Phone Number', value: '+91 98765 00011' },
+  { label: 'Course', value: 'Hardware & Networking' },
   {
     label: 'Biography',
     value:
-      'Student preparing for SAT, ACT, and AP exams. Focused on math and science sections with regular practice tests on EduTest Pro by TechWagger.',
+      'Student at Super Computer Academy, Kerakat. Preparing for certificate and diploma online exams with regular mock test practice.',
   },
 ];
 
 export const feedbackRows = [
-  { name: 'SAT Math Practice', enrolled: '1,240', rating: 5 },
-  { name: 'AP Calculus AB', enrolled: '890', rating: 5 },
-  { name: 'ACT Science', enrolled: '756', rating: 4 },
-  { name: 'STAAR Algebra I', enrolled: '1,102', rating: 5 },
+  { name: 'PC Hardware Mock Test', enrolled: '428', rating: 5 },
+  { name: 'CCC Practice Exam', enrolled: '567', rating: 5 },
+  { name: 'Computer Application Test', enrolled: '312', rating: 5 },
+  { name: 'O Level M1-R5 Paper', enrolled: '234', rating: 4 },
 ];
 
 export const quizAttempts = [
-  { date: 'March 12, 2026', title: 'SAT Math Section — Practice 1', student: 'Alex Johnson', qus: 4, tm: 8, ca: 4, result: 'Pass' as const },
-  { date: 'March 10, 2026', title: 'AP Calc AB — Mock Exam 2', student: 'Alex Johnson', qus: 4, tm: 8, ca: 3, result: 'Over' as const },
-  { date: 'March 5, 2026', title: 'STAAR Algebra — Attempt 1', student: 'Alex Johnson', qus: 4, tm: 8, ca: 4, result: 'Pass' as const },
-  { date: 'February 28, 2026', title: 'ACT English — Practice 3', student: 'Alex Johnson', qus: 4, tm: 8, ca: 2, result: 'Cancel' as const },
+  { date: 'July 10, 2026', title: 'PC Hardware — Mock Test 1', student: 'Arjun Mehta', qus: 50, tm: 60, ca: 42, result: 'Pass' as const },
+  { date: 'July 8, 2026', title: 'CCC Practice Paper', student: 'Isha Patel', qus: 100, tm: 90, ca: 78, result: 'Pass' as const },
+  { date: 'July 5, 2026', title: 'MS Office — Online Test', student: 'Rohan Das', qus: 40, tm: 45, ca: 35, result: 'Over' as const },
 ];
 
 export const assignments = [
-  { title: 'Essay: US History — Civil Rights Movement', course: 'AP US History', marks: 80, submitted: 2 },
-  { title: 'Lab Report: Chemistry — Acids & Bases', course: 'AP Chemistry', marks: 100, submitted: 1 },
-  { title: 'Problem Set: Algebra II', course: 'SAT Math Prep', marks: 50, submitted: 3 },
-  { title: 'Reading Comprehension Practice', course: 'ACT English', marks: 75, submitted: 2 },
+  { title: 'PC Assembly Practical Report', course: 'Hardware & Networking', marks: 50, submitted: 12 },
+  { title: 'Tally Accounting Exercise', course: 'Computer Application', marks: 30, submitted: 8 },
+  { title: 'Network Topology Diagram', course: 'Diploma — Network Admin', marks: 40, submitted: 6 },
 ];
 
 export const reviewsReceived = [
-  { student: 'Alex Johnson', date: 'January 30, 2026', course: 'SAT Math Practice', rating: 5, text: 'Excellent practice material!' },
-  { student: 'Maria Garcia', date: 'February 15, 2026', course: 'AP Calculus AB', rating: 5, text: 'Very helpful mock exam.' },
-  { student: 'James Wilson', date: 'March 1, 2026', course: 'ACT Science', rating: 4, text: 'Good questions, timed well.' },
+  { student: 'Arjun Mehta', date: 'July 1, 2026', course: 'CCC Mock Test', rating: 5, text: 'Online exam bahut helpful hai!' },
+  { student: 'Priya Singh', date: 'June 28, 2026', course: 'Hardware Test', rating: 5, text: 'Instant result mil gaya.' },
 ];
 
 export const orderHistory = [
-  { id: '#5478', course: 'SAT Pro Plan', date: 'January 27, 2026', price: '$19.99', status: 'Success' },
-  { id: '#4585', course: 'AP Course Pack', date: 'February 14, 2026', price: '$29.99', status: 'Processing' },
-  { id: '#9656', course: 'STAAR Prep Bundle', date: 'March 3, 2026', price: '$49.99', status: 'On Hold' },
-  { id: '#7821', course: 'ACT Full Practice', date: 'March 8, 2026', price: '$39.99', status: 'Canceled' },
+  { id: '#SCA1001', course: 'Student Plan — 1 Month', date: 'July 1, 2026', price: '₹199.00', status: 'Success' },
+  { id: '#SCA1002', course: 'Wallet Top-up', date: 'June 20, 2026', price: '₹500.00', status: 'Success' },
 ];
 
 export const announcements = [
-  { title: 'New SAT Digital Format Update', course: 'SAT Prep', date: 'March 1, 2026', status: 'Published' },
-  { title: 'Spring Break Exam Schedule', course: 'All Courses', date: 'February 20, 2026', status: 'Published' },
-  { title: 'Proctoring Policy Change', course: 'AP Exams', date: 'February 10, 2026', status: 'Draft' },
+  { title: 'Online Exam Facility — All Students', course: 'All Courses', date: 'July 10, 2026', status: 'Published' },
+  { title: 'CCC Mock Test Schedule — July 2026', course: 'Govt IT', date: 'July 5, 2026', status: 'Published' },
+  { title: 'Admission Open — 3, 6 & 12 Month Courses', course: 'Academy', date: 'July 1, 2026', status: 'Published' },
 ];

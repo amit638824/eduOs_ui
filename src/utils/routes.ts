@@ -1,11 +1,10 @@
 export const EXAM_CATEGORY_SLUGS = [
-  'sat-act',
-  'ap',
-  'ap-ib',
-  'state',
+  'hardware-networking',
+  'computer-application',
+  'diploma',
+  'govt-it',
+  'programming',
   'certification',
-  'nclex',
-  'it',
 ] as const;
 
 export type ExamCategorySlug = (typeof EXAM_CATEGORY_SLUGS)[number];
@@ -16,13 +15,12 @@ export function isExamCategorySlug(slug: string): slug is ExamCategorySlug {
 
 export function getExamCategoryTitle(slug: ExamCategorySlug): string {
   const titles: Record<ExamCategorySlug, string> = {
-    'sat-act': 'SAT & ACT Prep',
-    ap: 'AP Exams',
-    'ap-ib': 'AP & IB Exams',
-    state: 'State Assessments',
-    certification: 'Certifications',
-    nclex: 'NCLEX & Nursing',
-    it: 'IT Certifications',
+    'hardware-networking': 'Hardware & Networking',
+    'computer-application': 'Computer Application',
+    diploma: 'Diploma & Certificate',
+    'govt-it': 'CCC & O Level (Govt IT)',
+    programming: 'Programming',
+    certification: 'IT Certifications',
   };
   return titles[slug];
 }

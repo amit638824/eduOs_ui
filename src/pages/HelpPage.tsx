@@ -12,8 +12,8 @@ export default function HelpPage() {
           <div className="col-xl-8 offset-xl-2">
             <h3>How can we help?</h3>
             <p>
-              Contact the {parentCompany.name} EdTech support team for login, exam access, and school
-              onboarding help. EduTest Pro is built and supported by {parentCompany.name} from India.
+              Contact {parentCompany.name} support for login help, online test access, admission
+              enquiries, and institute onboarding. Visit us at Kerakat, Jaunpur or call during academy hours.
             </p>
             <ul>
               <li>Phone: {contact.phone}</li>

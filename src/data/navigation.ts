@@ -8,17 +8,17 @@ const base = '/dashboard';
 export const publicNavigation: NavItem[] = [
   { label: 'Home', href: '/' },
   {
-    label: 'Practice Tests',
+    label: 'Online Tests',
     href: '/exams',
     children: [
-      { label: 'SAT & ACT Prep', href: '/exams/sat-act' },
-      { label: 'AP Exams', href: '/exams/ap', badge: 'Popular' },
-      { label: 'AP & IB Exams', href: '/exams/ap-ib' },
-      { label: 'State Assessments', href: '/exams/state' },
-      { label: 'Certifications', href: '/exams/certification' },
+      { label: 'Hardware & Networking', href: '/exams/hardware-networking' },
+      { label: 'Computer Application', href: '/exams/computer-application', badge: 'Popular' },
+      { label: 'Diploma & Certificate', href: '/exams/diploma' },
+      { label: 'CCC & O Level', href: '/exams/govt-it' },
+      { label: 'Programming', href: '/exams/programming' },
     ],
   },
-  { label: 'For Schools', href: '/schools' },
+  { label: 'For Institutes', href: '/schools' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'About', href: '/about' },
 ];
@@ -59,7 +59,7 @@ export function buildAuthenticatedPublicNav(user: ApiUser): NavItem[] {
 export function buildDashboardHeaderNav(user: ApiUser): NavItem[] {
   return [
     { label: 'Back to Website', href: '/' },
-    { label: 'Practice Tests', href: '/exams' },
+    { label: 'Online Tests', href: '/exams' },
     ...buildAuthenticatedPublicNav(user).filter((item) => item.label !== 'My Dashboard'),
   ];
 }

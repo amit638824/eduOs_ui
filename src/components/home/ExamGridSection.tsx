@@ -3,13 +3,12 @@ import { siteContent } from '@/data/siteContent';
 import type { ExamCategorySlug } from '@/utils/routes';
 
 const categoryFilterMap: Record<ExamCategorySlug, string> = {
-  'sat-act': 'filter-sat',
-  ap: 'filter-ap',
-  'ap-ib': 'filter-ap',
-  state: 'filter-state',
+  'hardware-networking': 'filter-hardware',
+  'computer-application': 'filter-software',
+  diploma: 'filter-diploma',
+  'govt-it': 'filter-govt',
+  programming: 'filter-cert',
   certification: 'filter-cert',
-  nclex: 'filter-cert',
-  it: 'filter-cert',
 };
 
 export default function ExamGridSection({ activeCategory }: { activeCategory?: ExamCategorySlug }) {

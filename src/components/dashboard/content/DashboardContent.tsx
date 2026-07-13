@@ -836,7 +836,7 @@ function CreateTestInfoForm() {
     defaultValues: {
       title: '',
       slug: '',
-      category: 'sat',
+      category: 'hardware',
       duration: '90',
       description: '',
     },
@@ -858,7 +858,7 @@ function CreateTestInfoForm() {
                 <input
                   id="examTitle"
                   type="text"
-                  placeholder="e.g. SAT Math Practice Test 1"
+                  placeholder="e.g. CCC Mock Test — July 2026"
                   className={inputClassName('', !!errors.title)}
                   {...register('title')}
                 />
@@ -873,7 +873,7 @@ function CreateTestInfoForm() {
                 <input
                   id="examSlug"
                   type="text"
-                  placeholder="sat-math-practice-1"
+                  placeholder="ccc-mock-july-2026"
                   className={inputClassName('', !!errors.slug)}
                   {...register('slug')}
                 />
@@ -887,10 +887,10 @@ function CreateTestInfoForm() {
             </div>
             <div className="dashboard__selector">
               <select className="form-select" {...register('category')}>
-                <option value="sat">SAT & ACT</option>
-                <option value="ap">AP Exams</option>
-                <option value="state">State Assessment</option>
-                <option value="cert">Certification</option>
+                <option value="hardware">Hardware & Networking</option>
+                <option value="software">Computer Application</option>
+                <option value="diploma">Diploma Course</option>
+                <option value="govt">CCC / O Level</option>
               </select>
               <FormError message={errors.category?.message} />
             </div>
@@ -1199,9 +1199,8 @@ export function DashboardBecomeInstructorContent() {
           <div className="become__instructor__text">
             <h3 className="become__instructor__small__heading">Become an Instructor</h3>
             <p>
-              Join EduTest Pro — built by TechWagger — and help students prepare for SAT, ACT, AP, and
-              state assessments. Share your expertise through practice exams, quizzes, and proctored
-              sessions.
+              Join Super Computer Academy and help students prepare for online mock tests, certificate
+              exams, CCC, O Level, and diploma assessments in Hardware, Software & Networking.
             </p>
             <h3 className="become__instructor__small__heading">Instructor Rules</h3>
             <p>All instructors must meet our quality and compliance standards for online exam preparation.</p>

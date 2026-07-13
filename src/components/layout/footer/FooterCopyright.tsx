@@ -17,8 +17,8 @@ export default function FooterCopyright() {
         <div className="col-xl-6 col-lg-6">
           <div className="footerarea__copyright__content footerarea__copyright__content__2">
             <p>
-              Copyright © <span>{footer.copyright.year}</span> by {footer.copyright.brand}. All
-              Rights Reserved. {footer.copyright.product} is an EdTech product of {footer.copyright.brand}.
+              Copyright © <span>{footer.copyright.year}</span> {footer.copyright.brand}. All
+              Rights Reserved. {footer.copyright.product}.
             </p>
           </div>
         </div>

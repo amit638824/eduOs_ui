@@ -12,7 +12,7 @@ export default function Preloader() {
     <div id="back__preloader" style={hidden ? { display: 'none' } : undefined}>
       <div id="back__circle_loader" />
       <div className="back__loader_logo">
-        <img loading="lazy" src="/img/pre.png" alt="Loading" />
+        <img loading="lazy" src="/img/logo/sca-logo.png" alt="Loading" />
       </div>
     </div>
   );

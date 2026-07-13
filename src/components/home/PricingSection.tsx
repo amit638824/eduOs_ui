@@ -24,7 +24,7 @@ export default function PricingSection() {
                   </div>
                   <div className="pricingarea__number">
                     <h1>
-                      <span className="price__currency">$</span>
+                      <span className="price__currency">₹</span>
                       {plan.price}
                       <span className="price__durition">{plan.period}</span>
                     </h1>

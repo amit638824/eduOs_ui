@@ -7,25 +7,25 @@ export default function SchoolsPage() {
 
   return (
     <>
-      <Breadcrumb title="For Schools" />
+      <Breadcrumb title="For Institutes" />
       <div className="aboutarea__2 sp_top_100 sp_bottom_100">
         <div className="container">
           <div className="row align-items-center">
             <div className="col-xl-6" data-aos="fade-up">
               <div className="aboutarea__content__wraper">
                 <div className="aboutarea__button">
-                  <div className="default__small__button">K-12 &amp; Higher Ed</div>
+                  <div className="default__small__button">Institutes &amp; Colleges</div>
                 </div>
                 <div className="aboutarea__headding heading__underline">
                   <h2>
-                    Secure Online Testing for <span>Schools &amp; Institutions</span>
+                    Online Testing for <span>IT Training Institutes</span>
                   </h2>
                 </div>
                 <div className="aboutarea__para aboutarea__para__2">
                   <p>
-                    EduTest Pro — an EdTech product of {parentCompany.name} — helps school districts
-                    deliver state benchmarks, classroom quizzes, and high-stakes exams with live
-                    proctoring, instant grading, and secure cloud infrastructure.
+                    {parentCompany.name} helps computer training centers and engineering colleges
+                    conduct secure online mock tests, certificate exams, and batch assessments with
+                    instant results, rank reports, and wallet-based payments.
                   </p>
                 </div>
                 <div className="aboutarea__list__2">
