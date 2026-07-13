@@ -113,8 +113,29 @@ export async function saveAnswer(
   return data.data;
 }
 
-export async function submitAttempt(attemptId: string) {
-  const { data } = await api.post<ApiResponse<ExamResult>>(`${base}/attempts/${attemptId}/submit`);
+export async function submitAttempt(attemptId: string, autoSubmit = false) {
+  const { data } = await api.post<ApiResponse<ExamResult>>(`${base}/attempts/${attemptId}/submit`, {
+    autoSubmit,
+  });
+  return data.data;
+}
+
+export async function logProctoringEvent(
+  attemptId: string,
+  event: string,
+  detail?: Record<string, unknown>,
+) {
+  const { data } = await api.post<ApiResponse<{ tab_switch_count: number }>>(
+    `${base}/attempts/${attemptId}/proctoring`,
+    { event, detail },
+  );
+  return data.data;
+}
+
+export async function getMyStats() {
+  const { data } = await api.get<ApiResponse<import('@/types/examination').StudentStats>>(
+    `${base}/stats/my`,
+  );
   return data.data;
 }
 

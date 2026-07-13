@@ -369,7 +369,7 @@ export const siteContent: SiteContent = {
       },
     ],
     copyright: {
-      year: '2026',
+      year: new Date().getFullYear().toString(),
       brand: 'Super Computer Academy',
       product: 'Online Exam Portal',
     },

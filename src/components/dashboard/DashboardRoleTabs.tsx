@@ -3,10 +3,10 @@ import type { DashboardRole } from '@/types/dashboard';
 import { useAuth } from '@/context/AuthContext';
 import { resolveDashboardRole } from '@/utils/dashboardRole';
 
-const tabs: { role: DashboardRole; label: string; href: string; apiRoles: string[] }[] = [
-  { role: 'student', label: 'Student', href: '/dashboard/student-dashboard', apiRoles: ['student', 'parent'] },
-  { role: 'teacher', label: 'Teacher', href: '/dashboard/teacher-dashboard', apiRoles: ['teacher', 'examiner', 'evaluator'] },
-  { role: 'admin', label: 'Admin', href: '/dashboard/admin-dashboard', apiRoles: ['super_admin', 'org_admin', 'branch_admin'] },
+const tabs: { role: DashboardRole; label: string; href: string }[] = [
+  { role: 'student', label: 'Student', href: '/dashboard/student-dashboard' },
+  { role: 'teacher', label: 'Teacher', href: '/dashboard/teacher-dashboard' },
+  { role: 'admin', label: 'Admin', href: '/dashboard/admin-dashboard' },
 ];
 
 interface DashboardRoleTabsProps {
@@ -23,20 +23,19 @@ export default function DashboardRoleTabs({ activeRole }: DashboardRoleTabsProps
     return tab.role === 'student';
   });
 
+  if (visibleTabs.length <= 1) return null;
+
   return (
-    <div className="container-fluid full__width__padding dashboard-role-tabs">
-      <ul className="nav tab__button__wrap dashboard-role-tabs__list">
-        {visibleTabs.map((tab) => (
-          <li key={tab.role} className="nav-item">
-            <Link
-              className={`single__tab__link${activeRole === tab.role ? ' active' : ''}`}
-              to={tab.href}
-            >
-              {tab.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+    <div className="sca-db-role-tabs">
+      {visibleTabs.map((tab) => (
+        <Link
+          key={tab.role}
+          className={`sca-db-role-tabs__item${activeRole === tab.role ? ' sca-db-role-tabs__item--active' : ''}`}
+          to={tab.href}
+        >
+          {tab.label}
+        </Link>
+      ))}
     </div>
   );
 }

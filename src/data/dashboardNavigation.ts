@@ -54,13 +54,11 @@ const logoutItem = { label: 'Logout', href: '/login', icon: 'logout', action: 'l
  * Phase 1 sidebar menus — only modules that exist in the platform.
  * Student / Teacher / Admin items match doc walkthrough scenes.
  */
-export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): DashboardNavSection[] {
-  const name = fullName(user);
-
+export function buildDashboardNavigation(_user: ApiUser, role: DashboardRole): DashboardNavSection[] {
   if (role === 'teacher') {
     return [
       {
-        title: `Teacher — ${name}`,
+        title: '',
         items: [
           { label: 'Dashboard', href: `${base}/teacher-dashboard`, icon: 'home' },
           { label: 'My Profile', href: `${base}/teacher-profile`, icon: 'user' },
@@ -69,13 +67,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
           { label: 'My Tests', href: `${base}/teacher-course`, icon: 'monitor' },
           { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
           { label: 'Test Attempts', href: `${base}/teacher-quiz-attempts`, icon: 'quiz' },
-          { label: 'Reports & Analytics', href: `${base}/teacher-reviews`, icon: 'star' },
-        ],
-      },
-      {
-        title: 'Account',
-        className: 'mt-40',
-        items: [
+          { label: 'Reports', href: `${base}/teacher-reviews`, icon: 'star' },
           { label: 'Settings', href: `${base}/teacher-settings`, icon: 'settings' },
           logoutItem,
         ],
@@ -86,7 +78,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
   if (role === 'admin') {
     return [
       {
-        title: `Admin — ${name}`,
+        title: '',
         items: [
           { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
           { label: 'My Profile', href: `${base}/admin-profile`, icon: 'user' },
@@ -96,17 +88,11 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
           { label: 'All Attempts', href: `${base}/admin-quiz-attempts`, icon: 'quiz' },
           { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },
           { label: 'Payments', href: `${base}/admin-wishlist`, icon: 'cart' },
-          { label: 'User Management', href: `${base}/admin-users`, icon: 'user' },
+          { label: 'Users', href: `${base}/admin-users`, icon: 'user' },
           { label: 'Audit Logs', href: `${base}/admin-audit`, icon: 'assignment' },
-        ],
-      },
-      {
-        title: 'Organization',
-        className: 'mt-40',
-        items: [
-          { label: 'Org Structure', href: `${base}/admin-org`, icon: 'course' },
+          { label: 'Organization', href: `${base}/admin-org`, icon: 'course' },
           { label: 'Branding', href: `${base}/admin-branding`, icon: 'settings' },
-          { label: 'Sessions & MFA', href: `${base}/admin-sessions`, icon: 'monitor' },
+          { label: 'Sessions', href: `${base}/admin-sessions`, icon: 'monitor' },
           { label: 'Settings', href: `${base}/admin-settings`, icon: 'settings' },
           logoutItem,
         ],
@@ -116,7 +102,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
 
   return [
     {
-      title: `Student — ${name}`,
+      title: '',
       items: [
         { label: 'Dashboard', href: `${base}/student-dashboard`, icon: 'home' },
         { label: 'My Profile', href: `${base}/student-profile`, icon: 'user' },

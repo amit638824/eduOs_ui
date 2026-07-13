@@ -49,6 +49,23 @@ export interface ExamTest {
   total_marks?: number | null;
   published_at?: string | null;
   scheduled_at?: string | null;
+  attempt_id?: string | null;
+  attempt_status?: string | null;
+  attempt_submitted_at?: string | null;
+  result_attempt_id?: string | null;
+  result_percentage?: number | null;
+}
+
+export interface ExamSecurityConfig {
+  shuffleQuestions: boolean;
+  shuffleOptions: boolean;
+  negativeMarking: boolean;
+  fullScreen: boolean;
+  browserLock: boolean;
+  blockCopyPaste: boolean;
+  autoSubmit: boolean;
+  allowResume: boolean;
+  maxTabSwitches: number;
 }
 
 export interface TestAttempt {
@@ -61,6 +78,17 @@ export interface TestAttempt {
   total_score?: number | null;
   max_score?: number | null;
   percentage?: number | null;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  result_attempt_id?: string | null;
+  instructions?: string | null;
+  config?: ExamSecurityConfig;
+  remaining_seconds?: number;
+  ends_at?: string;
+  tab_switch_count?: number;
+  duration_minutes?: number;
+  passing_marks?: number | null;
 }
 
 export interface AttemptQuestion {
@@ -84,6 +112,7 @@ export interface ExamResult {
   accuracy?: number | null;
   rank?: number | null;
   percentile?: number | null;
+  passing_marks?: number | null;
   created_at: string;
 }
 
@@ -95,6 +124,13 @@ export interface OrgAnalytics {
   attempts: number;
   results: number;
   branches: number;
+}
+
+export interface StudentStats {
+  assigned_tests: number;
+  attempts: number;
+  results: number;
+  in_progress: number;
 }
 
 export interface CreateQuestionInput {

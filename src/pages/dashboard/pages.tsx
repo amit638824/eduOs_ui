@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import {
   QuestionBankPanel,
   TestsListPanel,
@@ -26,17 +27,22 @@ import {
 import { feedbackRows } from '@/data/dashboardData';
 import { useOrganization } from '@/hooks/useOrganization';
 import { examinationService } from '@/services';
-import type { OrgAnalytics } from '@/types/examination';
+import type { OrgAnalytics, StudentStats } from '@/types/examination';
 
 export function StudentDashboardHome() {
-  const [stats, setStats] = useState<OrgAnalytics | null>(null);
+  const [stats, setStats] = useState<StudentStats | null>(null);
 
   useEffect(() => {
-    examinationService.getAnalyticsOverview().then(setStats).catch(() => setStats(null));
+    examinationService.getMyStats().then(setStats).catch(() => setStats(null));
   }, []);
 
   return (
     <>
+      <DashboardPageHeader
+        badge="Student Portal"
+        title="Dashboard"
+        subtitle="Quick access to your tests, attempts, results and wallet."
+      />
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title">
           <h4>Quick Actions</h4>
@@ -67,8 +73,8 @@ export function StudentDashboardHome() {
       <DashboardCounters
         title="Summary"
         counters={[
-          { value: String(stats?.tests ?? '—'), label: 'Live Tests', icon: '/img/counter/counter__1.png' },
-          { value: String(stats?.attempts ?? '—'), label: 'Total Attempts', icon: '/img/counter/counter__2.png' },
+          { value: String(stats?.assigned_tests ?? '—'), label: 'Assigned Tests', icon: '/img/counter/counter__1.png' },
+          { value: String(stats?.in_progress ?? '—'), label: 'In Progress', icon: '/img/counter/counter__2.png' },
           { value: String(stats?.results ?? '—'), label: 'Results', icon: '/img/counter/counter__3.png' },
         ]}
       />
@@ -86,8 +92,12 @@ export function TeacherDashboardHome() {
 
   return (
     <>
+      <DashboardPageHeader
+        badge="Teacher Portal"
+        title="Dashboard"
+        subtitle="Manage question bank, create tests and review student attempts."
+      />
       <DashboardCounters
-        title="Teacher Dashboard"
         counters={[
           { value: String(stats?.tests ?? '—'), label: 'Tests', icon: '/img/counter/counter__1.png' },
           { value: String(stats?.questions ?? '—'), label: 'Questions', icon: '/img/counter/counter__2.png' },
@@ -143,6 +153,11 @@ export function AdminDashboardHome() {
 
   return (
     <>
+      <DashboardPageHeader
+        badge="Admin Portal"
+        title={organization ? organization.name : 'Admin Dashboard'}
+        subtitle="Manage users, tests, payments, reports and organization settings."
+      />
       {error && (
         <div className="dashboard__content__wraper sp_bottom_20">
           <p className="login__error">{error}</p>

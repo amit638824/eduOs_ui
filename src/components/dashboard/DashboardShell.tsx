@@ -1,8 +1,10 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
+import { useTheme } from '@/context/ThemeContext';
 import type { DashboardNavSection, DashboardProfile, DashboardRole } from '@/types/dashboard';
-import DashboardHero from './DashboardHero';
 import DashboardSidebar from './DashboardSidebar';
-import DashboardRoleTabs from './DashboardRoleTabs';
+import DashboardTopBar from './DashboardTopBar';
+
+const COLLAPSE_KEY = 'sca-sidebar-collapsed';
 
 interface DashboardShellProps {
   role: DashboardRole;
@@ -19,46 +21,67 @@ export default function DashboardShell({
   onLogout,
   children,
 }: DashboardShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isDark } = useTheme();
+  const [collapsed, setCollapsed] = useState(() => {
+    const stored = localStorage.getItem(COLLAPSE_KEY);
+    return stored === null ? true : stored === '1';
+  });
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    document.body.classList.add('sca-dashboard-body');
+    return () => document.body.classList.remove('sca-dashboard-body');
+  }, []);
+
+  const toggleCollapse = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0');
+      return next;
+    });
+  };
+
+  const handleToggleMenu = () => {
+    if (window.matchMedia('(max-width: 991px)').matches) {
+      setMobileOpen((o) => !o);
+    } else {
+      toggleCollapse();
+    }
+  };
 
   return (
-    <div className="dashboardarea sp_bottom_100">
-      <DashboardHero profile={profile} />
-      <DashboardRoleTabs activeRole={role} />
+    <div
+      className={[
+        'sca-dashboard',
+        isDark ? 'sca-dashboard--dark' : 'sca-dashboard--light',
+        collapsed ? 'sca-dashboard--collapsed' : '',
+        mobileOpen ? 'sca-dashboard--mobile-open' : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+    >
+      <DashboardSidebar
+        sections={navigation}
+        collapsed={collapsed}
+        onLogout={onLogout}
+        onNavigate={() => setMobileOpen(false)}
+      />
 
-      <div className="dashboard">
-        <div className="container-fluid full__width__padding">
-          <div className="dashboard-mobile-bar">
-            <button
-              type="button"
-              className="dashboard-mobile-toggle"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open menu"
-            >
-              <i className="icofont-navigation-menu" />
-              Menu
-            </button>
-            <span className="text-muted small">{profile.name}</span>
-          </div>
-
-          <div
-            className={`dashboard-sidebar-overlay${sidebarOpen ? ' is-open' : ''}`}
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden={!sidebarOpen}
-          />
-
-          <div className="row">
-            <div className={`col-xl-3 col-lg-3 col-md-12 dashboard-sidebar-col${sidebarOpen ? ' is-open' : ''}`}>
-              <DashboardSidebar
-                sections={navigation}
-                onLogout={onLogout}
-                onNavigate={() => setSidebarOpen(false)}
-              />
-            </div>
-            <div className="col-xl-9 col-lg-9 col-md-12 dashboard-content-col">{children}</div>
-          </div>
-        </div>
+      <div className="sca-dashboard__main">
+        <DashboardTopBar
+          profile={profile}
+          role={role}
+          onToggleMenu={handleToggleMenu}
+        />
+        <div className="sca-dashboard__content">{children}</div>
       </div>
+
+      <button
+        type="button"
+        className="sca-dashboard__overlay"
+        aria-label="Close menu"
+        onClick={() => setMobileOpen(false)}
+      />
     </div>
   );
 }

@@ -1,15 +1,23 @@
-import { NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { siteContent } from '@/data/siteContent';
 import type { DashboardNavSection } from '@/types/dashboard';
 import DashboardIcon from './DashboardIcon';
 
 interface DashboardSidebarProps {
   sections: DashboardNavSection[];
+  collapsed: boolean;
   onLogout: () => void;
   onNavigate?: () => void;
 }
 
-export default function DashboardSidebar({ sections, onLogout, onNavigate }: DashboardSidebarProps) {
+export default function DashboardSidebar({
+  sections,
+  collapsed,
+  onLogout,
+  onNavigate,
+}: DashboardSidebarProps) {
   const navigate = useNavigate();
+  const { brand } = siteContent;
 
   const handleLogout = async () => {
     await onLogout();
@@ -17,41 +25,54 @@ export default function DashboardSidebar({ sections, onLogout, onNavigate }: Das
   };
 
   return (
-    <div className="dashboard__inner sticky-top">
-      {sections.map((section, index) => (
-        <div key={`${section.title}-${index}`}>
-          {section.title && (
-            <div className={`dashboard__nav__title ${section.className ?? ''}`.trim()}>
-              <h6>{section.title}</h6>
-            </div>
-          )}
-          <div className="dashboard__nav">
+    <aside className="sca-db-sidebar" aria-label="Dashboard navigation">
+      <div className="sca-db-sidebar__brand">
+        <Link
+          to="/dashboard"
+          className="sca-db-sidebar__brand-link"
+          title={brand.name}
+          onClick={onNavigate}
+        >
+          <img src={brand.logo} alt={brand.name} className="sca-db-sidebar__logo" />
+        </Link>
+      </div>
+
+      <nav className="sca-db-sidebar__nav">
+        {sections.map((section, index) => (
+          <div key={`nav-${index}`} className="sca-db-sidebar__group">
             <ul>
               {section.items.map((item) => (
                 <li key={item.href}>
                   {item.action === 'logout' ? (
-                    <button type="button" className="dashboard-nav-logout" onClick={handleLogout}>
+                    <button
+                      type="button"
+                      className="sca-db-nav-item"
+                      title={collapsed ? item.label : undefined}
+                      onClick={handleLogout}
+                    >
                       <DashboardIcon name={item.icon} />
-                      {item.label}
+                      {!collapsed && <span>{item.label}</span>}
                     </button>
                   ) : (
                     <NavLink
                       to={item.href}
-                      className={({ isActive }) => (isActive ? 'active' : undefined)}
+                      className={({ isActive }) =>
+                        `sca-db-nav-item${isActive ? ' sca-db-nav-item--active' : ''}`
+                      }
                       end
+                      title={collapsed ? item.label : undefined}
                       onClick={onNavigate}
                     >
                       <DashboardIcon name={item.icon} />
-                      {item.label}
+                      {!collapsed && <span>{item.label}</span>}
                     </NavLink>
                   )}
-                  {item.badge && <span className="dashboard__label">{item.badge}</span>}
                 </li>
               ))}
             </ul>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </nav>
+    </aside>
   );
 }

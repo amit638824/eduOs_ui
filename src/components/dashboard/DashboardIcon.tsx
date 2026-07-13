@@ -16,6 +16,7 @@ const icons: Record<string, string> = {
   announcement: 'icofont-megaphone',
   chat: 'icofont-speech-comments',
   cart: 'icofont-cart-alt',
+  wallet: 'icofont-wallet',
   course: 'icofont-book-alt',
 };
 

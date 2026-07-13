@@ -34,12 +34,12 @@ export default function Layout() {
   return (
     <>
       <Preloader />
-      <DarkModeSwitcher />
-      <main className="main_wrapper overflow-hidden">
+      {!isDashboard && <DarkModeSwitcher />}
+      <main className={`main_wrapper overflow-hidden${isDashboard ? ' main_wrapper--dashboard' : ''}`}>
         {!isDashboard && !isAuthPage && <TopBar />}
-        <Header />
-        <MobileMenu />
-        <ThemeShadow />
+        {!isDashboard && <Header />}
+        {!isDashboard && <MobileMenu />}
+        {!isDashboard && <ThemeShadow />}
         <Outlet />
         {!isDashboard && !isAuthPage && <Footer />}
       </main>

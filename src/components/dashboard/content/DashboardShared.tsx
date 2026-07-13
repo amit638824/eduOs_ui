@@ -129,18 +129,19 @@ export function DashboardTabButtons({
   onChange: (tab: string) => void;
 }) {
   return (
-    <ul className="nav about__button__wrap dashboard__button__wrap">
+    <div className="sca-tabs" role="tablist">
       {tabs.map((tab) => (
-        <li key={tab} className="nav-item">
-          <button
-            type="button"
-            className={`single__tab__link${active === tab ? ' active' : ''}`}
-            onClick={() => onChange(tab)}
-          >
-            {tab}
-          </button>
-        </li>
+        <button
+          key={tab}
+          type="button"
+          role="tab"
+          aria-selected={active === tab}
+          className={`sca-tabs__btn${active === tab ? ' sca-tabs__btn--active' : ''}`}
+          onClick={() => onChange(tab)}
+        >
+          {tab}
+        </button>
       ))}
-    </ul>
+    </div>
   );
 }

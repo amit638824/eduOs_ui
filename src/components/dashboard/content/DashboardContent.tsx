@@ -11,6 +11,7 @@ import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
+import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import {
   becomeTeacherSchema,
   createTestSchema,
@@ -45,14 +46,16 @@ export function DashboardCounters({
   title,
   counters,
 }: {
-  title: string;
+  title?: string;
   counters: DashboardCounter[];
 }) {
   return (
     <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>{title}</h4>
-      </div>
+      {title ? (
+        <div className="dashboard__section__title">
+          <h4>{title}</h4>
+        </div>
+      ) : null}
       <div className="row">
         {counters.map((counter) => (
           <div key={counter.label} className="col-xl-3 col-lg-4 col-md-6 col-12">
@@ -1114,15 +1117,15 @@ export function DashboardSettingsContent() {
   if (!user) return null;
 
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>Account Settings</h4>
-      </div>
-      <div className="row">
-        <div className="col-xl-12 sp_bottom_20">
-          <DashboardTabButtons tabs={tabs} active={activeTab} onChange={setActiveTab} />
-        </div>
-        <div className="col-xl-12">
+    <>
+      <DashboardPageHeader
+        badge="Account"
+        title="Settings"
+        subtitle="Manage your profile, password and preferences."
+      />
+      <div className="dashboard__content__wraper">
+        <DashboardTabButtons tabs={tabs} active={activeTab} onChange={setActiveTab} />
+        <div>
           {activeTab === 'Profile' && <ProfileSettingsApiForm />}
           {activeTab === 'Organization' && isAdmin && (
             <OrganizationSettingsForm organization={organization} onSaved={refresh} />
@@ -1131,7 +1134,7 @@ export function DashboardSettingsContent() {
           {activeTab === 'Social Icon' && <SocialLinksForm />}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

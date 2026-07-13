@@ -6,9 +6,11 @@ import { examinationService } from '@/services';
 import { parseApiError } from '@/lib/errors';
 import { FormError, inputClassName } from '@/components/ui/FormField';
 import { createTestApiSchema, type CreateTestApiFormValues } from '@/validators/schemas';
-import type { AttemptQuestion, ExamResult, ExamTest, Question, TestAttempt } from '@/types/examination';
+import type { ExamResult, ExamTest, Question, TestAttempt } from '@/types/examination';
 import { useAuth } from '@/context/AuthContext';
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
+import ExamAttemptPlayer from './ExamAttemptPlayer';
+import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 
 export function QuestionBankPanel() {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -236,10 +238,46 @@ export function StudentTestsPanel() {
     }
   };
 
+  const resume = (t: ExamTest) => {
+    if (t.attempt_id) navigate(`/dashboard/exam/${t.id}/attempt/${t.attempt_id}`);
+  };
+
+  const renderAction = (t: ExamTest) => {
+    const st = t.attempt_status;
+    if (st === 'submitted' || st === 'auto_submitted') {
+      const resultId = t.result_attempt_id ?? t.attempt_id;
+      return resultId ? (
+        <Link to={`/dashboard/exam-result/${resultId}`} className="default__button sp_top_15">
+          View Result
+        </Link>
+      ) : (
+        <span className="sp_top_15 text-muted">Completed</span>
+      );
+    }
+    if (st === 'in_progress' && t.attempt_id) {
+      return (
+        <button type="button" className="default__button sp_top_15" disabled={loading} onClick={() => resume(t)}>
+          Resume Test
+        </button>
+      );
+    }
+    return (
+      <button type="button" className="default__button sp_top_15" disabled={loading} onClick={() => start(t.id)}>
+        Start Test
+      </button>
+    );
+  };
+
   return (
-    <div className="dashboard__content__wraper">
+    <>
+      <DashboardPageHeader
+        badge="Online Tests"
+        title="My Assigned Tests"
+        subtitle="Start, resume or view results for your institute examinations."
+      />
+      <div className="dashboard__content__wraper">
       <div className="dashboard__section__title">
-        <h4>My Assigned Tests</h4>
+        <h4>Available Tests</h4>
       </div>
       {error && <p className="login__error sp_bottom_15">{error}</p>}
       <div className="row">
@@ -250,14 +288,13 @@ export function StudentTestsPanel() {
                 <div className="counter__content__wraper">
                   <h5>{t.title}</h5>
                   <p>{t.duration_minutes} min · Pass: {t.passing_marks ?? '—'}</p>
-                  <button
-                    type="button"
-                    className="default__button sp_top_15"
-                    disabled={loading}
-                    onClick={() => start(t.id)}
-                  >
-                    Start Test
-                  </button>
+                  {t.attempt_status && (
+                    <p className="text-muted" style={{ fontSize: '0.85rem' }}>
+                      Status: {t.attempt_status.replace('_', ' ')}
+                      {t.result_percentage != null ? ` · ${Number(t.result_percentage).toFixed(1)}%` : ''}
+                    </p>
+                  )}
+                  {renderAction(t)}
                 </div>
               </div>
             </div>
@@ -266,10 +303,12 @@ export function StudentTestsPanel() {
         {!tests.length && !error && <p>No tests assigned yet.</p>}
       </div>
     </div>
+    </>
   );
 }
 
 export function AttemptsListPanel({ title }: { title: string }) {
+  const navigate = useNavigate();
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
   const [error, setError] = useState('');
 
@@ -291,22 +330,35 @@ export function AttemptsListPanel({ title }: { title: string }) {
           <thead>
             <tr>
               <th>Test</th>
-              <th>Student</th>
               <th>Status</th>
               <th>Score</th>
               <th>Started</th>
+              <th />
             </tr>
           </thead>
           <tbody>
             {attempts.map((a) => (
               <tr key={a.id}>
                 <td>{a.test_title ?? a.test_id}</td>
-                <td>—</td>
-                <td>{a.status}</td>
-                <td>
-                  {a.percentage != null ? `${a.percentage}%` : '—'}
-                </td>
+                <td>{a.status.replace('_', ' ')}</td>
+                <td>{a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : '—'}</td>
                 <td>{new Date(a.started_at).toLocaleString()}</td>
+                <td>
+                  {a.status === 'in_progress' && (
+                    <button
+                      type="button"
+                      className="dashboard__small__btn__2"
+                      onClick={() => navigate(`/dashboard/exam/${a.test_id}/attempt/${a.id}`)}
+                    >
+                      Resume
+                    </button>
+                  )}
+                  {(a.status === 'submitted' || a.status === 'auto_submitted') && (
+                    <Link to={`/dashboard/exam-result/${a.id}`} className="dashboard__small__btn__2">
+                      Result
+                    </Link>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -340,8 +392,10 @@ export function ResultsPanel() {
               <th>Test</th>
               <th>Score</th>
               <th>Percentage</th>
-              <th>Accuracy</th>
+              <th>Rank</th>
+              <th>Percentile</th>
               <th>Date</th>
+              <th />
             </tr>
           </thead>
           <tbody>
@@ -352,8 +406,14 @@ export function ResultsPanel() {
                   {r.total_score}/{r.max_score}
                 </td>
                 <td>{Number(r.percentage).toFixed(1)}%</td>
-                <td>{r.accuracy != null ? `${Number(r.accuracy).toFixed(1)}%` : '—'}</td>
+                <td>{r.rank != null ? `#${r.rank}` : '—'}</td>
+                <td>{r.percentile != null ? `${Number(r.percentile).toFixed(1)}%` : '—'}</td>
                 <td>{new Date(r.created_at).toLocaleString()}</td>
+                <td>
+                  <Link to={`/dashboard/exam-result/${r.attempt_id}`} className="dashboard__small__btn__2">
+                    View
+                  </Link>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -434,123 +494,7 @@ export function CreateTestPanel() {
 }
 
 export function ExamAttemptPage() {
-  const { attemptId } = useParams();
-  const navigate = useNavigate();
-  const [attempt, setAttempt] = useState<
-    (TestAttempt & { questions: AttemptQuestion[]; duration_minutes: number }) | null
-  >(null);
-  const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  const load = async () => {
-    if (!attemptId) return;
-    try {
-      const data = await examinationService.getAttempt(attemptId);
-      setAttempt(data);
-    } catch (err) {
-      setError(parseApiError(err));
-    }
-  };
-
-  useEffect(() => {
-    load();
-  }, [attemptId]);
-
-  const selectOption = async (questionId: string, optionId: string, current?: string[], multi = false) => {
-    if (!attemptId) return;
-    let selected: string[];
-    if (multi) {
-      selected = current?.includes(optionId)
-        ? current.filter((id) => id !== optionId)
-        : [...(current ?? []), optionId];
-    } else {
-      selected = [optionId];
-    }
-    await examinationService.saveAnswer(attemptId, questionId, { selectedOptionIds: selected });
-    await load();
-  };
-
-  const saveTextAnswer = async (questionId: string, value: string, field: 'text' | 'value') => {
-    if (!attemptId) return;
-    const answer = field === 'text' ? { text: value } : { value: Number(value) };
-    await examinationService.saveAnswer(attemptId, questionId, answer);
-    await load();
-  };
-
-  const submit = async () => {
-    if (!attemptId) return;
-    setSubmitting(true);
-    try {
-      const result = await examinationService.submitAttempt(attemptId);
-      navigate(`/dashboard/exam-result/${result.attempt_id}`);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  if (error) return <p className="login__error">{error}</p>;
-  if (!attempt) return <p>Loading exam...</p>;
-
-  return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>{attempt.test_title ?? 'Exam'}</h4>
-        <span>{attempt.duration_minutes} min · {attempt.status}</span>
-      </div>
-      {attempt.questions.map((q, idx) => {
-        const selected = q.answer?.selectedOptionIds ?? [];
-        const isMulti = q.type === 'msq';
-        const inputType = isMulti ? 'checkbox' : 'radio';
-        return (
-          <div key={q.question_id} className="sp_bottom_30">
-            <h6>
-              Q{idx + 1}. {q.content?.text} <small className="text-muted">({q.type})</small>
-            </h6>
-            {(q.type === 'mcq' || q.type === 'msq' || q.type === 'true_false') && (
-              <ul className="list-unstyled">
-                {q.options.map((opt) => (
-                  <li key={opt.id} className="sp_bottom_10">
-                    <label>
-                      <input
-                        type={inputType}
-                        name={q.question_id}
-                        checked={selected.includes(opt.id)}
-                        onChange={() => selectOption(q.question_id, opt.id, selected, isMulti)}
-                      />{' '}
-                      {opt.content?.text}
-                    </label>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {q.type === 'fill_blank' && (
-              <input
-                className="register__input"
-                defaultValue={q.answer?.text ?? ''}
-                onBlur={(e) => saveTextAnswer(q.question_id, e.target.value, 'text')}
-                placeholder="Your answer"
-              />
-            )}
-            {(q.type === 'integer' || q.type === 'numerical') && (
-              <input
-                className="register__input"
-                type="number"
-                step={q.type === 'numerical' ? '0.01' : '1'}
-                defaultValue={q.answer?.value ?? ''}
-                onBlur={(e) => saveTextAnswer(q.question_id, e.target.value, 'value')}
-                placeholder="Enter number"
-              />
-            )}
-          </div>
-        );
-      })}
-      <button type="button" className="default__button" disabled={submitting} onClick={submit}>
-        {submitting ? 'Submitting...' : 'Submit Test'}
-      </button>
-    </div>
-  );
+  return <ExamAttemptPlayer />;
 }
 
 export function ExamResultPage() {
@@ -595,9 +539,9 @@ export function ExamResultPage() {
           <div className="dashboard__single__counter">
             <div className="counter__content__wraper">
               <div className="counter__number">
-                {result.accuracy != null ? `${Number(result.accuracy).toFixed(1)}%` : '—'}
+                {result.rank != null ? `#${result.rank}` : '—'}
               </div>
-              <p>Accuracy</p>
+              <p>Rank</p>
             </div>
           </div>
         </div>
@@ -605,13 +549,22 @@ export function ExamResultPage() {
           <div className="dashboard__single__counter">
             <div className="counter__content__wraper">
               <div className="counter__number">
-                {result.rank != null ? `#${result.rank}` : '—'}
+                {result.percentile != null ? `${Number(result.percentile).toFixed(1)}%` : '—'}
               </div>
-              <p>Rank</p>
+              <p>Percentile</p>
             </div>
           </div>
         </div>
       </div>
+      {result.passing_marks != null && (
+        <p className="sp_bottom_20">
+          {Number(result.total_score) >= Number(result.passing_marks) ? (
+            <span className="form-success">Passed (minimum {result.passing_marks} marks)</span>
+          ) : (
+            <span className="login__error">Did not meet passing marks ({result.passing_marks})</span>
+          )}
+        </p>
+      )}
       <Link className="default__button" to="/dashboard/student-reviews">
         Back to Results
       </Link>
