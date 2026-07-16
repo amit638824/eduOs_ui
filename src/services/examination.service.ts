@@ -79,6 +79,32 @@ export async function createQuestion(input: CreateQuestionInput) {
   return data.data;
 }
 
+export async function getQuestion(id: string) {
+  const { data } = await api.get<
+    ApiResponse<
+      Question & {
+        topic_id?: string;
+        subject_id?: string;
+        department_id?: string;
+        options?: { id: string; content: { text?: string; value?: number }; is_correct: boolean }[];
+      }
+    >
+  >(`${base}/questions/${id}`);
+  return data.data;
+}
+
+export async function updateQuestion(id: string, input: CreateQuestionInput) {
+  const { data } = await api.patch<ApiResponse<Question>>(`${base}/questions/${id}`, input);
+  return data.data;
+}
+
+export async function deleteQuestion(id: string) {
+  const { data } = await api.delete<ApiResponse<{ id: string; deleted: boolean }>>(
+    `${base}/questions/${id}`,
+  );
+  return data.data;
+}
+
 export async function approveQuestion(id: string) {
   const { data } = await api.post<ApiResponse<Question>>(`${base}/questions/${id}/approve`);
   return data.data;

@@ -93,7 +93,7 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 18px 12px 18px 24px;
+  padding: 18px 20px;
   border-bottom: 1px solid var(--db-sidebar-border);
   flex-shrink: 0;
   min-height: 72px;
@@ -125,19 +125,19 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px 10px 20px;
+  padding: 8px 0 20px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .sca-db-sidebar__group + .sca-db-sidebar__group {
-  margin-top: 8px;
+  margin-top: 4px;
   padding-top: 8px;
   border-top: 1px solid var(--db-sidebar-border);
 }
 
 .sca-db-sidebar__section-title {
-  padding: 4px 14px 8px;
+  padding: 8px 20px 6px;
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -149,6 +149,16 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   list-style: none;
   margin: 0;
   padding: 0;
+  display: block;
+  width: 100%;
+}
+
+.sca-db-sidebar__group ul li {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  float: none;
 }
 
 .sca-db-nav-item {
@@ -156,14 +166,16 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   align-items: center;
   gap: 12px;
   width: 100%;
-  padding: 11px 14px;
-  margin-bottom: 2px;
-  border-radius: 8px;
+  box-sizing: border-box;
+  padding: 12px 20px;
+  margin: 0;
+  border-radius: 0;
   color: var(--db-sidebar-muted);
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
   border: none;
+  border-left: 3px solid transparent;
   background: transparent;
   cursor: pointer;
   text-align: left;
@@ -172,7 +184,8 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   transition:
     padding var(--db-sidebar-duration) var(--db-sidebar-ease),
     background 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .sca-db-nav-item i,
@@ -206,20 +219,31 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 }
 
 .sca-db-nav-item:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--db-sidebar-text);
 }
 
 .sca-db-nav-item--active {
-  background: var(--db-sidebar-accent-soft) !important;
-  color: var(--db-accent) !important;
+  background: rgba(59, 130, 246, 0.22) !important;
+  color: #fff !important;
   font-weight: 600;
+  border-left-color: var(--db-accent);
+}
+
+.sca-db-nav-item--active i,
+.sca-db-nav-item--active .dashboard-nav-icon {
+  color: #fff;
 }
 
 .sca-dashboard--collapsed .sca-db-nav-item {
   justify-content: center;
   gap: 0;
-  padding: 12px 8px;
+  padding: 14px 0;
+  border-left-width: 3px;
+}
+
+.sca-dashboard--collapsed .sca-db-nav-item--active {
+  border-left-color: var(--db-accent);
 }
 
 /* ── Main ── */
@@ -493,6 +517,8 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 .sca-dashboard .form-select,
 .sca-dashboard textarea.register__input {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: var(--db-input-bg) !important;
   border: 1px solid var(--db-border) !important;
   color: var(--db-text) !important;
@@ -510,7 +536,8 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   box-shadow: 0 0 0 3px var(--db-accent-soft);
 }
 
-.sca-dashboard .register__input:disabled {
+.sca-dashboard .register__input:disabled,
+.sca-dashboard .form-select:disabled {
   opacity: 0.6;
 }
 
@@ -519,15 +546,23 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   border: none;
   border-radius: 8px;
   padding: 11px 22px;
+  min-height: 44px;
   font-weight: 600;
   font-size: 0.875rem;
   color: #fff;
   cursor: pointer;
   transition: opacity 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sca-dashboard .default__button:hover {
   opacity: 0.9;
+}
+
+.sca-dashboard .default__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .sca-dashboard .dashboard__small__btn__2 {
@@ -554,8 +589,174 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   color: #4ade80;
 }
 
-.sca-dashboard .text-muted {
-  color: var(--db-muted) !important;
+.sca-dashboard .form-check-input {
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: 0;
+  cursor: pointer;
+  border: 1.5px solid var(--db-border);
+  background-color: var(--db-input-bg);
+}
+
+.sca-dashboard .form-check-input:checked {
+  background-color: var(--db-accent);
+  border-color: var(--db-accent);
+}
+
+.sca-dashboard .dashboard__table table tbody td .form-check-input,
+.sca-dashboard .dashboard__table table thead th .form-check-input {
+  display: block;
+}
+
+.sca-dashboard .form-select:disabled,
+.sca-dashboard .register__input:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.edtp-field-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  color: var(--db-muted);
+}
+
+.edtp-field-hint--loading {
+  color: var(--db-accent);
+}
+
+.edtp-inline-spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(59, 130, 246, 0.25);
+  border-top-color: var(--db-accent);
+  border-radius: 50%;
+  animation: edtp-spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes edtp-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.edtp-search-field {
+  margin-bottom: 12px;
+}
+
+.edtp-search-field__wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.edtp-search-field__icon {
+  position: absolute;
+  left: 12px;
+  color: var(--db-muted);
+  font-size: 0.95rem;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.edtp-search-field__wrap .register__input {
+  padding-left: 36px !important;
+  padding-right: 36px !important;
+}
+
+.edtp-search-field__clear {
+  position: absolute;
+  right: 8px;
+  border: none;
+  background: transparent;
+  color: var(--db-muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+}
+
+.edtp-search-field__clear:hover {
+  color: var(--db-text);
+}
+
+.sca-dashboard .form-select.edtp-select--loading {
+  background-image: none;
+  padding-right: 36px;
+}
+
+/* Input + button rows */
+.sca-dashboard .edtp-inline-field {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  width: 100%;
+}
+
+.sca-dashboard .edtp-inline-field .register__input,
+.sca-dashboard .edtp-inline-field .form-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto !important;
+}
+
+.sca-dashboard .edtp-inline-field .default__button {
+  flex: 0 0 auto;
+}
+
+/* Structured lists inside dashboard cards */
+.sca-dashboard .edtp-data-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sca-dashboard .edtp-data-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  float: none;
+  border: 1px solid var(--db-border);
+  border-radius: 8px;
+  background: var(--db-input-bg);
+  color: var(--db-text);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.sca-dashboard .edtp-data-list li .edtp-data-list__meta {
+  color: var(--db-muted);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.sca-dashboard .edtp-panel-block {
+  background: var(--db-card-hover);
+  border: 1px solid var(--db-border);
+  border-radius: 10px;
+  padding: 16px;
+  height: 100%;
+}
+
+.sca-dashboard .edtp-panel-block h5 {
+  margin: 0 0 14px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--db-text);
+}
+
+.sca-dashboard .edtp-panel-block .form-select,
+.sca-dashboard .edtp-panel-block .edtp-inline-field {
+  margin-bottom: 12px;
 }
 
 /* Stats */
@@ -693,8 +894,20 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   background: var(--db-input-bg);
   border: 1px solid var(--db-border);
   border-radius: 10px;
-  padding: 18px;
+  padding: 20px;
   margin-bottom: 20px;
+}
+
+.edtp-form-card h5 {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--db-text);
+}
+
+.edtp-form-card .row.g-3 > [class*='col-'] {
+  display: flex;
+  flex-direction: column;
 }
 
 .sca-exam-guide {
@@ -993,10 +1206,19 @@ body.sca-dashboard-body .sca-dashboard .dashboard__content__wraper {
 
 body.sca-dashboard-body .sca-dashboard .dashboard__section__title {
   border-bottom: 1px solid var(--db-border) !important;
+  margin-bottom: 18px !important;
+  padding-bottom: 12px !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 body.sca-dashboard-body .sca-dashboard .dashboard__section__title h4 {
   color: var(--db-text) !important;
+  margin: 0 !important;
+  font-size: 1.125rem !important;
 }
 
 body.sca-dashboard-body .sca-dashboard .dashboard__section__title a {
@@ -1062,6 +1284,33 @@ body.sca-dashboard-body .sca-dashboard .edtp-form-card {
   color: var(--db-text) !important;
 }
 
+body.sca-dashboard-body .sca-dashboard .edtp-panel-block {
+  background: var(--db-card-hover) !important;
+  border-color: var(--db-border) !important;
+}
+
+body.sca-dashboard-body .sca-dashboard .edtp-data-list li {
+  display: flex !important;
+  float: none !important;
+  width: 100% !important;
+  background: var(--db-input-bg) !important;
+  border-color: var(--db-border) !important;
+  color: var(--db-text) !important;
+}
+
+body.sca-dashboard-body .sca-dashboard .sca-db-nav-item {
+  width: 100% !important;
+  max-width: none !important;
+  border-radius: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+body.sca-dashboard-body .sca-dashboard .sca-db-nav-item--active {
+  background: rgba(59, 130, 246, 0.22) !important;
+  color: #fff !important;
+}
+
 body.sca-dashboard-body .sca-dashboard .register__input,
 body.sca-dashboard-body .sca-dashboard .form-select,
 body.sca-dashboard-body .sca-dashboard textarea.register__input {
@@ -1070,6 +1319,12 @@ body.sca-dashboard-body .sca-dashboard textarea.register__input {
   background: var(--db-input-bg) !important;
   border: 1px solid var(--db-border) !important;
   color: var(--db-text) !important;
+}
+
+body.sca-dashboard-body .sca-dashboard .edtp-inline-field .register__input,
+body.sca-dashboard-body .sca-dashboard .edtp-inline-field .form-select {
+  width: auto !important;
+  flex: 1 1 auto !important;
 }
 
 body.sca-dashboard-body .sca-dashboard label {

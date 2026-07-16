@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { getTestsListPath } from '@/utils/dashboardRole';
+import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
@@ -365,19 +366,23 @@ export function UsersManagementPanel({
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="row g-3">
             <div className="col-md-6 col-lg-3">
+              <label>First name</label>
               <input className="register__input" placeholder="First name" {...register('firstName')} />
               <FormError message={errors.firstName?.message} />
             </div>
             <div className="col-md-6 col-lg-3">
+              <label>Last name</label>
               <input className="register__input" placeholder="Last name" {...register('lastName')} />
               <FormError message={errors.lastName?.message} />
             </div>
             <div className="col-md-6 col-lg-3">
+              <label>Email</label>
               <input className="register__input" placeholder="Email" {...register('email')} />
               <FormError message={errors.email?.message} />
             </div>
             {!lockedRole ? (
               <div className="col-md-6 col-lg-2">
+                <label>Role</label>
                 <select className="form-select" {...register('role')}>
                   <option value="student">Student</option>
                   <option value="teacher">Teacher</option>
@@ -388,10 +393,11 @@ export function UsersManagementPanel({
               <input type="hidden" {...register('role')} />
             )}
             <div className="col-md-6 col-lg-3">
+              <label>Password</label>
               <input className="register__input" type="password" placeholder="Password" {...register('password')} />
               <FormError message={errors.password?.message} />
             </div>
-            <div className="col-md-6 col-lg-2 d-flex align-items-start">
+            <div className="col-md-6 col-lg-2 d-flex align-items-end">
               <button type="submit" className="default__button w-100">{addLabel}</button>
             </div>
           </div>
@@ -687,11 +693,19 @@ export function OrgStructurePanel() {
   const [departments, setDepartments] = useState<Awaited<ReturnType<typeof platformService.listDepartments>>['data']>([]);
   const [sessions, setSessions] = useState<Awaited<ReturnType<typeof platformService.listAcademicSessions>>['data']>([]);
   const [deptName, setDeptName] = useState('');
+  const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
   const [sessionName, setSessionName] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [deptLoading, setDeptLoading] = useState(false);
   const withLoader = useDashboardLoader();
+
+  const reloadDepartments = async (id = branchId) => {
+    if (!id) return;
+    const r = await platformService.listDepartments(id);
+    setDepartments(r.data);
+  };
 
   useEffect(() => {
     if (branches[0] && !branchId) setBranchId(branches[0].id);
@@ -713,13 +727,48 @@ export function OrgStructurePanel() {
 
   useDashboardLoadingEffect(orgLoading || loading || deptLoading);
 
-  const addDept = async () => {
-    if (!branchId || !deptName) return;
+  const saveDept = async () => {
+    if (!branchId || !deptName.trim()) return;
+    setError('');
+    setMessage('');
     await withLoader(async () => {
-      await platformService.createDepartment(branchId, { name: deptName });
-      setDeptName('');
-      const r = await platformService.listDepartments(branchId);
-      setDepartments(r.data);
+      try {
+        if (editingDeptId) {
+          await platformService.updateDepartment(editingDeptId, { name: deptName.trim() });
+          setMessage('Department updated.');
+        } else {
+          await platformService.createDepartment(branchId, { name: deptName.trim() });
+          setMessage('Department added.');
+        }
+        setDeptName('');
+        setEditingDeptId(null);
+        await reloadDepartments();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const startEditDept = (d: { id: string; name: string }) => {
+    setEditingDeptId(d.id);
+    setDeptName(d.name);
+  };
+
+  const deleteDept = async (id: string) => {
+    if (!window.confirm('Delete this department?')) return;
+    setError('');
+    await withLoader(async () => {
+      try {
+        await platformService.deleteDepartment(id);
+        if (editingDeptId === id) {
+          setEditingDeptId(null);
+          setDeptName('');
+        }
+        setMessage('Department deleted.');
+        await reloadDepartments();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
     });
   };
 
@@ -740,27 +789,99 @@ export function OrgStructurePanel() {
 
   return (
     <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title"><h4>Departments</h4></div>
+      <div className="dashboard__section__title">
+        <h4>Organization Structure</h4>
+      </div>
       {error && <p className="login__error sp_bottom_15">{error}</p>}
-      <div className="row">
-        <div className="col-md-6 sp_bottom_30">
-          <h5>Departments</h5>
-          <select className="form-select sp_bottom_15" value={branchId} onChange={(e) => setBranchId(e.target.value)}>
-            {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-          </select>
-          <div className="d-flex gap-2 sp_bottom_15">
-            <input className="register__input" placeholder="Department name" value={deptName} onChange={(e) => setDeptName(e.target.value)} />
-            <button type="button" className="default__button" onClick={addDept}>Add</button>
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="row g-3">
+        <div className="col-md-6">
+          <div className="edtp-panel-block">
+            <h5>Departments</h5>
+            <label htmlFor="orgBranch">Branch</label>
+            <select
+              id="orgBranch"
+              className="form-select"
+              value={branchId}
+              onChange={(e) => setBranchId(e.target.value)}
+            >
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+            <label htmlFor="deptName">{editingDeptId ? 'Edit department' : 'Department name'}</label>
+            <div className="edtp-inline-field">
+              <input
+                id="deptName"
+                className="register__input"
+                placeholder="e.g. Computer Science"
+                value={deptName}
+                onChange={(e) => setDeptName(e.target.value)}
+              />
+              <button type="button" className="default__button" onClick={saveDept}>
+                {editingDeptId ? 'Update' : 'Add'}
+              </button>
+              {editingDeptId && (
+                <button
+                  type="button"
+                  className="dashboard__small__btn__2"
+                  onClick={() => {
+                    setEditingDeptId(null);
+                    setDeptName('');
+                  }}
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+            <ul className="edtp-data-list">
+              {departments.map((d) => (
+                <li key={d.id}>
+                  <span>{d.name}{d.code ? ` (${d.code})` : ''}</span>
+                  <span className="d-flex gap-2">
+                    <button type="button" className="dashboard__small__btn__2" onClick={() => startEditDept(d)}>
+                      Edit
+                    </button>
+                    <button type="button" className="dashboard__small__btn__2" onClick={() => void deleteDept(d.id)}>
+                      Delete
+                    </button>
+                  </span>
+                </li>
+              ))}
+              {departments.length === 0 && (
+                <li><span className="text-muted">No departments yet.</span></li>
+              )}
+            </ul>
           </div>
-          <ul>{departments.map((d) => <li key={d.id}>{d.name} {d.code && `(${d.code})`}</li>)}</ul>
         </div>
-        <div className="col-md-6 sp_bottom_30">
-          <h5>Academic Sessions</h5>
-          <div className="d-flex gap-2 sp_bottom_15">
-            <input className="register__input" placeholder="Session name" value={sessionName} onChange={(e) => setSessionName(e.target.value)} />
-            <button type="button" className="default__button" onClick={addSession}>Add</button>
+        <div className="col-md-6">
+          <div className="edtp-panel-block">
+            <h5>Academic Sessions</h5>
+            <label htmlFor="sessionName">Session name</label>
+            <div className="edtp-inline-field">
+              <input
+                id="sessionName"
+                className="register__input"
+                placeholder="e.g. 2025-26"
+                value={sessionName}
+                onChange={(e) => setSessionName(e.target.value)}
+              />
+              <button type="button" className="default__button" onClick={addSession}>
+                Add
+              </button>
+            </div>
+            <ul className="edtp-data-list">
+              {sessions.map((s) => (
+                <li key={s.id}>
+                  <span>{s.name}</span>
+                  {s.is_current && <span className="edtp-badge edtp-badge--active">Current</span>}
+                </li>
+              ))}
+              {sessions.length === 0 && (
+                <li><span className="text-muted">No sessions yet.</span></li>
+              )}
+            </ul>
           </div>
-          <ul>{sessions.map((s) => <li key={s.id}>{s.name} {s.is_current && '(current)'}</li>)}</ul>
         </div>
       </div>
     </div>
@@ -781,7 +902,11 @@ export function TestBuilderPanel() {
   } | null>(null);
   const [bankQuestions, setBankQuestions] = useState<{ id: string; content?: { text?: string }; type?: string }[]>([]);
   const [students, setStudents] = useState<Awaited<ReturnType<typeof examinationService.listAssignableStudents>>['data']>([]);
-  const [selectedStudent, setSelectedStudent] = useState('');
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
+  const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [questionSearch, setQuestionSearch] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [assignedSearch, setAssignedSearch] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -795,7 +920,7 @@ export function TestBuilderPanel() {
       const [t, q, s] = await Promise.all([
         examinationService.getTest(testId),
         examinationService.listQuestions(1, 100, 'approved'),
-        examinationService.listAssignableStudents(1, 100),
+        examinationService.listAssignableStudents(1, 200),
       ]);
       setTest(t as typeof test);
       setBankQuestions(q.data);
@@ -817,13 +942,89 @@ export function TestBuilderPanel() {
   const isLive = test?.status === 'live';
   const activeStep = isLive ? 5 : testQuestions.length > 0 ? 4 : 3;
 
-  const addQuestion = async (questionId: string) => {
-    if (!testId) return;
+  const qSearch = questionSearch.trim().toLowerCase();
+  const sSearch = studentSearch.trim().toLowerCase();
+  const aSearch = assignedSearch.trim().toLowerCase();
+
+  const availableQuestions = bankQuestions
+    .filter((q) => !testQuestions.some((tq) => tq.question_id === q.id))
+    .filter((q) => {
+      if (!qSearch) return true;
+      const text = (q.content?.text ?? '').toLowerCase();
+      const type = (q.type ?? '').toLowerCase();
+      return text.includes(qSearch) || type.includes(qSearch);
+    });
+
+  const unassignedStudents = students
+    .filter((s) => !assignedIds.has(s.student_id))
+    .filter((s) => {
+      if (!sSearch) return true;
+      const name = `${s.first_name} ${s.last_name}`.toLowerCase();
+      return name.includes(sSearch) || s.email.toLowerCase().includes(sSearch);
+    });
+
+  const filteredAssignments = assignments.filter((a) => {
+    if (!aSearch) return true;
+    const name = `${a.first_name} ${a.last_name}`.toLowerCase();
+    return name.includes(aSearch) || a.email.toLowerCase().includes(aSearch);
+  });
+
+  const allQuestionsSelected =
+    availableQuestions.length > 0 &&
+    availableQuestions.every((q) => selectedQuestionIds.includes(q.id));
+  const allStudentsSelected =
+    unassignedStudents.length > 0 &&
+    unassignedStudents.every((s) => selectedStudentIds.includes(s.student_id));
+
+  const toggleQuestion = (id: string) => {
+    setSelectedQuestionIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const toggleAllQuestions = () => {
+    if (allQuestionsSelected) {
+      setSelectedQuestionIds((prev) => prev.filter((id) => !availableQuestions.some((q) => q.id === id)));
+    } else {
+      setSelectedQuestionIds((prev) => {
+        const next = new Set(prev);
+        availableQuestions.forEach((q) => next.add(q.id));
+        return [...next];
+      });
+    }
+  };
+
+  const toggleStudent = (id: string) => {
+    setSelectedStudentIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+  };
+
+  const toggleAllStudents = () => {
+    if (allStudentsSelected) {
+      setSelectedStudentIds((prev) =>
+        prev.filter((id) => !unassignedStudents.some((s) => s.student_id === id)),
+      );
+    } else {
+      setSelectedStudentIds((prev) => {
+        const next = new Set(prev);
+        unassignedStudents.forEach((s) => next.add(s.student_id));
+        return [...next];
+      });
+    }
+  };
+
+  const submitSelectedQuestions = async () => {
+    if (!testId || selectedQuestionIds.length === 0) return;
     setMessage('');
+    setError('');
     await withLoader(async () => {
       try {
-        await examinationService.addQuestionToTest(testId, questionId);
-        setMessage('Question added to test.');
+        for (const questionId of selectedQuestionIds) {
+          await examinationService.addQuestionToTest(testId, questionId);
+        }
+        setMessage(`${selectedQuestionIds.length} question(s) added to test.`);
+        setSelectedQuestionIds([]);
         await load();
       } catch (err) {
         setError(parseApiError(err));
@@ -845,35 +1046,17 @@ export function TestBuilderPanel() {
     });
   };
 
-  const assignStudent = async () => {
-    if (!testId || !selectedStudent) return;
+  const submitSelectedStudents = async () => {
+    if (!testId || selectedStudentIds.length === 0) return;
     setMessage('');
+    setError('');
     await withLoader(async () => {
       try {
-        await examinationService.assignTestToStudent(testId, selectedStudent);
-        setMessage('Test assigned to student successfully.');
-        setSelectedStudent('');
-        await load();
-      } catch (err) {
-        setError(parseApiError(err));
-      }
-    });
-  };
-
-  const assignAllStudents = async () => {
-    if (!testId) return;
-    const unassigned = students.filter((s) => !assignedIds.has(s.student_id));
-    if (!unassigned.length) {
-      setMessage('All students are already assigned.');
-      return;
-    }
-    setMessage('');
-    await withLoader(async () => {
-      try {
-        for (const s of unassigned) {
-          await examinationService.assignTestToStudent(testId, s.student_id);
+        for (const studentId of selectedStudentIds) {
+          await examinationService.assignTestToStudent(testId, studentId);
         }
-        setMessage(`Assigned to ${unassigned.length} student(s).`);
+        setMessage(`Test assigned to ${selectedStudentIds.length} student(s).`);
+        setSelectedStudentIds([]);
         await load();
       } catch (err) {
         setError(parseApiError(err));
@@ -912,7 +1095,7 @@ export function TestBuilderPanel() {
           <section className="edtp-form-card">
             <h5>Questions in this test ({testQuestions.length})</h5>
             {testQuestions.length === 0 ? (
-              <p className="text-muted mb-0">No questions yet. Add from the question bank on the right.</p>
+              <p className="text-muted mb-0">No questions yet. Select from the question bank and submit.</p>
             ) : (
               <ol className="sca-exam-builder-qlist">
                 {testQuestions.map((tq, i) => (
@@ -933,73 +1116,211 @@ export function TestBuilderPanel() {
 
           {!isLive && (
             <section className="edtp-form-card">
-              <h5>Add from Question Bank</h5>
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_15">
+                <h5 className="mb-0">Add from Question Bank</h5>
+                <button
+                  type="button"
+                  className="default__button"
+                  disabled={selectedQuestionIds.length === 0}
+                  onClick={() => void submitSelectedQuestions()}
+                >
+                  Submit Selected ({selectedQuestionIds.length})
+                </button>
+              </div>
+              <SearchField
+                value={questionSearch}
+                onChange={setQuestionSearch}
+                placeholder="Search questions by text or type…"
+              />
               <div className="dashboard__table table-responsive">
                 <table>
-                  <thead><tr><th>Question</th><th>Type</th><th /></tr></thead>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 48 }}>
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={allQuestionsSelected}
+                          onChange={toggleAllQuestions}
+                          disabled={availableQuestions.length === 0}
+                          aria-label="Select all questions"
+                        />
+                      </th>
+                      <th>Question</th>
+                      <th>Type</th>
+                    </tr>
+                  </thead>
                   <tbody>
-                    {bankQuestions
-                      .filter((q) => !testQuestions.some((tq) => tq.question_id === q.id))
-                      .map((q) => (
-                        <tr key={q.id}>
-                          <td>{q.content?.text}</td>
-                          <td>{q.type}</td>
-                          <td>
-                            <button type="button" className="default__button small-btn" onClick={() => addQuestion(q.id)}>
-                              Add
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    {bankQuestions.length === 0 && (
-                      <tr><td colSpan={3}>No approved questions. <Link to="/dashboard/admin-question-bank">Add questions</Link> first.</td></tr>
+                    {availableQuestions.map((q) => (
+                      <tr key={q.id}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={selectedQuestionIds.includes(q.id)}
+                            onChange={() => toggleQuestion(q.id)}
+                            aria-label={`Select question ${q.content?.text ?? q.id}`}
+                          />
+                        </td>
+                        <td>{q.content?.text}</td>
+                        <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
+                      </tr>
+                    ))}
+                    {availableQuestions.length === 0 && (
+                      <tr>
+                        <td colSpan={3}>
+                          {qSearch
+                            ? 'No questions match your search.'
+                            : bankQuestions.length === 0
+                              ? (
+                                  <>No approved questions. <Link to="/dashboard/admin-question-bank">Add questions</Link> first.</>
+                                )
+                              : 'All available questions are already in this test.'}
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
               </div>
+              {availableQuestions.length > 0 && (
+                <div className="d-flex flex-wrap gap-2 sp_top_15">
+                  <button type="button" className="dashboard__small__btn__2" onClick={toggleAllQuestions}>
+                    {allQuestionsSelected ? 'Clear All' : 'Select All'}
+                  </button>
+                  <button
+                    type="button"
+                    className="default__button"
+                    disabled={selectedQuestionIds.length === 0}
+                    onClick={() => void submitSelectedQuestions()}
+                  >
+                    Submit Selected ({selectedQuestionIds.length})
+                  </button>
+                </div>
+              )}
             </section>
           )}
 
           {isLive && (
             <section className="edtp-form-card">
-              <h5>Assign to Students</h5>
-              <p className="text-muted" style={{ fontSize: '0.875rem' }}>
-                Students only see tests assigned to them under My Tests.
-              </p>
-              <div className="d-flex flex-wrap gap-2 sp_bottom_15">
-                <select
-                  className="form-select"
-                  style={{ maxWidth: 320 }}
-                  value={selectedStudent}
-                  onChange={(e) => setSelectedStudent(e.target.value)}
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_15">
+                <div>
+                  <h5 className="mb-1">Assign to Students</h5>
+                  <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
+                    Search, select students, then submit. Students see tests under My Tests.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="default__button"
+                  disabled={selectedStudentIds.length === 0}
+                  onClick={() => void submitSelectedStudents()}
                 >
-                  <option value="">Select student…</option>
-                  {students
-                    .filter((s) => !assignedIds.has(s.student_id))
-                    .map((s) => (
-                      <option key={s.student_id} value={s.student_id}>
-                        {s.first_name} {s.last_name} ({s.email})
-                      </option>
-                    ))}
-                </select>
-                <button type="button" className="default__button" disabled={!selectedStudent} onClick={assignStudent}>
-                  Assign
-                </button>
-                <button type="button" className="dashboard__small__btn__2" onClick={assignAllStudents}>
-                  Assign All Students
+                  Submit Selected ({selectedStudentIds.length})
                 </button>
               </div>
-              <h6>Assigned ({assignments.length})</h6>
+              <SearchField
+                value={studentSearch}
+                onChange={setStudentSearch}
+                placeholder="Search by name or email…"
+              />
+              <div className="dashboard__table table-responsive sp_bottom_15">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: 48 }}>
+                        <input
+                          type="checkbox"
+                          className="form-check-input"
+                          checked={allStudentsSelected}
+                          onChange={toggleAllStudents}
+                          disabled={unassignedStudents.length === 0}
+                          aria-label="Select all students"
+                        />
+                      </th>
+                      <th>Name</th>
+                      <th>Email</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unassignedStudents.map((s) => (
+                      <tr key={s.student_id}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={selectedStudentIds.includes(s.student_id)}
+                            onChange={() => toggleStudent(s.student_id)}
+                            aria-label={`Select ${s.first_name} ${s.last_name}`}
+                          />
+                        </td>
+                        <td>{s.first_name} {s.last_name}</td>
+                        <td>{s.email}</td>
+                      </tr>
+                    ))}
+                    {unassignedStudents.length === 0 && (
+                      <tr>
+                        <td colSpan={3}>
+                          {sSearch
+                            ? 'No students match your search.'
+                            : students.length === 0
+                              ? 'No active students found.'
+                              : 'All students are already assigned.'}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {unassignedStudents.length > 0 && (
+                <div className="d-flex flex-wrap gap-2 sp_bottom_20">
+                  <button type="button" className="dashboard__small__btn__2" onClick={toggleAllStudents}>
+                    {allStudentsSelected ? 'Clear All' : 'Select All'}
+                  </button>
+                  <button
+                    type="button"
+                    className="default__button"
+                    disabled={selectedStudentIds.length === 0}
+                    onClick={() => void submitSelectedStudents()}
+                  >
+                    Submit Selected ({selectedStudentIds.length})
+                  </button>
+                </div>
+              )}
+
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_10">
+                <h6 className="mb-0">Assigned ({assignments.length})</h6>
+              </div>
+              {assignments.length > 0 && (
+                <SearchField
+                  value={assignedSearch}
+                  onChange={setAssignedSearch}
+                  placeholder="Search assigned students…"
+                />
+              )}
               {assignments.length === 0 ? (
                 <p className="text-muted mb-0">No students assigned yet.</p>
               ) : (
-                <ul className="sca-exam-builder-assignees">
-                  {assignments.map((a) => (
-                    <li key={a.student_id}>
-                      {a.first_name} {a.last_name} <small className="text-muted">({a.email})</small>
-                    </li>
-                  ))}
-                </ul>
+                <div className="dashboard__table table-responsive">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredAssignments.map((a) => (
+                        <tr key={a.student_id}>
+                          <td>{a.first_name} {a.last_name}</td>
+                          <td>{a.email}</td>
+                        </tr>
+                      ))}
+                      {filteredAssignments.length === 0 && (
+                        <tr><td colSpan={2}>No assigned students match your search.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </section>
           )}

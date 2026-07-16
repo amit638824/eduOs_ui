@@ -177,6 +177,16 @@ export async function createDepartment(branchId: string, input: { name: string; 
   return data.data;
 }
 
+export async function updateDepartment(id: string, input: { name?: string; code?: string }) {
+  const { data } = await api.patch<ApiResponse<Department>>(`${base}/departments/${id}`, input);
+  return data.data;
+}
+
+export async function deleteDepartment(id: string) {
+  const { data } = await api.delete<ApiResponse<unknown>>(`${base}/departments/${id}`);
+  return data.data;
+}
+
 export async function listAcademicSessions(page = 1, limit = 20) {
   const { data } = await api.get<PaginatedResponse<AcademicSession>>(`${base}/academic-sessions`, {
     params: { page, limit },

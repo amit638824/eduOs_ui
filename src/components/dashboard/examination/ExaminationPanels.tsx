@@ -14,6 +14,7 @@ import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validat
 import ExamAttemptPlayer from './ExamAttemptPlayer';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
+import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
 
@@ -34,27 +35,52 @@ function needsAnswerOnly(type: QuestionType) {
   return type === 'fill_blank' || type === 'integer' || type === 'numerical';
 }
 
+const QB_PREFS_KEY = 'edutech.questionBank.hierarchy';
+
+function loadQbPrefs(): { departmentId?: string; subjectId?: string; topicId?: string } {
+  try {
+    return JSON.parse(localStorage.getItem(QB_PREFS_KEY) || '{}') as {
+      departmentId?: string;
+      subjectId?: string;
+      topicId?: string;
+    };
+  } catch {
+    return {};
+  }
+}
+
+function saveQbPrefs(departmentId: string, subjectId: string, topicId: string) {
+  localStorage.setItem(QB_PREFS_KEY, JSON.stringify({ departmentId, subjectId, topicId }));
+}
+
 export function QuestionBankPanel() {
   const { user } = useAuth();
   const { branches } = useOrganization();
   const isTeacher = user?.roles.includes('teacher') ?? false;
-  const canAddTopic = isTeacher || (user?.roles.some((r) => ['org_admin', 'super_admin', 'branch_admin'].includes(r)) ?? false);
+  const canAddTopic =
+    isTeacher ||
+    (user?.roles.some((r) => ['org_admin', 'super_admin', 'branch_admin'].includes(r)) ?? false);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
   const [topics, setTopics] = useState<{ id: string; name: string }[]>([]);
 
-  const [departmentId, setDepartmentId] = useState('');
-  const [subjectId, setSubjectId] = useState('');
-  const [topicId, setTopicId] = useState('');
+  const [departmentId, setDepartmentId] = useState(() => loadQbPrefs().departmentId ?? '');
+  const [subjectId, setSubjectId] = useState(() => loadQbPrefs().subjectId ?? '');
+  const [topicId, setTopicId] = useState(() => loadQbPrefs().topicId ?? '');
 
   const [newSubjectName, setNewSubjectName] = useState('');
   const [newTopicName, setNewTopicName] = useState('');
   const [showAddSubject, setShowAddSubject] = useState(false);
   const [showAddTopic, setShowAddTopic] = useState(false);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [topicsLoading, setTopicsLoading] = useState(false);
+  const [deptsLoading, setDeptsLoading] = useState(false);
+  const [questionSearch, setQuestionSearch] = useState('');
   const [error, setError] = useState('');
   const [newQ, setNewQ] = useState('');
   const [questionType, setQuestionType] = useState<QuestionType>('mcq');
@@ -68,7 +94,7 @@ export function QuestionBankPanel() {
     setLoading(true);
     setError('');
     try {
-      const res = await examinationService.listQuestions(1, 50);
+      const res = await examinationService.listQuestions(1, 100);
       setQuestions(res.data);
     } catch (err) {
       setError(parseApiError(err));
@@ -82,37 +108,105 @@ export function QuestionBankPanel() {
   }, []);
 
   useEffect(() => {
+    saveQbPrefs(departmentId, subjectId, topicId);
+  }, [departmentId, subjectId, topicId]);
+
+  useEffect(() => {
     const branchId = branches[0]?.id;
     if (!branchId) return;
+    setDeptsLoading(true);
     platformService
       .listDepartments(branchId, 1, 50)
-      .then((r) => setDepartments(r.data.map((d) => ({ id: d.id, name: d.name }))))
-      .catch((err) => setError(parseApiError(err)));
+      .then((r) => {
+        const list = r.data.map((d) => ({ id: d.id, name: d.name }));
+        setDepartments(list);
+        setDepartmentId((current) => {
+          if (current && list.some((d) => d.id === current)) return current;
+          const prefs = loadQbPrefs();
+          if (prefs.departmentId && list.some((d) => d.id === prefs.departmentId)) {
+            return prefs.departmentId;
+          }
+          return current;
+        });
+      })
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setDeptsLoading(false));
   }, [branches]);
 
   useEffect(() => {
-    setSubjectId('');
-    setTopicId('');
-    setSubjects([]);
-    setTopics([]);
-    if (!departmentId) return;
+    if (!departmentId) {
+      setSubjects([]);
+      setSubjectsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setSubjectsLoading(true);
     examinationService
       .listSubjects(1, 100, departmentId)
-      .then((r) => setSubjects(r.data.map((s) => ({ id: s.id, name: s.name }))))
-      .catch((err) => setError(parseApiError(err)));
+      .then((r) => {
+        if (cancelled) return;
+        const list = r.data.map((s) => ({ id: s.id, name: s.name }));
+        setSubjects(list);
+        setSubjectId((current) => {
+          if (current && list.some((s) => s.id === current)) return current;
+          const prefs = loadQbPrefs();
+          if (prefs.subjectId && list.some((s) => s.id === prefs.subjectId)) return prefs.subjectId;
+          return '';
+        });
+      })
+      .catch((err) => {
+        if (!cancelled) setError(parseApiError(err));
+      })
+      .finally(() => {
+        if (!cancelled) setSubjectsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [departmentId]);
 
   useEffect(() => {
-    setTopicId('');
-    setTopics([]);
-    if (!subjectId) return;
+    if (!subjectId) {
+      setTopics([]);
+      setTopicsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setTopicsLoading(true);
     examinationService
       .listTopicsForSubject(subjectId)
-      .then((list) => setTopics(list.map((t) => ({ id: t.id, name: t.name }))))
-      .catch((err) => setError(parseApiError(err)));
+      .then((list) => {
+        if (cancelled) return;
+        const mapped = list.map((t) => ({ id: t.id, name: t.name }));
+        setTopics(mapped);
+        setTopicId((current) => {
+          if (current && mapped.some((t) => t.id === current)) return current;
+          const prefs = loadQbPrefs();
+          if (prefs.topicId && mapped.some((t) => t.id === prefs.topicId)) return prefs.topicId;
+          return '';
+        });
+      })
+      .catch((err) => {
+        if (!cancelled) setError(parseApiError(err));
+      })
+      .finally(() => {
+        if (!cancelled) setTopicsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [subjectId]);
 
   useDashboardLoadingEffect(loading);
+
+  const resetQuestionFields = () => {
+    setNewQ('');
+    setOpt1('');
+    setOpt2('');
+    setCorrect('1');
+    setQuestionType('mcq');
+    setEditingId(null);
+  };
 
   const buildOptions = () => {
     if (questionType === 'true_false') {
@@ -133,6 +227,17 @@ export function QuestionBankPanel() {
     ];
   };
 
+  const handleDepartmentChange = (id: string) => {
+    setDepartmentId(id);
+    setSubjectId('');
+    setTopicId('');
+  };
+
+  const handleSubjectChange = (id: string) => {
+    setSubjectId(id);
+    setTopicId('');
+  };
+
   const handleAddSubject = async () => {
     if (!departmentId || !newSubjectName.trim()) return;
     setError('');
@@ -144,6 +249,7 @@ export function QuestionBankPanel() {
         });
         setSubjects((prev) => [...prev, { id: created.id, name: created.name }]);
         setSubjectId(created.id);
+        setTopicId('');
         setNewSubjectName('');
         setShowAddSubject(false);
         setMessage(`Subject "${created.name}" added.`);
@@ -172,34 +278,94 @@ export function QuestionBankPanel() {
     });
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleEdit = async (id: string) => {
+    setError('');
+    setMessage('');
+    await withLoader(async () => {
+      try {
+        const q = await examinationService.getQuestion(id);
+        setEditingId(q.id);
+        setQuestionType(q.type as QuestionType);
+        setNewQ(q.content?.text ?? '');
+        if (q.department_id) setDepartmentId(q.department_id);
+        if (q.subject_id) setSubjectId(q.subject_id);
+        if (q.topic_id) setTopicId(q.topic_id);
+
+        const opts = q.options ?? [];
+        if (q.type === 'true_false') {
+          const trueOpt = opts.find((o) => o.content?.text === 'True');
+          setCorrect(trueOpt?.is_correct ? 'true' : 'false');
+          setOpt1('');
+          setOpt2('');
+        } else if (q.type === 'fill_blank' || q.type === 'integer' || q.type === 'numerical') {
+          const text = opts[0]?.content?.text;
+          const value = opts[0]?.content?.value;
+          setOpt1(text != null ? String(text) : value != null ? String(value) : '');
+          setOpt2('');
+          setCorrect('1');
+        } else {
+          setOpt1(opts[0]?.content?.text ?? '');
+          setOpt2(opts[1]?.content?.text ?? '');
+          setCorrect(opts[1]?.is_correct ? '2' : '1');
+        }
+        setMessage('Editing question — update and save, or cancel.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Delete this question?')) return;
+    setError('');
+    await withLoader(async () => {
+      try {
+        await examinationService.deleteQuestion(id);
+        if (editingId === id) resetQuestionFields();
+        setMessage('Question deleted.');
+        await loadQuestions();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage('');
     setError('');
     if (!departmentId || !subjectId || !topicId) {
-      setError('Select department, subject, and topic before adding a question.');
+      setError('Select department, subject, and topic before saving a question.');
       return;
     }
+    const payload = {
+      type: questionType,
+      content: { text: newQ },
+      marks: 1,
+      difficulty: 2,
+      topicId,
+      options: buildOptions(),
+    };
     await withLoader(async () => {
       try {
-        const created = await examinationService.createQuestion({
-          type: questionType,
-          content: { text: newQ },
-          marks: 1,
-          difficulty: 2,
-          topicId,
-          options: buildOptions(),
-        });
-        try {
-          await examinationService.approveQuestion(created.id);
-          setMessage(`${QUESTION_TYPE_LABELS[questionType]} question created and approved.`);
-        } catch {
-          setMessage(`${QUESTION_TYPE_LABELS[questionType]} question created (pending approval).`);
+        if (editingId) {
+          await examinationService.updateQuestion(editingId, payload);
+          setMessage('Question updated.');
+          resetQuestionFields();
+        } else {
+          const created = await examinationService.createQuestion(payload);
+          try {
+            await examinationService.approveQuestion(created.id);
+            setMessage(`${QUESTION_TYPE_LABELS[questionType]} question added. Department / subject / topic kept for next question.`);
+          } catch {
+            setMessage('Question created (pending approval). Hierarchy kept for next question.');
+          }
+          setNewQ('');
+          setOpt1('');
+          setOpt2('');
+          setCorrect('1');
         }
-        setNewQ('');
-        setOpt1('');
-        setOpt2('');
-        setCorrect('1');
         await loadQuestions();
       } catch (err) {
         setError(parseApiError(err));
@@ -212,50 +378,67 @@ export function QuestionBankPanel() {
       <DashboardPageHeader
         badge="Step 1"
         title="Question Bank"
-        subtitle="Select department → subject → topic, then add questions. Teachers can also add topics."
+        subtitle="Department → subject → topic stay selected after each add. Edit or delete anytime from the list."
       />
       <AdminExamGuide activeStep={1} compact />
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title">
-          <h4>Add Question</h4>
+          <h4>{editingId ? 'Edit Question' : 'Add Question'}</h4>
+          {editingId && (
+            <button type="button" className="dashboard__small__btn__2" onClick={resetQuestionFields}>
+              Cancel edit
+            </button>
+          )}
         </div>
         {error && <p className="login__error sp_bottom_15">{error}</p>}
         {message && <p className="form-success sp_bottom_15">{message}</p>}
-        <form onSubmit={handleCreate} className="edtp-form-card sp_bottom_30">
+        <form onSubmit={handleSubmit} className="edtp-form-card sp_bottom_30">
           <div className="row g-3">
             <div className="col-md-4">
               <label className="form-label">Department</label>
               <select
-                className="form-select"
+                className={`form-select${deptsLoading ? ' edtp-select--loading' : ''}`}
                 value={departmentId}
-                onChange={(e) => setDepartmentId(e.target.value)}
+                onChange={(e) => handleDepartmentChange(e.target.value)}
+                disabled={deptsLoading}
                 required
               >
-                <option value="">Select department</option>
+                <option value="">{deptsLoading ? 'Loading departments…' : 'Select department'}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
-              <p className="text-muted mb-0 mt-1" style={{ fontSize: '0.75rem' }}>
-                Departments are added by Organization Admin.
-              </p>
+              <FieldHint loading={deptsLoading} loadingText="Fetching departments…" />
+              {!deptsLoading && (
+                <p className="text-muted mb-0 mt-1" style={{ fontSize: '0.75rem' }}>
+                  Stays selected until you change it. Org Admin adds departments.
+                </p>
+              )}
             </div>
 
             <div className="col-md-4">
               <label className="form-label">Subject</label>
               <select
-                className="form-select"
+                className={`form-select${subjectsLoading ? ' edtp-select--loading' : ''}`}
                 value={subjectId}
-                onChange={(e) => setSubjectId(e.target.value)}
-                disabled={!departmentId}
+                onChange={(e) => handleSubjectChange(e.target.value)}
+                disabled={!departmentId || subjectsLoading}
                 required
               >
-                <option value="">Select subject</option>
+                <option value="">
+                  {subjectsLoading ? 'Loading subjects…' : 'Select subject'}
+                </option>
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
-              {departmentId && (
+              <FieldHint
+                loading={subjectsLoading}
+                empty={Boolean(departmentId && !subjectsLoading && subjects.length === 0)}
+                emptyText="No subjects in this department. Add one below."
+                loadingText="Fetching subjects…"
+              />
+              {departmentId && !subjectsLoading && (
                 <button
                   type="button"
                   className="dashboard__small__btn__2 mt-2"
@@ -265,7 +448,7 @@ export function QuestionBankPanel() {
                 </button>
               )}
               {showAddSubject && departmentId && (
-                <div className="d-flex gap-2 mt-2">
+                <div className="edtp-inline-field mt-2">
                   <input
                     className="register__input"
                     placeholder="Subject name"
@@ -282,18 +465,26 @@ export function QuestionBankPanel() {
             <div className="col-md-4">
               <label className="form-label">Topic</label>
               <select
-                className="form-select"
+                className={`form-select${topicsLoading ? ' edtp-select--loading' : ''}`}
                 value={topicId}
                 onChange={(e) => setTopicId(e.target.value)}
-                disabled={!subjectId}
+                disabled={!subjectId || topicsLoading}
                 required
               >
-                <option value="">Select topic</option>
+                <option value="">
+                  {topicsLoading ? 'Loading topics…' : 'Select topic'}
+                </option>
                 {topics.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
-              {canAddTopic && subjectId && (
+              <FieldHint
+                loading={topicsLoading}
+                empty={Boolean(subjectId && !topicsLoading && topics.length === 0)}
+                emptyText="No topics yet. Add one below."
+                loadingText="Fetching topics…"
+              />
+              {canAddTopic && subjectId && !topicsLoading && (
                 <button
                   type="button"
                   className="dashboard__small__btn__2 mt-2"
@@ -303,7 +494,7 @@ export function QuestionBankPanel() {
                 </button>
               )}
               {showAddTopic && subjectId && (
-                <div className="d-flex gap-2 mt-2">
+                <div className="edtp-inline-field mt-2">
                   <input
                     className="register__input"
                     placeholder="Topic name"
@@ -386,16 +577,29 @@ export function QuestionBankPanel() {
                 </div>
               </>
             )}
-            <div className="col-12">
+            <div className="col-12 d-flex flex-wrap gap-2">
               <button type="submit" className="default__button" disabled={!topicId}>
-                Add {QUESTION_TYPE_LABELS[questionType]} Question
+                {editingId
+                  ? `Update ${QUESTION_TYPE_LABELS[questionType]} Question`
+                  : `Add ${QUESTION_TYPE_LABELS[questionType]} Question`}
               </button>
+              {editingId && (
+                <button type="button" className="dashboard__small__btn__2" onClick={resetQuestionFields}>
+                  Cancel
+                </button>
+              )}
             </div>
           </div>
         </form>
+
         <div className="dashboard__section__title">
           <h4>Questions ({questions.length})</h4>
         </div>
+        <SearchField
+          value={questionSearch}
+          onChange={setQuestionSearch}
+          placeholder="Search questions by text, department, subject, topic…"
+        />
         <div className="dashboard__table table-responsive">
           <table>
             <thead>
@@ -406,10 +610,23 @@ export function QuestionBankPanel() {
                 <th>Topic</th>
                 <th>Type</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {questions.map((q) => (
+              {questions
+                .filter((q) => {
+                  const qSearch = questionSearch.trim().toLowerCase();
+                  if (!qSearch) return true;
+                  return (
+                    (q.content?.text ?? '').toLowerCase().includes(qSearch) ||
+                    (q.department_name ?? '').toLowerCase().includes(qSearch) ||
+                    (q.subject_name ?? '').toLowerCase().includes(qSearch) ||
+                    (q.topic_name ?? '').toLowerCase().includes(qSearch) ||
+                    (q.type ?? '').toLowerCase().includes(qSearch)
+                  );
+                })
+                .map((q) => (
                 <tr key={q.id}>
                   <td>{q.content?.text ?? '—'}</td>
                   <td>{q.department_name ?? '—'}</td>
@@ -417,10 +634,28 @@ export function QuestionBankPanel() {
                   <td>{q.topic_name ?? '—'}</td>
                   <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
                   <td>{q.status}</td>
+                  <td className="text-nowrap">
+                    <button
+                      type="button"
+                      className="dashboard__small__btn__2 me-2"
+                      onClick={() => void handleEdit(q.id)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      className="dashboard__small__btn__2"
+                      onClick={() => void handleDelete(q.id)}
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
               {questions.length === 0 && (
-                <tr><td colSpan={6}>No questions yet. Select department → subject → topic and add your first question.</td></tr>
+                <tr>
+                  <td colSpan={7}>No questions yet. Select department → subject → topic and add your first question.</td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -763,7 +998,9 @@ export function CreateTestPanel() {
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
   const [topics, setTopics] = useState<{ id: string; name: string }[]>([]);
-  const [hierarchyLoading, setHierarchyLoading] = useState(true);
+  const [deptsLoading, setDeptsLoading] = useState(true);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [topicsLoading, setTopicsLoading] = useState(false);
   const { branches } = useOrganization();
   const withLoader = useDashboardLoader();
   const {
@@ -791,7 +1028,7 @@ export function CreateTestPanel() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setHierarchyLoading(true);
+      setDeptsLoading(true);
       try {
         const branchId = branches[0]?.id;
         const deptRes = branchId
@@ -802,7 +1039,7 @@ export function CreateTestPanel() {
       } catch (err) {
         if (!cancelled) setApiError(parseApiError(err));
       } finally {
-        if (!cancelled) setHierarchyLoading(false);
+        if (!cancelled) setDeptsLoading(false);
       }
     })();
     return () => {
@@ -815,8 +1052,12 @@ export function CreateTestPanel() {
     setValue('topicId', '');
     setSubjects([]);
     setTopics([]);
-    if (!departmentId) return;
+    if (!departmentId) {
+      setSubjectsLoading(false);
+      return;
+    }
     let cancelled = false;
+    setSubjectsLoading(true);
     examinationService
       .listSubjects(1, 100, departmentId)
       .then((r) => {
@@ -824,6 +1065,9 @@ export function CreateTestPanel() {
       })
       .catch((err) => {
         if (!cancelled) setApiError(parseApiError(err));
+      })
+      .finally(() => {
+        if (!cancelled) setSubjectsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -833,8 +1077,12 @@ export function CreateTestPanel() {
   useEffect(() => {
     setValue('topicId', '');
     setTopics([]);
-    if (!subjectId) return;
+    if (!subjectId) {
+      setTopicsLoading(false);
+      return;
+    }
     let cancelled = false;
+    setTopicsLoading(true);
     examinationService
       .listTopicsForSubject(subjectId)
       .then((list) => {
@@ -842,13 +1090,14 @@ export function CreateTestPanel() {
       })
       .catch(() => {
         if (!cancelled) setTopics([]);
+      })
+      .finally(() => {
+        if (!cancelled) setTopicsLoading(false);
       });
     return () => {
       cancelled = true;
     };
   }, [subjectId, setValue]);
-
-  useDashboardLoadingEffect(hierarchyLoading);
 
   const onSubmit = async (values: CreateTestApiFormValues) => {
     setApiError('');
@@ -901,50 +1150,59 @@ export function CreateTestPanel() {
               <label htmlFor="departmentId">Department</label>
               <select
                 id="departmentId"
-                className={inputClassName('form-select', !!errors.departmentId)}
+                className={`${inputClassName('form-select', !!errors.departmentId)}${deptsLoading ? ' edtp-select--loading' : ''}`}
                 {...register('departmentId')}
+                disabled={deptsLoading}
               >
-                <option value="">Select department</option>
+                <option value="">{deptsLoading ? 'Loading departments…' : 'Select department'}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
+              <FieldHint loading={deptsLoading} loadingText="Fetching departments…" />
               <FormError message={errors.departmentId?.message} />
             </div>
             <div className="col-md-4">
               <label htmlFor="subjectId">Subject</label>
               <select
                 id="subjectId"
-                className={inputClassName('form-select', !!errors.subjectId)}
+                className={`${inputClassName('form-select', !!errors.subjectId)}${subjectsLoading ? ' edtp-select--loading' : ''}`}
                 {...register('subjectId')}
-                disabled={!departmentId}
+                disabled={!departmentId || subjectsLoading}
               >
-                <option value="">Select subject</option>
+                <option value="">{subjectsLoading ? 'Loading subjects…' : 'Select subject'}</option>
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
               </select>
+              <FieldHint
+                loading={subjectsLoading}
+                empty={Boolean(departmentId && !subjectsLoading && subjects.length === 0)}
+                emptyText="No subjects for this department."
+                loadingText="Fetching subjects…"
+              />
               <FormError message={errors.subjectId?.message} />
             </div>
             <div className="col-md-4">
               <label htmlFor="topicId">Topic</label>
               <select
                 id="topicId"
-                className={inputClassName('form-select', !!errors.topicId)}
+                className={`${inputClassName('form-select', !!errors.topicId)}${topicsLoading ? ' edtp-select--loading' : ''}`}
                 {...register('topicId')}
-                disabled={!subjectId}
+                disabled={!subjectId || topicsLoading}
               >
-                <option value="">Select topic</option>
+                <option value="">{topicsLoading ? 'Loading topics…' : 'Select topic'}</option>
                 {topics.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
               </select>
+              <FieldHint
+                loading={topicsLoading}
+                empty={Boolean(subjectId && !topicsLoading && topics.length === 0)}
+                emptyText="No topics found for this subject."
+                loadingText="Fetching topics…"
+              />
               <FormError message={errors.topicId?.message} />
-              {subjectId && topics.length === 0 && !hierarchyLoading && (
-                <p className="text-muted mb-0" style={{ fontSize: '0.8rem' }}>
-                  No topics found for this subject. Ask org admin to seed subjects/topics.
-                </p>
-              )}
             </div>
             <div className="col-12">
               <label htmlFor="examTitle">Exam Title</label>

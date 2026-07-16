@@ -38,6 +38,8 @@ export interface Question {
   marks: number;
   difficulty?: number | null;
   topic_id?: string | null;
+  subject_id?: string | null;
+  department_id?: string | null;
   topic_name?: string | null;
   subject_name?: string | null;
   department_name?: string | null;
