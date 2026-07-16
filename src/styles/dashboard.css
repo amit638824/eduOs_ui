@@ -569,16 +569,256 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   background: var(--db-card-hover);
   border: 1px solid var(--db-border);
   color: var(--db-text);
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 7px 14px;
   font-size: 0.8125rem;
+  font-weight: 600;
   text-decoration: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
 .sca-dashboard .dashboard__small__btn__2:hover {
   border-color: var(--db-accent);
   color: var(--db-accent);
+  background: var(--db-accent-soft);
+}
+
+/* ── Shared CRUD buttons (Add / Edit / Delete / Cancel) ── */
+.sca-dashboard .edtp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  line-height: 1.2;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+  white-space: nowrap;
+  text-decoration: none;
+  font-family: inherit;
+}
+
+.sca-dashboard .edtp-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sca-dashboard .edtp-btn--sm {
+  padding: 7px 12px;
+  font-size: 0.8125rem;
+  min-height: 34px;
+}
+
+.sca-dashboard .edtp-btn--md {
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  min-height: 40px;
+}
+
+.sca-dashboard .edtp-btn--primary {
+  background: var(--db-accent);
+  border-color: var(--db-accent);
+  color: #fff;
+}
+
+.sca-dashboard .edtp-btn--primary:hover:not(:disabled) {
+  opacity: 0.92;
+}
+
+.sca-dashboard .edtp-btn--secondary {
+  background: var(--db-input-bg);
+  border-color: var(--db-border);
+  color: var(--db-text);
+}
+
+.sca-dashboard .edtp-btn--secondary:hover:not(:disabled) {
+  border-color: var(--db-accent);
+  color: var(--db-accent);
+  background: var(--db-accent-soft);
+}
+
+.sca-dashboard .edtp-btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--db-muted);
+}
+
+.sca-dashboard .edtp-btn--ghost:hover:not(:disabled) {
+  color: var(--db-text);
+  background: var(--db-row-hover);
+}
+
+.sca-dashboard .edtp-btn--danger {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #dc2626;
+}
+
+.sca-dashboard .edtp-btn--danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.16);
+  border-color: #dc2626;
+}
+
+.sca-dashboard .edtp-btn--success {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #15803d;
+}
+
+.sca-dashboard .edtp-btn--success:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.sca-dashboard.sca-dashboard--dark .edtp-btn--danger {
+  color: #fca5a5;
+}
+
+.sca-dashboard.sca-dashboard--dark .edtp-btn--success {
+  color: #86efac;
+}
+
+.sca-dashboard .edtp-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.sca-dashboard .edtp-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--db-border);
+}
+
+.sca-dashboard .edtp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.sca-dashboard .edtp-field:last-of-type {
+  margin-bottom: 0;
+}
+
+.sca-dashboard .edtp-field__label {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--db-text);
+}
+
+.sca-dashboard .edtp-field__hint {
+  font-size: 0.75rem;
+  color: var(--db-muted);
+}
+
+.sca-dashboard .edtp-alert {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.sca-dashboard .edtp-alert--error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #b91c1c;
+}
+
+.sca-dashboard .edtp-alert--success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  color: #15803d;
+}
+
+.sca-dashboard.sca-dashboard--dark .edtp-alert--error {
+  color: #fca5a5;
+}
+
+.sca-dashboard.sca-dashboard--dark .edtp-alert--success {
+  color: #86efac;
+}
+
+.sca-dashboard .edtp-crud-panel__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sca-dashboard .edtp-crud-panel__head h5 {
+  margin: 0;
+}
+
+.sca-dashboard .edtp-crud-panel__sub {
+  margin: 4px 0 0;
+  font-size: 0.8125rem;
+  color: var(--db-muted);
+}
+
+.sca-dashboard .edtp-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--db-muted);
+  font-size: 0.875rem;
+  border: 1px dashed var(--db-border);
+  border-radius: 8px;
+  background: var(--db-input-bg);
+}
+
+.sca-dashboard .edtp-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  color: var(--db-muted);
+  background: var(--db-input-bg);
+  border: 1px solid var(--db-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.sca-dashboard .dashboard__table code,
+.sca-dashboard .edtp-panel-block code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  color: var(--db-muted);
+  background: var(--db-input-bg);
+  border: 1px solid var(--db-border);
+  border-radius: 6px;
+  padding: 2px 8px;
+}
+
+.sca-dashboard.sca-dashboard--light .edtp-badge--active {
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+.sca-dashboard .edtp-crud-panel .edtp-form-actions + .edtp-data-list {
+  margin-top: 16px;
+}
+
+.sca-dashboard .edtp-list-item--editing {
+  border-color: var(--db-accent) !important;
+  background: var(--db-accent-soft) !important;
+}
+
+.sca-dashboard .edtp-form-card .edtp-form-actions {
+  margin-top: 8px;
+  padding-top: 16px;
 }
 
 .sca-dashboard .login__error {
@@ -821,6 +1061,14 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 
 .dashboard__table tbody tr:last-child td {
   border-bottom: none;
+}
+
+.sca-dashboard .dashboard__table tbody tr.edtp-row--editing {
+  background: var(--db-accent-soft);
+}
+
+.sca-dashboard .dashboard__table tbody tr.edtp-row--editing td {
+  border-color: transparent;
 }
 
 /* Quick actions */

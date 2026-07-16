@@ -5,6 +5,15 @@ import { useOrgScope } from '@/context/OrgScopeContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { setSelectedOrganizationId } from '@/lib/orgScope';
 import type { Organization } from '@/types/api';
+import {
+  EdtpAlert,
+  EdtpBtn,
+  EdtpEmpty,
+  EdtpField,
+  EdtpFormActions,
+  EdtpPanel,
+  EdtpRowActions,
+} from '@/components/ui/CrudUI';
 
 function slugify(name: string) {
   return name
@@ -67,6 +76,7 @@ export function OrganizationsPanel() {
     setActivateNow(org.isActive);
     setMessage('');
     setError('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const save = async () => {
@@ -154,33 +164,37 @@ export function OrganizationsPanel() {
           their students, teachers, exams and results.
         </p>
       </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      {error && <EdtpAlert type="error">{error}</EdtpAlert>}
+      {message && <EdtpAlert type="success">{message}</EdtpAlert>}
 
       <div className="row g-3">
         <div className="col-lg-4">
-          <div className="edtp-panel-block">
-            <h5>{editingId ? 'Edit organization' : 'Add organization'}</h5>
-            <label htmlFor="orgName">Name</label>
-            <input
-              id="orgName"
-              className="register__input"
-              value={name}
-              onChange={(e) => {
-                const v = e.target.value;
-                setName(v);
-                if (!editingId) setSlug(slugify(v));
-              }}
-              placeholder="e.g. Sunrise Academy"
-            />
-            <label htmlFor="orgSlug">Slug</label>
-            <input
-              id="orgSlug"
-              className="register__input"
-              value={slug}
-              onChange={(e) => setSlug(slugify(e.target.value))}
-              placeholder="sunrise-academy"
-            />
+          <EdtpPanel
+            title={editingId ? 'Edit organization' : 'Add organization'}
+            subtitle={editingId ? 'Update details, then save.' : 'New vendors start as pending unless approved.'}
+          >
+            <EdtpField label="Name" htmlFor="orgName">
+              <input
+                id="orgName"
+                className="register__input"
+                value={name}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setName(v);
+                  if (!editingId) setSlug(slugify(v));
+                }}
+                placeholder="e.g. Sunrise Academy"
+              />
+            </EdtpField>
+            <EdtpField label="Slug" htmlFor="orgSlug" hint="URL-safe id — lowercase letters, numbers, hyphens">
+              <input
+                id="orgSlug"
+                className="register__input"
+                value={slug}
+                onChange={(e) => setSlug(slugify(e.target.value))}
+                placeholder="sunrise-academy"
+              />
+            </EdtpField>
             <label className="edtp-check-row">
               <input
                 type="checkbox"
@@ -189,97 +203,79 @@ export function OrganizationsPanel() {
               />
               <span>Approve immediately (active)</span>
             </label>
-            <div className="edtp-inline-field mt-2">
-              <button type="button" className="default__button" onClick={() => void save()}>
+            <EdtpFormActions>
+              <EdtpBtn variant="primary" size="md" onClick={() => void save()}>
                 {editingId ? 'Update' : 'Create'}
-              </button>
+              </EdtpBtn>
               {editingId && (
-                <button type="button" className="dashboard__small__btn__2" onClick={resetForm}>
+                <EdtpBtn variant="ghost" size="md" onClick={resetForm}>
                   Cancel
-                </button>
+                </EdtpBtn>
               )}
-            </div>
-          </div>
+            </EdtpFormActions>
+          </EdtpPanel>
         </div>
 
         <div className="col-lg-8">
-          <div className="edtp-panel-block">
-            <h5>All organizations</h5>
-            <div className="dashboard__table table-responsive">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Slug</th>
-                    <th>Users</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {orgs.map((org) => (
-                    <tr key={org.id}>
-                      <td>{org.name}</td>
-                      <td>
-                        <code>{org.slug}</code>
-                      </td>
-                      <td>{org.usersCount ?? '—'}</td>
-                      <td>
-                        <span
-                          className={`edtp-badge ${
-                            org.isActive ? 'edtp-badge--active' : 'edtp-badge--inactive'
-                          }`}
-                        >
-                          {statusLabel(org)}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="d-flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            className="dashboard__small__btn__2"
-                            onClick={() => manageData(org)}
-                          >
-                            Manage
-                          </button>
-                          {!org.isActive && (
-                            <button
-                              type="button"
-                              className="default__button small-btn"
-                              onClick={() => void approve(org)}
-                            >
-                              Approve
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            className="dashboard__small__btn__2"
-                            onClick={() => startEdit(org)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            className="dashboard__small__btn__2"
-                            onClick={() => void remove(org)}
-                          >
-                            Delete
-                          </button>
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {orgs.length === 0 && !loading && (
+          <EdtpPanel title="All organizations" subtitle={`${orgs.length} vendor${orgs.length === 1 ? '' : 's'}`}>
+            {orgs.length === 0 && !loading ? (
+              <EdtpEmpty>No organizations yet. Create the first vendor on the left.</EdtpEmpty>
+            ) : (
+              <div className="dashboard__table table-responsive">
+                <table>
+                  <thead>
                     <tr>
-                      <td colSpan={5} className="text-muted">
-                        No organizations yet. Create the first vendor on the left.
-                      </td>
+                      <th>Name</th>
+                      <th>Slug</th>
+                      <th>Users</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
+                  </thead>
+                  <tbody>
+                    {orgs.map((org) => (
+                      <tr key={org.id} className={editingId === org.id ? 'edtp-row--editing' : undefined}>
+                        <td>
+                          <strong>{org.name}</strong>
+                        </td>
+                        <td>
+                          <span className="edtp-code">{org.slug}</span>
+                        </td>
+                        <td>{org.usersCount ?? '—'}</td>
+                        <td>
+                          <span
+                            className={`edtp-badge ${
+                              org.isActive ? 'edtp-badge--active' : 'edtp-badge--inactive'
+                            }`}
+                          >
+                            {statusLabel(org)}
+                          </span>
+                        </td>
+                        <td>
+                          <EdtpRowActions>
+                            <EdtpBtn variant="secondary" onClick={() => manageData(org)}>
+                              Manage
+                            </EdtpBtn>
+                            {!org.isActive && (
+                              <EdtpBtn variant="success" onClick={() => void approve(org)}>
+                                Approve
+                              </EdtpBtn>
+                            )}
+                            <EdtpBtn variant="secondary" onClick={() => startEdit(org)}>
+                              Edit
+                            </EdtpBtn>
+                            <EdtpBtn variant="danger" onClick={() => void remove(org)}>
+                              Delete
+                            </EdtpBtn>
+                          </EdtpRowActions>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </EdtpPanel>
         </div>
       </div>
     </div>

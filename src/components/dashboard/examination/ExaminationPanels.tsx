@@ -15,6 +15,7 @@ import ExamAttemptPlayer from './ExamAttemptPlayer';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
+import { EdtpBtn, EdtpFormActions, EdtpRowActions } from '@/components/ui/CrudUI';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
 
@@ -577,17 +578,19 @@ export function QuestionBankPanel() {
                 </div>
               </>
             )}
-            <div className="col-12 d-flex flex-wrap gap-2">
-              <button type="submit" className="default__button" disabled={!topicId}>
-                {editingId
-                  ? `Update ${QUESTION_TYPE_LABELS[questionType]} Question`
-                  : `Add ${QUESTION_TYPE_LABELS[questionType]} Question`}
-              </button>
-              {editingId && (
-                <button type="button" className="dashboard__small__btn__2" onClick={resetQuestionFields}>
-                  Cancel
-                </button>
-              )}
+            <div className="col-12">
+              <EdtpFormActions>
+                <EdtpBtn type="submit" variant="primary" size="md" disabled={!topicId}>
+                  {editingId
+                    ? `Update ${QUESTION_TYPE_LABELS[questionType]} Question`
+                    : `Add ${QUESTION_TYPE_LABELS[questionType]} Question`}
+                </EdtpBtn>
+                {editingId && (
+                  <EdtpBtn variant="ghost" size="md" onClick={resetQuestionFields}>
+                    Cancel
+                  </EdtpBtn>
+                )}
+              </EdtpFormActions>
             </div>
           </div>
         </form>
@@ -627,28 +630,22 @@ export function QuestionBankPanel() {
                   );
                 })
                 .map((q) => (
-                <tr key={q.id}>
+                <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
                   <td>{q.content?.text ?? '—'}</td>
                   <td>{q.department_name ?? '—'}</td>
                   <td>{q.subject_name ?? '—'}</td>
                   <td>{q.topic_name ?? '—'}</td>
                   <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
                   <td>{q.status}</td>
-                  <td className="text-nowrap">
-                    <button
-                      type="button"
-                      className="dashboard__small__btn__2 me-2"
-                      onClick={() => void handleEdit(q.id)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="dashboard__small__btn__2"
-                      onClick={() => void handleDelete(q.id)}
-                    >
-                      Delete
-                    </button>
+                  <td>
+                    <EdtpRowActions>
+                      <EdtpBtn variant="secondary" onClick={() => void handleEdit(q.id)}>
+                        Edit
+                      </EdtpBtn>
+                      <EdtpBtn variant="danger" onClick={() => void handleDelete(q.id)}>
+                        Delete
+                      </EdtpBtn>
+                    </EdtpRowActions>
                   </td>
                 </tr>
               ))}
@@ -735,22 +732,30 @@ export function TestsListPanel({ title }: { title: string }) {
                   <td>{statusBadge(t.status)}</td>
                   <td>{t.duration_minutes} min</td>
                   <td>{t.total_marks ?? '—'}</td>
-                  <td className="text-nowrap">
-                    {t.status === 'draft' && (
-                      <>
-                        <Link to={`/dashboard/test-builder/${t.id}`} className="dashboard__small__btn__2 me-2">
-                          Build
+                  <td>
+                    <EdtpRowActions>
+                      {t.status === 'draft' && (
+                        <>
+                          <Link
+                            to={`/dashboard/test-builder/${t.id}`}
+                            className="edtp-btn edtp-btn--secondary edtp-btn--sm"
+                          >
+                            Build
+                          </Link>
+                          <EdtpBtn variant="success" onClick={() => publish(t.id)}>
+                            Publish
+                          </EdtpBtn>
+                        </>
+                      )}
+                      {t.status === 'live' && (
+                        <Link
+                          to={`/dashboard/test-builder/${t.id}`}
+                          className="edtp-btn edtp-btn--secondary edtp-btn--sm"
+                        >
+                          Manage & Assign
                         </Link>
-                        <button type="button" className="dashboard__small__btn__2" onClick={() => publish(t.id)}>
-                          Publish
-                        </button>
-                      </>
-                    )}
-                    {t.status === 'live' && (
-                      <Link to={`/dashboard/test-builder/${t.id}`} className="dashboard__small__btn__2">
-                        Manage & Assign
-                      </Link>
-                    )}
+                      )}
+                    </EdtpRowActions>
                   </td>
                 </tr>
               ))}

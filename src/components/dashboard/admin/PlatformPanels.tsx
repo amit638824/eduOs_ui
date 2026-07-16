@@ -11,6 +11,15 @@ import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/Dashboa
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { getTestsListPath } from '@/utils/dashboardRole';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
+import {
+  EdtpAlert,
+  EdtpBtn,
+  EdtpEmpty,
+  EdtpField,
+  EdtpFormActions,
+  EdtpPanel,
+  EdtpRowActions,
+} from '@/components/ui/CrudUI';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
@@ -358,47 +367,56 @@ export function UsersManagementPanel({
         <h4>{heading}</h4>
         <span className="badge bg-primary">{users.length}</span>
       </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      {error && <EdtpAlert type="error">{error}</EdtpAlert>}
+      {message && <EdtpAlert type="success">{message}</EdtpAlert>}
 
       <div className="edtp-form-card">
         <h5>{addLabel}</h5>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="row g-3">
             <div className="col-md-6 col-lg-3">
-              <label>First name</label>
-              <input className="register__input" placeholder="First name" {...register('firstName')} />
-              <FormError message={errors.firstName?.message} />
+              <EdtpField label="First name">
+                <input className="register__input" placeholder="First name" {...register('firstName')} />
+                <FormError message={errors.firstName?.message} />
+              </EdtpField>
             </div>
             <div className="col-md-6 col-lg-3">
-              <label>Last name</label>
-              <input className="register__input" placeholder="Last name" {...register('lastName')} />
-              <FormError message={errors.lastName?.message} />
+              <EdtpField label="Last name">
+                <input className="register__input" placeholder="Last name" {...register('lastName')} />
+                <FormError message={errors.lastName?.message} />
+              </EdtpField>
             </div>
             <div className="col-md-6 col-lg-3">
-              <label>Email</label>
-              <input className="register__input" placeholder="Email" {...register('email')} />
-              <FormError message={errors.email?.message} />
+              <EdtpField label="Email">
+                <input className="register__input" placeholder="Email" {...register('email')} />
+                <FormError message={errors.email?.message} />
+              </EdtpField>
             </div>
             {!lockedRole ? (
               <div className="col-md-6 col-lg-2">
-                <label>Role</label>
-                <select className="form-select" {...register('role')}>
-                  <option value="student">Student</option>
-                  <option value="teacher">Teacher</option>
-                  <option value="org_admin">Org Admin</option>
-                </select>
+                <EdtpField label="Role">
+                  <select className="form-select" {...register('role')}>
+                    <option value="student">Student</option>
+                    <option value="teacher">Teacher</option>
+                    <option value="org_admin">Org Admin</option>
+                  </select>
+                </EdtpField>
               </div>
             ) : (
               <input type="hidden" {...register('role')} />
             )}
             <div className="col-md-6 col-lg-3">
-              <label>Password</label>
-              <input className="register__input" type="password" placeholder="Password" {...register('password')} />
-              <FormError message={errors.password?.message} />
+              <EdtpField label="Password">
+                <input className="register__input" type="password" placeholder="Password" {...register('password')} />
+                <FormError message={errors.password?.message} />
+              </EdtpField>
             </div>
-            <div className="col-md-6 col-lg-2 d-flex align-items-end">
-              <button type="submit" className="default__button w-100">{addLabel}</button>
+            <div className="col-12">
+              <EdtpFormActions>
+                <EdtpBtn type="submit" variant="primary" size="md">
+                  {addLabel}
+                </EdtpBtn>
+              </EdtpFormActions>
             </div>
           </div>
         </form>
@@ -422,7 +440,7 @@ export function UsersManagementPanel({
             </div>
           </div>
         ))}
-        {users.length === 0 && <p>No users found.</p>}
+        {users.length === 0 && <EdtpEmpty>No users found.</EdtpEmpty>}
       </div>
 
       <div className="dashboard__table table-responsive d-none d-lg-block">
@@ -792,25 +810,30 @@ export function OrgStructurePanel() {
       <div className="dashboard__section__title">
         <h4>Departments & Sessions</h4>
       </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      {error && <EdtpAlert type="error">{error}</EdtpAlert>}
+      {message && <EdtpAlert type="success">{message}</EdtpAlert>}
       <div className="row g-3">
         <div className="col-md-6">
-          <div className="edtp-panel-block">
-            <h5>Departments</h5>
-            <label htmlFor="orgBranch">Branch</label>
-            <select
-              id="orgBranch"
-              className="form-select"
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
+          <EdtpPanel
+            title="Departments"
+            subtitle={editingDeptId ? 'Editing selected department' : 'Add departments under a branch'}
+          >
+            <EdtpField label="Branch" htmlFor="orgBranch">
+              <select
+                id="orgBranch"
+                className="form-select"
+                value={branchId}
+                onChange={(e) => setBranchId(e.target.value)}
+              >
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}</option>
+                ))}
+              </select>
+            </EdtpField>
+            <EdtpField
+              label={editingDeptId ? 'Edit department' : 'Department name'}
+              htmlFor="deptName"
             >
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>{b.name}</option>
-              ))}
-            </select>
-            <label htmlFor="deptName">{editingDeptId ? 'Edit department' : 'Department name'}</label>
-            <div className="edtp-inline-field">
               <input
                 id="deptName"
                 className="register__input"
@@ -818,47 +841,47 @@ export function OrgStructurePanel() {
                 value={deptName}
                 onChange={(e) => setDeptName(e.target.value)}
               />
-              <button type="button" className="default__button" onClick={saveDept}>
+            </EdtpField>
+            <EdtpFormActions>
+              <EdtpBtn variant="primary" size="md" onClick={saveDept}>
                 {editingDeptId ? 'Update' : 'Add'}
-              </button>
+              </EdtpBtn>
               {editingDeptId && (
-                <button
-                  type="button"
-                  className="dashboard__small__btn__2"
+                <EdtpBtn
+                  variant="ghost"
+                  size="md"
                   onClick={() => {
                     setEditingDeptId(null);
                     setDeptName('');
                   }}
                 >
                   Cancel
-                </button>
+                </EdtpBtn>
               )}
-            </div>
+            </EdtpFormActions>
             <ul className="edtp-data-list">
               {departments.map((d) => (
-                <li key={d.id}>
+                <li key={d.id} className={editingDeptId === d.id ? 'edtp-list-item--editing' : undefined}>
                   <span>{d.name}{d.code ? ` (${d.code})` : ''}</span>
-                  <span className="d-flex gap-2">
-                    <button type="button" className="dashboard__small__btn__2" onClick={() => startEditDept(d)}>
+                  <EdtpRowActions>
+                    <EdtpBtn variant="secondary" onClick={() => startEditDept(d)}>
                       Edit
-                    </button>
-                    <button type="button" className="dashboard__small__btn__2" onClick={() => void deleteDept(d.id)}>
+                    </EdtpBtn>
+                    <EdtpBtn variant="danger" onClick={() => void deleteDept(d.id)}>
                       Delete
-                    </button>
-                  </span>
+                    </EdtpBtn>
+                  </EdtpRowActions>
                 </li>
               ))}
               {departments.length === 0 && (
                 <li><span className="text-muted">No departments yet.</span></li>
               )}
             </ul>
-          </div>
+          </EdtpPanel>
         </div>
         <div className="col-md-6">
-          <div className="edtp-panel-block">
-            <h5>Academic Sessions</h5>
-            <label htmlFor="sessionName">Session name</label>
-            <div className="edtp-inline-field">
+          <EdtpPanel title="Academic Sessions" subtitle="Current academic year / term">
+            <EdtpField label="Session name" htmlFor="sessionName">
               <input
                 id="sessionName"
                 className="register__input"
@@ -866,10 +889,12 @@ export function OrgStructurePanel() {
                 value={sessionName}
                 onChange={(e) => setSessionName(e.target.value)}
               />
-              <button type="button" className="default__button" onClick={addSession}>
+            </EdtpField>
+            <EdtpFormActions>
+              <EdtpBtn variant="primary" size="md" onClick={addSession}>
                 Add
-              </button>
-            </div>
+              </EdtpBtn>
+            </EdtpFormActions>
             <ul className="edtp-data-list">
               {sessions.map((s) => (
                 <li key={s.id}>
@@ -881,7 +906,7 @@ export function OrgStructurePanel() {
                 <li><span className="text-muted">No sessions yet.</span></li>
               )}
             </ul>
-          </div>
+          </EdtpPanel>
         </div>
       </div>
     </div>

@@ -110,6 +110,7 @@ export interface CreateOrganizationInput {
   logoUrl?: string;
   theme?: Record<string, unknown>;
   settings?: Record<string, unknown>;
+  contactEmail?: string;
   isActive?: boolean;
 }
 
@@ -119,6 +120,7 @@ export interface UpdateOrganizationInput {
   logoUrl?: string;
   theme?: Record<string, unknown>;
   settings?: Record<string, unknown>;
+  contactEmail?: string;
   isActive?: boolean;
 }
 
