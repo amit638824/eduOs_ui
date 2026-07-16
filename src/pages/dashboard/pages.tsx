@@ -182,7 +182,11 @@ export function AdminDashboardHome() {
       <DashboardPageHeader
         badge="Admin Portal"
         title={organization ? organization.name : 'Admin Dashboard'}
-        subtitle="Manage exams, users, payments and organization settings."
+        subtitle={
+          organization
+            ? `Managing ${organization.name} — students, teachers, exams and results stay org-scoped.`
+            : 'Manage exams, users, payments and organization settings.'
+        }
       />
       <AdminExamGuide />
       {error && (

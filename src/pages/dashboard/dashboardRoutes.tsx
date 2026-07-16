@@ -20,6 +20,7 @@ import {
   TestBuilderPanel,
   BrandingSettingsPanel,
 } from '@/components/dashboard/admin/PlatformPanels';
+import { OrganizationsPanel } from '@/components/dashboard/admin/OrganizationsPanel';
 import {
   StudentDashboardHome,
   AdminDashboardHome,
@@ -122,6 +123,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/admin-faculty" element={dash('admin', <UsersManagementPanel lockedRole="teacher" title="Faculty" />)} />
     <Route path="/dashboard/admin-students" element={dash('admin', <UsersManagementPanel lockedRole="student" title="Students" />)} />
     <Route path="/dashboard/admin-audit" element={dash('admin', <AuditLogPanel />)} />
+    <Route path="/dashboard/admin-organizations" element={dash('admin', <OrganizationsPanel />)} />
     <Route path="/dashboard/admin-org" element={dash('admin', <OrgStructurePanel />)} />
     <Route path="/dashboard/admin-branding" element={dash('admin', <BrandingSettingsPanel />)} />
     <Route path="/dashboard/admin-sessions" element={dash('admin', <SessionsSecurityPanel />)} />

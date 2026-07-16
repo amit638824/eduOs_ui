@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { DashboardLoadingProvider, useDashboardLoading } from '@/context/DashboardLoadingContext';
+import { OrgScopeProvider, useOrgScope } from '@/context/OrgScopeContext';
 import type { DashboardNavSection, DashboardProfile, DashboardRole } from '@/types/dashboard';
 import LoaderInner from '@/components/ui/LoaderInner';
 import DashboardSidebar from './DashboardSidebar';
@@ -24,16 +25,18 @@ export default function DashboardShell({
   children,
 }: DashboardShellProps) {
   return (
-    <DashboardLoadingProvider>
-      <DashboardShellInner
-        role={role}
-        profile={profile}
-        navigation={navigation}
-        onLogout={onLogout}
-      >
-        {children}
-      </DashboardShellInner>
-    </DashboardLoadingProvider>
+    <OrgScopeProvider>
+      <DashboardLoadingProvider>
+        <DashboardShellInner
+          role={role}
+          profile={profile}
+          navigation={navigation}
+          onLogout={onLogout}
+        >
+          {children}
+        </DashboardShellInner>
+      </DashboardLoadingProvider>
+    </OrgScopeProvider>
   );
 }
 
@@ -46,6 +49,7 @@ function DashboardShellInner({
 }: DashboardShellProps) {
   const { isDark } = useTheme();
   const { loading } = useDashboardLoading();
+  const { selectedOrgId, isSuperAdmin } = useOrgScope();
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem(COLLAPSE_KEY);
     return stored === null ? true : stored === '1';
@@ -73,6 +77,9 @@ function DashboardShellInner({
     }
   };
 
+  // Remount panels when superadmin switches org so data reloads for that tenant
+  const contentKey = isSuperAdmin ? selectedOrgId ?? 'no-org' : 'tenant';
+
   return (
     <div
       className={[
@@ -98,7 +105,7 @@ function DashboardShellInner({
           menuOpen={mobileOpen}
           onToggleMenu={handleToggleMenu}
         />
-        <div className="sca-dashboard__content">
+        <div className="sca-dashboard__content" key={contentKey}>
           {loading && <LoaderInner />}
           {children}
         </div>

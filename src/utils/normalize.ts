@@ -35,6 +35,14 @@ export function normalizeOrganization(raw: Record<string, unknown>): Organizatio
     isActive: Boolean(raw.isActive ?? raw.is_active ?? true),
     createdAt: String(raw.createdAt ?? raw.created_at ?? ''),
     updatedAt: (raw.updatedAt as string | undefined) ?? (raw.updated_at as string | undefined),
+    usersCount:
+      raw.usersCount != null || raw.users_count != null
+        ? Number(raw.usersCount ?? raw.users_count)
+        : undefined,
+    branchesCount:
+      raw.branchesCount != null || raw.branches_count != null
+        ? Number(raw.branchesCount ?? raw.branches_count)
+        : undefined,
   };
 }
 

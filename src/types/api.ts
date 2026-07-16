@@ -89,6 +89,8 @@ export interface Organization {
   isActive: boolean;
   createdAt: string;
   updatedAt?: string;
+  usersCount?: number;
+  branchesCount?: number;
 }
 
 export interface Branch {
@@ -100,6 +102,15 @@ export interface Branch {
   settings?: Record<string, unknown>;
   isActive: boolean;
   createdAt: string;
+}
+
+export interface CreateOrganizationInput {
+  name: string;
+  slug: string;
+  logoUrl?: string;
+  theme?: Record<string, unknown>;
+  settings?: Record<string, unknown>;
+  isActive?: boolean;
 }
 
 export interface UpdateOrganizationInput {

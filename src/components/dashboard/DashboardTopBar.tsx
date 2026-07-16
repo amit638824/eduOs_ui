@@ -3,6 +3,7 @@ import { useTheme } from '@/context/ThemeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
 import DashboardBreadcrumb from './DashboardBreadcrumb';
 import HamburgerIcon from '@/components/ui/HamburgerIcon';
+import OrgSwitcher from './OrgSwitcher';
 
 interface DashboardTopBarProps {
   profile: DashboardProfile;
@@ -30,6 +31,7 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
       </div>
 
       <div className="sca-db-header__right">
+        <OrgSwitcher />
         <button
           type="button"
           className="sca-db-icon-btn"

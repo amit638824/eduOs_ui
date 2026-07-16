@@ -1049,6 +1049,49 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   color: var(--db-muted);
 }
 
+.sca-db-org-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(280px, 42vw);
+  margin-right: 4px;
+}
+
+.sca-db-org-switcher__label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--db-muted);
+  white-space: nowrap;
+}
+
+.sca-db-org-switcher__select {
+  min-width: 0;
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--db-border);
+  background: var(--db-header-bg);
+  color: inherit;
+  font-size: 13px;
+}
+
+.edtp-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.edtp-check-row input {
+  width: auto;
+  margin: 0;
+}
+
 /* Bootstrap grid fix inside dashboard */
 .sca-dashboard .row {
   --bs-gutter-x: 16px;

@@ -790,7 +790,7 @@ export function OrgStructurePanel() {
   return (
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title">
-        <h4>Organization Structure</h4>
+        <h4>Departments & Sessions</h4>
       </div>
       {error && <p className="login__error sp_bottom_15">{error}</p>}
       {message && <p className="form-success sp_bottom_15">{message}</p>}

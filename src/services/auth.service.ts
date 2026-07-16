@@ -17,6 +17,8 @@ export function isMfaLoginResponse(data: LoginApiResponse): data is MfaLoginResp
 }
 
 export async function login(input: LoginInput): Promise<LoginApiResponse> {
+  // Drop stale session so login is a clean credential check
+  tokenStorage.clear();
   const { data } = await api.post<ApiResponse<LoginApiResponse>>('/auth/login', input);
   if (isMfaLoginResponse(data.data)) {
     return data.data;

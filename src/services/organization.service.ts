@@ -2,6 +2,7 @@ import api from '@/lib/api';
 import type {
   ApiResponse,
   Branch,
+  CreateOrganizationInput,
   Organization,
   PaginatedResponse,
   UpdateOrganizationInput,
@@ -23,6 +24,11 @@ export async function getOrganization(id: string): Promise<Organization> {
   return normalizeOrganization(data.data);
 }
 
+export async function createOrganization(input: CreateOrganizationInput): Promise<Organization> {
+  const { data } = await api.post<ApiResponse<Record<string, unknown>>>('/organizations', input);
+  return normalizeOrganization(data.data);
+}
+
 export async function updateOrganization(
   id: string,
   input: UpdateOrganizationInput,
@@ -40,6 +46,17 @@ export async function updateOrganization(
     payload,
   );
   return normalizeOrganization(data.data);
+}
+
+export async function verifyOrganization(id: string): Promise<Organization> {
+  const { data } = await api.post<ApiResponse<Record<string, unknown>>>(
+    `/organizations/${id}/verify`,
+  );
+  return normalizeOrganization(data.data);
+}
+
+export async function deleteOrganization(id: string): Promise<void> {
+  await api.delete(`/organizations/${id}`);
 }
 
 export async function listBranches(organizationId: string, page = 1, limit = 20) {

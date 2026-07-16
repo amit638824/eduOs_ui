@@ -43,8 +43,8 @@ export function buildDashboardProfile(user: ApiUser, role: DashboardRole): Dashb
       innerClass: 'admin__dashboard__inner',
       showRating: true,
       cta: {
-        label: isSuperAdmin(user.roles) ? 'Manage Organization' : 'Add Students',
-        href: isSuperAdmin(user.roles) ? `${base}/admin-org` : `${base}/admin-students`,
+        label: isSuperAdmin(user.roles) ? 'Manage Organizations' : 'Add Students',
+        href: isSuperAdmin(user.roles) ? `${base}/admin-organizations` : `${base}/admin-students`,
       },
     },
   };
@@ -71,8 +71,11 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
           title: 'Platform',
           items: [
             { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
-            { label: 'Organizations', href: `${base}/admin-org`, icon: 'course' },
+            { label: 'Organizations', href: `${base}/admin-organizations`, icon: 'course' },
             { label: 'Users', href: `${base}/admin-users`, icon: 'user' },
+            { label: 'Departments', href: `${base}/admin-org`, icon: 'bookmark' },
+            { label: 'Faculty', href: `${base}/admin-faculty`, icon: 'user' },
+            { label: 'Students', href: `${base}/admin-students`, icon: 'bookmark' },
             { label: 'Audit Logs', href: `${base}/admin-audit`, icon: 'assignment' },
             { label: 'Payments', href: `${base}/admin-wishlist`, icon: 'cart' },
             { label: 'Sessions', href: `${base}/admin-sessions`, icon: 'monitor' },
@@ -80,7 +83,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
           ],
         },
         {
-          title: 'Examinations',
+          title: 'Examinations (selected org)',
           items: [
             { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
             { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },

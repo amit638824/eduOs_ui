@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { ApiUser, LoginInput, RegisterInput } from '@/types/api';
 import { tokenStorage } from '@/lib/storage';
+import { setSelectedOrganizationId } from '@/lib/orgScope';
 import * as authService from '@/services/auth.service';
 
 interface AuthContextValue {
@@ -65,6 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await authService.logout();
+    setSelectedOrganizationId(null);
     setUser(null);
   }, []);
 
