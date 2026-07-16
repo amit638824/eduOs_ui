@@ -10,27 +10,54 @@ export function resolveDashboardRole(apiRoles: string[]): DashboardRole {
   return 'student';
 }
 
-/** Sidebar/layout role — teachers share the student dashboard experience */
-export function resolveLayoutRole(apiRoles: string[]): Extract<DashboardRole, 'admin' | 'student'> {
-  if (apiRoles.some((r) => ADMIN_ROLES.includes(r as ApiRole))) return 'admin';
-  return 'student';
+/** Sidebar/layout role — admin, teacher, and student each get their own experience */
+export function resolveLayoutRole(apiRoles: string[]): DashboardRole {
+  return resolveDashboardRole(apiRoles);
+}
+
+export function isSuperAdmin(apiRoles: string[]): boolean {
+  return apiRoles.includes('super_admin');
+}
+
+export function isOrgAdmin(apiRoles: string[]): boolean {
+  return apiRoles.includes('org_admin') || apiRoles.includes('branch_admin');
 }
 
 export function getRoleFromPath(pathname: string): DashboardRole {
-  if (pathname.includes('/admin-') || pathname.includes('/create-test') || pathname.includes('/test-builder')) {
+  if (
+    pathname.includes('/admin-') ||
+    pathname.includes('/create-test') ||
+    pathname.includes('/test-builder') ||
+    pathname.includes('/question-bank')
+  ) {
+    if (pathname.includes('/teacher-')) return 'teacher';
     return 'admin';
   }
+  if (pathname.includes('/teacher-')) return 'teacher';
   return 'student';
 }
 
 export function canAccessDashboardRole(userRoles: string[], layoutRole: DashboardRole): boolean {
   const allowed = resolveLayoutRole(userRoles);
-  if (allowed === 'admin') return layoutRole === 'admin';
-  return layoutRole === 'student';
+  return allowed === layoutRole;
+}
+
+/** Shared exam-authoring pages (create test, question bank, builder) for admin + teacher */
+export function canAuthorExams(apiRoles: string[]): boolean {
+  const role = resolveLayoutRole(apiRoles);
+  return role === 'admin' || role === 'teacher';
 }
 
 export function getDefaultDashboardPath(apiRoles: string[]): string {
-  return resolveLayoutRole(apiRoles) === 'admin'
-    ? '/dashboard/admin-dashboard'
-    : '/dashboard/student-dashboard';
+  const role = resolveLayoutRole(apiRoles);
+  if (role === 'admin') return '/dashboard/admin-dashboard';
+  if (role === 'teacher') return '/dashboard/teacher-dashboard';
+  return '/dashboard/student-dashboard';
+}
+
+export function getTestsListPath(apiRoles: string[]): string {
+  const role = resolveLayoutRole(apiRoles);
+  if (role === 'admin') return '/dashboard/admin-course';
+  if (role === 'teacher') return '/dashboard/teacher-course';
+  return '/dashboard/student-enrolled-courses';
 }

@@ -19,11 +19,52 @@ export async function getAnalyticsOverview(): Promise<OrgAnalytics> {
   return data.data;
 }
 
-export async function listSubjects(page = 1, limit = 50) {
+export async function listSubjects(page = 1, limit = 50, departmentId?: string) {
   const { data } = await api.get<PaginatedResponse<Subject>>(`${base}/subjects`, {
-    params: { page, limit },
+    params: { page, limit, departmentId },
   });
   return data;
+}
+
+export async function createSubject(input: {
+  name: string;
+  code?: string;
+  departmentId: string;
+}) {
+  const { data } = await api.post<ApiResponse<Subject>>(`${base}/subjects`, input);
+  return data.data;
+}
+
+export async function listChapters(subjectId: string) {
+  const { data } = await api.get<ApiResponse<import('@/types/examination').Chapter[]>>(
+    `${base}/subjects/${subjectId}/chapters`,
+  );
+  return data.data;
+}
+
+export async function listTopics(chapterId: string) {
+  const { data } = await api.get<ApiResponse<import('@/types/examination').Topic[]>>(
+    `${base}/chapters/${chapterId}/topics`,
+  );
+  return data.data;
+}
+
+export async function listTopicsForSubject(subjectId: string) {
+  const { data } = await api.get<ApiResponse<import('@/types/examination').Topic[]>>(
+    `${base}/subjects/${subjectId}/topics`,
+  );
+  return data.data;
+}
+
+export async function createTopicForSubject(
+  subjectId: string,
+  input: { name: string; difficulty?: number; chapterName?: string },
+) {
+  const { data } = await api.post<ApiResponse<import('@/types/examination').Topic>>(
+    `${base}/subjects/${subjectId}/topics`,
+    input,
+  );
+  return data.data;
 }
 
 export async function listQuestions(page = 1, limit = 20, status?: string) {

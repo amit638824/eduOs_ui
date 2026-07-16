@@ -19,6 +19,7 @@ export interface Subject {
   name: string;
   code?: string | null;
   language: string;
+  department_id?: string | null;
 }
 
 export interface QuestionOption {
@@ -36,6 +37,10 @@ export interface Question {
   content: { text?: string };
   marks: number;
   difficulty?: number | null;
+  topic_id?: string | null;
+  topic_name?: string | null;
+  subject_name?: string | null;
+  department_name?: string | null;
   options?: QuestionOption[];
 }
 
@@ -139,6 +144,7 @@ export interface CreateQuestionInput {
   explanation?: string;
   marks?: number;
   difficulty?: number;
+  topicId: string;
   options?: { content: { text?: string; value?: number }; isCorrect: boolean }[];
 }
 
@@ -148,4 +154,19 @@ export interface CreateTestInput {
   durationMinutes?: number;
   passingMarks?: number;
   instructions?: string;
+  config?: Record<string, unknown>;
+}
+
+export interface Chapter {
+  id: string;
+  subject_id: string;
+  name: string;
+  sort_order?: number;
+}
+
+export interface Topic {
+  id: string;
+  chapter_id: string;
+  name: string;
+  difficulty?: number | null;
 }

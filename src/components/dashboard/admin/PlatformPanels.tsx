@@ -9,6 +9,7 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
+import { getTestsListPath } from '@/utils/dashboardRole';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
@@ -285,22 +286,32 @@ const createUserSchema = yup.object({
 
 type CreateUserForm = yup.InferType<typeof createUserSchema>;
 
-export function UsersManagementPanel() {
+export function UsersManagementPanel({
+  lockedRole,
+  title,
+}: {
+  lockedRole?: 'student' | 'teacher' | 'org_admin';
+  title?: string;
+} = {}) {
   const [users, setUsers] = useState<Awaited<ReturnType<typeof platformService.listUsers>>['data']>([]);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const withLoader = useDashboardLoader();
+  const defaultRole = lockedRole ?? 'student';
   const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateUserForm>({
     resolver: yupResolver(createUserSchema),
-    defaultValues: { email: '', password: '', firstName: '', lastName: '', role: 'student' },
+    defaultValues: { email: '', password: '', firstName: '', lastName: '', role: defaultRole },
   });
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await platformService.listUsers(1, 50);
-      setUsers(res.data);
+      const res = await platformService.listUsers(1, 100);
+      const filtered = lockedRole
+        ? res.data.filter((u) => (u.roles as string[]).includes(lockedRole))
+        : res.data;
+      setUsers(filtered);
     } catch (err) {
       setError(parseApiError(err));
     } finally {
@@ -308,17 +319,25 @@ export function UsersManagementPanel() {
     }
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => { void load(); }, [lockedRole]);
 
   useDashboardLoadingEffect(loading);
 
   const onSubmit = async (values: CreateUserForm) => {
     setError('');
+    setMessage('');
     await withLoader(async () => {
       try {
-        await platformService.createUser(values);
-        setMessage('User created.');
-        reset();
+        const payload = lockedRole ? { ...values, role: lockedRole } : values;
+        await platformService.createUser(payload);
+        setMessage(
+          lockedRole === 'teacher'
+            ? 'Faculty member added.'
+            : lockedRole === 'student'
+              ? 'Student added.'
+              : 'User created.',
+        );
+        reset({ email: '', password: '', firstName: '', lastName: '', role: defaultRole });
         await load();
       } catch (err) {
         setError(parseApiError(err));
@@ -326,17 +345,23 @@ export function UsersManagementPanel() {
     });
   };
 
+  const heading =
+    title ??
+    (lockedRole === 'teacher' ? 'Faculty' : lockedRole === 'student' ? 'Students' : 'User Management');
+  const addLabel =
+    lockedRole === 'teacher' ? 'Add Faculty' : lockedRole === 'student' ? 'Add Student' : 'Add User';
+
   return (
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title">
-        <h4>User Management</h4>
-        <span className="badge bg-primary">{users.length} users</span>
+        <h4>{heading}</h4>
+        <span className="badge bg-primary">{users.length}</span>
       </div>
       {error && <p className="login__error sp_bottom_15">{error}</p>}
       {message && <p className="form-success sp_bottom_15">{message}</p>}
 
       <div className="edtp-form-card">
-        <h5>Add New User</h5>
+        <h5>{addLabel}</h5>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="row g-3">
             <div className="col-md-6 col-lg-3">
@@ -351,19 +376,23 @@ export function UsersManagementPanel() {
               <input className="register__input" placeholder="Email" {...register('email')} />
               <FormError message={errors.email?.message} />
             </div>
-            <div className="col-md-6 col-lg-2">
-              <select className="form-select" {...register('role')}>
-                <option value="student">Student</option>
-                <option value="teacher">Teacher</option>
-                <option value="org_admin">Org Admin</option>
-              </select>
-            </div>
+            {!lockedRole ? (
+              <div className="col-md-6 col-lg-2">
+                <select className="form-select" {...register('role')}>
+                  <option value="student">Student</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="org_admin">Org Admin</option>
+                </select>
+              </div>
+            ) : (
+              <input type="hidden" {...register('role')} />
+            )}
             <div className="col-md-6 col-lg-3">
               <input className="register__input" type="password" placeholder="Password" {...register('password')} />
               <FormError message={errors.password?.message} />
             </div>
             <div className="col-md-6 col-lg-2 d-flex align-items-start">
-              <button type="submit" className="default__button w-100">Add User</button>
+              <button type="submit" className="default__button w-100">{addLabel}</button>
             </div>
           </div>
         </form>
@@ -711,7 +740,7 @@ export function OrgStructurePanel() {
 
   return (
     <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title"><h4>Organization Structure</h4></div>
+      <div className="dashboard__section__title"><h4>Departments</h4></div>
       {error && <p className="login__error sp_bottom_15">{error}</p>}
       <div className="row">
         <div className="col-md-6 sp_bottom_30">
@@ -740,6 +769,8 @@ export function OrgStructurePanel() {
 
 export function TestBuilderPanel() {
   const { testId } = useParams();
+  const { user } = useAuth();
+  const testsListPath = getTestsListPath(user?.roles ?? []);
   const [test, setTest] = useState<{
     title?: string;
     status?: string;
@@ -853,7 +884,7 @@ export function TestBuilderPanel() {
   if (!testId) {
     return (
       <div className="dashboard__content__wraper">
-        <p>Select a draft test from <Link to="/dashboard/admin-course">All Tests</Link> to build it.</p>
+        <p>Select a draft test from <Link to={testsListPath}>My Tests</Link> to build it.</p>
       </div>
     );
   }
@@ -869,7 +900,7 @@ export function TestBuilderPanel() {
               <span className={`edtp-badge ${isLive ? 'edtp-badge--active' : 'edtp-badge--role'}`}>{test?.status}</span>
             </p>
           </div>
-          <Link to="/dashboard/admin-course" className="dashboard__small__btn__2">← All Tests</Link>
+          <Link to={testsListPath} className="dashboard__small__btn__2">← Back to Tests</Link>
         </div>
       </div>
       <AdminExamGuide activeStep={activeStep} compact />

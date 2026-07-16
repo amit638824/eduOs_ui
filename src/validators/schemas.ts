@@ -89,6 +89,9 @@ export const createTestApiSchema = yup.object({
   title: yup.string().required('Exam title is required').trim().min(3).max(255),
   duration: yup.string().required('Duration is required'),
   description: yup.string().trim().max(2000).optional().default(''),
+  departmentId: yup.string().required('Department is required'),
+  subjectId: yup.string().required('Subject is required'),
+  topicId: yup.string().required('Topic is required'),
 });
 
 export type CreateTestApiFormValues = yup.InferType<typeof createTestApiSchema>;
