@@ -184,7 +184,7 @@ export function AdminDashboardHome() {
         </div>
       )}
       <DashboardCounters
-        title={organization ? `${organization.name} Overview` : loading ? 'Loading...' : 'Admin Overview'}
+        title={organization ? `${organization.name} Overview` : 'Admin Overview'}
         counters={counters}
       />
     </>

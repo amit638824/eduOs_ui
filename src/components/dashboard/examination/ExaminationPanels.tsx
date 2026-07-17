@@ -864,6 +864,7 @@ export function StudentTestsPanel() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
+  const [startingId, setStartingId] = useState<string | null>(null);
 
   useEffect(() => {
     setPageLoading(true);
@@ -878,6 +879,7 @@ export function StudentTestsPanel() {
 
   const start = async (testId: string) => {
     setLoading(true);
+    setStartingId(testId);
     setError('');
     try {
       const attempt = await examinationService.startAttempt(testId);
@@ -886,6 +888,7 @@ export function StudentTestsPanel() {
       setError(parseApiError(err));
     } finally {
       setLoading(false);
+      setStartingId(null);
     }
   };
 
@@ -893,29 +896,45 @@ export function StudentTestsPanel() {
     if (t.attempt_id) navigate(`/dashboard/exam/${t.id}/attempt/${t.attempt_id}`);
   };
 
+  const statusMeta = (t: ExamTest) => {
+    const st = t.attempt_status;
+    if (st === 'submitted' || st === 'auto_submitted') {
+      return { label: 'Completed', cls: 'edtp-badge--active' };
+    }
+    if (st === 'in_progress') {
+      return { label: 'In progress', cls: 'edtp-badge--role' };
+    }
+    return { label: 'Not started', cls: 'edtp-badge--inactive' };
+  };
+
   const renderAction = (t: ExamTest) => {
     const st = t.attempt_status;
     if (st === 'submitted' || st === 'auto_submitted') {
       const resultId = t.result_attempt_id ?? t.attempt_id;
       return resultId ? (
-        <Link to={`/dashboard/exam-result/${resultId}`} className="default__button sp_top_15">
+        <Link to={`/dashboard/exam-result/${resultId}`} className="edtp-btn edtp-btn--secondary edtp-btn--md">
           View Result
         </Link>
       ) : (
-        <span className="sp_top_15 text-muted">Completed</span>
+        <span className="text-muted">Completed</span>
       );
     }
     if (st === 'in_progress' && t.attempt_id) {
       return (
-        <button type="button" className="default__button sp_top_15" disabled={loading} onClick={() => resume(t)}>
+        <EdtpBtn variant="primary" size="md" disabled={loading} onClick={() => resume(t)}>
           Resume Test
-        </button>
+        </EdtpBtn>
       );
     }
     return (
-      <button type="button" className="default__button sp_top_15" disabled={loading} onClick={() => start(t.id)}>
-        Start Test
-      </button>
+      <EdtpBtn
+        variant="primary"
+        size="md"
+        disabled={loading}
+        onClick={() => void start(t.id)}
+      >
+        {startingId === t.id ? 'Starting…' : 'Start Test'}
+      </EdtpBtn>
     );
   };
 
@@ -927,33 +946,57 @@ export function StudentTestsPanel() {
         subtitle="Start, resume or view results for your institute examinations."
       />
       <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>Available Tests</h4>
-      </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      <div className="row">
-        {tests.map((t) => (
-          <div key={t.id} className="col-xl-4 col-lg-6 sp_bottom_20">
-            <div className="dashboard__single__counter">
-              <div className="counterarea__text__wraper">
-                <div className="counter__content__wraper">
-                  <h5>{t.title}</h5>
-                  <p>{t.duration_minutes} min · Pass: {t.passing_marks ?? '—'}</p>
-                  {t.attempt_status && (
-                    <p className="text-muted" style={{ fontSize: '0.85rem' }}>
-                      Status: {t.attempt_status.replace('_', ' ')}
-                      {t.result_percentage != null ? ` · ${Number(t.result_percentage).toFixed(1)}%` : ''}
-                    </p>
-                  )}
-                  {renderAction(t)}
-                </div>
-              </div>
-            </div>
+        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <h4 className="mb-0">Available Tests</h4>
+          <span className="badge bg-primary">{tests.length}</span>
+        </div>
+        {error && <p className="login__error sp_bottom_15">{error}</p>}
+
+        {tests.length === 0 && !error && !pageLoading ? (
+          <div className="sca-student-tests-empty">
+            <h5>No tests assigned yet</h5>
+            <p className="text-muted mb-0">
+              When your institute publishes and assigns an exam, it will appear here.
+            </p>
           </div>
-        ))}
-        {!tests.length && !error && <p>No tests assigned yet.</p>}
+        ) : (
+          <div className="sca-student-tests-grid">
+            {tests.map((t) => {
+              const status = statusMeta(t);
+              return (
+                <article key={t.id} className="sca-student-test-card">
+                  <div className="sca-student-test-card__top">
+                    <span className={`edtp-badge ${status.cls}`}>{status.label}</span>
+                    {t.result_percentage != null && (
+                      <span className="sca-student-test-card__score">
+                        {Number(t.result_percentage).toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                  <h5 className="sca-student-test-card__title">{t.title}</h5>
+                  <ul className="sca-student-test-card__meta">
+                    <li>
+                      <span>Duration</span>
+                      <strong>{t.duration_minutes} min</strong>
+                    </li>
+                    <li>
+                      <span>Passing</span>
+                      <strong>{t.passing_marks ?? '—'}</strong>
+                    </li>
+                    {t.total_marks != null && (
+                      <li>
+                        <span>Total marks</span>
+                        <strong>{t.total_marks}</strong>
+                      </li>
+                    )}
+                  </ul>
+                  <div className="sca-student-test-card__action">{renderAction(t)}</div>
+                </article>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </div>
     </>
   );
 }
@@ -1409,15 +1452,6 @@ export function ExamResultPage() {
           </div>
         </div>
       </div>
-      {result.passing_marks != null && (
-        <p className="sp_bottom_20">
-          {Number(result.total_score) >= Number(result.passing_marks) ? (
-            <span className="form-success">Passed (minimum {result.passing_marks} marks)</span>
-          ) : (
-            <span className="login__error">Did not meet passing marks ({result.passing_marks})</span>
-          )}
-        </p>
-      )}
       <Link className="default__button" to="/dashboard/student-reviews">
         Back to Results
       </Link>

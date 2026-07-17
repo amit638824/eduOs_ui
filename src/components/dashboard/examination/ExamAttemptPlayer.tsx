@@ -95,10 +95,29 @@ export default function ExamAttemptPlayer() {
   const [warning, setWarning] = useState('');
   const [saveMsg, setSaveMsg] = useState('');
   const [pageLoading, setPageLoading] = useState(true);
+  const [draftText, setDraftText] = useState('');
 
   const config = attempt?.config ?? DEFAULT_CONFIG;
   const questions = attempt?.questions ?? [];
   const current = questions[currentIdx];
+
+  useEffect(() => {
+    if (!current) {
+      setDraftText('');
+      return;
+    }
+    if (current.type === 'fill_blank') {
+      setDraftText(current.answer?.text ?? '');
+    } else if (current.type === 'integer' || current.type === 'numerical') {
+      setDraftText(
+        current.answer?.value != null && !Number.isNaN(Number(current.answer.value))
+          ? String(current.answer.value)
+          : '',
+      );
+    } else {
+      setDraftText('');
+    }
+  }, [current?.question_id, current?.type]);
 
   const load = useCallback(async (silent = false) => {
     if (!attemptId) return;
@@ -247,19 +266,36 @@ export default function ExamAttemptPlayer() {
     const answer =
       field === 'text'
         ? { text: value }
-        : { value: Number(value) };
+        : { value: value === '' ? undefined : Number(value) };
 
     patchQuestionAnswer(questionId, answer);
-    flashSave();
 
     void examinationService
-      .saveAnswer(attemptId, questionId, answer)
+      .saveAnswer(
+        attemptId,
+        questionId,
+        field === 'text'
+          ? { text: value }
+          : { value: value === '' ? null : Number(value) },
+      )
       .catch((err) => setError(parseApiError(err)));
+  };
+
+  const flushCurrentAnswer = () => {
+    if (!current || !attemptId) return;
+    if (current.type === 'fill_blank') {
+      saveTextAnswer(current.question_id, draftText, 'text');
+      return;
+    }
+    if (current.type === 'integer' || current.type === 'numerical') {
+      saveTextAnswer(current.question_id, draftText, 'value');
+    }
   };
 
   const clearCurrentAnswer = () => {
     if (!attemptId || !current) return;
     const empty = { selectedOptionIds: [] as string[], text: '', value: undefined };
+    setDraftText('');
     patchQuestionAnswer(current.question_id, empty);
     flashSave();
 
@@ -272,20 +308,41 @@ export default function ExamAttemptPlayer() {
       .catch((err) => setError(parseApiError(err)));
   };
 
+  const saveAndNext = () => {
+    if (!current) return;
+    flushCurrentAnswer();
+    setVisitedSet((prev) => new Set(prev).add(current.question_id));
+    flashSave();
+    if (currentIdx < questions.length - 1) {
+      goToQuestion(currentIdx + 1);
+    }
+  };
+
   const submit = async () => {
-    if (!attemptId) return;
+    if (!attemptId || submitting) return;
+    flushCurrentAnswer();
+    try {
+      // Leave fullscreen first so the confirm dialog is visible and clickable
+      if (document.fullscreenElement) {
+        await document.exitFullscreen().catch(() => undefined);
+      }
+    } catch {
+      /* ignore */
+    }
     const ok = await confirmAction({
       title: 'Submit test?',
       text: 'You cannot change answers after submission.',
       icon: 'warning',
       confirmText: 'Yes, submit it!',
-      confirmColor: '#3085d6',
+      confirmColor: '#dc2626',
     });
     if (!ok) return;
     setSubmitting(true);
     try {
       const result = await examinationService.submitAttempt(attemptId, false);
-      if (document.fullscreenElement) await document.exitFullscreen();
+      if (document.fullscreenElement) {
+        await document.exitFullscreen().catch(() => undefined);
+      }
       navigate(`/dashboard/exam-result/${result.attempt_id ?? attemptId}`);
     } catch (err) {
       setError(parseApiError(err));
@@ -295,6 +352,8 @@ export default function ExamAttemptPlayer() {
 
   const toggleReview = () => {
     if (!current) return;
+    // Persist any typed answer before marking review so counts stay accurate
+    flushCurrentAnswer();
     setReviewSet((prev) => {
       const next = new Set(prev);
       if (next.has(current.question_id)) next.delete(current.question_id);
@@ -309,8 +368,11 @@ export default function ExamAttemptPlayer() {
     let review = 0;
     let notVisited = 0;
     questions.forEach((q) => {
-      if (isAnswered(q)) answered += 1;
-      if (reviewSet.has(q.question_id)) review += 1;
+      const markedReview = reviewSet.has(q.question_id);
+      const answeredQ = isAnswered(q);
+      // Answered = answered and not marked for review (NTA-style summary)
+      if (answeredQ && !markedReview) answered += 1;
+      if (markedReview) review += 1;
       if (!visitedSet.has(q.question_id)) notVisited += 1;
     });
     return { answered, review, notVisited };
@@ -322,28 +384,37 @@ export default function ExamAttemptPlayer() {
   if (!examStarted) {
     return (
       <div className="exam-intro">
-        <h3>{attempt.test_title ?? 'Online Examination'}</h3>
-        <p>
-          <strong>Duration:</strong> {attempt.duration_minutes} minutes ·{' '}
-          <strong>Questions:</strong> {questions.length}
+        <h3 className="exam-intro__title">{attempt.test_title ?? 'Online Examination'}</h3>
+        <p className="exam-intro__meta">
+          <span>
+            <strong>Duration:</strong> {attempt.duration_minutes} minutes
+          </span>
+          <span className="exam-intro__dot" aria-hidden>
+            ·
+          </span>
+          <span>
+            <strong>Questions:</strong> {questions.length}
+          </span>
         </p>
-        {attempt.instructions && (
-          <div className="sp_top_15">
-            <strong>Instructions:</strong>
-            <p>{attempt.instructions}</p>
-          </div>
-        )}
-        <ul>
-          {config.fullScreen && <li>Exam will run in fullscreen mode</li>}
-          {config.browserLock && (
-            <li>Do not switch tabs — max {config.maxTabSwitches} warnings allowed</li>
+
+        <div className="exam-intro__section">
+          <h4 className="exam-intro__heading">Instructions</h4>
+          {attempt.instructions && (
+            <p className="exam-intro__text">{attempt.instructions}</p>
           )}
-          {config.blockCopyPaste && <li>Copy / paste is disabled during exam</li>}
-          {config.autoSubmit && <li>Test auto-submits when timer ends</li>}
-          {config.negativeMarking && <li>Negative marking applies for wrong answers</li>}
-        </ul>
-        {error && <p className="login__error sp_bottom_15">{error}</p>}
-        <button type="button" className="default__button" onClick={startExam}>
+          <ul className="exam-intro__rules">
+            {config.fullScreen && <li>Exam will run in fullscreen mode.</li>}
+            {config.browserLock && (
+              <li>Do not switch tabs — max {config.maxTabSwitches} warnings allowed.</li>
+            )}
+            {config.blockCopyPaste && <li>Copy / paste is disabled during the exam.</li>}
+            {config.autoSubmit && <li>Test auto-submits when the timer ends.</li>}
+            {config.negativeMarking && <li>Negative marking applies for wrong answers.</li>}
+          </ul>
+        </div>
+
+        {error && <p className="login__error exam-intro__error">{error}</p>}
+        <button type="button" className="default__button exam-intro__cta" onClick={startExam}>
           Enter Fullscreen &amp; Start Exam
         </button>
       </div>
@@ -397,11 +468,13 @@ export default function ExamAttemptPlayer() {
           <p className="exam-question-text">{current.content?.text}</p>
 
           {(current.type === 'mcq' || current.type === 'msq' || current.type === 'true_false') && (
-            <ul className="exam-options">
+            <ul
+              className={`exam-options${current.type === 'true_false' ? ' exam-options--tf' : ''}`}
+            >
               {current.options.map((opt, optIdx) => {
                 const isSelected = selected.includes(opt.id);
                 return (
-                  <li key={opt.id}>
+                  <li key={opt.id} className="exam-options__item">
                     <label
                       className={`exam-option${isSelected ? ' exam-option--selected' : ''}`}
                     >
@@ -428,8 +501,9 @@ export default function ExamAttemptPlayer() {
             <input
               className="exam-text-input"
               key={current.question_id}
-              defaultValue={current.answer?.text ?? ''}
-              onBlur={(e) => saveTextAnswer(current.question_id, e.target.value, 'text')}
+              value={draftText}
+              onChange={(e) => setDraftText(e.target.value)}
+              onBlur={() => saveTextAnswer(current.question_id, draftText, 'text')}
               placeholder="Type your answer"
             />
           )}
@@ -440,8 +514,9 @@ export default function ExamAttemptPlayer() {
               key={current.question_id}
               type="number"
               step={current.type === 'numerical' ? '0.01' : '1'}
-              defaultValue={current.answer?.value ?? ''}
-              onBlur={(e) => saveTextAnswer(current.question_id, e.target.value, 'value')}
+              value={draftText}
+              onChange={(e) => setDraftText(e.target.value)}
+              onBlur={() => saveTextAnswer(current.question_id, draftText, 'value')}
               placeholder="Enter number"
             />
           )}
@@ -451,43 +526,41 @@ export default function ExamAttemptPlayer() {
           )}
 
           <div className="exam-nav-actions">
-            <button
-              type="button"
-              className="exam-btn exam-btn--outline"
-              disabled={currentIdx === 0}
-              onClick={() => goToQuestion(currentIdx - 1)}
-            >
-              ← Previous
-            </button>
-            <button
-              type="button"
-              className="exam-btn exam-btn--primary"
-              onClick={() => flashSave()}
-            >
-              Save
-            </button>
-            <button type="button" className="exam-btn exam-btn--outline" onClick={toggleReview}>
-              {reviewSet.has(current.question_id) ? 'Unmark Review' : 'Review Later'}
-            </button>
-            <button type="button" className="exam-btn exam-btn--ghost" onClick={clearCurrentAnswer}>
-              Clear Selection
-            </button>
-            <button
-              type="button"
-              className="exam-btn exam-btn--outline"
-              disabled={currentIdx >= questions.length - 1}
-              onClick={() => goToQuestion(currentIdx + 1)}
-            >
-              Next →
-            </button>
-            <button
-              type="button"
-              className="exam-btn exam-btn--danger"
-              disabled={submitting}
-              onClick={submit}
-            >
-              {submitting ? 'Submitting...' : 'Finish Test'}
-            </button>
+            <div className="exam-nav-actions__start">
+              <button
+                type="button"
+                className="exam-btn exam-btn--outline"
+                disabled={currentIdx === 0}
+                onClick={() => goToQuestion(currentIdx - 1)}
+              >
+                ← Previous
+              </button>
+            </div>
+            <div className="exam-nav-actions__mid">
+              <button
+                type="button"
+                className="exam-btn exam-btn--primary"
+                onClick={saveAndNext}
+              >
+                {currentIdx >= questions.length - 1 ? 'Save' : 'Save & Next'}
+              </button>
+              <button type="button" className="exam-btn exam-btn--outline" onClick={toggleReview}>
+                {reviewSet.has(current.question_id) ? 'Unmark Review' : 'Review Later'}
+              </button>
+              <button type="button" className="exam-btn exam-btn--ghost" onClick={clearCurrentAnswer}>
+                Clear Selection
+              </button>
+            </div>
+            <div className="exam-nav-actions__end">
+              <button
+                type="button"
+                className="exam-btn exam-btn--danger"
+                disabled={submitting}
+                onClick={() => void submit()}
+              >
+                {submitting ? 'Submitting...' : 'Finish Test'}
+              </button>
+            </div>
           </div>
         </main>
 
@@ -545,12 +618,6 @@ export default function ExamAttemptPlayer() {
               <span><i className="leg-review-answered" /> Answered + review</span>
               <span><i className="leg-current" /> Current question</span>
             </div>
-          </div>
-
-          <div className="exam-palette__footer">
-            <button type="button" className="exam-btn exam-btn--danger" disabled={submitting} onClick={submit}>
-              Finish Test
-            </button>
           </div>
         </aside>
       </div>

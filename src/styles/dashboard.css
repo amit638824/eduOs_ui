@@ -1483,6 +1483,20 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   .sca-exam-builder-grid > section:first-child {
     grid-column: 1 / -1;
   }
+
+  .sca-exam-builder-grid--single {
+    grid-template-columns: 1fr;
+  }
+
+  .sca-exam-builder-grid--single > section:first-child {
+    grid-column: auto;
+  }
+}
+
+.sca-exam-builder-publish {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--db-border);
 }
 
 .sca-exam-builder-qlist {
@@ -1541,6 +1555,207 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 
 .sca-exam-builder-actions__btns .edtp-btn {
   min-width: 120px;
+}
+
+.sca-report-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+@media (min-width: 768px) {
+  .sca-report-overview {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.sca-report-stat {
+  background: var(--db-surface, #fff);
+  border: 1px solid var(--db-border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-height: 104px;
+}
+
+.sca-report-stat__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--db-muted);
+}
+
+.sca-report-stat__value {
+  font-size: 1.75rem;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--db-accent, #2563eb);
+}
+
+.sca-report-stat__hint {
+  font-size: 0.8rem;
+  color: var(--db-muted);
+}
+
+.sca-report-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sca-report-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0 16px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: rgba(37, 99, 235, 0.04);
+  border: 1px solid var(--db-border);
+}
+
+@media (min-width: 768px) {
+  .sca-report-meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.sca-report-meta__label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--db-muted);
+  margin-bottom: 2px;
+}
+
+.sca-report-meta strong {
+  font-size: 0.95rem;
+  color: inherit;
+}
+
+.sca-report-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--db-accent, #2563eb);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.sca-student-tests-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .sca-student-tests-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .sca-student-tests-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.sca-student-test-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 18px 16px;
+  border: 1px solid var(--db-border);
+  border-radius: 12px;
+  background: var(--db-surface, #fff);
+  min-height: 220px;
+}
+
+.sca-student-test-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sca-student-test-card__score {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--db-accent, #2563eb);
+}
+
+.sca-student-test-card__title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.35;
+  color: inherit;
+}
+
+.sca-student-test-card__meta {
+  list-style: none;
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--db-border);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.sca-student-test-card__meta li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sca-student-test-card__meta span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--db-muted);
+}
+
+.sca-student-test-card__meta strong {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.sca-student-test-card__action {
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.sca-student-test-card__action .edtp-btn,
+.sca-student-test-card__action a.edtp-btn {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.sca-student-tests-empty {
+  padding: 36px 20px;
+  text-align: center;
+  border: 1px dashed var(--db-border);
+  border-radius: 12px;
+  background: rgba(148, 163, 184, 0.06);
+}
+
+.sca-student-tests-empty h5 {
+  margin: 0 0 6px;
+  font-weight: 700;
 }
 
 .edtp-badge--inactive {

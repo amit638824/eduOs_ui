@@ -9,6 +9,7 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
+import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { getTestsListPath } from '@/utils/dashboardRole';
 import { SearchField } from '@/components/ui/FieldHint';
 import {
@@ -581,9 +582,18 @@ export function UsersManagementPanel({
 }
 
 export function ReportsPanel() {
-  const [tests, setTests] = useState<{ id: string; title: string }[]>([]);
+  const [tests, setTests] = useState<{ id: string; title: string; status?: string }[]>([]);
   const [selected, setSelected] = useState('');
-  const [report, setReport] = useState<Record<string, unknown> | null>(null);
+  const [report, setReport] = useState<{
+    test?: { title?: string; status?: string; total_marks?: number };
+    stats?: {
+      attempt_count?: number;
+      avg_score?: number | string;
+      max_score?: number | string;
+      min_score?: number | string;
+    };
+    results?: Record<string, unknown>[];
+  } | null>(null);
   const [overview, setOverview] = useState<Record<string, unknown> | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -596,7 +606,7 @@ export function ReportsPanel() {
       examinationService.listTests(1, 50).then((r) => setTests(r.data)),
       platformService.getOrgOverviewReport().then(setOverview),
     ])
-      .catch(() => undefined)
+      .catch((err) => setError(parseApiError(err)))
       .finally(() => setLoading(false));
   }, []);
 
@@ -604,6 +614,7 @@ export function ReportsPanel() {
 
   const loadReport = async (testId: string) => {
     setSelected(testId);
+    setError('');
     if (!testId) {
       setReport(null);
       return;
@@ -611,9 +622,10 @@ export function ReportsPanel() {
     setReportLoading(true);
     try {
       const data = await platformService.getTestReport(testId);
-      setReport(data);
+      setReport(data as typeof report);
     } catch (err) {
       setError(parseApiError(err));
+      setReport(null);
     } finally {
       setReportLoading(false);
     }
@@ -622,65 +634,151 @@ export function ReportsPanel() {
   const exportCsv = async () => {
     if (!selected) return;
     await withLoader(async () => {
-      const blob = await platformService.exportTestReport(selected);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `test-report-${selected}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
+      try {
+        const blob = await platformService.exportTestReport(selected);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `test-report-${selected}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showSuccess('Exported', 'CSV download started.');
+      } catch (err) {
+        setError(parseApiError(err));
+      }
     });
   };
 
+  const overviewCards = [
+    { key: 'users', label: 'Users', hint: 'Active accounts' },
+    { key: 'tests', label: 'Tests', hint: 'Created exams' },
+    { key: 'attempts', label: 'Attempts', hint: 'Student attempts' },
+    { key: 'revenue', label: 'Revenue', hint: 'Completed payments', prefix: '₹' },
+  ] as const;
+
+  const results = report?.results ?? [];
+  const stats = report?.stats;
+  const selectedTitle = tests.find((t) => t.id === selected)?.title ?? report?.test?.title;
+
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title"><h4>Reports & Analytics</h4></div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      {overview && (
-        <div className="row sp_bottom_30">
-          {['users', 'tests', 'attempts', 'revenue'].map((key) => (
-            <div key={key} className="col-md-3 sp_bottom_15">
-              <div className="dashboard__single__counter">
-                <div className="counter__content__wraper">
-                  <div className="counter__number">{String(overview[key] ?? '—')}</div>
-                  <p>{key.charAt(0).toUpperCase() + key.slice(1)}</p>
-                </div>
-              </div>
+    <>
+      <DashboardPageHeader
+        badge="Insights"
+        title="Reports & Analytics"
+        subtitle="Organization overview and per-test performance. Export results when you need a spreadsheet."
+      />
+      <div className="dashboard__content__wraper">
+        {error && <EdtpAlert type="error">{error}</EdtpAlert>}
+
+        <div className="sca-report-overview">
+          {overviewCards.map((card) => (
+            <div key={card.key} className="sca-report-stat">
+              <span className="sca-report-stat__label">{card.label}</span>
+              <strong className="sca-report-stat__value">
+                {card.prefix ?? ''}
+                {overview ? String(overview[card.key] ?? '0') : '—'}
+              </strong>
+              <span className="sca-report-stat__hint">{card.hint}</span>
             </div>
           ))}
         </div>
-      )}
-      <div className="sp_bottom_20">
-        <EdtpSelect value={selected} onChange={(e) => loadReport(e.target.value)}>
-          <option value="">Select test for detailed report</option>
-          {tests.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-        </EdtpSelect>
-      </div>
-      {selected && (
-        <button type="button" className="default__button sp_bottom_20" onClick={exportCsv}>
-          Export CSV
-        </button>
-      )}
-      {report && (
-        <div className="dashboard__table table-responsive">
-          <table>
-            <thead>
-              <tr><th>Student</th><th>Score</th><th>%</th><th>Rank</th></tr>
-            </thead>
-            <tbody>
-              {((report.results as Record<string, unknown>[]) ?? []).map((r) => (
-                <tr key={r.id as string}>
-                  <td>{r.first_name as string} {r.last_name as string}</td>
-                  <td>{r.total_score as number}/{r.max_score as number}</td>
-                  <td>{Number(r.percentage).toFixed(1)}%</td>
-                  <td>{r.rank as number ?? '—'}</td>
-                </tr>
+
+        <section className="edtp-form-card sca-report-panel">
+          <div className="sca-report-panel__head">
+            <div>
+              <h5 className="mb-1">Test report</h5>
+              <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
+                Choose a test to view ranks, scores, and export CSV.
+              </p>
+            </div>
+            {selected && (
+              <EdtpBtn variant="primary" onClick={() => void exportCsv()} disabled={results.length === 0}>
+                Export CSV
+              </EdtpBtn>
+            )}
+          </div>
+
+          <EdtpField label="Select test">
+            <EdtpSelect value={selected} onChange={(e) => void loadReport(e.target.value)}>
+              <option value="">Select test for detailed report</option>
+              {tests.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.title}{t.status ? ` (${t.status})` : ''}
+                </option>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+            </EdtpSelect>
+          </EdtpField>
+
+          {!selected && (
+            <EdtpEmpty>Select a test above to load student results and rankings.</EdtpEmpty>
+          )}
+
+          {selected && report && (
+            <>
+              <div className="sca-report-meta">
+                <div>
+                  <span className="sca-report-meta__label">Test</span>
+                  <strong>{selectedTitle}</strong>
+                </div>
+                <div>
+                  <span className="sca-report-meta__label">Attempts</span>
+                  <strong>{stats?.attempt_count ?? results.length}</strong>
+                </div>
+                <div>
+                  <span className="sca-report-meta__label">Avg score</span>
+                  <strong>{Number(stats?.avg_score ?? 0).toFixed(1)}</strong>
+                </div>
+                <div>
+                  <span className="sca-report-meta__label">Best</span>
+                  <strong>{Number(stats?.max_score ?? 0).toFixed(1)}</strong>
+                </div>
+              </div>
+
+              {results.length === 0 ? (
+                <EdtpEmpty>
+                  No submitted results for this test yet. Assign students and wait for attempts.
+                </EdtpEmpty>
+              ) : (
+                <div className="dashboard__table table-responsive">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Rank</th>
+                        <th>Student</th>
+                        <th>Email</th>
+                        <th>Score</th>
+                        <th>%</th>
+                        <th>Accuracy</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {results.map((r, i) => (
+                        <tr key={(r.id as string) ?? i}>
+                          <td>
+                            <span className="sca-report-rank">{(r.rank as number) ?? i + 1}</span>
+                          </td>
+                          <td>
+                            {r.first_name as string} {r.last_name as string}
+                          </td>
+                          <td>{(r.email as string) ?? '—'}</td>
+                          <td>
+                            {r.total_score as number}/{r.max_score as number}
+                          </td>
+                          <td>{Number(r.percentage).toFixed(1)}%</td>
+                          <td>
+                            {r.accuracy != null ? `${Number(r.accuracy).toFixed(1)}%` : '—'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </>
+          )}
+        </section>
+      </div>
+    </>
   );
 }
 
@@ -1000,6 +1098,7 @@ export function TestBuilderPanel() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [phase, setPhase] = useState<'build' | 'publish' | 'assign'>('build');
   const withLoader = useDashboardLoader();
 
   const load = async () => {
@@ -1045,13 +1144,33 @@ export function TestBuilderPanel() {
 
   useEffect(() => { void load(); }, [testId]);
 
+  useEffect(() => {
+    setPhase('build');
+    setMessage('');
+    setError('');
+    setSelectedQuestionIds([]);
+    setSelectedStudentIds([]);
+  }, [testId]);
+
   useDashboardLoadingEffect(loading);
 
   const testQuestions = test?.questions ?? [];
   const assignments = test?.assignments ?? [];
   const assignedIds = new Set(assignments.map((a) => a.student_id));
   const isLive = test?.status === 'live';
-  const activeStep = isLive ? 5 : testQuestions.length > 0 ? 4 : 3;
+
+  useEffect(() => {
+    if (!test) return;
+    if (isLive) {
+      setPhase('assign');
+      return;
+    }
+    if (testQuestions.length === 0) {
+      setPhase('build');
+    }
+  }, [isLive, test, testQuestions.length]);
+
+  const activeStep = phase === 'assign' ? 5 : phase === 'publish' ? 4 : 3;
 
   const qSearch = questionSearch.trim().toLowerCase();
   const sSearch = studentSearch.trim().toLowerCase();
@@ -1134,9 +1253,10 @@ export function TestBuilderPanel() {
         for (const questionId of selectedQuestionIds) {
           await examinationService.addQuestionToTest(testId, questionId);
         }
-        setMessage(`${selectedQuestionIds.length} question(s) added to test.`);
+        setMessage(`${selectedQuestionIds.length} question(s) added. Review and publish when ready.`);
         setSelectedQuestionIds([]);
         await load();
+        setPhase('publish');
       } catch (err) {
         setError(parseApiError(err));
       }
@@ -1169,8 +1289,10 @@ export function TestBuilderPanel() {
     await withLoader(async () => {
       try {
         await examinationService.publishTest(testId);
-        setMessage('Test published! Now assign students below.');
+        setMessage('Test is live. Assign students so they can attempt it.');
         await load();
+        setPhase('assign');
+        showSuccess('Published', 'Test is live. Assign students next.');
       } catch (err) {
         setError(parseApiError(err));
       }
@@ -1232,6 +1354,10 @@ export function TestBuilderPanel() {
             <p className="mb-0 text-muted" style={{ fontSize: '0.875rem' }}>
               {test?.duration_minutes} min · {test?.total_marks ?? 0} marks · Status:{' '}
               <span className={`edtp-badge ${isLive ? 'edtp-badge--active' : 'edtp-badge--role'}`}>{test?.status}</span>
+              {' · '}
+              {phase === 'build' && 'Step 3: attach questions'}
+              {phase === 'publish' && 'Step 4: publish when ready'}
+              {phase === 'assign' && 'Step 5: assign students'}
             </p>
           </div>
           <Link to={testsListPath} className="dashboard__small__btn__2">← Back to Tests</Link>
@@ -1242,9 +1368,20 @@ export function TestBuilderPanel() {
         {error && <p className="login__error sp_bottom_15">{error}</p>}
         {message && <p className="form-success sp_bottom_15">{message}</p>}
 
-        <div className="sca-exam-builder-grid">
+        <div className={`sca-exam-builder-grid${phase !== 'build' ? ' sca-exam-builder-grid--single' : ''}`}>
+          {/* Shared question summary — always visible */}
           <section className="edtp-form-card">
-            <h5>Questions in this test ({testQuestions.length})</h5>
+            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_10">
+              <h5 className="mb-0">Questions in this test ({testQuestions.length})</h5>
+              {phase === 'publish' && !isLive && (
+                <EdtpBtn variant="secondary" onClick={() => setPhase('build')}>
+                  ← Edit questions
+                </EdtpBtn>
+              )}
+              {phase === 'assign' && isLive && (
+                <span className="edtp-badge edtp-badge--active">Published</span>
+              )}
+            </div>
             {testQuestions.length === 0 ? (
               <p className="text-muted mb-0">No questions yet. Select from the question bank and submit.</p>
             ) : (
@@ -1254,7 +1391,7 @@ export function TestBuilderPanel() {
                     <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
                     <span>{tq.content?.text ?? 'Question'}</span>
                     <span className="edtp-badge edtp-badge--role">{tq.type}</span>
-                    {!isLive && (
+                    {phase === 'build' && !isLive && (
                       <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
                         Remove
                       </EdtpBtn>
@@ -1263,14 +1400,37 @@ export function TestBuilderPanel() {
                 ))}
               </ol>
             )}
-            {!isLive && testQuestions.length > 0 && (
-              <button type="button" className="default__button sp_top_15" onClick={publish}>
-                Publish Test
-              </button>
+
+            {phase === 'build' && testQuestions.length > 0 && (
+              <div className="sca-exam-builder-actions">
+                <span className="sca-exam-builder-actions__count">
+                  Ready for publish when you are done adding questions.
+                </span>
+                <div className="sca-exam-builder-actions__btns">
+                  <EdtpBtn variant="primary" onClick={() => setPhase('publish')}>
+                    Continue to Publish →
+                  </EdtpBtn>
+                </div>
+              </div>
+            )}
+
+            {phase === 'publish' && !isLive && (
+              <div className="sca-exam-builder-publish">
+                <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>
+                  Publishing makes this test live. After that you can assign students.
+                </p>
+                <EdtpBtn
+                  variant="primary"
+                  disabled={testQuestions.length === 0}
+                  onClick={() => void publish()}
+                >
+                  Publish Test
+                </EdtpBtn>
+              </div>
             )}
           </section>
 
-          {!isLive && (
+          {phase === 'build' && !isLive && (
             <section className="edtp-form-card">
               <h5 className="sp_bottom_15">Add from Question Bank</h5>
               <SearchField
@@ -1350,12 +1510,12 @@ export function TestBuilderPanel() {
             </section>
           )}
 
-          {isLive && (
+          {phase === 'assign' && (
             <section className="edtp-form-card">
               <div className="sp_bottom_15">
                 <h5 className="mb-1">Assign to Students</h5>
                 <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
-                  Search, select students, then submit. Students see tests under My Tests.
+                  Search, select students, then submit. Students see this test under My Tests.
                 </p>
               </div>
               <SearchField
@@ -1425,7 +1585,7 @@ export function TestBuilderPanel() {
                       disabled={selectedStudentIds.length === 0}
                       onClick={() => void submitSelectedStudents()}
                     >
-                      Submit Selected
+                      Assign Selected
                     </EdtpBtn>
                   </div>
                 </div>

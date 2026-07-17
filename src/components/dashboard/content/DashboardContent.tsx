@@ -691,7 +691,8 @@ function PasswordChangeForm() {
               <PasswordInput
                 id="currentPass"
                 hasError={!!errors.currentPassword}
-                autoComplete="off"
+                autoComplete="current-password"
+                className="register__input"
                 {...register('currentPassword')}
               />
               <FormError message={errors.currentPassword?.message} />
@@ -706,6 +707,7 @@ function PasswordChangeForm() {
                 id="newPass"
                 hasError={!!errors.newPassword}
                 autoComplete="new-password"
+                className="register__input"
                 {...register('newPassword')}
               />
               <FormError message={errors.newPassword?.message} />
@@ -720,6 +722,7 @@ function PasswordChangeForm() {
                 id="confirmPass"
                 hasError={!!errors.confirmPassword}
                 autoComplete="new-password"
+                className="register__input"
                 {...register('confirmPassword')}
               />
               <FormError message={errors.confirmPassword?.message} />

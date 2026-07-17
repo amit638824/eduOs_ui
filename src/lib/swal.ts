@@ -34,6 +34,8 @@ export async function confirmAction(options: {
   confirmText?: string;
   confirmColor?: string;
 }): Promise<boolean> {
+  // Fullscreen exams: dialog must render inside the fullscreen element or it is invisible
+  const fullscreenRoot = document.fullscreenElement as HTMLElement | null;
   const result = await base.fire({
     title: options.title ?? 'Are you sure?',
     text: options.text,
@@ -43,6 +45,8 @@ export async function confirmAction(options: {
     cancelButtonColor: '#6b7280',
     confirmButtonText: options.confirmText ?? 'Yes, confirm',
     cancelButtonText: 'Cancel',
+    target: fullscreenRoot ?? 'body',
+    heightAuto: false,
   });
   return result.isConfirmed;
 }

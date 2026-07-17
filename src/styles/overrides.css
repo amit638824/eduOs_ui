@@ -687,43 +687,56 @@ html {
 
 .password-input-wrap input {
   width: 100%;
-  padding-right: 48px !important;
+  padding-right: 52px !important;
 }
 
 .password-input-toggle {
   position: absolute;
   top: 50%;
-  right: 14px;
+  right: 10px;
   transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
   border: none;
+  border-radius: 8px;
   background: transparent;
-  color: var(--contentColor, #666);
+  color: #64748b;
   cursor: pointer;
-  padding: 4px;
+  padding: 0;
   line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
-.password-input-toggle:hover {
-  color: var(--primaryColor, #5f2ded);
+.password-input-toggle:hover,
+.password-input-toggle:focus-visible {
+  color: #1e40af;
+  background: rgba(37, 99, 235, 0.08);
+  outline: none;
 }
 
-.password-input-toggle i {
-  font-size: 18px;
+.password-input-toggle.is-visible {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.password-input-toggle svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .loginarea__wraper .password-input-wrap .common__login__input {
-  padding-right: 48px !important;
+  padding-right: 52px !important;
 }
 
 .registerarea__form .password-input-wrap .register__input {
-  padding-right: 48px !important;
+  padding-right: 52px !important;
 }
 
 .dashboard__form__input .password-input-wrap input {
-  padding-right: 48px !important;
+  padding-right: 52px !important;
 }
 
 /* react-toastify — light card style, not full colored bg */
