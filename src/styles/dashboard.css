@@ -1515,6 +1515,34 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   margin-bottom: 6px;
 }
 
+.sca-exam-builder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--db-border);
+}
+
+.sca-exam-builder-actions__count {
+  font-size: 0.875rem;
+  color: var(--db-muted);
+  font-weight: 500;
+}
+
+.sca-exam-builder-actions__btns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.sca-exam-builder-actions__btns .edtp-btn {
+  min-width: 120px;
+}
+
 .edtp-badge--inactive {
   background: rgba(148, 163, 184, 0.15);
   color: var(--db-muted);

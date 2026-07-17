@@ -1272,17 +1272,7 @@ export function TestBuilderPanel() {
 
           {!isLive && (
             <section className="edtp-form-card">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_15">
-                <h5 className="mb-0">Add from Question Bank</h5>
-                <button
-                  type="button"
-                  className="default__button"
-                  disabled={selectedQuestionIds.length === 0}
-                  onClick={() => void submitSelectedQuestions()}
-                >
-                  Submit Selected ({selectedQuestionIds.length})
-                </button>
-              </div>
+              <h5 className="sp_bottom_15">Add from Question Bank</h5>
               <SearchField
                 value={questionSearch}
                 onChange={setQuestionSearch}
@@ -1339,18 +1329,22 @@ export function TestBuilderPanel() {
                 </table>
               </div>
               {availableQuestions.length > 0 && (
-                <div className="d-flex flex-wrap gap-2 sp_top_15">
-                  <button type="button" className="dashboard__small__btn__2" onClick={toggleAllQuestions}>
-                    {allQuestionsSelected ? 'Clear All' : 'Select All'}
-                  </button>
-                  <button
-                    type="button"
-                    className="default__button"
-                    disabled={selectedQuestionIds.length === 0}
-                    onClick={() => void submitSelectedQuestions()}
-                  >
-                    Submit Selected ({selectedQuestionIds.length})
-                  </button>
+                <div className="sca-exam-builder-actions">
+                  <span className="sca-exam-builder-actions__count">
+                    {selectedQuestionIds.length} selected
+                  </span>
+                  <div className="sca-exam-builder-actions__btns">
+                    <EdtpBtn variant="secondary" onClick={toggleAllQuestions}>
+                      {allQuestionsSelected ? 'Clear All' : 'Select All'}
+                    </EdtpBtn>
+                    <EdtpBtn
+                      variant="primary"
+                      disabled={selectedQuestionIds.length === 0}
+                      onClick={() => void submitSelectedQuestions()}
+                    >
+                      Submit Selected
+                    </EdtpBtn>
+                  </div>
                 </div>
               )}
             </section>
@@ -1358,21 +1352,11 @@ export function TestBuilderPanel() {
 
           {isLive && (
             <section className="edtp-form-card">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_15">
-                <div>
-                  <h5 className="mb-1">Assign to Students</h5>
-                  <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
-                    Search, select students, then submit. Students see tests under My Tests.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="default__button"
-                  disabled={selectedStudentIds.length === 0}
-                  onClick={() => void submitSelectedStudents()}
-                >
-                  Submit Selected ({selectedStudentIds.length})
-                </button>
+              <div className="sp_bottom_15">
+                <h5 className="mb-1">Assign to Students</h5>
+                <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
+                  Search, select students, then submit. Students see tests under My Tests.
+                </p>
               </div>
               <SearchField
                 value={studentSearch}
@@ -1428,18 +1412,22 @@ export function TestBuilderPanel() {
                 </table>
               </div>
               {unassignedStudents.length > 0 && (
-                <div className="d-flex flex-wrap gap-2 sp_bottom_20">
-                  <button type="button" className="dashboard__small__btn__2" onClick={toggleAllStudents}>
-                    {allStudentsSelected ? 'Clear All' : 'Select All'}
-                  </button>
-                  <button
-                    type="button"
-                    className="default__button"
-                    disabled={selectedStudentIds.length === 0}
-                    onClick={() => void submitSelectedStudents()}
-                  >
-                    Submit Selected ({selectedStudentIds.length})
-                  </button>
+                <div className="sca-exam-builder-actions sp_bottom_20">
+                  <span className="sca-exam-builder-actions__count">
+                    {selectedStudentIds.length} selected
+                  </span>
+                  <div className="sca-exam-builder-actions__btns">
+                    <EdtpBtn variant="secondary" onClick={toggleAllStudents}>
+                      {allStudentsSelected ? 'Clear All' : 'Select All'}
+                    </EdtpBtn>
+                    <EdtpBtn
+                      variant="primary"
+                      disabled={selectedStudentIds.length === 0}
+                      onClick={() => void submitSelectedStudents()}
+                    >
+                      Submit Selected
+                    </EdtpBtn>
+                  </div>
                 </div>
               )}
 
