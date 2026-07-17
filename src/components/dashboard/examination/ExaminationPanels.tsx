@@ -670,6 +670,9 @@ export function TestsListPanel({ title }: { title: string }) {
   const [tests, setTests] = useState<ExamTest[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDuration, setEditDuration] = useState('60');
   const withLoader = useDashboardLoader();
 
   const load = () => {
@@ -691,11 +694,55 @@ export function TestsListPanel({ title }: { title: string }) {
     await withLoader(async () => {
       try {
         await examinationService.publishTest(id);
+        showSuccess('Published', 'Test is now live.');
         load();
       } catch (err) {
         setError(parseApiError(err));
       }
     });
+  };
+
+  const startEdit = (t: ExamTest) => {
+    setEditingId(t.id);
+    setEditTitle(t.title);
+    setEditDuration(String(t.duration_minutes ?? 60));
+  };
+
+  const saveEdit = async () => {
+    if (!editingId) return;
+    setError('');
+    await withLoader(async () => {
+      try {
+        await examinationService.updateTest(editingId, {
+          title: editTitle.trim(),
+          durationMinutes: Number(editDuration) || 60,
+        });
+        setEditingId(null);
+        showSuccess('Updated', 'Test details saved.');
+        load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const remove = async (id: string, name: string) => {
+    const ok = await confirmDelete({
+      title: 'Delete test?',
+      text: `“${name}” will be archived and hidden from lists.`,
+      confirmText: 'Yes, delete',
+    });
+    if (!ok) return;
+    setError('');
+    try {
+      await withLoader(async () => {
+        await examinationService.deleteTest(id);
+        load();
+      });
+      showSuccess('Deleted!', `${name} has been removed.`);
+    } catch (err) {
+      setError(parseApiError(err));
+    }
   };
 
   const statusBadge = (status: string) => {
@@ -718,6 +765,39 @@ export function TestsListPanel({ title }: { title: string }) {
           <Link to="/dashboard/create-test" className="default__button small-btn">+ Create Test</Link>
         </div>
         {error && <p className="login__error sp_bottom_15">{error}</p>}
+
+        {editingId && (
+          <div className="edtp-form-card sp_bottom_20">
+            <h5>Edit test</h5>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label>Title</label>
+                <input
+                  className="register__input"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                />
+              </div>
+              <div className="col-md-3">
+                <label>Duration (minutes)</label>
+                <input
+                  className="register__input"
+                  type="number"
+                  min={1}
+                  value={editDuration}
+                  onChange={(e) => setEditDuration(e.target.value)}
+                />
+              </div>
+              <div className="col-12">
+                <EdtpFormActions>
+                  <EdtpBtn variant="primary" onClick={() => void saveEdit()}>Save</EdtpBtn>
+                  <EdtpBtn variant="ghost" onClick={() => setEditingId(null)}>Cancel</EdtpBtn>
+                </EdtpFormActions>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="dashboard__table table-responsive">
           <table>
             <thead>
@@ -738,6 +818,7 @@ export function TestsListPanel({ title }: { title: string }) {
                   <td>{t.total_marks ?? '—'}</td>
                   <td>
                     <EdtpRowActions>
+                      <EdtpBtn variant="secondary" onClick={() => startEdit(t)}>Edit</EdtpBtn>
                       {t.status === 'draft' && (
                         <>
                           <Link
@@ -759,6 +840,9 @@ export function TestsListPanel({ title }: { title: string }) {
                           Manage & Assign
                         </Link>
                       )}
+                      <EdtpBtn variant="danger" onClick={() => void remove(t.id, t.title)}>
+                        Delete
+                      </EdtpBtn>
                     </EdtpRowActions>
                   </td>
                 </tr>
@@ -874,7 +958,13 @@ export function StudentTestsPanel() {
   );
 }
 
-export function AttemptsListPanel({ title }: { title: string }) {
+export function AttemptsListPanel({
+  title,
+  readOnly = false,
+}: {
+  title: string;
+  readOnly?: boolean;
+}) {
   const navigate = useNavigate();
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
   const [error, setError] = useState('');
@@ -905,7 +995,7 @@ export function AttemptsListPanel({ title }: { title: string }) {
               <th>Status</th>
               <th>Score</th>
               <th>Started</th>
-              <th />
+              {!readOnly && <th />}
             </tr>
           </thead>
           <tbody>
@@ -915,24 +1005,31 @@ export function AttemptsListPanel({ title }: { title: string }) {
                 <td>{a.status.replace('_', ' ')}</td>
                 <td>{a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : '—'}</td>
                 <td>{new Date(a.started_at).toLocaleString()}</td>
-                <td>
-                  {a.status === 'in_progress' && (
-                    <button
-                      type="button"
-                      className="dashboard__small__btn__2"
-                      onClick={() => navigate(`/dashboard/exam/${a.test_id}/attempt/${a.id}`)}
-                    >
-                      Resume
-                    </button>
-                  )}
-                  {(a.status === 'submitted' || a.status === 'auto_submitted') && (
-                    <Link to={`/dashboard/exam-result/${a.id}`} className="dashboard__small__btn__2">
-                      Result
-                    </Link>
-                  )}
-                </td>
+                {!readOnly && (
+                  <td>
+                    {a.status === 'in_progress' && (
+                      <button
+                        type="button"
+                        className="dashboard__small__btn__2"
+                        onClick={() => navigate(`/dashboard/exam/${a.test_id}/attempt/${a.id}`)}
+                      >
+                        Resume
+                      </button>
+                    )}
+                    {(a.status === 'submitted' || a.status === 'auto_submitted') && (
+                      <Link to={`/dashboard/exam-result/${a.id}`} className="dashboard__small__btn__2">
+                        Result
+                      </Link>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
+            {attempts.length === 0 && (
+              <tr>
+                <td colSpan={readOnly ? 4 : 5}>No attempts found.</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

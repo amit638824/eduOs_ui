@@ -3,6 +3,7 @@ import { env } from '@/config/env';
 import { tokenStorage } from '@/lib/storage';
 import { getSelectedOrganizationId } from '@/lib/orgScope';
 import type { ApiResponse } from '@/types/api';
+import { isSuperAdmin } from '@/utils/dashboardRole';
 
 const api = axios.create({
   baseURL: env.apiBaseUrl,
@@ -23,6 +24,15 @@ function isPublicAuthRequest(url?: string): boolean {
   ].some((p) => path === p || path.endsWith(p));
 }
 
+function decodeRolesFromAccessToken(token: string): string[] {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1] ?? ''));
+    return Array.isArray(payload?.roles) ? payload.roles.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
 api.interceptors.request.use((config) => {
   const publicAuth = isPublicAuthRequest(config.url);
 
@@ -37,8 +47,10 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  // Only Super Admin sends org scope header
+  const roles = token ? decodeRolesFromAccessToken(token) : [];
   const orgId = getSelectedOrganizationId();
-  if (orgId) {
+  if (token && isSuperAdmin(roles) && orgId) {
     config.headers['X-Organization-Id'] = orgId;
   } else {
     delete config.headers['X-Organization-Id'];

@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { examinationService, platformService } from '@/services';
 import { parseApiError } from '@/lib/errors';
-import { FormError, inputClassName } from '@/components/ui/FormField';
+import { FormError } from '@/components/ui/FormField';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
@@ -213,6 +213,11 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
   return (
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title"><h4>{allowTopUp ? 'My Wallet' : 'Payments & Wallet'}</h4></div>
+      {!allowTopUp && (
+        <p className="text-muted sp_bottom_15" style={{ fontSize: '0.875rem' }}>
+          View-only for Super Admin. Payment mutations are blocked for this role.
+        </p>
+      )}
       {error && <p className="login__error sp_bottom_15">{error}</p>}
       {message && <p className="form-success sp_bottom_15">{message}</p>}
       {wallet && (
@@ -293,13 +298,23 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
 
 const createUserSchema = yup.object({
   email: yup.string().email().required(),
-  password: yup.string().min(8).required(),
+  password: yup
+    .string()
+    .transform((v) => (v == null || v === '' ? undefined : v))
+    .optional()
+    .min(8, 'Password must be at least 8 characters'),
   firstName: yup.string().required(),
   lastName: yup.string().required(),
   role: yup.mixed<'student' | 'teacher' | 'org_admin'>().oneOf(['student', 'teacher', 'org_admin']).required(),
 });
 
-type CreateUserForm = yup.InferType<typeof createUserSchema>;
+type CreateUserForm = {
+  email: string;
+  password?: string;
+  firstName: string;
+  lastName: string;
+  role: 'student' | 'teacher' | 'org_admin';
+};
 
 export function UsersManagementPanel({
   lockedRole,
@@ -312,21 +327,21 @@ export function UsersManagementPanel({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const withLoader = useDashboardLoader();
   const defaultRole = lockedRole ?? 'student';
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<CreateUserForm>({
-    resolver: yupResolver(createUserSchema),
+  const { register, handleSubmit, reset, formState: { errors }, setError: setFormError } = useForm<CreateUserForm>({
+    // yup InferType + optional password conflicts with RHF Resolver generics
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: yupResolver(createUserSchema) as any,
     defaultValues: { email: '', password: '', firstName: '', lastName: '', role: defaultRole },
   });
 
   const load = async () => {
     setLoading(true);
     try {
-      const res = await platformService.listUsers(1, 100);
-      const filtered = lockedRole
-        ? res.data.filter((u) => (u.roles as string[]).includes(lockedRole))
-        : res.data;
-      setUsers(filtered);
+      const res = await platformService.listUsers(1, 100, undefined, lockedRole);
+      setUsers(res.data);
     } catch (err) {
       setError(parseApiError(err));
     } finally {
@@ -338,21 +353,65 @@ export function UsersManagementPanel({
 
   useDashboardLoadingEffect(loading);
 
+  const resetForm = () => {
+    setEditingId(null);
+    reset({ email: '', password: '', firstName: '', lastName: '', role: defaultRole });
+  };
+
+  const startEdit = (u: (typeof users)[number]) => {
+    setEditingId(u.id);
+    const role =
+      (u.roles as string[]).find((r) => ['student', 'teacher', 'org_admin'].includes(r)) as
+        | 'student'
+        | 'teacher'
+        | 'org_admin'
+        | undefined;
+    reset({
+      email: u.email,
+      password: '',
+      firstName: u.first_name,
+      lastName: u.last_name,
+      role: lockedRole ?? role ?? 'student',
+    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const onSubmit = async (values: CreateUserForm) => {
     setError('');
     setMessage('');
+    if (!editingId && (!values.password || values.password.length < 8)) {
+      setFormError('password', { message: 'Password must be at least 8 characters' });
+      return;
+    }
     await withLoader(async () => {
       try {
-        const payload = lockedRole ? { ...values, role: lockedRole } : values;
-        await platformService.createUser(payload);
-        setMessage(
-          lockedRole === 'teacher'
-            ? 'Faculty member added.'
-            : lockedRole === 'student'
-              ? 'Student added.'
-              : 'User created.',
-        );
-        reset({ email: '', password: '', firstName: '', lastName: '', role: defaultRole });
+        const role = lockedRole ?? values.role;
+        if (editingId) {
+          await platformService.updateUser(editingId, {
+            firstName: values.firstName,
+            lastName: values.lastName,
+            role,
+          });
+          setMessage('User updated.');
+          showSuccess('Updated', 'User details saved.');
+        } else {
+          await platformService.createUser({
+            email: values.email,
+            password: values.password!,
+            firstName: values.firstName,
+            lastName: values.lastName,
+            role,
+          });
+          setMessage(
+            lockedRole === 'teacher'
+              ? 'Faculty member added.'
+              : lockedRole === 'student'
+                ? 'Student added.'
+                : 'User created.',
+          );
+          showSuccess('Created', 'Login credentials emailed.');
+        }
+        resetForm();
         await load();
       } catch (err) {
         setError(parseApiError(err));
@@ -360,11 +419,49 @@ export function UsersManagementPanel({
     });
   };
 
+  const setStatus = async (userId: string, status: 'active' | 'suspended') => {
+    setError('');
+    await withLoader(async () => {
+      try {
+        await platformService.updateUserStatus(userId, status);
+        showSuccess(status === 'active' ? 'Activated' : 'Suspended', `User is now ${status}.`);
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const removeUser = async (userId: string, name: string) => {
+    const ok = await confirmDelete({
+      title: 'Delete user?',
+      text: `“${name}” will be removed from this organization.`,
+      confirmText: 'Yes, delete',
+    });
+    if (!ok) return;
+    setError('');
+    try {
+      await withLoader(async () => {
+        await platformService.deleteUser(userId);
+        if (editingId === userId) resetForm();
+        await load();
+      });
+      showSuccess('Deleted!', `${name} has been removed.`);
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
   const heading =
     title ??
     (lockedRole === 'teacher' ? 'Faculty' : lockedRole === 'student' ? 'Students' : 'User Management');
-  const addLabel =
-    lockedRole === 'teacher' ? 'Add Faculty' : lockedRole === 'student' ? 'Add Student' : 'Add User';
+  const addLabel = editingId
+    ? 'Update User'
+    : lockedRole === 'teacher'
+      ? 'Add Faculty'
+      : lockedRole === 'student'
+        ? 'Add Student'
+        : 'Add User';
 
   return (
     <div className="dashboard__content__wraper">
@@ -376,7 +473,7 @@ export function UsersManagementPanel({
       {message && <EdtpAlert type="success">{message}</EdtpAlert>}
 
       <div className="edtp-form-card">
-        <h5>{addLabel}</h5>
+        <h5>{editingId ? 'Edit user' : addLabel}</h5>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="row g-3">
             <div className="col-md-6 col-lg-3">
@@ -393,7 +490,12 @@ export function UsersManagementPanel({
             </div>
             <div className="col-md-6 col-lg-3">
               <EdtpField label="Email">
-                <input className="register__input" placeholder="Email" {...register('email')} />
+                <input
+                  className="register__input"
+                  placeholder="Email"
+                  disabled={Boolean(editingId)}
+                  {...register('email')}
+                />
                 <FormError message={errors.email?.message} />
               </EdtpField>
             </div>
@@ -410,52 +512,38 @@ export function UsersManagementPanel({
             ) : (
               <input type="hidden" {...register('role')} />
             )}
-            <div className="col-md-6 col-lg-3">
-              <EdtpField label="Password">
-                <input className="register__input" type="password" placeholder="Password" {...register('password')} />
-                <FormError message={errors.password?.message} />
-              </EdtpField>
-            </div>
+            {!editingId && (
+              <div className="col-md-6 col-lg-3">
+                <EdtpField label="Password">
+                  <input className="register__input" type="password" placeholder="Password" {...register('password')} />
+                  <FormError message={errors.password?.message} />
+                </EdtpField>
+              </div>
+            )}
             <div className="col-12">
               <EdtpFormActions>
                 <EdtpBtn type="submit" variant="primary" size="md">
                   {addLabel}
                 </EdtpBtn>
+                {editingId && (
+                  <EdtpBtn type="button" variant="ghost" size="md" onClick={resetForm}>
+                    Cancel
+                  </EdtpBtn>
+                )}
               </EdtpFormActions>
             </div>
           </div>
         </form>
       </div>
 
-      <div className="edtp-user-grid d-lg-none">
-        {users.map((u) => (
-          <div key={u.id} className="edtp-user-card">
-            <div className="edtp-user-card__avatar">
-              {(u.first_name?.[0] ?? 'U').toUpperCase()}
-            </div>
-            <div className="edtp-user-card__name">{u.first_name} {u.last_name}</div>
-            <div className="edtp-user-card__email">{u.email}</div>
-            <div className="edtp-user-card__meta">
-              {(u.roles as string[]).map((r) => (
-                <span key={r} className="edtp-badge edtp-badge--role">{r}</span>
-              ))}
-              <span className={`edtp-badge ${u.status === 'active' ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
-                {u.status}
-              </span>
-            </div>
-          </div>
-        ))}
-        {users.length === 0 && <EdtpEmpty>No users found.</EdtpEmpty>}
-      </div>
-
-      <div className="dashboard__table table-responsive d-none d-lg-block">
+      <div className="dashboard__table table-responsive">
         <table>
           <thead>
-            <tr><th>Name</th><th>Email</th><th>Roles</th><th>Status</th></tr>
+            <tr><th>Name</th><th>Email</th><th>Roles</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id}>
+              <tr key={u.id} className={editingId === u.id ? 'edtp-row--editing' : undefined}>
                 <td>{u.first_name} {u.last_name}</td>
                 <td>{u.email}</td>
                 <td>{(u.roles as string[]).join(', ')}</td>
@@ -464,10 +552,26 @@ export function UsersManagementPanel({
                     {u.status}
                   </span>
                 </td>
+                <td>
+                  <EdtpRowActions>
+                    <EdtpBtn variant="secondary" onClick={() => startEdit(u)}>Edit</EdtpBtn>
+                    {u.status === 'active' ? (
+                      <EdtpBtn variant="danger" onClick={() => void setStatus(u.id, 'suspended')}>Suspend</EdtpBtn>
+                    ) : (
+                      <EdtpBtn variant="success" onClick={() => void setStatus(u.id, 'active')}>Activate</EdtpBtn>
+                    )}
+                    <EdtpBtn
+                      variant="danger"
+                      onClick={() => void removeUser(u.id, `${u.first_name} ${u.last_name}`)}
+                    >
+                      Delete
+                    </EdtpBtn>
+                  </EdtpRowActions>
+                </td>
               </tr>
             ))}
             {users.length === 0 && (
-              <tr><td colSpan={4}>No users found.</td></tr>
+              <tr><td colSpan={5}>No users found.</td></tr>
             )}
           </tbody>
         </table>
@@ -1039,6 +1143,26 @@ export function TestBuilderPanel() {
     });
   };
 
+  const removeQuestion = async (questionId: string) => {
+    if (!testId) return;
+    const ok = await confirmDelete({
+      title: 'Remove question?',
+      text: 'This question will be removed from the test.',
+      confirmText: 'Yes, remove',
+    });
+    if (!ok) return;
+    setError('');
+    await withLoader(async () => {
+      try {
+        await examinationService.removeQuestionFromTest(testId, questionId);
+        setMessage('Question removed from test.');
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
   const publish = async () => {
     if (!testId) return;
     setMessage('');
@@ -1064,6 +1188,26 @@ export function TestBuilderPanel() {
         }
         setMessage(`Test assigned to ${selectedStudentIds.length} student(s).`);
         setSelectedStudentIds([]);
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const unassignStudent = async (studentId: string, name: string) => {
+    if (!testId) return;
+    const ok = await confirmDelete({
+      title: 'Unassign student?',
+      text: `Remove “${name}” from this test?`,
+      confirmText: 'Yes, unassign',
+    });
+    if (!ok) return;
+    setError('');
+    await withLoader(async () => {
+      try {
+        await examinationService.unassignStudentFromTest(testId, studentId);
+        setMessage(`${name} unassigned.`);
         await load();
       } catch (err) {
         setError(parseApiError(err));
@@ -1110,6 +1254,11 @@ export function TestBuilderPanel() {
                     <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
                     <span>{tq.content?.text ?? 'Question'}</span>
                     <span className="edtp-badge edtp-badge--role">{tq.type}</span>
+                    {!isLive && (
+                      <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
+                        Remove
+                      </EdtpBtn>
+                    )}
                   </li>
                 ))}
               </ol>
@@ -1313,6 +1462,7 @@ export function TestBuilderPanel() {
                       <tr>
                         <th>Name</th>
                         <th>Email</th>
+                        <th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1320,10 +1470,20 @@ export function TestBuilderPanel() {
                         <tr key={a.student_id}>
                           <td>{a.first_name} {a.last_name}</td>
                           <td>{a.email}</td>
+                          <td>
+                            <EdtpBtn
+                              variant="danger"
+                              onClick={() =>
+                                void unassignStudent(a.student_id, `${a.first_name} ${a.last_name}`)
+                              }
+                            >
+                              Unassign
+                            </EdtpBtn>
+                          </td>
                         </tr>
                       ))}
                       {filteredAssignments.length === 0 && (
-                        <tr><td colSpan={2}>No assigned students match your search.</td></tr>
+                        <tr><td colSpan={3}>No assigned students match your search.</td></tr>
                       )}
                     </tbody>
                   </table>
@@ -1334,56 +1494,5 @@ export function TestBuilderPanel() {
         </div>
       </div>
     </>
-  );
-}
-
-export function BrandingSettingsPanel() {
-  const [facebook, setFacebook] = useState('');
-  const [twitter, setTwitter] = useState('');
-  const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(true);
-  const withLoader = useDashboardLoader();
-
-  useEffect(() => {
-    setLoading(true);
-    platformService.getSettings(['social_links', 'exam_rules'])
-      .then((rows) => {
-        const social = rows.find((r) => r.key === 'social_links')?.value as Record<string, string> | undefined;
-        if (social) {
-          setFacebook(social.facebook ?? '');
-          setTwitter(social.twitter ?? '');
-        }
-      })
-      .catch(() => undefined)
-      .finally(() => setLoading(false));
-  }, []);
-
-  useDashboardLoadingEffect(loading);
-
-  const save = async () => {
-    await withLoader(async () => {
-      await platformService.upsertSetting('social_links', { facebook, twitter, linkedin: '', instagram: '' });
-      setMessage('Settings saved.');
-    });
-  };
-
-  return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title"><h4>Branding & Integrations</h4></div>
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-md-6 sp_bottom_15">
-          <label>Facebook URL</label>
-          <input className={inputClassName('register__input')} value={facebook} onChange={(e) => setFacebook(e.target.value)} />
-        </div>
-        <div className="col-md-6 sp_bottom_15">
-          <label>Twitter URL</label>
-          <input className={inputClassName('register__input')} value={twitter} onChange={(e) => setTwitter(e.target.value)} />
-        </div>
-        <div className="col-12">
-          <button type="button" className="default__button" onClick={save}>Save Settings</button>
-        </div>
-      </div>
-    </div>
   );
 }

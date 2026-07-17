@@ -45,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (authService.isMfaLoginResponse(result)) {
       return { requiresMfa: true, mfaToken: result.mfaToken };
     }
+    setSelectedOrganizationId(null);
     persistTokens(result.tokens.accessToken, result.tokens.refreshToken);
     setUser(result.user);
     return authService.getDashboardPathForRoles(result.user.roles);
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const completeMfaLogin = useCallback(async (mfaToken: string, code: string) => {
     const result = await authService.verifyMfaLogin(mfaToken, code);
+    setSelectedOrganizationId(null);
     persistTokens(result.tokens.accessToken, result.tokens.refreshToken);
     setUser(result.user);
     return authService.getDashboardPathForRoles(result.user.roles);
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = useCallback(async (input: RegisterInput) => {
     const result = await authService.register(input);
+    setSelectedOrganizationId(null);
     persistTokens(result.tokens.accessToken, result.tokens.refreshToken);
     setUser(result.user);
     return authService.getDashboardPathForRoles(result.user.roles);

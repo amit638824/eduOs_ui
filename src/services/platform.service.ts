@@ -137,9 +137,9 @@ export async function verifyRazorpayPayment(input: {
   return data.data;
 }
 
-export async function listUsers(page = 1, limit = 20, search?: string) {
+export async function listUsers(page = 1, limit = 20, search?: string, role?: string) {
   const { data } = await api.get<PaginatedResponse<PlatformUser>>(`${base}/users`, {
-    params: { page, limit, search },
+    params: { page, limit, search, role },
   });
   return data;
 }
@@ -153,6 +153,24 @@ export async function createUser(input: {
   role: 'student' | 'teacher' | 'org_admin';
 }) {
   const { data } = await api.post<ApiResponse<PlatformUser>>(`${base}/users`, input);
+  return data.data;
+}
+
+export async function updateUser(
+  userId: string,
+  input: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    role?: 'student' | 'teacher' | 'org_admin';
+  },
+) {
+  const { data } = await api.patch<ApiResponse<PlatformUser>>(`${base}/users/${userId}`, input);
+  return data.data;
+}
+
+export async function deleteUser(userId: string) {
+  const { data } = await api.delete<ApiResponse<unknown>>(`${base}/users/${userId}`);
   return data.data;
 }
 
@@ -213,6 +231,13 @@ export async function getSettings(keys?: string[]) {
 
 export async function upsertSetting(key: string, value: unknown) {
   const { data } = await api.put<ApiResponse<OrgSetting>>(`${base}/settings`, { key, value });
+  return data.data;
+}
+
+export async function deleteSetting(key: string) {
+  const { data } = await api.delete<ApiResponse<{ message: string; deleted: boolean }>>(
+    `${base}/settings/${encodeURIComponent(key)}`,
+  );
   return data.data;
 }
 

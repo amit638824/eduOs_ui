@@ -18,7 +18,6 @@ import {
   SessionsSecurityPanel,
   OrgStructurePanel,
   TestBuilderPanel,
-  BrandingSettingsPanel,
 } from '@/components/dashboard/admin/PlatformPanels';
 import { OrganizationsPanel } from '@/components/dashboard/admin/OrganizationsPanel';
 import {
@@ -115,7 +114,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/admin-profile" element={dash('admin', <DashboardProfileContent />)} />
     <Route path="/dashboard/admin-message" element={dash('admin', <NotificationsPanel />)} />
     <Route path="/dashboard/admin-course" element={dash('admin', <TestsListPanel title="All Tests" />)} />
-    <Route path="/dashboard/admin-quiz-attempts" element={dash('admin', <AttemptsListPanel title="All Attempts" />)} />
+    <Route path="/dashboard/admin-quiz-attempts" element={dash('admin', <AttemptsListPanel title="All Attempts" readOnly />)} />
     <Route path="/dashboard/admin-reviews" element={dash('admin', <ReportsPanel />)} />
     <Route path="/dashboard/admin-wishlist" element={dash('admin', <PaymentsPanel />)} />
     <Route path="/dashboard/admin-settings" element={dash('admin', <DashboardSettingsContent />)} />
@@ -125,7 +124,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/admin-audit" element={dash('admin', <AuditLogPanel />)} />
     <Route path="/dashboard/admin-organizations" element={dash('admin', <OrganizationsPanel />)} />
     <Route path="/dashboard/admin-org" element={dash('admin', <OrgStructurePanel />)} />
-    <Route path="/dashboard/admin-branding" element={dash('admin', <BrandingSettingsPanel />)} />
+    <Route path="/dashboard/admin-branding" element={<Navigate to="/dashboard/admin-settings" replace />} />
     <Route path="/dashboard/admin-sessions" element={dash('admin', <SessionsSecurityPanel />)} />
   </>
 );

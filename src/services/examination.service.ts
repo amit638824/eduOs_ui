@@ -134,6 +134,11 @@ export async function updateTest(id: string, input: Partial<CreateTestInput & { 
   return data.data;
 }
 
+export async function deleteTest(id: string) {
+  const { data } = await api.delete<ApiResponse<{ id: string; deleted: boolean }>>(`${base}/tests/${id}`);
+  return data.data;
+}
+
 export async function addTestSection(testId: string, name: string) {
   const { data } = await api.post<ApiResponse<unknown>>(`${base}/tests/${testId}/sections`, { name });
   return data.data;
@@ -143,6 +148,13 @@ export async function addQuestionToTest(testId: string, questionId: string) {
   const { data } = await api.post<ApiResponse<unknown>>(`${base}/tests/${testId}/questions`, {
     questionId,
   });
+  return data.data;
+}
+
+export async function removeQuestionFromTest(testId: string, questionId: string) {
+  const { data } = await api.delete<ApiResponse<{ removed: boolean }>>(
+    `${base}/tests/${testId}/questions/${questionId}`,
+  );
   return data.data;
 }
 
@@ -160,6 +172,13 @@ export async function assignTestToStudent(testId: string, studentId: string) {
   const { data } = await api.post<ApiResponse<unknown>>(`${base}/tests/${testId}/assign`, {
     studentId,
   });
+  return data.data;
+}
+
+export async function unassignStudentFromTest(testId: string, studentId: string) {
+  const { data } = await api.delete<ApiResponse<{ removed: boolean }>>(
+    `${base}/tests/${testId}/assign/${studentId}`,
+  );
   return data.data;
 }
 

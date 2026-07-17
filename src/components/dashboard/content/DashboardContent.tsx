@@ -12,8 +12,10 @@ import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
 import { EdtpSelect } from '@/components/ui/CrudUI';
+import { confirmDelete } from '@/lib/swal';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
+import { useOrgScope } from '@/context/OrgScopeContext';
 import {
   becomeTeacherSchema,
   createTestSchema,
@@ -741,6 +743,7 @@ function SocialLinksForm() {
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(true);
   const withLoader = useDashboardLoader();
+  const { selectedOrgId } = useOrgScope();
   const {
     register,
     handleSubmit,
@@ -751,25 +754,57 @@ function SocialLinksForm() {
     defaultValues: { facebook: '', twitter: '', linkedin: '', instagram: '' },
   });
 
-  useEffect(() => {
+  const load = async () => {
     setLoading(true);
-    platformService.getSettings(['social_links'])
-      .then((rows) => {
-        const social = rows.find((r) => r.key === 'social_links')?.value as SocialLinksFormValues | undefined;
-        if (social) reset(social);
-      })
-      .catch(() => undefined)
-      .finally(() => setLoading(false));
-  }, [reset]);
+    try {
+      const rows = await platformService.getSettings(['social_links']);
+      const social = rows.find((r) => r.key === 'social_links')?.value as SocialLinksFormValues | undefined;
+      reset(social ?? { facebook: '', twitter: '', linkedin: '', instagram: '' });
+    } catch {
+      reset({ facebook: '', twitter: '', linkedin: '', instagram: '' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void load();
+  }, [selectedOrgId]);
 
   useDashboardLoadingEffect(loading);
 
   const onSubmit = async (values: SocialLinksFormValues) => {
     setApiError('');
+    setMessage('');
     await withLoader(async () => {
       try {
         await platformService.upsertSetting('social_links', values);
-        setMessage('Social links saved successfully.');
+        setMessage('Branding social links saved.');
+      } catch (err) {
+        setApiError(parseApiError(err));
+      }
+    });
+  };
+
+  const resetForm = () => {
+    reset({ facebook: '', twitter: '', linkedin: '', instagram: '' });
+    setMessage('');
+    setApiError('');
+  };
+
+  const clearSaved = async () => {
+    const ok = await confirmDelete({
+      title: 'Reset branding links?',
+      text: 'This deletes saved social links for the selected organization.',
+      confirmText: 'Yes, reset',
+    });
+    if (!ok) return;
+    setApiError('');
+    await withLoader(async () => {
+      try {
+        await platformService.deleteSetting('social_links');
+        resetForm();
+        setMessage('Social links cleared for this organization.');
       } catch (err) {
         setApiError(parseApiError(err));
       }
@@ -806,9 +841,15 @@ function SocialLinksForm() {
           </div>
         ))}
         <div className="col-xl-12">
-          <div className="dashboard__form__button">
+          <div className="dashboard__form__button d-flex flex-wrap gap-2">
             <button type="submit" className="default__button">
-              Save Social Links
+              Save Branding Links
+            </button>
+            <button type="button" className="dashboard__small__btn__2" onClick={resetForm}>
+              Clear Form
+            </button>
+            <button type="button" className="dashboard__small__btn__2" onClick={() => void clearSaved()}>
+              Delete Saved Links
             </button>
           </div>
         </div>
@@ -1099,8 +1140,8 @@ export function DashboardSettingsContent() {
     ['super_admin', 'org_admin', 'branch_admin'].includes(r),
   );
   const tabs = isAdmin
-    ? ['Profile', 'Organization', 'Password', 'Social Icon']
-    : ['Profile', 'Password', 'Social Icon'];
+    ? ['Profile', 'Organization', 'Password', 'Branding']
+    : ['Profile', 'Password', 'Branding'];
   const [activeTab, setActiveTab] = useState('Profile');
 
   useDashboardLoadingEffect(orgLoading && activeTab === 'Organization');
@@ -1112,7 +1153,7 @@ export function DashboardSettingsContent() {
       <DashboardPageHeader
         badge="Account"
         title="Settings"
-        subtitle="Manage your profile, password and preferences."
+        subtitle="Manage organization profile, branding, password and preferences for the selected tenant."
       />
       <div className="dashboard__content__wraper">
         <DashboardTabButtons tabs={tabs} active={activeTab} onChange={setActiveTab} />
@@ -1122,7 +1163,7 @@ export function DashboardSettingsContent() {
             <OrganizationSettingsForm organization={organization} onSaved={refresh} />
           )}
           {activeTab === 'Password' && <PasswordChangeForm />}
-          {activeTab === 'Social Icon' && <SocialLinksForm />}
+          {activeTab === 'Branding' && <SocialLinksForm />}
         </div>
       </div>
     </>
