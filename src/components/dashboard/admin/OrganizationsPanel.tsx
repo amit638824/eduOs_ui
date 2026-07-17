@@ -28,7 +28,9 @@ function slugify(name: string) {
 function statusLabel(org: Organization) {
   if (org.isActive) return 'Approved';
   const v = org.settings?.verificationStatus;
-  return typeof v === 'string' ? v : 'Pending';
+  if (v === 'suspended') return 'Suspended';
+  if (typeof v === 'string' && v !== 'verified') return v;
+  return 'Pending';
 }
 
 /** Superadmin: add / edit / approve / delete vendor organizations */
@@ -110,7 +112,11 @@ export function OrganizationsPanel() {
             contactEmail: contact || undefined,
             isActive: activateNow,
           });
-          setMessage('Organization updated. Notification email sent to org contacts.');
+          setMessage(
+            activateNow
+              ? 'Organization updated and set to Approved / Active.'
+              : 'Organization updated and set to Pending / Suspended.',
+          );
         } else {
           const created = await organizationService.createOrganization({
             name: name.trim(),
@@ -151,6 +157,32 @@ export function OrganizationsPanel() {
         await organizationService.verifyOrganization(org.id);
         await showSuccess('Approved!', `${org.name} can now access the platform.`);
         setMessage(`${org.name} approved. Pending users are now active.`);
+        if (editingId === org.id) setActivateNow(true);
+        await load();
+        await refreshOrganizations();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const suspend = async (org: Organization) => {
+    const ok = await confirmAction({
+      title: 'Suspend organization?',
+      text: `${org.name} will be deactivated. Org users will be suspended and cannot log in until you approve again.`,
+      icon: 'warning',
+      confirmText: 'Yes, suspend',
+      confirmColor: '#dc2626',
+    });
+    if (!ok) return;
+    setError('');
+    setMessage('');
+    await withLoader(async () => {
+      try {
+        await organizationService.updateOrganization(org.id, { isActive: false });
+        await showSuccess('Suspended', `${org.name} has been suspended.`);
+        setMessage(`${org.name} suspended. Account access is blocked until re-approved.`);
+        if (editingId === org.id) setActivateNow(false);
         await load();
         await refreshOrganizations();
       } catch (err) {
@@ -272,19 +304,26 @@ export function OrganizationsPanel() {
                 </EdtpField>
               </>
             )}
-            <label className="edtp-check-row" htmlFor="orgApproveNow">
-              <input
-                id="orgApproveNow"
-                type="checkbox"
-                className="form-check-input edtp-check-row__input"
-                checked={activateNow}
-                onChange={(e) => setActivateNow(e.target.checked)}
-              />
-              <span className="edtp-check-row__text">
-                <strong>Approve immediately</strong>
-                <small>Organization becomes active right away</small>
+            <button
+              type="button"
+              id="orgApproveNow"
+              role="switch"
+              aria-checked={activateNow}
+              className={`edtp-switch${activateNow ? ' is-on' : ''}`}
+              onClick={() => setActivateNow((prev) => !prev)}
+            >
+              <span className="edtp-switch__track" aria-hidden>
+                <span className="edtp-switch__thumb" />
               </span>
-            </label>
+              <span className="edtp-switch__text">
+                <strong>{activateNow ? 'Approved / Active' : 'Pending approval'}</strong>
+                <small>
+                  {activateNow
+                    ? 'Organization can access the platform'
+                    : 'Organization stays inactive until approved'}
+                </small>
+              </span>
+            </button>
             <EdtpFormActions>
               <EdtpBtn variant="primary" size="md" onClick={() => void save()}>
                 {editingId ? 'Update' : 'Create & email login'}
@@ -338,7 +377,11 @@ export function OrganizationsPanel() {
                             <EdtpBtn variant="secondary" onClick={() => manageData(org)}>
                               Manage
                             </EdtpBtn>
-                            {!org.isActive && (
+                            {org.isActive ? (
+                              <EdtpBtn variant="danger" onClick={() => void suspend(org)}>
+                                Suspend
+                              </EdtpBtn>
+                            ) : (
                               <EdtpBtn variant="success" onClick={() => void approve(org)}>
                                 Approve
                               </EdtpBtn>

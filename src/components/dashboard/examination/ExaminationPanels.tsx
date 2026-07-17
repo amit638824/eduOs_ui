@@ -15,7 +15,7 @@ import ExamAttemptPlayer from './ExamAttemptPlayer';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
-import { EdtpBtn, EdtpFormActions, EdtpRowActions } from '@/components/ui/CrudUI';
+import { EdtpBtn, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete, showSuccess } from '@/lib/swal';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
@@ -403,18 +403,17 @@ export function QuestionBankPanel() {
           <div className="row g-3">
             <div className="col-md-4">
               <label className="form-label">Department</label>
-              <select
-                className={`form-select${deptsLoading ? ' edtp-select--loading' : ''}`}
+              <EdtpSelect
+                loading={deptsLoading}
                 value={departmentId}
                 onChange={(e) => handleDepartmentChange(e.target.value)}
-                disabled={deptsLoading}
                 required
               >
                 <option value="">{deptsLoading ? 'Loading departments…' : 'Select department'}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
-              </select>
+              </EdtpSelect>
               <FieldHint loading={deptsLoading} loadingText="Fetching departments…" />
               {!deptsLoading && (
                 <p className="text-muted mb-0 mt-1" style={{ fontSize: '0.75rem' }}>
@@ -425,8 +424,8 @@ export function QuestionBankPanel() {
 
             <div className="col-md-4">
               <label className="form-label">Subject</label>
-              <select
-                className={`form-select${subjectsLoading ? ' edtp-select--loading' : ''}`}
+              <EdtpSelect
+                loading={subjectsLoading}
                 value={subjectId}
                 onChange={(e) => handleSubjectChange(e.target.value)}
                 disabled={!departmentId || subjectsLoading}
@@ -438,7 +437,7 @@ export function QuestionBankPanel() {
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
-              </select>
+              </EdtpSelect>
               <FieldHint
                 loading={subjectsLoading}
                 empty={Boolean(departmentId && !subjectsLoading && subjects.length === 0)}
@@ -471,8 +470,8 @@ export function QuestionBankPanel() {
 
             <div className="col-md-4">
               <label className="form-label">Topic</label>
-              <select
-                className={`form-select${topicsLoading ? ' edtp-select--loading' : ''}`}
+              <EdtpSelect
+                loading={topicsLoading}
                 value={topicId}
                 onChange={(e) => setTopicId(e.target.value)}
                 disabled={!subjectId || topicsLoading}
@@ -484,7 +483,7 @@ export function QuestionBankPanel() {
                 {topics.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
-              </select>
+              </EdtpSelect>
               <FieldHint
                 loading={topicsLoading}
                 empty={Boolean(subjectId && !topicsLoading && topics.length === 0)}
@@ -517,8 +516,7 @@ export function QuestionBankPanel() {
 
             <div className="col-md-4">
               <label className="form-label">Question Type</label>
-              <select
-                className="form-select"
+              <EdtpSelect
                 value={questionType}
                 onChange={(e) => {
                   setQuestionType(e.target.value as QuestionType);
@@ -530,7 +528,7 @@ export function QuestionBankPanel() {
                 {(Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]).map((t) => (
                   <option key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</option>
                 ))}
-              </select>
+              </EdtpSelect>
             </div>
             <div className="col-12">
               <label className="form-label">Question Text</label>
@@ -545,10 +543,10 @@ export function QuestionBankPanel() {
             {questionType === 'true_false' && (
               <div className="col-md-4">
                 <label className="form-label">Correct Answer</label>
-                <select className="form-select" value={correct} onChange={(e) => setCorrect(e.target.value)}>
+                <EdtpSelect value={correct} onChange={(e) => setCorrect(e.target.value)}>
                   <option value="true">True</option>
                   <option value="false">False</option>
-                </select>
+                </EdtpSelect>
               </div>
             )}
             {needsAnswerOnly(questionType) && (
@@ -577,10 +575,10 @@ export function QuestionBankPanel() {
                 </div>
                 <div className="col-md-2">
                   <label className="form-label">Correct</label>
-                  <select className="form-select" value={correct} onChange={(e) => setCorrect(e.target.value)}>
+                  <EdtpSelect value={correct} onChange={(e) => setCorrect(e.target.value)}>
                     <option value="1">Option 1</option>
                     <option value="2">Option 2</option>
-                  </select>
+                  </EdtpSelect>
                 </div>
               </>
             )}
@@ -1159,33 +1157,34 @@ export function CreateTestPanel() {
           <div className="row g-3">
             <div className="col-md-4">
               <label htmlFor="departmentId">Department</label>
-              <select
+              <EdtpSelect
                 id="departmentId"
-                className={`${inputClassName('form-select', !!errors.departmentId)}${deptsLoading ? ' edtp-select--loading' : ''}`}
+                hasError={!!errors.departmentId}
+                loading={deptsLoading}
                 {...register('departmentId')}
-                disabled={deptsLoading}
               >
                 <option value="">{deptsLoading ? 'Loading departments…' : 'Select department'}</option>
                 {departments.map((d) => (
                   <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
-              </select>
+              </EdtpSelect>
               <FieldHint loading={deptsLoading} loadingText="Fetching departments…" />
               <FormError message={errors.departmentId?.message} />
             </div>
             <div className="col-md-4">
               <label htmlFor="subjectId">Subject</label>
-              <select
+              <EdtpSelect
                 id="subjectId"
-                className={`${inputClassName('form-select', !!errors.subjectId)}${subjectsLoading ? ' edtp-select--loading' : ''}`}
+                hasError={!!errors.subjectId}
+                loading={subjectsLoading}
+                disabled={!departmentId}
                 {...register('subjectId')}
-                disabled={!departmentId || subjectsLoading}
               >
                 <option value="">{subjectsLoading ? 'Loading subjects…' : 'Select subject'}</option>
                 {subjects.map((s) => (
                   <option key={s.id} value={s.id}>{s.name}</option>
                 ))}
-              </select>
+              </EdtpSelect>
               <FieldHint
                 loading={subjectsLoading}
                 empty={Boolean(departmentId && !subjectsLoading && subjects.length === 0)}
@@ -1196,17 +1195,18 @@ export function CreateTestPanel() {
             </div>
             <div className="col-md-4">
               <label htmlFor="topicId">Topic</label>
-              <select
+              <EdtpSelect
                 id="topicId"
-                className={`${inputClassName('form-select', !!errors.topicId)}${topicsLoading ? ' edtp-select--loading' : ''}`}
+                hasError={!!errors.topicId}
+                loading={topicsLoading}
+                disabled={!subjectId}
                 {...register('topicId')}
-                disabled={!subjectId || topicsLoading}
               >
                 <option value="">{topicsLoading ? 'Loading topics…' : 'Select topic'}</option>
                 {topics.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
-              </select>
+              </EdtpSelect>
               <FieldHint
                 loading={topicsLoading}
                 empty={Boolean(subjectId && !topicsLoading && topics.length === 0)}
@@ -1222,13 +1222,13 @@ export function CreateTestPanel() {
             </div>
             <div className="col-md-6">
               <label htmlFor="duration">Duration (minutes)</label>
-              <select id="duration" className="form-select" {...register('duration')}>
+              <EdtpSelect id="duration" {...register('duration')}>
                 <option value="15">15</option>
                 <option value="30">30</option>
                 <option value="60">60</option>
                 <option value="90">90</option>
                 <option value="120">120</option>
-              </select>
+              </EdtpSelect>
             </div>
             <div className="col-12">
               <label htmlFor="aboutExam">Description (optional)</label>

@@ -1,5 +1,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
+export { EdtpSelect, type EdtpSelectProps } from '@/components/ui/EdtpSelect';
+
 type BtnVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
 type BtnSize = 'sm' | 'md';
 

@@ -19,6 +19,7 @@ import {
   EdtpFormActions,
   EdtpPanel,
   EdtpRowActions,
+  EdtpSelect,
 } from '@/components/ui/CrudUI';
 import { confirmDelete, showSuccess } from '@/lib/swal';
 import * as yup from 'yup';
@@ -396,11 +397,11 @@ export function UsersManagementPanel({
             {!lockedRole ? (
               <div className="col-md-6 col-lg-2">
                 <EdtpField label="Role">
-                  <select className="form-select" {...register('role')}>
+                  <EdtpSelect {...register('role')}>
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
                     <option value="org_admin">Org Admin</option>
-                  </select>
+                  </EdtpSelect>
                 </EdtpField>
               </div>
             ) : (
@@ -543,10 +544,10 @@ export function ReportsPanel() {
         </div>
       )}
       <div className="sp_bottom_20">
-        <select className="form-select" value={selected} onChange={(e) => loadReport(e.target.value)}>
+        <EdtpSelect value={selected} onChange={(e) => loadReport(e.target.value)}>
           <option value="">Select test for detailed report</option>
           {tests.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-        </select>
+        </EdtpSelect>
       </div>
       {selected && (
         <button type="button" className="default__button sp_bottom_20" onClick={exportCsv}>
@@ -710,13 +711,10 @@ export function OrgStructurePanel() {
   const { branches, loading: orgLoading } = useOrganization();
   const [branchId, setBranchId] = useState('');
   const [departments, setDepartments] = useState<Awaited<ReturnType<typeof platformService.listDepartments>>['data']>([]);
-  const [sessions, setSessions] = useState<Awaited<ReturnType<typeof platformService.listAcademicSessions>>['data']>([]);
   const [deptName, setDeptName] = useState('');
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
-  const [sessionName, setSessionName] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(true);
   const [deptLoading, setDeptLoading] = useState(false);
   const withLoader = useDashboardLoader();
 
@@ -728,11 +726,6 @@ export function OrgStructurePanel() {
 
   useEffect(() => {
     if (branches[0] && !branchId) setBranchId(branches[0].id);
-    setLoading(true);
-    platformService.listAcademicSessions(1, 20)
-      .then((r) => setSessions(r.data))
-      .catch(() => undefined)
-      .finally(() => setLoading(false));
   }, [branches, branchId]);
 
   useEffect(() => {
@@ -744,7 +737,7 @@ export function OrgStructurePanel() {
       .finally(() => setDeptLoading(false));
   }, [branchId]);
 
-  useDashboardLoadingEffect(orgLoading || loading || deptLoading);
+  useDashboardLoadingEffect(orgLoading || deptLoading);
 
   const saveDept = async () => {
     if (!branchId || !deptName.trim()) return;
@@ -797,46 +790,32 @@ export function OrgStructurePanel() {
     });
   };
 
-  const addSession = async () => {
-    await withLoader(async () => {
-      const year = new Date().getFullYear();
-      await platformService.createAcademicSession({
-        name: sessionName || `${year}-${year + 1}`,
-        startDate: `${year}-04-01`,
-        endDate: `${year + 1}-03-31`,
-        isCurrent: true,
-      });
-      const r = await platformService.listAcademicSessions();
-      setSessions(r.data);
-      setSessionName('');
-    });
-  };
-
   return (
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title">
-        <h4>Departments & Sessions</h4>
+        <h4>Departments</h4>
       </div>
       {error && <EdtpAlert type="error">{error}</EdtpAlert>}
       {message && <EdtpAlert type="success">{message}</EdtpAlert>}
-      <div className="row g-3">
-        <div className="col-md-6">
-          <EdtpPanel
-            title="Departments"
-            subtitle={editingDeptId ? 'Editing selected department' : 'Add departments under a branch'}
-          >
+      <EdtpPanel
+        title="Manage departments"
+        subtitle={editingDeptId ? 'Editing selected department' : 'Add departments under a branch'}
+      >
+        <div className="row g-3">
+          <div className="col-md-5">
             <EdtpField label="Branch" htmlFor="orgBranch">
-              <select
+              <EdtpSelect
                 id="orgBranch"
-                className="form-select"
                 value={branchId}
                 onChange={(e) => setBranchId(e.target.value)}
               >
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
-              </select>
+              </EdtpSelect>
             </EdtpField>
+          </div>
+          <div className="col-md-7">
             <EdtpField
               label={editingDeptId ? 'Edit department' : 'Department name'}
               htmlFor="deptName"
@@ -849,73 +828,45 @@ export function OrgStructurePanel() {
                 onChange={(e) => setDeptName(e.target.value)}
               />
             </EdtpField>
-            <EdtpFormActions>
-              <EdtpBtn variant="primary" size="md" onClick={saveDept}>
-                {editingDeptId ? 'Update' : 'Add'}
-              </EdtpBtn>
-              {editingDeptId && (
-                <EdtpBtn
-                  variant="ghost"
-                  size="md"
-                  onClick={() => {
-                    setEditingDeptId(null);
-                    setDeptName('');
-                  }}
-                >
-                  Cancel
-                </EdtpBtn>
-              )}
-            </EdtpFormActions>
-            <ul className="edtp-data-list">
-              {departments.map((d) => (
-                <li key={d.id} className={editingDeptId === d.id ? 'edtp-list-item--editing' : undefined}>
-                  <span>{d.name}{d.code ? ` (${d.code})` : ''}</span>
-                  <EdtpRowActions>
-                    <EdtpBtn variant="secondary" onClick={() => startEditDept(d)}>
-                      Edit
-                    </EdtpBtn>
-                    <EdtpBtn variant="danger" onClick={() => void deleteDept(d.id)}>
-                      Delete
-                    </EdtpBtn>
-                  </EdtpRowActions>
-                </li>
-              ))}
-              {departments.length === 0 && (
-                <li><span className="text-muted">No departments yet.</span></li>
-              )}
-            </ul>
-          </EdtpPanel>
+          </div>
         </div>
-        <div className="col-md-6">
-          <EdtpPanel title="Academic Sessions" subtitle="Current academic year / term">
-            <EdtpField label="Session name" htmlFor="sessionName">
-              <input
-                id="sessionName"
-                className="register__input"
-                placeholder="e.g. 2025-26"
-                value={sessionName}
-                onChange={(e) => setSessionName(e.target.value)}
-              />
-            </EdtpField>
-            <EdtpFormActions>
-              <EdtpBtn variant="primary" size="md" onClick={addSession}>
-                Add
-              </EdtpBtn>
-            </EdtpFormActions>
-            <ul className="edtp-data-list">
-              {sessions.map((s) => (
-                <li key={s.id}>
-                  <span>{s.name}</span>
-                  {s.is_current && <span className="edtp-badge edtp-badge--active">Current</span>}
-                </li>
-              ))}
-              {sessions.length === 0 && (
-                <li><span className="text-muted">No sessions yet.</span></li>
-              )}
-            </ul>
-          </EdtpPanel>
-        </div>
-      </div>
+        <EdtpFormActions>
+          <EdtpBtn variant="primary" size="md" onClick={saveDept}>
+            {editingDeptId ? 'Update' : 'Add department'}
+          </EdtpBtn>
+          {editingDeptId && (
+            <EdtpBtn
+              variant="ghost"
+              size="md"
+              onClick={() => {
+                setEditingDeptId(null);
+                setDeptName('');
+              }}
+            >
+              Cancel
+            </EdtpBtn>
+          )}
+        </EdtpFormActions>
+        {departments.length === 0 ? (
+          <EdtpEmpty>No departments yet. Add one above to get started.</EdtpEmpty>
+        ) : (
+          <ul className="edtp-data-list">
+            {departments.map((d) => (
+              <li key={d.id} className={editingDeptId === d.id ? 'edtp-list-item--editing' : undefined}>
+                <span>{d.name}{d.code ? ` (${d.code})` : ''}</span>
+                <EdtpRowActions>
+                  <EdtpBtn variant="secondary" onClick={() => startEditDept(d)}>
+                    Edit
+                  </EdtpBtn>
+                  <EdtpBtn variant="danger" onClick={() => void deleteDept(d.id)}>
+                    Delete
+                  </EdtpBtn>
+                </EdtpRowActions>
+              </li>
+            ))}
+          </ul>
+        )}
+      </EdtpPanel>
     </div>
   );
 }

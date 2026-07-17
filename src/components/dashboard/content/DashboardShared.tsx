@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import type { DashboardCourseItem } from '@/data/dashboardData';
+import { EdtpSelect } from '@/components/ui/CrudUI';
 
 export function DashboardFilterRow() {
   return (
@@ -9,13 +10,13 @@ export function DashboardFilterRow() {
           <span>Courses</span>
         </div>
         <div className="dashboard__selector">
-          <select className="form-select" defaultValue="all">
+          <EdtpSelect defaultValue="all">
             <option value="all">All</option>
             <option value="hardware">Hardware & Networking</option>
             <option value="software">Computer Application</option>
             <option value="diploma">Diploma Course</option>
             <option value="govt">CCC / O Level</option>
-          </select>
+          </EdtpSelect>
         </div>
       </div>
       <div className="col-xl-3 col-lg-4 col-md-4 col-12">
@@ -23,12 +24,12 @@ export function DashboardFilterRow() {
           <span>SORT BY</span>
         </div>
         <div className="dashboard__selector">
-          <select className="form-select" defaultValue="default">
+          <EdtpSelect defaultValue="default">
             <option value="default">Default</option>
             <option value="trending">Trending</option>
             <option value="low">Price: low to high</option>
             <option value="high">Price: high to low</option>
-          </select>
+          </EdtpSelect>
         </div>
       </div>
       <div className="col-xl-3 col-lg-4 col-md-4 col-12">
@@ -36,11 +37,11 @@ export function DashboardFilterRow() {
           <span>SORT BY OFFER</span>
         </div>
         <div className="dashboard__selector">
-          <select className="form-select" defaultValue="free">
+          <EdtpSelect defaultValue="free">
             <option value="free">Free</option>
             <option value="paid">Paid</option>
             <option value="premium">Premium</option>
-          </select>
+          </EdtpSelect>
         </div>
       </div>
     </div>

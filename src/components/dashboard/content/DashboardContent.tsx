@@ -11,6 +11,7 @@ import { organizationService, platformService } from '@/services';
 import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
+import { EdtpSelect } from '@/components/ui/CrudUI';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import {
@@ -877,12 +878,12 @@ function CreateTestInfoForm() {
               <span>Category</span>
             </div>
             <div className="dashboard__selector">
-              <select className="form-select" {...register('category')}>
+              <EdtpSelect {...register('category')}>
                 <option value="hardware">Hardware & Networking</option>
                 <option value="software">Computer Application</option>
                 <option value="diploma">Diploma Course</option>
                 <option value="govt">CCC / O Level</option>
-              </select>
+              </EdtpSelect>
               <FormError message={errors.category?.message} />
             </div>
           </div>
@@ -891,12 +892,12 @@ function CreateTestInfoForm() {
               <span>Duration (minutes)</span>
             </div>
             <div className="dashboard__selector">
-              <select className="form-select" {...register('duration')}>
+              <EdtpSelect {...register('duration')}>
                 <option value="60">60 min</option>
                 <option value="90">90 min</option>
                 <option value="120">120 min</option>
                 <option value="180">180 min</option>
-              </select>
+              </EdtpSelect>
               <FormError message={errors.duration?.message} />
             </div>
           </div>

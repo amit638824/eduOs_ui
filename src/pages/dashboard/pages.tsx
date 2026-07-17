@@ -166,17 +166,6 @@ export function AdminDashboardHome() {
     ];
   }, [organization, branches.length, organizations.length, examStats]);
 
-  const tableRows = useMemo(() => {
-    if (branches.length) {
-      return branches.map((branch) => ({
-        name: branch.name,
-        enrolled: branch.code ?? '—',
-        rating: branch.isActive ? 5 : 3,
-      }));
-    }
-    return feedbackRows;
-  }, [branches]);
-
   return (
     <>
       <DashboardPageHeader
@@ -197,10 +186,6 @@ export function AdminDashboardHome() {
       <DashboardCounters
         title={organization ? `${organization.name} Overview` : loading ? 'Loading...' : 'Admin Overview'}
         counters={counters}
-      />
-      <DashboardFeedbackTable
-        title={branches.length ? 'Branch List' : 'Platform Analytics'}
-        rows={tableRows}
       />
     </>
   );
