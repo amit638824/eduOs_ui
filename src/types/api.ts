@@ -110,7 +110,10 @@ export interface CreateOrganizationInput {
   logoUrl?: string;
   theme?: Record<string, unknown>;
   settings?: Record<string, unknown>;
-  contactEmail?: string;
+  contactEmail: string;
+  adminFirstName?: string;
+  adminLastName?: string;
+  adminPassword?: string;
   isActive?: boolean;
 }
 

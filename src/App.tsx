@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { OrgScopeProvider } from '@/context/OrgScopeContext';
 import Layout from '@/components/layout/Layout';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
@@ -23,33 +24,35 @@ export default function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/exams" element={<ExamsPage />} />
-              <Route path="/exams/:slug" element={<ExamSlugPage />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/schools" element={<SchoolsPage />} />
-              <Route path="/help" element={<HelpPage />} />
-              <Route path="/privacy" element={<PrivacyPage />} />
-              <Route path="/blog" element={<BlogPage />} />
-              <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <OrgScopeProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/exams" element={<ExamsPage />} />
+                <Route path="/exams/:slug" element={<ExamSlugPage />} />
+                <Route path="/pricing" element={<PricingPage />} />
+                <Route path="/schools" element={<SchoolsPage />} />
+                <Route path="/help" element={<HelpPage />} />
+                <Route path="/privacy" element={<PrivacyPage />} />
+                <Route path="/blog" element={<BlogPage />} />
+                <Route path="/blog/:slug" element={<BlogPostPage />} />
 
-              <Route path="/instructor" element={<Navigate to="/dashboard/become-a-teacher" replace />} />
-              <Route path="/instructor-details" element={<Navigate to="/dashboard/become-a-teacher" replace />} />
+                <Route path="/instructor" element={<Navigate to="/dashboard/become-a-teacher" replace />} />
+                <Route path="/instructor-details" element={<Navigate to="/dashboard/become-a-teacher" replace />} />
 
-              {dashboardRouteElements}
+                {dashboardRouteElements}
 
-              <Route path="*" element={<NotFoundPage />} />
-            </Route>
-          </Routes>
-        </BrowserRouter>
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
+            </Routes>
+          </BrowserRouter>
+        </OrgScopeProvider>
       </AuthProvider>
     </ThemeProvider>
   );

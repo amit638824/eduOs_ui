@@ -4,6 +4,7 @@ import { parseApiError } from '@/lib/errors';
 import { useOrgScope } from '@/context/OrgScopeContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { setSelectedOrganizationId } from '@/lib/orgScope';
+import { confirmAction, confirmDelete, showSuccess } from '@/lib/swal';
 import type { Organization } from '@/types/api';
 import {
   EdtpAlert,
@@ -41,6 +42,9 @@ export function OrganizationsPanel() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [adminFirstName, setAdminFirstName] = useState('Organization');
+  const [adminLastName, setAdminLastName] = useState('Admin');
   const [activateNow, setActivateNow] = useState(false);
 
   const load = async () => {
@@ -66,6 +70,9 @@ export function OrganizationsPanel() {
     setEditingId(null);
     setName('');
     setSlug('');
+    setContactEmail('');
+    setAdminFirstName('Organization');
+    setAdminLastName('Admin');
     setActivateNow(false);
   };
 
@@ -73,6 +80,9 @@ export function OrganizationsPanel() {
     setEditingId(org.id);
     setName(org.name);
     setSlug(org.slug);
+    setContactEmail(
+      typeof org.settings?.contactEmail === 'string' ? org.settings.contactEmail : '',
+    );
     setActivateNow(org.isActive);
     setMessage('');
     setError('');
@@ -84,27 +94,36 @@ export function OrganizationsPanel() {
       setError('Name and slug are required.');
       return;
     }
+    if (!editingId && !contactEmail.trim()) {
+      setError('Login email is required — org admin credentials will be emailed there.');
+      return;
+    }
     setError('');
     setMessage('');
     await withLoader(async () => {
       try {
+        const contact = contactEmail.trim();
         if (editingId) {
           await organizationService.updateOrganization(editingId, {
             name: name.trim(),
             slug: slug.trim(),
+            contactEmail: contact || undefined,
             isActive: activateNow,
           });
-          setMessage('Organization updated.');
+          setMessage('Organization updated. Notification email sent to org contacts.');
         } else {
-          await organizationService.createOrganization({
+          const created = await organizationService.createOrganization({
             name: name.trim(),
             slug: slug.trim(),
+            contactEmail: contact,
+            adminFirstName: adminFirstName.trim() || 'Organization',
+            adminLastName: adminLastName.trim() || 'Admin',
             isActive: activateNow,
           });
+          const emailedTo =
+            (created as { adminEmail?: string | null }).adminEmail ?? contact;
           setMessage(
-            activateNow
-              ? 'Organization created and approved.'
-              : 'Organization created — pending approval.',
+            `Organization created. Login email + temporary password sent to ${emailedTo}.`,
           );
         }
         resetForm();
@@ -117,11 +136,20 @@ export function OrganizationsPanel() {
   };
 
   const approve = async (org: Organization) => {
+    const ok = await confirmAction({
+      title: 'Approve organization?',
+      text: `${org.name} and its pending users will become active.`,
+      icon: 'question',
+      confirmText: 'Yes, approve it!',
+      confirmColor: '#16a34a',
+    });
+    if (!ok) return;
     setError('');
     setMessage('');
     await withLoader(async () => {
       try {
         await organizationService.verifyOrganization(org.id);
+        await showSuccess('Approved!', `${org.name} can now access the platform.`);
         setMessage(`${org.name} approved. Pending users are now active.`);
         await load();
         await refreshOrganizations();
@@ -132,13 +160,17 @@ export function OrganizationsPanel() {
   };
 
   const remove = async (org: Organization) => {
-    if (!window.confirm(`Delete organization “${org.name}”? This soft-deletes the vendor.`)) {
-      return;
-    }
+    const ok = await confirmDelete({
+      title: 'Delete organization?',
+      text: `“${org.name}” will be soft-deleted. You won’t be able to revert this easily.`,
+      confirmText: 'Yes, delete it!',
+    });
+    if (!ok) return;
     setError('');
     await withLoader(async () => {
       try {
         await organizationService.deleteOrganization(org.id);
+        await showSuccess('Deleted!', `${org.name} has been removed.`);
         setMessage('Organization deleted.');
         if (editingId === org.id) resetForm();
         await load();
@@ -171,7 +203,11 @@ export function OrganizationsPanel() {
         <div className="col-lg-4">
           <EdtpPanel
             title={editingId ? 'Edit organization' : 'Add organization'}
-            subtitle={editingId ? 'Update details, then save.' : 'New vendors start as pending unless approved.'}
+            subtitle={
+              editingId
+                ? 'Update details, then save.'
+                : 'Creates org admin account and emails login + password.'
+            }
           >
             <EdtpField label="Name" htmlFor="orgName">
               <input
@@ -195,17 +231,63 @@ export function OrganizationsPanel() {
                 placeholder="sunrise-academy"
               />
             </EdtpField>
-            <label className="edtp-check-row">
+            <EdtpField
+              label={editingId ? 'Contact email' : 'Login email *'}
+              htmlFor="orgContact"
+              hint={
+                editingId
+                  ? 'Used for Super Admin notifications'
+                  : 'Org admin will log in with this email — password is auto-generated and emailed'
+              }
+            >
               <input
+                id="orgContact"
+                type="email"
+                className="register__input"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="admin@academy.com"
+                required={!editingId}
+              />
+            </EdtpField>
+            {!editingId && (
+              <>
+                <EdtpField label="Admin first name" htmlFor="orgAdminFirst">
+                  <input
+                    id="orgAdminFirst"
+                    className="register__input"
+                    value={adminFirstName}
+                    onChange={(e) => setAdminFirstName(e.target.value)}
+                    placeholder="Organization"
+                  />
+                </EdtpField>
+                <EdtpField label="Admin last name" htmlFor="orgAdminLast">
+                  <input
+                    id="orgAdminLast"
+                    className="register__input"
+                    value={adminLastName}
+                    onChange={(e) => setAdminLastName(e.target.value)}
+                    placeholder="Admin"
+                  />
+                </EdtpField>
+              </>
+            )}
+            <label className="edtp-check-row" htmlFor="orgApproveNow">
+              <input
+                id="orgApproveNow"
                 type="checkbox"
+                className="form-check-input edtp-check-row__input"
                 checked={activateNow}
                 onChange={(e) => setActivateNow(e.target.checked)}
               />
-              <span>Approve immediately (active)</span>
+              <span className="edtp-check-row__text">
+                <strong>Approve immediately</strong>
+                <small>Organization becomes active right away</small>
+              </span>
             </label>
             <EdtpFormActions>
               <EdtpBtn variant="primary" size="md" onClick={() => void save()}>
-                {editingId ? 'Update' : 'Create'}
+                {editingId ? 'Update' : 'Create & email login'}
               </EdtpBtn>
               {editingId && (
                 <EdtpBtn variant="ghost" size="md" onClick={resetForm}>

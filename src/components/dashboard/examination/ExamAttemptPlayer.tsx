@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { examinationService } from '@/services';
 import { parseApiError } from '@/lib/errors';
+import { confirmAction } from '@/lib/swal';
 import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { useExamProctoring } from '@/hooks/useExamProctoring';
 import { siteContent } from '@/data/siteContent';
@@ -201,7 +202,28 @@ export default function ExamAttemptPlayer() {
     window.setTimeout(() => setSaveMsg(''), 2000);
   };
 
-  const selectOption = async (questionId: string, optionId: string, currentSelected?: string[], multi = false) => {
+  const patchQuestionAnswer = (
+    questionId: string,
+    answer: NonNullable<AttemptQuestion['answer']>,
+  ) => {
+    setAttempt((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        questions: prev.questions.map((q) =>
+          q.question_id === questionId ? { ...q, answer } : q,
+        ),
+      };
+    });
+    setVisitedSet((prev) => new Set(prev).add(questionId));
+  };
+
+  const selectOption = (
+    questionId: string,
+    optionId: string,
+    currentSelected?: string[],
+    multi = false,
+  ) => {
     if (!attemptId) return;
     let selected: string[];
     if (multi) {
@@ -211,35 +233,55 @@ export default function ExamAttemptPlayer() {
     } else {
       selected = [optionId];
     }
-    await examinationService.saveAnswer(attemptId, questionId, { selectedOptionIds: selected });
-    setVisitedSet((prev) => new Set(prev).add(questionId));
+
+    patchQuestionAnswer(questionId, { selectedOptionIds: selected });
     flashSave();
-    await load(true);
+
+    void examinationService
+      .saveAnswer(attemptId, questionId, { selectedOptionIds: selected })
+      .catch((err) => setError(parseApiError(err)));
   };
 
-  const saveTextAnswer = async (questionId: string, value: string, field: 'text' | 'value') => {
+  const saveTextAnswer = (questionId: string, value: string, field: 'text' | 'value') => {
     if (!attemptId) return;
-    const answer = field === 'text' ? { text: value } : { value: Number(value) };
-    await examinationService.saveAnswer(attemptId, questionId, answer);
-    setVisitedSet((prev) => new Set(prev).add(questionId));
+    const answer =
+      field === 'text'
+        ? { text: value }
+        : { value: Number(value) };
+
+    patchQuestionAnswer(questionId, answer);
     flashSave();
-    await load(true);
+
+    void examinationService
+      .saveAnswer(attemptId, questionId, answer)
+      .catch((err) => setError(parseApiError(err)));
   };
 
-  const clearCurrentAnswer = async () => {
+  const clearCurrentAnswer = () => {
     if (!attemptId || !current) return;
-    await examinationService.saveAnswer(attemptId, current.question_id, {
-      selectedOptionIds: [],
-      text: '',
-      value: null,
-    });
+    const empty = { selectedOptionIds: [] as string[], text: '', value: undefined };
+    patchQuestionAnswer(current.question_id, empty);
     flashSave();
-    await load(true);
+
+    void examinationService
+      .saveAnswer(attemptId, current.question_id, {
+        selectedOptionIds: [],
+        text: '',
+        value: null,
+      })
+      .catch((err) => setError(parseApiError(err)));
   };
 
   const submit = async () => {
     if (!attemptId) return;
-    if (!window.confirm('Submit test? You cannot change answers after submission.')) return;
+    const ok = await confirmAction({
+      title: 'Submit test?',
+      text: 'You cannot change answers after submission.',
+      icon: 'warning',
+      confirmText: 'Yes, submit it!',
+      confirmColor: '#3085d6',
+    });
+    if (!ok) return;
     setSubmitting(true);
     try {
       const result = await examinationService.submitAttempt(attemptId, false);

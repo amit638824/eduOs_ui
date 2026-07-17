@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { getTestsListPath } from '@/utils/dashboardRole';
-import { FieldHint, SearchField } from '@/components/ui/FieldHint';
+import { SearchField } from '@/components/ui/FieldHint';
 import {
   EdtpAlert,
   EdtpBtn,
@@ -20,6 +20,7 @@ import {
   EdtpPanel,
   EdtpRowActions,
 } from '@/components/ui/CrudUI';
+import { confirmDelete, showSuccess } from '@/lib/swal';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
@@ -773,7 +774,12 @@ export function OrgStructurePanel() {
   };
 
   const deleteDept = async (id: string) => {
-    if (!window.confirm('Delete this department?')) return;
+    const ok = await confirmDelete({
+      title: 'Delete department?',
+      text: "You won't be able to revert this!",
+      confirmText: 'Yes, delete it!',
+    });
+    if (!ok) return;
     setError('');
     await withLoader(async () => {
       try {
@@ -782,6 +788,7 @@ export function OrgStructurePanel() {
           setEditingDeptId(null);
           setDeptName('');
         }
+        await showSuccess('Deleted!', 'Department has been deleted.');
         setMessage('Department deleted.');
         await reloadDepartments();
       } catch (err) {
@@ -942,14 +949,35 @@ export function TestBuilderPanel() {
     setLoading(true);
     setError('');
     try {
-      const [t, q, s] = await Promise.all([
+      const [tResult, qResult, sResult] = await Promise.allSettled([
         examinationService.getTest(testId),
         examinationService.listQuestions(1, 100, 'approved'),
-        examinationService.listAssignableStudents(1, 200),
+        examinationService.listAssignableStudents(1, 100),
       ]);
-      setTest(t as typeof test);
-      setBankQuestions(q.data);
-      setStudents(s.data.filter((st) => st.status === 'active'));
+
+      if (tResult.status === 'fulfilled') {
+        setTest(tResult.value as typeof test);
+      } else {
+        setError(parseApiError(tResult.reason));
+        return;
+      }
+
+      if (qResult.status === 'fulfilled') {
+        setBankQuestions(qResult.value.data);
+      } else {
+        setBankQuestions([]);
+        setError(parseApiError(qResult.reason));
+      }
+
+      if (sResult.status === 'fulfilled') {
+        setStudents(sResult.value.data.filter((st) => st.status === 'active'));
+      } else {
+        setStudents([]);
+        // Don't wipe test/questions if only students list failed
+        if (qResult.status === 'fulfilled') {
+          setError(parseApiError(sResult.reason));
+        }
+      }
     } catch (err) {
       setError(parseApiError(err));
     } finally {

@@ -16,6 +16,7 @@ import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpFormActions, EdtpRowActions } from '@/components/ui/CrudUI';
+import { confirmDelete, showSuccess } from '@/lib/swal';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
 
@@ -318,13 +319,18 @@ export function QuestionBankPanel() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this question?')) return;
+    const ok = await confirmDelete({
+      title: 'Delete question?',
+      text: "You won't be able to revert this!",
+      confirmText: 'Yes, delete it!',
+    });
+    if (!ok) return;
     setError('');
     await withLoader(async () => {
       try {
         await examinationService.deleteQuestion(id);
         if (editingId === id) resetQuestionFields();
-        setMessage('Question deleted.');
+        await showSuccess('Deleted!', 'Question has been deleted.');
         await loadQuestions();
       } catch (err) {
         setError(parseApiError(err));

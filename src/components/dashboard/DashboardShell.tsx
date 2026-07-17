@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useTheme } from '@/context/ThemeContext';
 import { DashboardLoadingProvider, useDashboardLoading } from '@/context/DashboardLoadingContext';
-import { OrgScopeProvider, useOrgScope } from '@/context/OrgScopeContext';
+import { useOrgScope } from '@/context/OrgScopeContext';
 import type { DashboardNavSection, DashboardProfile, DashboardRole } from '@/types/dashboard';
 import LoaderInner from '@/components/ui/LoaderInner';
 import DashboardSidebar from './DashboardSidebar';
@@ -25,18 +25,16 @@ export default function DashboardShell({
   children,
 }: DashboardShellProps) {
   return (
-    <OrgScopeProvider>
-      <DashboardLoadingProvider>
-        <DashboardShellInner
-          role={role}
-          profile={profile}
-          navigation={navigation}
-          onLogout={onLogout}
-        >
-          {children}
-        </DashboardShellInner>
-      </DashboardLoadingProvider>
-    </OrgScopeProvider>
+    <DashboardLoadingProvider>
+      <DashboardShellInner
+        role={role}
+        profile={profile}
+        navigation={navigation}
+        onLogout={onLogout}
+      >
+        {children}
+      </DashboardShellInner>
+    </DashboardLoadingProvider>
   );
 }
 

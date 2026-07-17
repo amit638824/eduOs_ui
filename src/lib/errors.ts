@@ -18,6 +18,19 @@ export class ApiError extends Error {
 export function parseApiError(error: unknown): string {
   if (axios.isAxiosError<ApiErrorResponse>(error)) {
     const payload = error.response?.data;
+    if (payload?.details && typeof payload.details === 'object') {
+      const details = payload.details as {
+        formErrors?: string[];
+        fieldErrors?: Record<string, string[] | undefined>;
+      };
+      const fieldMsgs = Object.entries(details.fieldErrors ?? {})
+        .flatMap(([field, msgs]) => (msgs ?? []).map((m) => `${field}: ${m}`));
+      const formMsgs = details.formErrors ?? [];
+      const combined = [...formMsgs, ...fieldMsgs].filter(Boolean);
+      if (combined.length) {
+        return combined.join(' · ');
+      }
+    }
     if (payload?.message) return payload.message;
     if (error.message) return error.message;
   }

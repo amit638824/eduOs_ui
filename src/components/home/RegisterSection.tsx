@@ -61,8 +61,8 @@ export default function RegisterSection({ variant = 'default' }: { variant?: 'de
       }
     >
       <div className="container">
-        <div className="row">
-          <div className="col-xl-7 col-lg-7 col-md-12 col-sm-12 col-12" data-aos="fade-up">
+        <div className="row align-items-center g-4">
+          <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12" data-aos="fade-up">
             <div className="registerarea__wraper">
               <div className="section__title registerarea__section__title">
                 <div className="section__title__button">
@@ -90,7 +90,7 @@ export default function RegisterSection({ variant = 'default' }: { variant?: 'de
             </div>
           </div>
 
-          <div className="col-xl-5 col-lg-5 col-md-12 col-sm-12 col-12" data-aos="fade-up">
+          <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12" data-aos="fade-up">
             <div className="registerarea__form">
               <div className="registerarea__form__heading">
                 <h4>{registerContent.formTitle}</h4>

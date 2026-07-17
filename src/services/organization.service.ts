@@ -24,9 +24,17 @@ export async function getOrganization(id: string): Promise<Organization> {
   return normalizeOrganization(data.data);
 }
 
-export async function createOrganization(input: CreateOrganizationInput): Promise<Organization> {
-  const { data } = await api.post<ApiResponse<Record<string, unknown>>>('/organizations', input);
-  return normalizeOrganization(data.data);
+export async function createOrganization(
+  input: CreateOrganizationInput,
+): Promise<Organization & { adminEmail?: string | null; credentialsEmailed?: boolean }> {
+  const { data } = await api.post<
+    ApiResponse<Record<string, unknown> & { adminEmail?: string | null; credentialsEmailed?: boolean }>
+  >('/organizations', input);
+  return {
+    ...normalizeOrganization(data.data),
+    adminEmail: (data.data.adminEmail as string | null | undefined) ?? null,
+    credentialsEmailed: Boolean(data.data.credentialsEmailed),
+  };
 }
 
 export async function updateOrganization(
@@ -39,6 +47,7 @@ export async function updateOrganization(
     logoUrl: input.logoUrl,
     theme: input.theme,
     settings: input.settings,
+    contactEmail: input.contactEmail,
     isActive: input.isActive,
   };
   const { data } = await api.patch<ApiResponse<Record<string, unknown>>>(

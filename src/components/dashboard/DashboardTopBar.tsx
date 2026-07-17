@@ -30,8 +30,11 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
         <DashboardBreadcrumb />
       </div>
 
-      <div className="sca-db-header__right">
+      <div className="sca-db-header__center">
         <OrgSwitcher />
+      </div>
+
+      <div className="sca-db-header__right">
         <button
           type="button"
           className="sca-db-icon-btn"
