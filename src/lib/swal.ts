@@ -1,4 +1,5 @@
 import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
 
 const base = Swal.mixin({
   buttonsStyling: true,
@@ -6,7 +7,7 @@ const base = Swal.mixin({
   heightAuto: false,
 });
 
-/** Delete / destructive confirm — returns true if user confirmed */
+/** Delete / destructive confirm — SweetAlert2 */
 export async function confirmDelete(options?: {
   title?: string;
   text?: string;
@@ -25,7 +26,7 @@ export async function confirmDelete(options?: {
   return result.isConfirmed;
 }
 
-/** Generic confirm (submit, approve, etc.) */
+/** Generic confirm (submit, activate, suspend, etc.) — SweetAlert2 */
 export async function confirmAction(options: {
   title?: string;
   text: string;
@@ -46,22 +47,23 @@ export async function confirmAction(options: {
   return result.isConfirmed;
 }
 
-export async function showSuccess(title: string, text?: string): Promise<void> {
-  await base.fire({
-    title,
-    text,
-    icon: 'success',
-    confirmButtonColor: '#3085d6',
-  });
+function toastMessage(title: string, text?: string) {
+  return text ? `${title} — ${text}` : title;
 }
 
-export async function showError(title: string, text?: string): Promise<void> {
-  await base.fire({
-    title,
-    text,
-    icon: 'error',
-    confirmButtonColor: '#d33',
-  });
+/** Success feedback — react-toastify (not a blocking modal) */
+export function showSuccess(title: string, text?: string): void {
+  toast.success(toastMessage(title, text));
 }
 
-export { Swal };
+/** Error feedback — react-toastify */
+export function showError(title: string, text?: string): void {
+  toast.error(toastMessage(title, text));
+}
+
+/** Info feedback — react-toastify */
+export function showInfo(title: string, text?: string): void {
+  toast.info(toastMessage(title, text));
+}
+
+export { Swal, toast };

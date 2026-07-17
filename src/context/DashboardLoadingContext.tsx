@@ -5,19 +5,23 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface DashboardLoadingContextValue {
   loading: boolean;
   setLoading: (id: string, active: boolean) => void;
+  clearAll: () => void;
 }
 
 const DashboardLoadingContext = createContext<DashboardLoadingContextValue | null>(null);
 
 export function DashboardLoadingProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<Set<string>>(() => new Set());
+  const location = useLocation();
 
   const setLoading = useCallback((id: string, active: boolean) => {
     setPending((prev) => {
@@ -31,9 +35,21 @@ export function DashboardLoadingProvider({ children }: { children: ReactNode }) 
     });
   }, []);
 
+  const clearAll = useCallback(() => {
+    setPending((prev) => (prev.size === 0 ? prev : new Set()));
+  }, []);
+
+  // Drop any stuck loaders when navigating between dashboard pages
+  useEffect(() => {
+    clearAll();
+  }, [location.pathname, clearAll]);
+
   const loading = pending.size > 0;
 
-  const value = useMemo(() => ({ loading, setLoading }), [loading, setLoading]);
+  const value = useMemo(
+    () => ({ loading, setLoading, clearAll }),
+    [loading, setLoading, clearAll],
+  );
 
   return (
     <DashboardLoadingContext.Provider value={value}>{children}</DashboardLoadingContext.Provider>
@@ -59,20 +75,34 @@ export function useDashboardLoadingEffect(loading: boolean) {
   }, [id, loading, setLoading]);
 }
 
-/** Wrap any async API call with the dashboard inner loader */
+/**
+ * Wrap async API work with the dashboard loader.
+ * Always finishes (finally) — keep SweetAlert / confirm dialogs OUTSIDE this wrapper
+ * so the spinner does not stay up while the user reads a popup.
+ */
 export function useDashboardLoader() {
-  const id = useId();
   const { setLoading } = useDashboardLoading();
+  const activeIds = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      activeIds.current.forEach((id) => setLoading(id, false));
+      activeIds.current.clear();
+    };
+  }, [setLoading]);
 
   return useCallback(
     async <T,>(fn: () => Promise<T>): Promise<T> => {
+      const id = `job-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      activeIds.current.add(id);
       setLoading(id, true);
       try {
         return await fn();
       } finally {
+        activeIds.current.delete(id);
         setLoading(id, false);
       }
     },
-    [id, setLoading],
+    [setLoading],
   );
 }

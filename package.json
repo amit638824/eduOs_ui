@@ -20,6 +20,7 @@
     "react-hook-form": "^7.81.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.1",
+    "react-toastify": "^11.1.0",
     "react-type-animation": "^3.2.0",
     "redux-persist": "^6.0.0",
     "sweetalert2": "^11.26.25",

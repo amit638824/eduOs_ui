@@ -170,6 +170,8 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
     setPaying(true);
     try {
       const order = await platformService.createRazorpayOrder(numAmount);
+      // Stop overlay before Razorpay modal — otherwise loader stays forever over checkout
+      setPaying(false);
       const rzp = new window.Razorpay({
         key: order.keyId,
         amount: order.amount,
@@ -184,6 +186,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
         theme: { color: '#2563eb' },
         modal: { ondismiss: () => setPaying(false) },
         handler: async (response) => {
+          setPaying(true);
           try {
             await platformService.verifyRazorpayPayment({
               paymentId: order.paymentId,
@@ -774,20 +777,20 @@ export function OrgStructurePanel() {
     });
     if (!ok) return;
     setError('');
-    await withLoader(async () => {
-      try {
+    try {
+      await withLoader(async () => {
         await platformService.deleteDepartment(id);
         if (editingDeptId === id) {
           setEditingDeptId(null);
           setDeptName('');
         }
-        await showSuccess('Deleted!', 'Department has been deleted.');
-        setMessage('Department deleted.');
         await reloadDepartments();
-      } catch (err) {
-        setError(parseApiError(err));
-      }
-    });
+      });
+      setMessage('Department deleted.');
+      showSuccess('Deleted!', 'Department has been deleted.');
+    } catch (err) {
+      setError(parseApiError(err));
+    }
   };
 
   return (

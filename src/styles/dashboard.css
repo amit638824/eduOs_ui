@@ -20,7 +20,7 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   --db-sidebar-w-collapsed: 72px;
   --db-sidebar-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --db-sidebar-duration: 0.24s;
-  --db-header-h: 64px;
+  --db-header-h: 72px;
   --db-accent: #3b82f6;
   --db-success: #22c55e;
 
@@ -1921,6 +1921,47 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--db-muted);
+}
+
+.sca-dashboard .edtp-status-switch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 148px;
+  vertical-align: middle;
+}
+
+.sca-dashboard .edtp-status-switch .edtp-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 92px;
+  line-height: 1.2;
+}
+
+.sca-dashboard .edtp-switch--compact {
+  display: inline-flex !important;
+  align-items: center;
+  width: auto;
+  margin: 0;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.sca-dashboard .edtp-switch--compact:hover {
+  background: transparent;
+  border: none;
+}
+
+.sca-dashboard .edtp-switch--compact .edtp-switch__track {
+  margin-top: 0;
+}
+
+.sca-dashboard .dashboard__table td .edtp-status-switch {
+  margin: 0;
 }
 
 /* Bootstrap grid fix inside dashboard */

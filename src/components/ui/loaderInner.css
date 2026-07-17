@@ -1,7 +1,10 @@
-/* Overlay only inside dashboard main content — not sidebar/header */
+/* Overlay fixed to visible main area — does not sink down on tall/scroll pages */
 .sca-loader-inner {
-  position: absolute;
-  inset: 0;
+  position: fixed;
+  top: var(--db-header-h, 72px);
+  left: var(--db-sidebar-w, 240px);
+  right: 0;
+  bottom: 0;
   z-index: 2000;
   display: flex;
   justify-content: center;
@@ -9,6 +12,18 @@
   background: rgba(0, 0, 0, 0.35);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  pointer-events: all;
+}
+
+.sca-dashboard--collapsed .sca-loader-inner {
+  left: var(--db-sidebar-w-collapsed, 72px);
+}
+
+@media (max-width: 991px) {
+  .sca-loader-inner,
+  .sca-dashboard--collapsed .sca-loader-inner {
+    left: 0;
+  }
 }
 
 .sca-dashboard.sca-dashboard--light .sca-loader-inner {
@@ -24,6 +39,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .sca-loader-inner__spinner {

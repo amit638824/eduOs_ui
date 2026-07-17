@@ -326,16 +326,16 @@ export function QuestionBankPanel() {
     });
     if (!ok) return;
     setError('');
-    await withLoader(async () => {
-      try {
+    try {
+      await withLoader(async () => {
         await examinationService.deleteQuestion(id);
         if (editingId === id) resetQuestionFields();
-        await showSuccess('Deleted!', 'Question has been deleted.');
         await loadQuestions();
-      } catch (err) {
-        setError(parseApiError(err));
-      }
-    });
+      });
+      showSuccess('Deleted!', 'Question has been deleted.');
+    } catch (err) {
+      setError(parseApiError(err));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

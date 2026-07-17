@@ -725,3 +725,54 @@ html {
 .dashboard__form__input .password-input-wrap input {
   padding-right: 48px !important;
 }
+
+/* react-toastify — light card style, not full colored bg */
+.Toastify {
+  z-index: 10050;
+}
+
+.Toastify__toast {
+  font-size: 0.875rem;
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14);
+  background: #fff !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0;
+  min-height: 56px;
+}
+
+.Toastify__toast-body {
+  color: #1e293b;
+  padding: 4px 0;
+  line-height: 1.4;
+}
+
+.Toastify__close-button {
+  color: #64748b !important;
+  opacity: 0.7;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+}
+
+.Toastify__progress-bar--success {
+  background: #22c55e !important;
+}
+
+.Toastify__progress-bar--error {
+  background: #ef4444 !important;
+}
+
+.Toastify__progress-bar--info {
+  background: #3b82f6 !important;
+}
+
+.Toastify__progress-bar--warning {
+  background: #f59e0b !important;
+}
+
+.Toastify__toast-icon svg {
+  width: 22px;
+  height: 22px;
+}

@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ToastContainer } from 'react-toastify';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { OrgScopeProvider } from '@/context/OrgScopeContext';
@@ -19,6 +20,7 @@ import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { dashboardRouteElements } from '@/pages/dashboard/dashboardRoutes';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
   return (
@@ -51,6 +53,17 @@ export default function App() {
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
             </Routes>
+            <ToastContainer
+              position="top-right"
+              autoClose={3200}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              pauseOnHover
+              draggable
+              theme="light"
+              toastClassName="sca-toast"
+            />
           </BrowserRouter>
         </OrgScopeProvider>
       </AuthProvider>

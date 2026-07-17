@@ -7,7 +7,7 @@ import LoaderInner from '@/components/ui/LoaderInner';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardTopBar from './DashboardTopBar';
 
-const COLLAPSE_KEY = 'sca-sidebar-collapsed';
+const COLLAPSE_KEY = 'sca-sidebar-collapsed-v2';
 
 interface DashboardShellProps {
   role: DashboardRole;
@@ -50,7 +50,8 @@ function DashboardShellInner({
   const { selectedOrgId, isSuperAdmin } = useOrgScope();
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem(COLLAPSE_KEY);
-    return stored === null ? true : stored === '1';
+    // Default: sidebar open (expanded)
+    return stored === null ? false : stored === '1';
   });
   const [mobileOpen, setMobileOpen] = useState(false);
 

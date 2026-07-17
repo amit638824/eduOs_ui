@@ -26,11 +26,7 @@ function slugify(name: string) {
 }
 
 function statusLabel(org: Organization) {
-  if (org.isActive) return 'Approved';
-  const v = org.settings?.verificationStatus;
-  if (v === 'suspended') return 'Suspended';
-  if (typeof v === 'string' && v !== 'verified') return v;
-  return 'Pending';
+  return org.isActive ? 'Activated' : 'Suspended';
 }
 
 /** Superadmin: add / edit / approve / delete vendor organizations */
@@ -43,7 +39,6 @@ export function OrganizationsPanel() {
   const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [adminFirstName, setAdminFirstName] = useState('Organization');
   const [adminLastName, setAdminLastName] = useState('Admin');
@@ -71,7 +66,6 @@ export function OrganizationsPanel() {
   const resetForm = () => {
     setEditingId(null);
     setName('');
-    setSlug('');
     setContactEmail('');
     setAdminFirstName('Organization');
     setAdminLastName('Admin');
@@ -81,7 +75,6 @@ export function OrganizationsPanel() {
   const startEdit = (org: Organization) => {
     setEditingId(org.id);
     setName(org.name);
-    setSlug(org.slug);
     setContactEmail(
       typeof org.settings?.contactEmail === 'string' ? org.settings.contactEmail : '',
     );
@@ -92,8 +85,9 @@ export function OrganizationsPanel() {
   };
 
   const save = async () => {
-    if (!name.trim() || !slug.trim()) {
-      setError('Name and slug are required.');
+    const nextSlug = slugify(name);
+    if (!name.trim() || !nextSlug) {
+      setError('Name is required.');
       return;
     }
     if (!editingId && !contactEmail.trim()) {
@@ -108,19 +102,19 @@ export function OrganizationsPanel() {
         if (editingId) {
           await organizationService.updateOrganization(editingId, {
             name: name.trim(),
-            slug: slug.trim(),
+            slug: nextSlug,
             contactEmail: contact || undefined,
             isActive: activateNow,
           });
           setMessage(
             activateNow
-              ? 'Organization updated and set to Approved / Active.'
-              : 'Organization updated and set to Pending / Suspended.',
+              ? 'Organization updated and set to Activated.'
+              : 'Organization updated and set to Suspended.',
           );
         } else {
           const created = await organizationService.createOrganization({
             name: name.trim(),
-            slug: slug.trim(),
+            slug: nextSlug,
             contactEmail: contact,
             adminFirstName: adminFirstName.trim() || 'Organization',
             adminLastName: adminLastName.trim() || 'Admin',
@@ -143,27 +137,27 @@ export function OrganizationsPanel() {
 
   const approve = async (org: Organization) => {
     const ok = await confirmAction({
-      title: 'Approve organization?',
+      title: 'Activate organization?',
       text: `${org.name} and its pending users will become active.`,
       icon: 'question',
-      confirmText: 'Yes, approve it!',
+      confirmText: 'Yes, activate!',
       confirmColor: '#16a34a',
     });
     if (!ok) return;
     setError('');
     setMessage('');
-    await withLoader(async () => {
-      try {
+    try {
+      await withLoader(async () => {
         await organizationService.verifyOrganization(org.id);
-        await showSuccess('Approved!', `${org.name} can now access the platform.`);
-        setMessage(`${org.name} approved. Pending users are now active.`);
         if (editingId === org.id) setActivateNow(true);
         await load();
         await refreshOrganizations();
-      } catch (err) {
-        setError(parseApiError(err));
-      }
-    });
+      });
+      setMessage(`${org.name} is now Activated.`);
+      showSuccess('Activated!', `${org.name} can now access the platform.`);
+    } catch (err) {
+      setError(parseApiError(err));
+    }
   };
 
   const suspend = async (org: Organization) => {
@@ -177,18 +171,18 @@ export function OrganizationsPanel() {
     if (!ok) return;
     setError('');
     setMessage('');
-    await withLoader(async () => {
-      try {
+    try {
+      await withLoader(async () => {
         await organizationService.updateOrganization(org.id, { isActive: false });
-        await showSuccess('Suspended', `${org.name} has been suspended.`);
-        setMessage(`${org.name} suspended. Account access is blocked until re-approved.`);
         if (editingId === org.id) setActivateNow(false);
         await load();
         await refreshOrganizations();
-      } catch (err) {
-        setError(parseApiError(err));
-      }
-    });
+      });
+      setMessage(`${org.name} suspended. Account access is blocked until re-approved.`);
+      showSuccess('Suspended', `${org.name} has been suspended.`);
+    } catch (err) {
+      setError(parseApiError(err));
+    }
   };
 
   const remove = async (org: Organization) => {
@@ -199,24 +193,24 @@ export function OrganizationsPanel() {
     });
     if (!ok) return;
     setError('');
-    await withLoader(async () => {
-      try {
+    try {
+      await withLoader(async () => {
         await organizationService.deleteOrganization(org.id);
-        await showSuccess('Deleted!', `${org.name} has been removed.`);
-        setMessage('Organization deleted.');
         if (editingId === org.id) resetForm();
         await load();
         await refreshOrganizations();
-      } catch (err) {
-        setError(parseApiError(err));
-      }
-    });
+      });
+      setMessage('Organization deleted.');
+      showSuccess('Deleted!', `${org.name} has been removed.`);
+    } catch (err) {
+      setError(parseApiError(err));
+    }
   };
 
   const manageData = (org: Organization) => {
     setSelectedOrganizationId(org.id);
     setSelectedOrgId(org.id);
-    setMessage(`Now managing data for ${org.name}. Use Users, Tests, Results from the sidebar.`);
+    setMessage(`Switched to ${org.name}. Use Users, Tests, Results from the sidebar.`);
   };
 
   return (
@@ -246,21 +240,8 @@ export function OrganizationsPanel() {
                 id="orgName"
                 className="register__input"
                 value={name}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setName(v);
-                  if (!editingId) setSlug(slugify(v));
-                }}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Sunrise Academy"
-              />
-            </EdtpField>
-            <EdtpField label="Slug" htmlFor="orgSlug" hint="URL-safe id — lowercase letters, numbers, hyphens">
-              <input
-                id="orgSlug"
-                className="register__input"
-                value={slug}
-                onChange={(e) => setSlug(slugify(e.target.value))}
-                placeholder="sunrise-academy"
               />
             </EdtpField>
             <EdtpField
@@ -316,11 +297,11 @@ export function OrganizationsPanel() {
                 <span className="edtp-switch__thumb" />
               </span>
               <span className="edtp-switch__text">
-                <strong>{activateNow ? 'Approved / Active' : 'Pending approval'}</strong>
+                <strong>{activateNow ? 'Activated' : 'Suspended'}</strong>
                 <small>
                   {activateNow
                     ? 'Organization can access the platform'
-                    : 'Organization stays inactive until approved'}
+                    : 'Organization stays inactive until activated'}
                 </small>
               </span>
             </button>
@@ -347,7 +328,6 @@ export function OrganizationsPanel() {
                   <thead>
                     <tr>
                       <th>Name</th>
-                      <th>Slug</th>
                       <th>Users</th>
                       <th>Status</th>
                       <th>Actions</th>
@@ -359,33 +339,35 @@ export function OrganizationsPanel() {
                         <td>
                           <strong>{org.name}</strong>
                         </td>
-                        <td>
-                          <span className="edtp-code">{org.slug}</span>
-                        </td>
                         <td>{org.usersCount ?? '—'}</td>
                         <td>
-                          <span
-                            className={`edtp-badge ${
-                              org.isActive ? 'edtp-badge--active' : 'edtp-badge--inactive'
-                            }`}
-                          >
-                            {statusLabel(org)}
-                          </span>
+                          <div className="edtp-status-switch">
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={org.isActive}
+                              aria-label={org.isActive ? 'Suspend organization' : 'Activate organization'}
+                              className={`edtp-switch edtp-switch--compact${org.isActive ? ' is-on' : ''}`}
+                              onClick={() => void (org.isActive ? suspend(org) : approve(org))}
+                            >
+                              <span className="edtp-switch__track" aria-hidden>
+                                <span className="edtp-switch__thumb" />
+                              </span>
+                            </button>
+                            <span
+                              className={`edtp-badge ${
+                                org.isActive ? 'edtp-badge--active' : 'edtp-badge--inactive'
+                              }`}
+                            >
+                              {statusLabel(org)}
+                            </span>
+                          </div>
                         </td>
                         <td>
                           <EdtpRowActions>
                             <EdtpBtn variant="secondary" onClick={() => manageData(org)}>
-                              Manage
+                              Switch to account
                             </EdtpBtn>
-                            {org.isActive ? (
-                              <EdtpBtn variant="danger" onClick={() => void suspend(org)}>
-                                Suspend
-                              </EdtpBtn>
-                            ) : (
-                              <EdtpBtn variant="success" onClick={() => void approve(org)}>
-                                Approve
-                              </EdtpBtn>
-                            )}
                             <EdtpBtn variant="secondary" onClick={() => startEdit(org)}>
                               Edit
                             </EdtpBtn>
