@@ -207,9 +207,10 @@
 }
 
 .exam-option {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: flex-start;
+  gap: 16px;
   width: 100%;
   margin: 0;
   padding: 12px 14px;
@@ -236,6 +237,7 @@
   flex-shrink: 0;
   width: 28px;
   height: 28px;
+  margin-top: 1px;
   border-radius: 50%;
   display: inline-flex;
   align-items: center;
@@ -253,10 +255,11 @@
 
 .exam-option__text {
   flex: 1;
+  min-width: 0;
   font-size: 0.9375rem;
-  line-height: 1.4;
+  line-height: 1.45;
   color: #1e293b;
-  padding: 0;
+  padding: 2px 0 0 4px;
   margin: 0;
 }
 

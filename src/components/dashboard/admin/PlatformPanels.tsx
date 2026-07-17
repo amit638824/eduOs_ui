@@ -650,11 +650,11 @@ export function ReportsPanel() {
   };
 
   const overviewCards = [
-    { key: 'users', label: 'Users', hint: 'Active accounts' },
-    { key: 'tests', label: 'Tests', hint: 'Created exams' },
-    { key: 'attempts', label: 'Attempts', hint: 'Student attempts' },
-    { key: 'revenue', label: 'Revenue', hint: 'Completed payments', prefix: '₹' },
-  ] as const;
+    { key: 'users' as const, label: 'Users', hint: 'Active accounts', prefix: '' },
+    { key: 'tests' as const, label: 'Tests', hint: 'Created exams', prefix: '' },
+    { key: 'attempts' as const, label: 'Attempts', hint: 'Student attempts', prefix: '' },
+    { key: 'revenue' as const, label: 'Revenue', hint: 'Completed payments', prefix: '₹' },
+  ];
 
   const results = report?.results ?? [];
   const stats = report?.stats;
