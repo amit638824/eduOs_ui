@@ -2,13 +2,13 @@ import * as yup from 'yup';
 
 export const passwordSchema = yup
   .string()
-  .required('Password is required')
-  .min(8, 'Password must be at least 8 characters')
-  .max(128, 'Password is too long')
-  .matches(/[A-Z]/, 'Password must contain an uppercase letter')
-  .matches(/[a-z]/, 'Password must contain a lowercase letter')
-  .matches(/[0-9]/, 'Password must contain a number')
-  .matches(/[^A-Za-z0-9]/, 'Password must contain a special character');
+  .required('Please enter a password.')
+  .min(8, 'Password must be at least 8 characters.')
+  .max(128, 'Password is too long.')
+  .matches(/[A-Z]/, 'Password must include at least one uppercase letter.')
+  .matches(/[a-z]/, 'Password must include at least one lowercase letter.')
+  .matches(/[0-9]/, 'Password must include at least one number.')
+  .matches(/[^A-Za-z0-9]/, 'Password must include at least one special character.');
 
 export const loginSchema = yup.object({
   email: yup.string().required('Email is required').email('Enter a valid email'),
@@ -134,16 +134,19 @@ export const searchSchema = yup.object({
 });
 
 export const forgotPasswordSchema = yup.object({
-  email: yup.string().required('Email is required').email('Enter a valid email'),
+  email: yup
+    .string()
+    .required('Please enter your email address.')
+    .email('Please enter a valid email address.'),
 });
 
 export const resetPasswordSchema = yup.object({
-  token: yup.string().required('Reset token is required'),
+  token: yup.string().required('Your reset link is missing or invalid. Please request a new one.'),
   password: passwordSchema,
   confirmPassword: yup
     .string()
-    .required('Please confirm your password')
-    .oneOf([yup.ref('password')], 'Passwords must match'),
+    .required('Please confirm your password.')
+    .oneOf([yup.ref('password')], 'Passwords do not match. Please try again.'),
 });
 
 export type LoginFormValues = yup.InferType<typeof loginSchema>;

@@ -23,6 +23,7 @@ export default function ResetPasswordPage() {
     formState: { errors },
   } = useForm<ResetPasswordFormValues>({
     resolver: yupResolver(resetPasswordSchema),
+    mode: 'onTouched',
     defaultValues: {
       token: tokenFromUrl,
       password: '',
@@ -39,7 +40,7 @@ export default function ResetPasswordPage() {
     setSubmitting(true);
     try {
       await authService.resetPassword(values.token, values.password);
-      setMessage('Password reset successful. Redirecting to login…');
+      setMessage('Your password has been reset. Redirecting to login…');
       window.setTimeout(() => navigate('/login'), 1800);
     } catch (err) {
       setApiError(parseApiError(err));
@@ -53,27 +54,45 @@ export default function ResetPasswordPage() {
       <Breadcrumb title="Reset Password" />
       <div className="loginarea auth-page-section">
         <div className="container">
-          <div className="row">
-            <div className="col-xl-6 col-md-8 offset-md-2" data-aos="fade-up">
-              <div className="loginarea__wraper">
+          <div className="row justify-content-center">
+            <div className="col-xl-5 col-lg-6 col-md-8" data-aos="fade-up">
+              <div className="loginarea__wraper auth-card">
                 <div className="login__heading">
-                  <h3 className="login__title">Set new password</h3>
-                  <p>Choose a strong password for your account.</p>
+                  <h3 className="login__title">Set a new password</h3>
+                  <p className="login__description">
+                    Choose a strong password for your account.
+                  </p>
                 </div>
+
                 {!tokenFromUrl && (
-                  <p className="login__error sp_bottom_15">
+                  <div className="auth-alert auth-alert--error" role="alert">
                     Reset link is missing or invalid.{' '}
                     <Link to="/forgot-password">Request a new link</Link>
-                  </p>
+                  </div>
                 )}
-                {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-                {message && <p className="form-success sp_bottom_15">{message}</p>}
+                {apiError && (
+                  <div className="auth-alert auth-alert--error" role="alert">
+                    {apiError}
+                  </div>
+                )}
+                {message && (
+                  <div className="auth-alert auth-alert--success" role="status">
+                    {message}
+                  </div>
+                )}
+
                 <form onSubmit={handleSubmit(onSubmit)} noValidate>
                   <input type="hidden" {...register('token')} />
                   <FormError message={errors.token?.message} />
-                  <div className="login__form sp_bottom_15">
+
+                  <div className="login__form">
+                    <label className="form__label" htmlFor="resetPassword">
+                      New password
+                    </label>
                     <PasswordInput
-                      placeholder="New password"
+                      id="resetPassword"
+                      inputClass="common__login__input"
+                      placeholder="Enter a new password"
                       hasError={!!errors.password}
                       autoComplete="new-password"
                       disabled={!tokenFromUrl || submitting}
@@ -81,9 +100,15 @@ export default function ResetPasswordPage() {
                     />
                     <FormError message={errors.password?.message} />
                   </div>
-                  <div className="login__form sp_bottom_15">
+
+                  <div className="login__form">
+                    <label className="form__label" htmlFor="resetConfirmPassword">
+                      Confirm password
+                    </label>
                     <PasswordInput
-                      placeholder="Confirm password"
+                      id="resetConfirmPassword"
+                      inputClass="common__login__input"
+                      placeholder="Re-enter your password"
                       hasError={!!errors.confirmPassword}
                       autoComplete="new-password"
                       disabled={!tokenFromUrl || submitting}
@@ -91,15 +116,19 @@ export default function ResetPasswordPage() {
                     />
                     <FormError message={errors.confirmPassword?.message} />
                   </div>
-                  <button
-                    type="submit"
-                    className="default__button auth-submit-btn w-100"
-                    disabled={!tokenFromUrl || submitting}
-                  >
-                    {submitting ? 'Saving…' : 'Reset Password'}
-                  </button>
+
+                  <div className="login__button">
+                    <button
+                      type="submit"
+                      className="default__button auth-submit-btn"
+                      disabled={!tokenFromUrl || submitting}
+                    >
+                      {submitting ? 'Saving…' : 'Reset password'}
+                    </button>
+                  </div>
                 </form>
-                <p className="sp_top_20 text-center">
+
+                <p className="auth-back-link">
                   <Link to="/login">Back to login</Link>
                 </p>
               </div>

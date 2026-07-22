@@ -12,23 +12,35 @@ export default function ForgotPasswordPage() {
   const [apiError, setApiError] = useState('');
   const [message, setMessage] = useState('');
   const [devToken, setDevToken] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ForgotPasswordFormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ForgotPasswordFormValues>({
     resolver: yupResolver(forgotPasswordSchema),
+    mode: 'onTouched',
     defaultValues: { email: '' },
   });
 
   const onSubmit = async (values: ForgotPasswordFormValues) => {
     setApiError('');
     setMessage('');
+    setSubmitting(true);
     try {
       const result = await authService.forgotPassword(values.email);
-      setMessage((result.message as string) ?? 'Check your email for reset instructions.');
+      setMessage(
+        (result.message as string) ??
+          'If an account exists for this email, you will receive reset instructions shortly.',
+      );
       if (result.devResetToken) {
         setDevToken(result.devResetToken as string);
       }
     } catch (err) {
       setApiError(parseApiError(err));
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -37,37 +49,60 @@ export default function ForgotPasswordPage() {
       <Breadcrumb title="Forgot Password" />
       <div className="loginarea auth-page-section">
         <div className="container">
-          <div className="row">
-            <div className="col-xl-6 col-md-8 offset-md-2" data-aos="fade-up">
-              <div className="loginarea__wraper">
+          <div className="row justify-content-center">
+            <div className="col-xl-5 col-lg-6 col-md-8" data-aos="fade-up">
+              <div className="loginarea__wraper auth-card">
                 <div className="login__heading">
                   <h3 className="login__title">Reset your password</h3>
-                  <p>Enter your email and we will send reset instructions.</p>
+                  <p className="login__description">
+                    Enter your email and we will send reset instructions.
+                  </p>
                 </div>
-                {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-                {message && <p className="form-success sp_bottom_15">{message}</p>}
+
+                {apiError && (
+                  <div className="auth-alert auth-alert--error" role="alert">
+                    {apiError}
+                  </div>
+                )}
+                {message && (
+                  <div className="auth-alert auth-alert--success" role="status">
+                    {message}
+                  </div>
+                )}
                 {devToken && (
-                  <p className="sp_bottom_15">
-                    Dev reset token: <code>{devToken}</code>{' '}
-                    <Link to={`/reset-password?token=${devToken}`}>Reset now</Link>
+                  <p className="login__hint auth-dev-token">
+                    Dev reset token:{' '}
+                    <Link to={`/reset-password?token=${devToken}`}>Open reset link</Link>
                   </p>
                 )}
+
                 <form onSubmit={handleSubmit(onSubmit)} noValidate>
                   <div className="login__form">
+                    <label className="form__label" htmlFor="forgotEmail">
+                      Email address
+                    </label>
                     <input
+                      id="forgotEmail"
                       type="email"
                       className={inputClassName('common__login__input', !!errors.email)}
-                      placeholder="Email"
-                      autoComplete="off"
+                      placeholder="you@example.com"
+                      autoComplete="email"
                       {...register('email')}
                     />
                     <FormError message={errors.email?.message} />
                   </div>
-                  <button type="submit" className="default__button auth-submit-btn w-100">
-                    Send Reset Link
-                  </button>
+                  <div className="login__button">
+                    <button
+                      type="submit"
+                      className="default__button auth-submit-btn"
+                      disabled={submitting}
+                    >
+                      {submitting ? 'Sending…' : 'Send reset link'}
+                    </button>
+                  </div>
                 </form>
-                <p className="sp_top_20 text-center">
+
+                <p className="auth-back-link">
                   <Link to="/login">Back to login</Link>
                 </p>
               </div>
