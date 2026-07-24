@@ -20,11 +20,19 @@ export const passwordSchema = yup
   .matches(/[^A-Za-z0-9]/, 'Password must include at least one special character.');
 
 export const loginSchema = yup.object({
-  email: yup
+  loginId: yup
     .string()
     .required('Email or enrollment number is required')
     .trim()
-    .max(255, 'Max 255 characters'),
+    .max(255, 'Max 255 characters')
+    .test('email-or-enrollment', 'Enter a valid email or enrollment number', (value) => {
+      if (!value?.trim()) return false;
+      const trimmed = value.trim();
+      if (trimmed.includes('@')) {
+        return yup.string().email().isValidSync(trimmed);
+      }
+      return trimmed.length >= 2;
+    }),
   password: yup.string().required('Password is required').max(128, 'Password is too long'),
 });
 

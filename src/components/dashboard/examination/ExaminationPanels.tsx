@@ -109,7 +109,6 @@ export function QuestionBankPanel() {
   const [optionTexts, setOptionTexts] = useState<string[]>(() => [...DEFAULT_OPTION_TEXTS]);
   const [correct, setCorrect] = useState('1');
   const [opt1, setOpt1] = useState('');
-  const [opt2, setOpt2] = useState('');
   const [message, setMessage] = useState('');
   const withLoader = useDashboardLoader();
 
@@ -237,7 +236,6 @@ export function QuestionBankPanel() {
     setNewQ('');
     setOptionTexts([...DEFAULT_OPTION_TEXTS]);
     setOpt1('');
-    setOpt2('');
     setCorrect('1');
     setQuestionType('mcq');
     setMarksInput(String(loadQbPrefs().marksPerQuestion ?? 1));
@@ -247,7 +245,6 @@ export function QuestionBankPanel() {
   const clearOptionInputs = () => {
     setOptionTexts([...DEFAULT_OPTION_TEXTS]);
     setOpt1('');
-    setOpt2('');
     setCorrect('1');
   };
 
@@ -354,12 +351,10 @@ export function QuestionBankPanel() {
           const trueOpt = opts.find((o) => o.content?.text === 'True');
           setCorrect(trueOpt?.is_correct ? 'true' : 'false');
           setOpt1('');
-          setOpt2('');
         } else if (q.type === 'fill_blank' || q.type === 'integer' || q.type === 'numerical') {
           const text = opts[0]?.content?.text;
           const value = opts[0]?.content?.value;
           setOpt1(text != null ? String(text) : value != null ? String(value) : '');
-          setOpt2('');
           setCorrect('1');
         } else {
           const count = Math.min(5, Math.max(2, opts.length || 4)) as McqOptionCount;
@@ -370,7 +365,6 @@ export function QuestionBankPanel() {
           const correctIdx = opts.findIndex((o) => o.is_correct ?? o.isCorrect);
           setCorrect(String(correctIdx >= 0 ? correctIdx + 1 : 1));
           setOpt1('');
-          setOpt2('');
         }
         if (q.marks != null) {
           setMarksInput(String(q.marks));

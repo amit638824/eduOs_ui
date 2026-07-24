@@ -26,7 +26,7 @@ export default function LoginPage() {
     resolver: yupResolver(loginSchema),
     mode: 'onTouched',
     reValidateMode: 'onChange',
-    defaultValues: { email: '', password: '' },
+    defaultValues: { loginId: '', password: '' },
   });
 
   const {
@@ -44,7 +44,10 @@ export default function LoginPage() {
     setApiError('');
     setSubmitting(true);
     try {
-      const result = await login(values);
+      const result = await login({
+        email: values.loginId.trim(),
+        password: values.password,
+      });
       if (typeof result === 'object' && 'requiresMfa' in result && result.requiresMfa) {
         setMfaToken(result.mfaToken);
         return;
@@ -142,18 +145,19 @@ export default function LoginPage() {
                     <form onSubmit={handleLoginSubmit(onLogin)} noValidate autoComplete="off">
                       {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
                       <div className="login__form">
-                        <label className="form__label" htmlFor="loginEmail">
+                        <label className="form__label" htmlFor="loginId">
                           Email or Enrollment No.
                         </label>
                         <input
-                          id="loginEmail"
-                          className={inputClassName('common__login__input', !!loginErrors.email)}
+                          id="loginId"
+                          className={inputClassName('common__login__input', !!loginErrors.loginId)}
                           type="text"
+                          inputMode="text"
                           placeholder="you@example.com or ENR-2026-0001"
                           autoComplete="username"
-                          {...registerLogin('email')}
+                          {...registerLogin('loginId')}
                         />
-                        <FormError message={loginErrors.email?.message} />
+                        <FormError message={loginErrors.loginId?.message} />
                       </div>
                       <div className="login__form">
                         <label className="form__label" htmlFor="loginPassword">
@@ -225,6 +229,7 @@ export default function LoginPage() {
                           className={inputClassName('common__login__input', !!signupErrors.email)}
                           type="email"
                           placeholder="you@school.edu"
+                          autoComplete="email"
                           {...registerSignup('email')}
                         />
                         <FormError message={signupErrors.email?.message} />
