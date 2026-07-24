@@ -1379,6 +1379,33 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   flex-direction: column;
 }
 
+.edtp-form-card .edtp-field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.edtp-form-card .edtp-field__hint {
+  min-height: 2.25rem;
+  line-height: 1.35;
+}
+
+.edtp-form-col-spacer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sca-dashboard .register__input.edtp-number-input {
+  height: 44px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.sca-dashboard .register__input.edtp-number-input::-webkit-outer-spin-button,
+.sca-dashboard .register__input.edtp-number-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 .sca-exam-guide {
   margin: 0 0 20px;
   padding: clamp(16px, 2.5vw, 24px);

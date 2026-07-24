@@ -15,7 +15,7 @@ import ExamAttemptPlayer from './ExamAttemptPlayer';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
-import { EdtpBtn, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
+import { EdtpBtn, EdtpField, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete, showSuccess } from '@/lib/swal';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
@@ -39,21 +39,29 @@ function needsAnswerOnly(type: QuestionType) {
 
 const QB_PREFS_KEY = 'edutech.questionBank.hierarchy';
 
-function loadQbPrefs(): { departmentId?: string; subjectId?: string; topicId?: string } {
+type McqOptionCount = 2 | 3 | 4 | 5;
+
+type QbPrefs = {
+  departmentId?: string;
+  subjectId?: string;
+  topicId?: string;
+  marksPerQuestion?: number;
+  optionCount?: McqOptionCount;
+};
+
+function loadQbPrefs(): QbPrefs {
   try {
-    return JSON.parse(localStorage.getItem(QB_PREFS_KEY) || '{}') as {
-      departmentId?: string;
-      subjectId?: string;
-      topicId?: string;
-    };
+    return JSON.parse(localStorage.getItem(QB_PREFS_KEY) || '{}') as QbPrefs;
   } catch {
     return {};
   }
 }
 
-function saveQbPrefs(departmentId: string, subjectId: string, topicId: string) {
-  localStorage.setItem(QB_PREFS_KEY, JSON.stringify({ departmentId, subjectId, topicId }));
+function saveQbPrefs(prefs: QbPrefs) {
+  localStorage.setItem(QB_PREFS_KEY, JSON.stringify({ ...loadQbPrefs(), ...prefs }));
 }
+
+const DEFAULT_OPTION_TEXTS = ['', '', '', '', ''];
 
 export function QuestionBankPanel() {
   const { user } = useAuth();
@@ -86,9 +94,12 @@ export function QuestionBankPanel() {
   const [error, setError] = useState('');
   const [newQ, setNewQ] = useState('');
   const [questionType, setQuestionType] = useState<QuestionType>('mcq');
+  const [marksPerQuestion, setMarksPerQuestion] = useState(() => loadQbPrefs().marksPerQuestion ?? 1);
+  const [optionCount, setOptionCount] = useState<McqOptionCount>(() => loadQbPrefs().optionCount ?? 4);
+  const [optionTexts, setOptionTexts] = useState<string[]>(() => [...DEFAULT_OPTION_TEXTS]);
+  const [correct, setCorrect] = useState('1');
   const [opt1, setOpt1] = useState('');
   const [opt2, setOpt2] = useState('');
-  const [correct, setCorrect] = useState('1');
   const [message, setMessage] = useState('');
   const withLoader = useDashboardLoader();
 
@@ -110,8 +121,16 @@ export function QuestionBankPanel() {
   }, []);
 
   useEffect(() => {
-    saveQbPrefs(departmentId, subjectId, topicId);
+    saveQbPrefs({ departmentId, subjectId, topicId });
   }, [departmentId, subjectId, topicId]);
+
+  useEffect(() => {
+    saveQbPrefs({ marksPerQuestion });
+  }, [marksPerQuestion]);
+
+  useEffect(() => {
+    saveQbPrefs({ optionCount });
+  }, [optionCount]);
 
   useEffect(() => {
     const branchId = branches[0]?.id;
@@ -203,11 +222,34 @@ export function QuestionBankPanel() {
 
   const resetQuestionFields = () => {
     setNewQ('');
+    setOptionTexts([...DEFAULT_OPTION_TEXTS]);
     setOpt1('');
     setOpt2('');
     setCorrect('1');
     setQuestionType('mcq');
     setEditingId(null);
+  };
+
+  const clearOptionInputs = () => {
+    setOptionTexts([...DEFAULT_OPTION_TEXTS]);
+    setOpt1('');
+    setOpt2('');
+    setCorrect('1');
+  };
+
+  const handleOptionCountChange = (count: McqOptionCount) => {
+    setOptionCount(count);
+    if (Number(correct) > count) {
+      setCorrect('1');
+    }
+  };
+
+  const handleOptionTextChange = (index: number, value: string) => {
+    setOptionTexts((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
   };
 
   const buildOptions = () => {
@@ -223,10 +265,10 @@ export function QuestionBankPanel() {
     if (questionType === 'integer' || questionType === 'numerical') {
       return [{ content: { value: Number(opt1) || 0 }, isCorrect: true }];
     }
-    return [
-      { content: { text: opt1 }, isCorrect: correct === '1' },
-      { content: { text: opt2 }, isCorrect: correct === '2' },
-    ];
+    return optionTexts.slice(0, optionCount).map((text, index) => ({
+      content: { text },
+      isCorrect: correct === String(index + 1),
+    }));
   };
 
   const handleDepartmentChange = (id: string) => {
@@ -306,9 +348,18 @@ export function QuestionBankPanel() {
           setOpt2('');
           setCorrect('1');
         } else {
-          setOpt1(opts[0]?.content?.text ?? '');
-          setOpt2(opts[1]?.content?.text ?? '');
-          setCorrect(opts[1]?.is_correct ? '2' : '1');
+          const count = Math.min(5, Math.max(2, opts.length || 4)) as McqOptionCount;
+          setOptionCount(count);
+          setOptionTexts(
+            Array.from({ length: 5 }, (_, i) => opts[i]?.content?.text ?? ''),
+          );
+          const correctIdx = opts.findIndex((o) => o.is_correct ?? o.isCorrect);
+          setCorrect(String(correctIdx >= 0 ? correctIdx + 1 : 1));
+          setOpt1('');
+          setOpt2('');
+        }
+        if (q.marks != null) {
+          setMarksPerQuestion(q.marks);
         }
         setMessage('Editing question — update and save, or cancel.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -346,10 +397,14 @@ export function QuestionBankPanel() {
       setError('Select department, subject, and topic before saving a question.');
       return;
     }
+    if (marksPerQuestion < 1) {
+      setError('Marks per question must be at least 1.');
+      return;
+    }
     const payload = {
       type: questionType,
       content: { text: newQ },
-      marks: 1,
+      marks: marksPerQuestion,
       difficulty: 2,
       topicId,
       options: buildOptions(),
@@ -369,9 +424,7 @@ export function QuestionBankPanel() {
             setMessage('Question created (pending approval). Hierarchy kept for next question.');
           }
           setNewQ('');
-          setOpt1('');
-          setOpt2('');
-          setCorrect('1');
+          clearOptionInputs();
         }
         await loadQuestions();
       } catch (err) {
@@ -515,20 +568,53 @@ export function QuestionBankPanel() {
             </div>
 
             <div className="col-md-4">
-              <label className="form-label">Question Type</label>
-              <EdtpSelect
-                value={questionType}
-                onChange={(e) => {
-                  setQuestionType(e.target.value as QuestionType);
-                  setOpt1('');
-                  setOpt2('');
-                  setCorrect('1');
-                }}
+              <EdtpField label="Question Type" hint="Choose how students will answer.">
+                <EdtpSelect
+                  value={questionType}
+                  onChange={(e) => {
+                    setQuestionType(e.target.value as QuestionType);
+                    clearOptionInputs();
+                  }}
+                >
+                  {(Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]).map((t) => (
+                    <option key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</option>
+                  ))}
+                </EdtpSelect>
+              </EdtpField>
+            </div>
+            <div className="col-md-4">
+              <EdtpField label="Marks per Question" hint="Stays selected until you change it.">
+                <input
+                  type="number"
+                  className="register__input edtp-number-input"
+                  min={1}
+                  step={1}
+                  value={marksPerQuestion}
+                  onChange={(e) => setMarksPerQuestion(Math.max(1, Number(e.target.value) || 1))}
+                  required
+                />
+              </EdtpField>
+            </div>
+            <div className="col-md-4">
+              <EdtpField
+                label="Number of Options"
+                hint={
+                  needsTwoOptions(questionType)
+                    ? 'Default 4. Stays selected until you change it.'
+                    : 'Available for MCQ and MSQ only.'
+                }
               >
-                {(Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]).map((t) => (
-                  <option key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</option>
-                ))}
-              </EdtpSelect>
+                <EdtpSelect
+                  value={optionCount}
+                  disabled={!needsTwoOptions(questionType)}
+                  onChange={(e) => handleOptionCountChange(Number(e.target.value) as McqOptionCount)}
+                >
+                  <option value={2}>2 options</option>
+                  <option value={3}>3 options</option>
+                  <option value={4}>4 options</option>
+                  <option value={5}>5 options</option>
+                </EdtpSelect>
+              </EdtpField>
             </div>
             <div className="col-12">
               <label className="form-label">Question Text</label>
@@ -565,21 +651,33 @@ export function QuestionBankPanel() {
             )}
             {needsTwoOptions(questionType) && (
               <>
-                <div className="col-md-5">
-                  <label className="form-label">Option 1</label>
-                  <input className="register__input" value={opt1} onChange={(e) => setOpt1(e.target.value)} required />
+                {Array.from({ length: optionCount }, (_, index) => (
+                  <div key={index} className="col-md-4">
+                    <EdtpField label={`Option ${index + 1}`}>
+                      <input
+                        className="register__input"
+                        value={optionTexts[index] ?? ''}
+                        onChange={(e) => handleOptionTextChange(index, e.target.value)}
+                        required
+                      />
+                    </EdtpField>
+                  </div>
+                ))}
+                <div className="col-md-4">
+                  <EdtpField label="Correct">
+                    <EdtpSelect value={correct} onChange={(e) => setCorrect(e.target.value)}>
+                      {Array.from({ length: optionCount }, (_, index) => (
+                        <option key={index} value={String(index + 1)}>
+                          Option {index + 1}
+                        </option>
+                      ))}
+                    </EdtpSelect>
+                  </EdtpField>
                 </div>
-                <div className="col-md-5">
-                  <label className="form-label">Option 2</label>
-                  <input className="register__input" value={opt2} onChange={(e) => setOpt2(e.target.value)} required />
-                </div>
-                <div className="col-md-2">
-                  <label className="form-label">Correct</label>
-                  <EdtpSelect value={correct} onChange={(e) => setCorrect(e.target.value)}>
-                    <option value="1">Option 1</option>
-                    <option value="2">Option 2</option>
-                  </EdtpSelect>
-                </div>
+                {(optionCount + 1) % 3 !== 0 &&
+                  Array.from({ length: 3 - ((optionCount + 1) % 3) }, (_, i) => (
+                    <div key={`opt-spacer-${i}`} className="col-md-4 edtp-form-col-spacer" aria-hidden />
+                  ))}
               </>
             )}
             <div className="col-12">
