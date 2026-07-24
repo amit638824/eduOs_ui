@@ -4,6 +4,7 @@ import { resolveHeaderNavigation } from '@/data/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { getDefaultDashboardPath } from '@/utils/dashboardRole';
 import HamburgerIcon from '@/components/ui/HamburgerIcon';
+import DarkModeSwitcher from './DarkModeSwitcher';
 
 export default function Header() {
   const { brand } = siteContent;
@@ -53,6 +54,7 @@ export default function Header() {
 
             <div className="col-xl-3 col-lg-3 col-md-6">
               <div className="headerarea__right">
+                <DarkModeSwitcher variant="inline" />
                 {user ? (
                   <>
                     <div className="headerarea__login">
@@ -79,7 +81,7 @@ export default function Header() {
                   </>
                 )}
                 <div className="mobile-off-canvas">
-                  <a className="mobile-aside-button sca-hamburger-btn" href="#" aria-label="Open menu">
+                  <a className="mobile-aside-button sca-hamburger-btn" href="#" aria-label="Open menu" onClick={(e) => e.preventDefault()}>
                     <HamburgerIcon />
                   </a>
                 </div>

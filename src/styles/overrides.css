@@ -38,11 +38,22 @@
   color: var(--primaryColor, #5f2ded);
 }
 
-/* Keep theme toggle fully on-screen (template used right: -50px which clipped + caused overflow) */
-.mode_switcher.my_switcher {
+/* Floating theme toggle — mobile/tablet only (desktop uses inline toggle in header) */
+.mode_switcher.my_switcher:not(.mode_switcher--inline) {
   z-index: 99999;
   right: 0;
-  top: 120px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+@media (min-width: 992px) {
+  .mode_switcher.my_switcher:not(.mode_switcher--inline) {
+    display: none;
+  }
+
+  .headerarea__right .mobile-off-canvas {
+    display: none !important;
+  }
 }
 
 .mode_switcher.my_switcher button {
@@ -52,12 +63,51 @@
   padding: 10px 12px;
 }
 
-.mode_switcher.my_switcher button span {
+.mode_switcher.my_switcher:not(.mode_switcher--inline) button span {
   display: none;
 }
 
-.mode_switcher.my_switcher button svg {
+.mode_switcher.my_switcher:not(.mode_switcher--inline) button svg {
   margin-right: 0;
+}
+
+/* Inline theme toggle in header */
+.mode_switcher--inline {
+  position: static;
+  right: auto;
+  top: auto;
+  transform: none;
+  z-index: auto;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.mode_switcher--inline button {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0 !important;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.mode_switcher--inline button span {
+  display: none !important;
+}
+
+.mode_switcher--inline button svg {
+  margin-right: 0 !important;
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 991px) {
+  .mode_switcher--inline {
+    display: none !important;
+  }
 }
 
 /* ── Footer fixes ── */
@@ -414,11 +464,68 @@
   transform: rotate(-45deg);
 }
 
-.sca-hamburger-btn--close.mobile-aside-close {
-  top: 20px;
-  right: 20px;
+/* ── Mobile off-canvas drawer ── */
+@media (max-width: 991px) {
+  .desktop__menu__wrapper {
+    display: block !important;
+  }
+
+  .desktop__menu__wrapper .main_menu_wrap {
+    display: none !important;
+  }
+
+  .desktop__menu__wrapper .headerarea__login,
+  .desktop__menu__wrapper .headerarea__button {
+    display: none !important;
+  }
+
+  .desktop__menu__wrapper > .row {
+    align-items: center;
+  }
+
+  .desktop__menu__wrapper .headerarea__right {
+    justify-content: flex-end;
+  }
+}
+
+body.mobile-menu-open {
+  overflow: hidden;
+}
+
+body.mobile-menu-open .mode_switcher.my_switcher {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.mobile-off-canvas-active {
+  z-index: 10000 !important;
+  overflow: hidden;
+}
+
+.wrapper .body-overlay,
+.main_wrapper .body-overlay {
+  z-index: 9999;
+}
+
+.mobile-off-canvas-active .mobile-aside-close.sca-hamburger-btn--close {
+  left: auto !important;
+  right: 16px;
+  top: 16px;
+  position: absolute;
+  z-index: 3;
   font-size: inherit;
   background: #fff;
+}
+
+.mobile-off-canvas-active .header-mobile-aside-wrap {
+  padding-top: 72px;
+}
+
+@media (max-width: 767px) {
+  .mobile-off-canvas-active .header-mobile-aside-wrap {
+    padding-top: 64px;
+  }
 }
 
 .sca-hamburger-btn--close.mobile-aside-close i {
@@ -461,6 +568,10 @@
 
 .is_dark .sca-hamburger-btn--close.mobile-aside-close {
   background: #1a2347;
+}
+
+.is_dark .mode_switcher--inline button {
+  box-shadow: none;
 }
 
 

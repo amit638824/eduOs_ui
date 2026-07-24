@@ -20,20 +20,32 @@
             var navbarTrigger = $('.mobile-aside-button'),
                 endTrigger = $('.mobile-aside-close'),
                 container = $('.mobile-off-canvas-active'),
-                wrapper = $('.wrapper');
-            wrapper.prepend('<div class="body-overlay"></div>');
+                wrapper = $('.wrapper, .main_wrapper');
+
+            function closeMobileMenu() {
+                container.removeClass('inside');
+                wrapper.removeClass('overlay-active');
+                $('body').removeClass('mobile-menu-open');
+            }
+
+            wrapper.each(function() {
+                if (!$(this).children('.body-overlay').length) {
+                    $(this).prepend('<div class="body-overlay"></div>');
+                }
+            });
+
             navbarTrigger.on('click', function(e) {
                 e.preventDefault();
                 container.addClass('inside');
                 wrapper.addClass('overlay-active');
+                $('body').addClass('mobile-menu-open');
             });
-            endTrigger.on('click', function() {
-                container.removeClass('inside');
-                wrapper.removeClass('overlay-active');
+            endTrigger.on('click', function(e) {
+                e.preventDefault();
+                closeMobileMenu();
             });
             $('.body-overlay').on('click', function() {
-                container.removeClass('inside');
-                wrapper.removeClass('overlay-active');
+                closeMobileMenu();
             });
         };
         headermobileAside();

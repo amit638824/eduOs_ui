@@ -42,7 +42,7 @@ export default function MobileMenu() {
 
   return (
     <div className="mobile-off-canvas-active">
-      <a className="mobile-aside-close sca-hamburger-btn sca-hamburger-btn--close" href="#" aria-label="Close menu">
+      <a className="mobile-aside-close sca-hamburger-btn sca-hamburger-btn--close" href="#" aria-label="Close menu" onClick={(e) => e.preventDefault()}>
         <HamburgerIcon open />
       </a>
       <div className="header-mobile-aside-wrap">

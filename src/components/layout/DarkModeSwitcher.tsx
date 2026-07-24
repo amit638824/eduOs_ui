@@ -1,10 +1,14 @@
 import { useTheme } from '@/context/ThemeContext';
 
-export default function DarkModeSwitcher() {
+type DarkModeSwitcherProps = {
+  variant?: 'floating' | 'inline';
+};
+
+export default function DarkModeSwitcher({ variant = 'floating' }: DarkModeSwitcherProps) {
   const { isDark, toggleTheme } = useTheme();
 
   return (
-    <div className="mode_switcher my_switcher">
+    <div className={`mode_switcher my_switcher${variant === 'inline' ? ' mode_switcher--inline' : ''}`}>
       <button
         type="button"
         className={`light align-items-center${isDark ? ' dark--mode' : ''}`}
