@@ -16,6 +16,8 @@ export function inputClassName(baseClass: string, hasError?: boolean) {
 interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
   hasError?: boolean;
   inputClass?: string;
+  /** Show password as plain text on first render (dashboard create forms with a suggested default). */
+  defaultVisible?: boolean;
 }
 
 function EyeIcon({ open }: { open: boolean }) {
@@ -59,8 +61,11 @@ function EyeIcon({ open }: { open: boolean }) {
 }
 
 export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
-  function PasswordInput({ hasError, inputClass = '', className, ...props }, ref) {
-    const [visible, setVisible] = useState(false);
+  function PasswordInput(
+    { hasError, inputClass = '', className, defaultVisible = false, ...props },
+    ref,
+  ) {
+    const [visible, setVisible] = useState(defaultVisible);
     const fieldClass = inputClass || className || '';
 
     return (

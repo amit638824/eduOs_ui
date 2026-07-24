@@ -1,4 +1,13 @@
 import * as yup from 'yup';
+import { parsePositiveIntInput } from '@/utils/positiveIntInput';
+
+const durationMinutesField = yup
+  .string()
+  .required('Duration is required')
+  .test('min-duration', 'Duration must be at least 1 minute', (value) => {
+    const parsed = parsePositiveIntInput(value ?? '');
+    return parsed != null && parsed >= 1;
+  });
 
 export const passwordSchema = yup
   .string()
@@ -11,7 +20,11 @@ export const passwordSchema = yup
   .matches(/[^A-Za-z0-9]/, 'Password must include at least one special character.');
 
 export const loginSchema = yup.object({
-  email: yup.string().required('Email is required').email('Enter a valid email'),
+  email: yup
+    .string()
+    .required('Email or enrollment number is required')
+    .trim()
+    .max(255, 'Max 255 characters'),
   password: yup.string().required('Password is required').max(128, 'Password is too long'),
 });
 
@@ -87,7 +100,7 @@ export const quickSignupSchema = yup.object({
 
 export const createTestApiSchema = yup.object({
   title: yup.string().required('Exam title is required').trim().min(3).max(255),
-  duration: yup.string().required('Duration is required'),
+  duration: durationMinutesField,
   description: yup.string().trim().max(2000).optional().default(''),
   departmentId: yup.string().required('Department is required'),
   subjectId: yup.string().required('Subject is required'),
@@ -104,7 +117,7 @@ export const createTestSchema = yup.object({
     .trim()
     .matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use lowercase letters, numbers, and hyphens only'),
   category: yup.string().required('Category is required'),
-  duration: yup.string().required('Duration is required'),
+  duration: durationMinutesField,
   description: yup.string().trim().max(2000, 'Description is too long').optional().default(''),
 });
 

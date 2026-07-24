@@ -34,6 +34,7 @@ export interface PlatformUser {
   phone?: string;
   status: string;
   roles: string[];
+  enrollment_no?: string | null;
   created_at: string;
 }
 
@@ -144,6 +145,13 @@ export async function listUsers(page = 1, limit = 20, search?: string, role?: st
   return data;
 }
 
+export async function previewEnrollmentNumber() {
+  const { data } = await api.get<ApiResponse<{ enrollmentNo: string }>>(
+    `${base}/users/enrollment-number/preview`,
+  );
+  return data.data.enrollmentNo;
+}
+
 export async function createUser(input: {
   email: string;
   password: string;
@@ -151,6 +159,7 @@ export async function createUser(input: {
   lastName: string;
   phone?: string;
   role: 'student' | 'teacher' | 'org_admin';
+  enrollmentNo?: string;
 }) {
   const { data } = await api.post<ApiResponse<PlatformUser>>(`${base}/users`, input);
   return data.data;
@@ -163,6 +172,7 @@ export async function updateUser(
     lastName?: string;
     phone?: string;
     role?: 'student' | 'teacher' | 'org_admin';
+    enrollmentNo?: string;
   },
 ) {
   const { data } = await api.patch<ApiResponse<PlatformUser>>(`${base}/users/${userId}`, input);

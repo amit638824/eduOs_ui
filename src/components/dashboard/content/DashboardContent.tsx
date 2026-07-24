@@ -10,6 +10,7 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { organizationService, platformService } from '@/services';
 import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
+import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
 import { EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete } from '@/lib/swal';
@@ -866,6 +867,7 @@ function CreateTestInfoForm() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<CreateTestFormValues>({
     resolver: yupResolver(createTestSchema),
@@ -932,17 +934,26 @@ function CreateTestInfoForm() {
             </div>
           </div>
           <div className="col-xl-6 col-lg-6 sp_bottom_20">
-            <div className="dashboard__select__heading">
-              <span>Duration (minutes)</span>
-            </div>
-            <div className="dashboard__selector">
-              <EdtpSelect {...register('duration')}>
-                <option value="60">60 min</option>
-                <option value="90">90 min</option>
-                <option value="120">120 min</option>
-                <option value="180">180 min</option>
-              </EdtpSelect>
-              <FormError message={errors.duration?.message} />
+            <div className="dashboard__form__wraper">
+              <div className="dashboard__form__input">
+                <label htmlFor="examDuration">Duration (minutes)</label>
+                <input
+                  id="examDuration"
+                  type="number"
+                  min={1}
+                  step={1}
+                  placeholder="e.g. 90"
+                  className={inputClassName('register__input edtp-number-input', !!errors.duration)}
+                  {...register('duration', {
+                    onBlur: (e) => {
+                      setValue('duration', normalizePositiveIntInput(e.target.value, 60), {
+                        shouldValidate: true,
+                      });
+                    },
+                  })}
+                />
+                <FormError message={errors.duration?.message} />
+              </div>
             </div>
           </div>
           <div className="col-xl-12 sp_bottom_20">

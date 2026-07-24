@@ -18,6 +18,7 @@ import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpField, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete, showSuccess } from '@/lib/swal';
 import { formatDateTime } from '@/utils/dateFormat';
+import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
 
@@ -64,6 +65,14 @@ function saveQbPrefs(prefs: QbPrefs) {
 
 const DEFAULT_OPTION_TEXTS = ['', '', '', '', ''];
 
+function parseMarksInput(raw: string): number | null {
+  return parsePositiveIntInput(raw);
+}
+
+function normalizeMarksInput(raw: string): string {
+  return normalizePositiveIntInput(raw, 1);
+}
+
 export function QuestionBankPanel() {
   const { user } = useAuth();
   const { branches } = useOrganization();
@@ -95,7 +104,7 @@ export function QuestionBankPanel() {
   const [error, setError] = useState('');
   const [newQ, setNewQ] = useState('');
   const [questionType, setQuestionType] = useState<QuestionType>('mcq');
-  const [marksPerQuestion, setMarksPerQuestion] = useState(() => loadQbPrefs().marksPerQuestion ?? 1);
+  const [marksInput, setMarksInput] = useState(() => String(loadQbPrefs().marksPerQuestion ?? 1));
   const [optionCount, setOptionCount] = useState<McqOptionCount>(() => loadQbPrefs().optionCount ?? 4);
   const [optionTexts, setOptionTexts] = useState<string[]>(() => [...DEFAULT_OPTION_TEXTS]);
   const [correct, setCorrect] = useState('1');
@@ -126,8 +135,11 @@ export function QuestionBankPanel() {
   }, [departmentId, subjectId, topicId]);
 
   useEffect(() => {
-    saveQbPrefs({ marksPerQuestion });
-  }, [marksPerQuestion]);
+    const marks = parseMarksInput(marksInput);
+    if (marks != null && marks >= 1) {
+      saveQbPrefs({ marksPerQuestion: marks });
+    }
+  }, [marksInput]);
 
   useEffect(() => {
     saveQbPrefs({ optionCount });
@@ -228,6 +240,7 @@ export function QuestionBankPanel() {
     setOpt2('');
     setCorrect('1');
     setQuestionType('mcq');
+    setMarksInput(String(loadQbPrefs().marksPerQuestion ?? 1));
     setEditingId(null);
   };
 
@@ -360,7 +373,7 @@ export function QuestionBankPanel() {
           setOpt2('');
         }
         if (q.marks != null) {
-          setMarksPerQuestion(q.marks);
+          setMarksInput(String(q.marks));
         }
         setMessage('Editing question — update and save, or cancel.');
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -398,14 +411,15 @@ export function QuestionBankPanel() {
       setError('Select department, subject, and topic before saving a question.');
       return;
     }
-    if (marksPerQuestion < 1) {
+    const marks = parseMarksInput(marksInput);
+    if (marks == null || marks < 1) {
       setError('Marks per question must be at least 1.');
       return;
     }
     const payload = {
       type: questionType,
       content: { text: newQ },
-      marks: marksPerQuestion,
+      marks,
       difficulty: 2,
       topicId,
       options: buildOptions(),
@@ -590,8 +604,9 @@ export function QuestionBankPanel() {
                   className="register__input edtp-number-input"
                   min={1}
                   step={1}
-                  value={marksPerQuestion}
-                  onChange={(e) => setMarksPerQuestion(Math.max(1, Number(e.target.value) || 1))}
+                  value={marksInput}
+                  onChange={(e) => setMarksInput(e.target.value)}
+                  onBlur={() => setMarksInput(normalizeMarksInput(marksInput))}
                   required
                 />
               </EdtpField>
@@ -809,12 +824,17 @@ export function TestsListPanel({ title }: { title: string }) {
 
   const saveEdit = async () => {
     if (!editingId) return;
+    const duration = parsePositiveIntInput(editDuration);
+    if (duration == null || duration < 1) {
+      setError('Duration must be at least 1 minute.');
+      return;
+    }
     setError('');
     await withLoader(async () => {
       try {
         await examinationService.updateTest(editingId, {
           title: editTitle.trim(),
-          durationMinutes: Number(editDuration) || 60,
+          durationMinutes: duration,
         });
         setEditingId(null);
         showSuccess('Updated', 'Test details saved.');
@@ -880,11 +900,13 @@ export function TestsListPanel({ title }: { title: string }) {
               <div className="col-md-3">
                 <label>Duration (minutes)</label>
                 <input
-                  className="register__input"
+                  className="register__input edtp-number-input"
                   type="number"
                   min={1}
+                  step={1}
                   value={editDuration}
                   onChange={(e) => setEditDuration(e.target.value)}
+                  onBlur={() => setEditDuration(normalizePositiveIntInput(editDuration, 60))}
                 />
               </div>
               <div className="col-12">
@@ -1353,12 +1375,17 @@ export function CreateTestPanel() {
     const dept = departments.find((d) => d.id === values.departmentId);
     const subject = subjects.find((s) => s.id === values.subjectId);
     const topic = topics.find((t) => t.id === values.topicId);
+    const duration = parsePositiveIntInput(values.duration);
+    if (duration == null || duration < 1) {
+      setApiError('Duration must be at least 1 minute.');
+      return;
+    }
     await withLoader(async () => {
       try {
         const test = await examinationService.createTest({
           title: values.title,
           description: values.description,
-          durationMinutes: Number(values.duration),
+          durationMinutes: duration,
           passingMarks: 40,
           instructions: 'Read all questions carefully. Do not switch tabs during the exam.',
           config: {
@@ -1461,13 +1488,21 @@ export function CreateTestPanel() {
             </div>
             <div className="col-md-6">
               <label htmlFor="duration">Duration (minutes)</label>
-              <EdtpSelect id="duration" {...register('duration')}>
-                <option value="15">15</option>
-                <option value="30">30</option>
-                <option value="60">60</option>
-                <option value="90">90</option>
-                <option value="120">120</option>
-              </EdtpSelect>
+              <input
+                id="duration"
+                type="number"
+                min={1}
+                step={1}
+                className={inputClassName('register__input edtp-number-input', !!errors.duration)}
+                {...register('duration', {
+                  onBlur: (e) => {
+                    setValue('duration', normalizePositiveIntInput(e.target.value, 60), {
+                      shouldValidate: true,
+                    });
+                  },
+                })}
+              />
+              <FormError message={errors.duration?.message} />
             </div>
             <div className="col-12">
               <label htmlFor="aboutExam">Description (optional)</label>

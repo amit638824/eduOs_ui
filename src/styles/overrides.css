@@ -953,7 +953,8 @@ html {
   padding-right: 52px !important;
 }
 
-.registerarea__form .password-input-wrap .register__input {
+.registerarea__form .password-input-wrap .register__input,
+.edtp-form-card .password-input-wrap .register__input {
   padding-right: 52px !important;
 }
 

@@ -6,6 +6,7 @@ import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/Dashboa
 import { setSelectedOrganizationId } from '@/lib/orgScope';
 import { confirmAction, confirmDelete, showSuccess } from '@/lib/swal';
 import type { Organization } from '@/types/api';
+import { FormError, PasswordInput } from '@/components/ui/FormField';
 import {
   EdtpAlert,
   EdtpBtn,
@@ -15,6 +16,7 @@ import {
   EdtpPanel,
   EdtpRowActions,
 } from '@/components/ui/CrudUI';
+import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
 
 function slugify(name: string) {
   return name
@@ -42,6 +44,8 @@ export function OrganizationsPanel() {
   const [contactEmail, setContactEmail] = useState('');
   const [adminFirstName, setAdminFirstName] = useState('Organization');
   const [adminLastName, setAdminLastName] = useState('Admin');
+  const [adminPassword, setAdminPassword] = useState(DEFAULT_SUGGESTED_PASSWORD);
+  const [passwordError, setPasswordError] = useState('');
   const [activateNow, setActivateNow] = useState(false);
 
   const load = async () => {
@@ -69,6 +73,8 @@ export function OrganizationsPanel() {
     setContactEmail('');
     setAdminFirstName('Organization');
     setAdminLastName('Admin');
+    setAdminPassword(DEFAULT_SUGGESTED_PASSWORD);
+    setPasswordError('');
     setActivateNow(false);
   };
 
@@ -94,6 +100,11 @@ export function OrganizationsPanel() {
       setError('Login email is required — org admin credentials will be emailed there.');
       return;
     }
+    if (!editingId && adminPassword.trim().length < 8) {
+      setPasswordError('Password must be at least 8 characters.');
+      return;
+    }
+    setPasswordError('');
     setError('');
     setMessage('');
     await withLoader(async () => {
@@ -118,6 +129,7 @@ export function OrganizationsPanel() {
             contactEmail: contact,
             adminFirstName: adminFirstName.trim() || 'Organization',
             adminLastName: adminLastName.trim() || 'Admin',
+            adminPassword: adminPassword.trim() || DEFAULT_SUGGESTED_PASSWORD,
             isActive: activateNow,
           });
           const emailedTo =
@@ -232,7 +244,7 @@ export function OrganizationsPanel() {
             subtitle={
               editingId
                 ? 'Update details, then save.'
-                : 'Creates org admin account and emails login + password.'
+                : 'Creates org admin account with the password below and emails login details.'
             }
           >
             <EdtpField label="Name" htmlFor="orgName">
@@ -250,7 +262,7 @@ export function OrganizationsPanel() {
               hint={
                 editingId
                   ? 'Used for Super Admin notifications'
-                  : 'Org admin will log in with this email — password is auto-generated and emailed'
+                  : 'Org admin will log in with this email'
               }
             >
               <input
@@ -282,6 +294,25 @@ export function OrganizationsPanel() {
                     onChange={(e) => setAdminLastName(e.target.value)}
                     placeholder="Admin"
                   />
+                </EdtpField>
+                <EdtpField
+                  label="Admin password"
+                  htmlFor="orgAdminPassword"
+                  hint={`Suggested: ${DEFAULT_SUGGESTED_PASSWORD} — edit if needed`}
+                >
+                  <PasswordInput
+                    id="orgAdminPassword"
+                    className="register__input"
+                    value={adminPassword}
+                    defaultVisible
+                    onChange={(e) => {
+                      setAdminPassword(e.target.value);
+                      if (passwordError) setPasswordError('');
+                    }}
+                    hasError={Boolean(passwordError)}
+                    autoComplete="new-password"
+                  />
+                  <FormError message={passwordError} />
                 </EdtpField>
               </>
             )}

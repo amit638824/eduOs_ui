@@ -143,14 +143,14 @@ export default function LoginPage() {
                       {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
                       <div className="login__form">
                         <label className="form__label" htmlFor="loginEmail">
-                          Email address
+                          Email or Enrollment No.
                         </label>
                         <input
                           id="loginEmail"
                           className={inputClassName('common__login__input', !!loginErrors.email)}
-                          type="email"
-                          placeholder="you@example.com"
-                          autoComplete="off"
+                          type="text"
+                          placeholder="you@example.com or ENR-2026-0001"
+                          autoComplete="username"
                           {...registerLogin('email')}
                         />
                         <FormError message={loginErrors.email?.message} />

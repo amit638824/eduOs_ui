@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { examinationService, platformService } from '@/services';
 import { parseApiError } from '@/lib/errors';
-import { FormError } from '@/components/ui/FormField';
+import { FormError, PasswordInput } from '@/components/ui/FormField';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/CrudUI';
 import { confirmDelete, showSuccess } from '@/lib/swal';
 import { formatDate, formatDateTime } from '@/utils/dateFormat';
+import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
@@ -298,6 +299,14 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
   );
 }
 
+function formatUserStatus(status: string) {
+  if (status === 'active') return 'Active';
+  if (status === 'inactive') return 'Inactive';
+  if (status === 'suspended') return 'Suspended';
+  if (status === 'pending') return 'Pending';
+  return status;
+}
+
 const createUserSchema = yup.object({
   email: yup.string().email().required(),
   password: yup
@@ -308,6 +317,7 @@ const createUserSchema = yup.object({
   firstName: yup.string().required(),
   lastName: yup.string().required(),
   role: yup.mixed<'student' | 'teacher' | 'org_admin'>().oneOf(['student', 'teacher', 'org_admin']).required(),
+  enrollmentNo: yup.string().trim().max(50).optional(),
 });
 
 type CreateUserForm = {
@@ -316,6 +326,7 @@ type CreateUserForm = {
   firstName: string;
   lastName: string;
   role: 'student' | 'teacher' | 'org_admin';
+  enrollmentNo?: string;
 };
 
 export function UsersManagementPanel({
@@ -332,12 +343,30 @@ export function UsersManagementPanel({
   const [editingId, setEditingId] = useState<string | null>(null);
   const withLoader = useDashboardLoader();
   const defaultRole = lockedRole ?? 'student';
-  const { register, handleSubmit, reset, formState: { errors }, setError: setFormError } = useForm<CreateUserForm>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+    control,
+    formState: { errors },
+    setError: setFormError,
+  } = useForm<CreateUserForm>({
     // yup InferType + optional password conflicts with RHF Resolver generics
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: yupResolver(createUserSchema) as any,
-    defaultValues: { email: '', password: '', firstName: '', lastName: '', role: defaultRole },
+    defaultValues: {
+      email: '',
+      password: DEFAULT_SUGGESTED_PASSWORD,
+      firstName: '',
+      lastName: '',
+      role: defaultRole,
+      enrollmentNo: '',
+    },
   });
+  const watchedRole = watch('role');
+  const showEnrollmentField = lockedRole === 'student' || watchedRole === 'student';
 
   const load = async () => {
     setLoading(true);
@@ -353,11 +382,32 @@ export function UsersManagementPanel({
 
   useEffect(() => { void load(); }, [lockedRole]);
 
+  useEffect(() => {
+    if (editingId || !showEnrollmentField) return;
+    platformService
+      .previewEnrollmentNumber()
+      .then((no) => setValue('enrollmentNo', no))
+      .catch(() => undefined);
+  }, [editingId, showEnrollmentField, setValue]);
+
   useDashboardLoadingEffect(loading);
 
   const resetForm = () => {
     setEditingId(null);
-    reset({ email: '', password: '', firstName: '', lastName: '', role: defaultRole });
+    reset({
+      email: '',
+      password: DEFAULT_SUGGESTED_PASSWORD,
+      firstName: '',
+      lastName: '',
+      role: defaultRole,
+      enrollmentNo: '',
+    });
+    if (defaultRole === 'student' || lockedRole === 'student') {
+      platformService
+        .previewEnrollmentNumber()
+        .then((no) => setValue('enrollmentNo', no))
+        .catch(() => undefined);
+    }
   };
 
   const startEdit = (u: (typeof users)[number]) => {
@@ -374,6 +424,7 @@ export function UsersManagementPanel({
       firstName: u.first_name,
       lastName: u.last_name,
       role: lockedRole ?? role ?? 'student',
+      enrollmentNo: u.enrollment_no ?? '',
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -393,6 +444,7 @@ export function UsersManagementPanel({
             firstName: values.firstName,
             lastName: values.lastName,
             role,
+            enrollmentNo: showEnrollmentField ? values.enrollmentNo?.trim() : undefined,
           });
           setMessage('User updated.');
           showSuccess('Updated', 'User details saved.');
@@ -403,6 +455,7 @@ export function UsersManagementPanel({
             firstName: values.firstName,
             lastName: values.lastName,
             role,
+            enrollmentNo: showEnrollmentField ? values.enrollmentNo?.trim() : undefined,
           });
           setMessage(
             lockedRole === 'teacher'
@@ -421,12 +474,15 @@ export function UsersManagementPanel({
     });
   };
 
-  const setStatus = async (userId: string, status: 'active' | 'suspended') => {
+  const setStatus = async (userId: string, status: 'active' | 'inactive') => {
     setError('');
     await withLoader(async () => {
       try {
         await platformService.updateUserStatus(userId, status);
-        showSuccess(status === 'active' ? 'Activated' : 'Suspended', `User is now ${status}.`);
+        showSuccess(
+          status === 'active' ? 'Activated' : 'Deactivated',
+          status === 'active' ? 'Account is active and can log in.' : 'Account is deactivated and cannot log in.',
+        );
         await load();
       } catch (err) {
         setError(parseApiError(err));
@@ -516,9 +572,34 @@ export function UsersManagementPanel({
             )}
             {!editingId && (
               <div className="col-md-6 col-lg-3">
-                <EdtpField label="Password">
-                  <input className="register__input" type="password" placeholder="Password" {...register('password')} />
+                <EdtpField label="Password" hint={`Suggested: ${DEFAULT_SUGGESTED_PASSWORD} — edit if needed`}>
+                  <Controller
+                    name="password"
+                    control={control}
+                    defaultValue={DEFAULT_SUGGESTED_PASSWORD}
+                    render={({ field }) => (
+                      <PasswordInput
+                        {...field}
+                        className="register__input"
+                        defaultVisible
+                        hasError={Boolean(errors.password)}
+                        autoComplete="new-password"
+                      />
+                    )}
+                  />
                   <FormError message={errors.password?.message} />
+                </EdtpField>
+              </div>
+            )}
+            {showEnrollmentField && (
+              <div className="col-md-6 col-lg-3">
+                <EdtpField label="Enrollment No." hint="Auto-generated. You can edit before saving.">
+                  <input
+                    className="register__input"
+                    placeholder="ENR-2026-0001"
+                    {...register('enrollmentNo')}
+                  />
+                  <FormError message={errors.enrollmentNo?.message} />
                 </EdtpField>
               </div>
             )}
@@ -541,24 +622,25 @@ export function UsersManagementPanel({
       <div className="dashboard__table table-responsive">
         <table>
           <thead>
-            <tr><th>Name</th><th>Email</th><th>Roles</th><th>Status</th><th>Actions</th></tr>
+            <tr><th>Name</th><th>Email</th>{lockedRole === 'student' && <th>Enrollment</th>}<th>Roles</th><th>Status</th><th>Actions</th></tr>
           </thead>
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className={editingId === u.id ? 'edtp-row--editing' : undefined}>
                 <td>{u.first_name} {u.last_name}</td>
                 <td>{u.email}</td>
+                {lockedRole === 'student' && <td>{u.enrollment_no ?? '—'}</td>}
                 <td>{(u.roles as string[]).join(', ')}</td>
                 <td>
                   <span className={`edtp-badge ${u.status === 'active' ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
-                    {u.status}
+                    {formatUserStatus(u.status)}
                   </span>
                 </td>
                 <td>
                   <EdtpRowActions>
                     <EdtpBtn variant="secondary" onClick={() => startEdit(u)}>Edit</EdtpBtn>
                     {u.status === 'active' ? (
-                      <EdtpBtn variant="danger" onClick={() => void setStatus(u.id, 'suspended')}>Suspend</EdtpBtn>
+                      <EdtpBtn variant="danger" onClick={() => void setStatus(u.id, 'inactive')}>Deactivate</EdtpBtn>
                     ) : (
                       <EdtpBtn variant="success" onClick={() => void setStatus(u.id, 'active')}>Activate</EdtpBtn>
                     )}
@@ -573,7 +655,7 @@ export function UsersManagementPanel({
               </tr>
             ))}
             {users.length === 0 && (
-              <tr><td colSpan={5}>No users found.</td></tr>
+              <tr><td colSpan={lockedRole === 'student' ? 6 : 5}>No users found.</td></tr>
             )}
           </tbody>
         </table>
