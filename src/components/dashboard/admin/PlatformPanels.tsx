@@ -23,6 +23,7 @@ import {
   EdtpSelect,
 } from '@/components/ui/CrudUI';
 import { confirmDelete, showSuccess } from '@/lib/swal';
+import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
@@ -95,7 +96,7 @@ export function NotificationsPanel() {
               <tr key={n.id} className={n.is_read ? '' : 'fw-semibold'}>
                 <td>{n.title}<br /><small>{n.body}</small></td>
                 <td>{n.channel}</td>
-                <td>{new Date(n.created_at).toLocaleString()}</td>
+                <td>{formatDateTime(n.created_at)}</td>
                 <td>{n.is_read ? 'Read' : 'Unread'}</td>
                 <td>
                   {!n.is_read && (
@@ -286,7 +287,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
                 <td>{p.first_name} {p.last_name}<br /><small>{p.email}</small></td>
                 <td>₹{p.amount} {p.currency}</td>
                 <td>{p.status}</td>
-                <td>{new Date(p.created_at).toLocaleDateString()}</td>
+                <td>{formatDate(p.created_at)}</td>
               </tr>
             ))}
             {payments.length === 0 && <tr><td colSpan={4}>No payments found.</td></tr>}
@@ -812,7 +813,7 @@ export function AuditLogPanel() {
                 <td>{l.action}</td>
                 <td>{l.resource}</td>
                 <td>{l.user_email ?? '—'}</td>
-                <td>{new Date(l.created_at).toLocaleString()}</td>
+                <td>{formatDateTime(l.created_at)}</td>
               </tr>
             ))}
             {logs.length === 0 && <tr><td colSpan={4}>No audit logs.</td></tr>}
@@ -894,7 +895,7 @@ export function SessionsSecurityPanel() {
               <tr key={s.id as string}>
                 <td>{JSON.stringify(s.device_info)}</td>
                 <td>{String(s.ip_address ?? '')}</td>
-                <td>{new Date(s.created_at as string).toLocaleString()}</td>
+                <td>{formatDateTime(s.created_at as string)}</td>
                 <td>{s.is_active ? 'Yes' : 'No'}</td>
                 <td>
                   {s.is_active ? (

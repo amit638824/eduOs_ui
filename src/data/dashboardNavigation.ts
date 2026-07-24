@@ -2,6 +2,7 @@ import type { ApiUser } from '@/types/api';
 import type { DashboardNavSection, DashboardProfile, DashboardRole } from '@/types/dashboard';
 import { resolveImageUrl } from '@/utils/image';
 import { isSuperAdmin } from '@/utils/dashboardRole';
+import { formatDateTime } from '@/utils/dateFormat';
 
 const base = '/dashboard';
 
@@ -178,7 +179,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
 
 export function buildProfileFields(user: ApiUser) {
   return [
-    { label: 'Registration Date', value: user.createdAt ? new Date(user.createdAt).toLocaleString('en-US') : '—' },
+    { label: 'Registration Date', value: user.createdAt ? formatDateTime(user.createdAt) : '—' },
     { label: 'First Name', value: user.firstName },
     { label: 'Last Name', value: user.lastName },
     { label: 'Username', value: user.email.split('@')[0] },

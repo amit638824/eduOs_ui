@@ -17,6 +17,7 @@ import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpField, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete, showSuccess } from '@/lib/swal';
+import { formatDateTime } from '@/utils/dateFormat';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
 
@@ -1145,7 +1146,7 @@ export function AttemptsListPanel({
                 <td>{a.test_title ?? a.test_id}</td>
                 <td>{a.status.replace('_', ' ')}</td>
                 <td>{a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : '—'}</td>
-                <td>{new Date(a.started_at).toLocaleString()}</td>
+                <td>{formatDateTime(a.started_at)}</td>
                 {!readOnly && (
                   <td>
                     {a.status === 'in_progress' && (
@@ -1223,7 +1224,7 @@ export function ResultsPanel() {
                 <td>{Number(r.percentage).toFixed(1)}%</td>
                 <td>{r.rank != null ? `#${r.rank}` : '—'}</td>
                 <td>{r.percentile != null ? `${Number(r.percentile).toFixed(1)}%` : '—'}</td>
-                <td>{new Date(r.created_at).toLocaleString()}</td>
+                <td>{formatDateTime(r.created_at)}</td>
                 <td>
                   <Link to={`/dashboard/exam-result/${r.attempt_id}`} className="dashboard__small__btn__2">
                     View

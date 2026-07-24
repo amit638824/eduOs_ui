@@ -10,6 +10,7 @@ import { siteContent } from '@/data/siteContent';
 import type { OrgAnalytics, StudentStats, TestAttempt } from '@/types/examination';
 import type { Notification } from '@/services/platform.service';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
+import { formatDate, formatRelativeDate } from '@/utils/dateFormat';
 
 function primaryRoleLabel(roles: string[]) {
   const order = [
@@ -50,17 +51,6 @@ function initials(first: string, last: string) {
 
 function usernameFromEmail(email: string) {
   return `@${email.split('@')[0]}`;
-}
-
-function formatRelative(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${Math.max(mins, 1)} min ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
-  return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export default function DashboardProfilePage() {
@@ -130,13 +120,7 @@ export default function DashboardProfilePage() {
     return organizationName;
   }, [branchName, organizationName]);
 
-  const memberSince = user?.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('en-IN', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      })
-    : '—';
+  const memberSince = user?.createdAt ? formatDate(user.createdAt) : '—';
 
   const statCards = useMemo(() => {
     if (layoutRole === 'student' && studentStats) {
@@ -171,7 +155,7 @@ export default function DashboardProfilePage() {
     const items: { title: string; time: string }[] = [];
 
     notifications.slice(0, 4).forEach((n) => {
-      items.push({ title: n.title, time: formatRelative(n.created_at) });
+      items.push({ title: n.title, time: formatRelativeDate(n.created_at) });
     });
 
     if (apiRole === 'student') {
@@ -179,17 +163,17 @@ export default function DashboardProfilePage() {
         const status = a.status.replace(/_/g, ' ');
         items.push({
           title: `${a.test_title ?? 'Test'} — ${status.charAt(0).toUpperCase()}${status.slice(1)}`,
-          time: formatRelative(a.started_at),
+          time: formatRelativeDate(a.started_at),
         });
       });
     }
 
     if (user?.lastLoginAt) {
-      items.push({ title: 'Last login to portal', time: formatRelative(user.lastLoginAt) });
+      items.push({ title: 'Last login to portal', time: formatRelativeDate(user.lastLoginAt) });
     }
 
     if (user?.createdAt) {
-      items.push({ title: 'Account created', time: formatRelative(user.createdAt) });
+      items.push({ title: 'Account created', time: formatRelativeDate(user.createdAt) });
     }
 
     return items.slice(0, 8);
