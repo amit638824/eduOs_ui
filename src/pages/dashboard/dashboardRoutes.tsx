@@ -120,6 +120,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/admin-settings" element={dash('admin', <DashboardSettingsContent />)} />
     <Route path="/dashboard/admin-users" element={dash('admin', <UsersManagementPanel />)} />
     <Route path="/dashboard/admin-faculty" element={dash('admin', <UsersManagementPanel lockedRole="teacher" title="Faculty" />)} />
+    <Route path="/dashboard/admin-staff" element={dash('admin', <UsersManagementPanel lockedRole="staff" title="Staff" />)} />
     <Route path="/dashboard/admin-students" element={dash('admin', <UsersManagementPanel lockedRole="student" title="Students" />)} />
     <Route path="/dashboard/admin-audit" element={dash('admin', <AuditLogPanel />)} />
     <Route path="/dashboard/admin-organizations" element={dash('admin', <OrganizationsPanel />)} />

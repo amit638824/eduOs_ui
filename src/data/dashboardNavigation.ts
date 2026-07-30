@@ -1,7 +1,7 @@
 import type { ApiUser } from '@/types/api';
 import type { DashboardNavSection, DashboardProfile, DashboardRole } from '@/types/dashboard';
 import { resolveImageUrl } from '@/utils/image';
-import { isSuperAdmin } from '@/utils/dashboardRole';
+import { isOrgStaff, isSuperAdmin } from '@/utils/dashboardRole';
 import { formatDateTime } from '@/utils/dateFormat';
 
 const base = '/dashboard';
@@ -65,6 +65,7 @@ const logoutItem = { label: 'Logout', href: '/login', icon: 'logout', action: 'l
 export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): DashboardNavSection[] {
   if (role === 'admin') {
     const superAdmin = isSuperAdmin(user.roles);
+    const staffOnly = isOrgStaff(user.roles) && !superAdmin && !user.roles.includes('org_admin');
 
     if (superAdmin) {
       return [
@@ -76,6 +77,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
             { label: 'Users', href: `${base}/admin-users`, icon: 'user' },
             { label: 'Departments', href: `${base}/admin-org`, icon: 'bookmark' },
             { label: 'Faculty', href: `${base}/admin-faculty`, icon: 'user' },
+            { label: 'Staff', href: `${base}/admin-staff`, icon: 'user' },
             { label: 'Students', href: `${base}/admin-students`, icon: 'bookmark' },
             { label: 'Audit Logs', href: `${base}/admin-audit`, icon: 'assignment' },
             { label: 'Payments', href: `${base}/admin-wishlist`, icon: 'cart' },
@@ -104,7 +106,39 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
       ];
     }
 
-    // Organization Admin — departments, faculty, students
+    if (staffOnly) {
+      return [
+        {
+          title: 'Operations',
+          items: [
+            { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
+            { label: 'Departments', href: `${base}/admin-org`, icon: 'course' },
+            { label: 'Students', href: `${base}/admin-students`, icon: 'bookmark' },
+          ],
+        },
+        {
+          title: 'Examinations',
+          items: [
+            { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
+            { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
+            { label: 'All Tests', href: `${base}/admin-course`, icon: 'monitor' },
+            { label: 'Attempts', href: `${base}/admin-quiz-attempts`, icon: 'assignment' },
+            { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },
+          ],
+        },
+        {
+          title: 'Account',
+          items: [
+            { label: 'My Profile', href: `${base}/admin-profile`, icon: 'user' },
+            { label: 'Notifications', href: `${base}/admin-message`, icon: 'message' },
+            { label: 'Settings', href: `${base}/admin-settings`, icon: 'settings' },
+            logoutItem,
+          ],
+        },
+      ];
+    }
+
+    // Organization Admin — departments, faculty, students, staff
     return [
       {
         title: 'Organization',
@@ -112,6 +146,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
           { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
           { label: 'Departments', href: `${base}/admin-org`, icon: 'course' },
           { label: 'Faculty', href: `${base}/admin-faculty`, icon: 'user' },
+          { label: 'Staff', href: `${base}/admin-staff`, icon: 'user' },
           { label: 'Students', href: `${base}/admin-students`, icon: 'bookmark' },
         ],
       },
@@ -119,6 +154,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
         title: 'Examinations',
         items: [
           { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
+          { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
           { label: 'All Tests', href: `${base}/admin-course`, icon: 'monitor' },
           { label: 'Attempts', href: `${base}/admin-quiz-attempts`, icon: 'assignment' },
           { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },

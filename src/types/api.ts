@@ -1,6 +1,7 @@
 export type ApiRole =
   | 'super_admin'
   | 'org_admin'
+  | 'staff'
   | 'branch_admin'
   | 'teacher'
   | 'examiner'

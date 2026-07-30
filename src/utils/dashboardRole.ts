@@ -1,7 +1,7 @@
 import type { ApiRole } from '@/types/api';
 import type { DashboardRole } from '@/types/dashboard';
 
-const ADMIN_ROLES: ApiRole[] = ['super_admin', 'org_admin', 'branch_admin'];
+const ADMIN_ROLES: ApiRole[] = ['super_admin', 'org_admin', 'staff', 'branch_admin'];
 const TEACHER_ROLES: ApiRole[] = ['teacher', 'examiner', 'evaluator'];
 
 export function resolveDashboardRole(apiRoles: string[]): DashboardRole {
@@ -21,6 +21,19 @@ export function isSuperAdmin(apiRoles: string[]): boolean {
 
 export function isOrgAdmin(apiRoles: string[]): boolean {
   return apiRoles.includes('org_admin') || apiRoles.includes('branch_admin');
+}
+
+export function isOrgStaff(apiRoles: string[]): boolean {
+  return apiRoles.includes('staff');
+}
+
+/** Org admin or staff (not super admin alone) — day-to-day org operations */
+export function canManageOrgStudents(apiRoles: string[]): boolean {
+  return (
+    apiRoles.includes('super_admin') ||
+    apiRoles.includes('org_admin') ||
+    apiRoles.includes('staff')
+  );
 }
 
 export function getRoleFromPath(pathname: string): DashboardRole {

@@ -10,7 +10,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
-import { getTestsListPath } from '@/utils/dashboardRole';
+import { getTestsListPath, isSuperAdmin } from '@/utils/dashboardRole';
 import { SearchField } from '@/components/ui/FieldHint';
 import {
   EdtpAlert,
@@ -316,7 +316,7 @@ const createUserSchema = yup.object({
     .min(8, 'Password must be at least 8 characters'),
   firstName: yup.string().required(),
   lastName: yup.string().required(),
-  role: yup.mixed<'student' | 'teacher' | 'org_admin'>().oneOf(['student', 'teacher', 'org_admin']).required(),
+  role: yup.mixed<'student' | 'teacher' | 'org_admin' | 'staff'>().oneOf(['student', 'teacher', 'org_admin', 'staff']).required(),
   enrollmentNo: yup.string().trim().max(50).optional(),
 });
 
@@ -325,7 +325,7 @@ type CreateUserForm = {
   password?: string;
   firstName: string;
   lastName: string;
-  role: 'student' | 'teacher' | 'org_admin';
+  role: 'student' | 'teacher' | 'org_admin' | 'staff';
   enrollmentNo?: string;
 };
 
@@ -333,7 +333,7 @@ export function UsersManagementPanel({
   lockedRole,
   title,
 }: {
-  lockedRole?: 'student' | 'teacher' | 'org_admin';
+  lockedRole?: 'student' | 'teacher' | 'org_admin' | 'staff';
   title?: string;
 } = {}) {
   const [users, setUsers] = useState<Awaited<ReturnType<typeof platformService.listUsers>>['data']>([]);
@@ -342,6 +342,9 @@ export function UsersManagementPanel({
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const withLoader = useDashboardLoader();
+  const { user: authUser } = useAuth();
+  const canDeleteUsers =
+    isSuperAdmin(authUser?.roles ?? []) || (authUser?.roles.includes('org_admin') ?? false);
   const defaultRole = lockedRole ?? 'student';
   const {
     register,
@@ -413,10 +416,11 @@ export function UsersManagementPanel({
   const startEdit = (u: (typeof users)[number]) => {
     setEditingId(u.id);
     const role =
-      (u.roles as string[]).find((r) => ['student', 'teacher', 'org_admin'].includes(r)) as
+      (u.roles as string[]).find((r) => ['student', 'teacher', 'org_admin', 'staff'].includes(r)) as
         | 'student'
         | 'teacher'
         | 'org_admin'
+        | 'staff'
         | undefined;
     reset({
       email: u.email,
@@ -462,7 +466,9 @@ export function UsersManagementPanel({
               ? 'Faculty member added.'
               : lockedRole === 'student'
                 ? 'Student added.'
-                : 'User created.',
+                : lockedRole === 'staff'
+                  ? 'Staff member added.'
+                  : 'User created.',
           );
           showSuccess('Created', 'Login credentials emailed.');
         }
@@ -512,14 +518,22 @@ export function UsersManagementPanel({
 
   const heading =
     title ??
-    (lockedRole === 'teacher' ? 'Faculty' : lockedRole === 'student' ? 'Students' : 'User Management');
+    (lockedRole === 'teacher'
+      ? 'Faculty'
+      : lockedRole === 'student'
+        ? 'Students'
+        : lockedRole === 'staff'
+          ? 'Staff'
+          : 'User Management');
   const addLabel = editingId
     ? 'Update User'
     : lockedRole === 'teacher'
       ? 'Add Faculty'
       : lockedRole === 'student'
         ? 'Add Student'
-        : 'Add User';
+        : lockedRole === 'staff'
+          ? 'Add Staff'
+          : 'Add User';
 
   return (
     <div className="dashboard__content__wraper">
@@ -563,6 +577,7 @@ export function UsersManagementPanel({
                   <EdtpSelect {...register('role')}>
                     <option value="student">Student</option>
                     <option value="teacher">Teacher</option>
+                    <option value="staff">Staff</option>
                     <option value="org_admin">Org Admin</option>
                   </EdtpSelect>
                 </EdtpField>
@@ -644,12 +659,14 @@ export function UsersManagementPanel({
                     ) : (
                       <EdtpBtn variant="success" onClick={() => void setStatus(u.id, 'active')}>Activate</EdtpBtn>
                     )}
-                    <EdtpBtn
-                      variant="danger"
-                      onClick={() => void removeUser(u.id, `${u.first_name} ${u.last_name}`)}
-                    >
-                      Delete
-                    </EdtpBtn>
+                    {canDeleteUsers && (
+                      <EdtpBtn
+                        variant="danger"
+                        onClick={() => void removeUser(u.id, `${u.first_name} ${u.last_name}`)}
+                      >
+                        Delete
+                      </EdtpBtn>
+                    )}
                   </EdtpRowActions>
                 </td>
               </tr>
@@ -1168,7 +1185,12 @@ export function TestBuilderPanel() {
     status?: string;
     duration_minutes?: number;
     total_marks?: number;
-    questions?: { question_id: string; type?: string; content?: { text?: string }; marks?: number }[];
+    questions?: {
+      question_id: string;
+      type?: string;
+      content?: { text?: string } | string;
+      marks?: number;
+    }[];
     assignments?: { student_id: string; first_name: string; last_name: string; email: string }[];
   } | null>(null);
   const [bankQuestions, setBankQuestions] = useState<{ id: string; content?: { text?: string }; type?: string }[]>([]);
@@ -1331,17 +1353,41 @@ export function TestBuilderPanel() {
     if (!testId || selectedQuestionIds.length === 0) return;
     setMessage('');
     setError('');
+    const alreadyOnTest = new Set(testQuestions.map((tq) => tq.question_id));
+    const toAdd = selectedQuestionIds.filter((id) => !alreadyOnTest.has(id));
+    if (toAdd.length === 0) {
+      setMessage('Selected question(s) are already on this test.');
+      setSelectedQuestionIds([]);
+      await load();
+      return;
+    }
     await withLoader(async () => {
       try {
-        for (const questionId of selectedQuestionIds) {
-          await examinationService.addQuestionToTest(testId, questionId);
+        let added = 0;
+        const failures: string[] = [];
+        for (const questionId of toAdd) {
+          try {
+            await examinationService.addQuestionToTest(testId, questionId);
+            added += 1;
+          } catch (err) {
+            failures.push(parseApiError(err));
+          }
         }
-        setMessage(`${selectedQuestionIds.length} question(s) added. Review and publish when ready.`);
         setSelectedQuestionIds([]);
         await load();
-        setPhase('publish');
+        if (added > 0) {
+          setMessage(
+            failures.length
+              ? `${added} question(s) added. ${failures.length} skipped.`
+              : `${added} question(s) added. Review and publish when ready.`,
+          );
+          setPhase('publish');
+        } else {
+          setError(failures[0] ?? 'Could not add questions to this test.');
+        }
       } catch (err) {
         setError(parseApiError(err));
+        await load();
       }
     });
   };
@@ -1469,18 +1515,30 @@ export function TestBuilderPanel() {
               <p className="text-muted mb-0">No questions yet. Select from the question bank and submit.</p>
             ) : (
               <ol className="sca-exam-builder-qlist">
-                {testQuestions.map((tq, i) => (
+                {testQuestions.map((tq, i) => {
+                  const content =
+                    typeof tq.content === 'string'
+                      ? (() => {
+                          try {
+                            return JSON.parse(tq.content) as { text?: string };
+                          } catch {
+                            return { text: tq.content };
+                          }
+                        })()
+                      : tq.content;
+                  return (
                   <li key={tq.question_id}>
                     <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
-                    <span>{tq.content?.text ?? 'Question'}</span>
-                    <span className="edtp-badge edtp-badge--role">{tq.type}</span>
+                    <span>{content?.text ?? 'Question'}</span>
+                    <span className="edtp-badge edtp-badge--role">{tq.type ?? '—'}</span>
                     {phase === 'build' && !isLive && (
                       <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
                         Remove
                       </EdtpBtn>
                     )}
                   </li>
-                ))}
+                  );
+                })}
               </ol>
             )}
 

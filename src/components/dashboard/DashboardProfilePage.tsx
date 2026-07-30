@@ -16,6 +16,7 @@ function primaryRoleLabel(roles: string[]) {
   const order = [
     'super_admin',
     'org_admin',
+    'staff',
     'branch_admin',
     'teacher',
     'examiner',
@@ -28,6 +29,7 @@ function primaryRoleLabel(roles: string[]) {
   const map: Record<string, string> = {
     super_admin: 'Super Admin',
     org_admin: 'Organization Admin',
+    staff: 'Organization Staff',
     branch_admin: 'Branch Admin',
     teacher: 'Teacher',
     examiner: 'Examiner',

@@ -79,7 +79,9 @@ export function QuestionBankPanel() {
   const isTeacher = user?.roles.includes('teacher') ?? false;
   const canAddTopic =
     isTeacher ||
-    (user?.roles.some((r) => ['org_admin', 'super_admin', 'branch_admin'].includes(r)) ?? false);
+    (user?.roles.some((r) =>
+      ['org_admin', 'super_admin', 'branch_admin', 'staff'].includes(r),
+    ) ?? false);
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);

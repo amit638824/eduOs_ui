@@ -158,7 +158,7 @@ export async function createUser(input: {
   firstName: string;
   lastName: string;
   phone?: string;
-  role: 'student' | 'teacher' | 'org_admin';
+  role: 'student' | 'teacher' | 'org_admin' | 'staff';
   enrollmentNo?: string;
 }) {
   const { data } = await api.post<ApiResponse<PlatformUser>>(`${base}/users`, input);
@@ -171,7 +171,7 @@ export async function updateUser(
     firstName?: string;
     lastName?: string;
     phone?: string;
-    role?: 'student' | 'teacher' | 'org_admin';
+    role?: 'student' | 'teacher' | 'org_admin' | 'staff';
     enrollmentNo?: string;
   },
 ) {
