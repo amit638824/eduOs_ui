@@ -16,9 +16,11 @@ import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpField, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
-import { confirmDelete, showSuccess } from '@/lib/swal';
+import { confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDateTime } from '@/utils/dateFormat';
+import { formatCountdown, msUntil } from '@/utils/countdown';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
+import type { ExamResultQuestion } from '@/types/examination';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
 
@@ -112,6 +114,7 @@ export function QuestionBankPanel() {
   const [correct, setCorrect] = useState('1');
   const [opt1, setOpt1] = useState('');
   const [message, setMessage] = useState('');
+  const [selectedDeleteIds, setSelectedDeleteIds] = useState<string[]>([]);
   const withLoader = useDashboardLoader();
 
   const loadQuestions = async () => {
@@ -391,9 +394,34 @@ export function QuestionBankPanel() {
       await withLoader(async () => {
         await examinationService.deleteQuestion(id);
         if (editingId === id) resetQuestionFields();
+        setSelectedDeleteIds((prev) => prev.filter((x) => x !== id));
         await loadQuestions();
       });
       showSuccess('Deleted!', 'Question has been deleted.');
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedDeleteIds.length === 0) return;
+    const ok = await confirmDelete({
+      title: `Delete ${selectedDeleteIds.length} question(s)?`,
+      text: "Selected questions will be removed from the bank. You won't be able to revert this!",
+      confirmText: 'Yes, delete selected',
+    });
+    if (!ok) return;
+    setError('');
+    try {
+      await withLoader(async () => {
+        for (const id of selectedDeleteIds) {
+          await examinationService.deleteQuestion(id);
+        }
+        if (editingId && selectedDeleteIds.includes(editingId)) resetQuestionFields();
+        setSelectedDeleteIds([]);
+        await loadQuestions();
+      });
+      showSuccess('Deleted!', `${selectedDeleteIds.length} question(s) deleted.`);
     } catch (err) {
       setError(parseApiError(err));
     }
@@ -717,10 +745,61 @@ export function QuestionBankPanel() {
           onChange={setQuestionSearch}
           placeholder="Search questions by text, department, subject, topic…"
         />
+        {(() => {
+          const filteredQuestions = questions.filter((q) => {
+            const qSearch = questionSearch.trim().toLowerCase();
+            if (!qSearch) return true;
+            return (
+              (q.content?.text ?? '').toLowerCase().includes(qSearch) ||
+              (q.department_name ?? '').toLowerCase().includes(qSearch) ||
+              (q.subject_name ?? '').toLowerCase().includes(qSearch) ||
+              (q.topic_name ?? '').toLowerCase().includes(qSearch) ||
+              (q.type ?? '').toLowerCase().includes(qSearch)
+            );
+          });
+          const allFilteredSelected =
+            filteredQuestions.length > 0 &&
+            filteredQuestions.every((q) => selectedDeleteIds.includes(q.id));
+          return (
         <div className="dashboard__table table-responsive">
+          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_15">
+            <span className="text-muted" style={{ fontSize: '0.875rem' }}>
+              {selectedDeleteIds.length > 0
+                ? `${selectedDeleteIds.length} selected`
+                : 'Select questions to delete in bulk'}
+            </span>
+            <EdtpBtn
+              variant="danger"
+              disabled={selectedDeleteIds.length === 0}
+              onClick={() => void handleBulkDelete()}
+            >
+              Delete Selected ({selectedDeleteIds.length})
+            </EdtpBtn>
+          </div>
           <table>
             <thead>
               <tr>
+                <th style={{ width: 48 }}>
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={allFilteredSelected}
+                    onChange={() => {
+                      if (allFilteredSelected) {
+                        setSelectedDeleteIds((prev) =>
+                          prev.filter((id) => !filteredQuestions.some((q) => q.id === id)),
+                        );
+                      } else {
+                        setSelectedDeleteIds((prev) => {
+                          const next = new Set(prev);
+                          filteredQuestions.forEach((q) => next.add(q.id));
+                          return [...next];
+                        });
+                      }
+                    }}
+                    aria-label="Select all questions"
+                  />
+                </th>
                 <th>Question</th>
                 <th>Department</th>
                 <th>Subject</th>
@@ -731,20 +810,21 @@ export function QuestionBankPanel() {
               </tr>
             </thead>
             <tbody>
-              {questions
-                .filter((q) => {
-                  const qSearch = questionSearch.trim().toLowerCase();
-                  if (!qSearch) return true;
-                  return (
-                    (q.content?.text ?? '').toLowerCase().includes(qSearch) ||
-                    (q.department_name ?? '').toLowerCase().includes(qSearch) ||
-                    (q.subject_name ?? '').toLowerCase().includes(qSearch) ||
-                    (q.topic_name ?? '').toLowerCase().includes(qSearch) ||
-                    (q.type ?? '').toLowerCase().includes(qSearch)
-                  );
-                })
-                .map((q) => (
+              {filteredQuestions.map((q) => (
                 <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
+                  <td>
+                    <input
+                      type="checkbox"
+                      className="form-check-input"
+                      checked={selectedDeleteIds.includes(q.id)}
+                      onChange={() =>
+                        setSelectedDeleteIds((prev) =>
+                          prev.includes(q.id) ? prev.filter((x) => x !== q.id) : [...prev, q.id],
+                        )
+                      }
+                      aria-label={`Select ${q.content?.text ?? q.id}`}
+                    />
+                  </td>
                   <td>{q.content?.text ?? '—'}</td>
                   <td>{q.department_name ?? '—'}</td>
                   <td>{q.subject_name ?? '—'}</td>
@@ -763,14 +843,16 @@ export function QuestionBankPanel() {
                   </td>
                 </tr>
               ))}
-              {questions.length === 0 && (
+              {filteredQuestions.length === 0 && (
                 <tr>
-                  <td colSpan={7}>No questions yet. Select department → subject → topic and add your first question.</td>
+                  <td colSpan={8}>No questions yet. Select department → subject → topic and add your first question.</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+          );
+        })()}
       </div>
     </>
   );
@@ -801,13 +883,16 @@ export function TestsListPanel({ title }: { title: string }) {
   useDashboardLoadingEffect(loading);
 
   const publish = async (id: string) => {
+    setError('');
     await withLoader(async () => {
       try {
-        await examinationService.publishTest(id);
+        await examinationService.publishTest(id, { mode: 'live_now' });
         showSuccess('Published', 'Test is now live.');
         load();
       } catch (err) {
-        setError(parseApiError(err));
+        const msg = parseApiError(err);
+        setError(msg);
+        showError('Publish failed', msg);
       }
     });
   };
@@ -862,7 +947,13 @@ export function TestsListPanel({ title }: { title: string }) {
 
   const statusBadge = (status: string) => {
     const cls =
-      status === 'live' ? 'edtp-badge--active' : status === 'draft' ? 'edtp-badge--role' : 'edtp-badge--inactive';
+      status === 'live'
+        ? 'edtp-badge--active'
+        : status === 'scheduled'
+          ? 'edtp-badge--role'
+          : status === 'draft'
+            ? 'edtp-badge--role'
+            : 'edtp-badge--inactive';
     return <span className={`edtp-badge ${cls}`}>{status}</span>;
   };
 
@@ -877,7 +968,9 @@ export function TestsListPanel({ title }: { title: string }) {
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
           <h4 className="mb-0">Test List</h4>
-          <Link to="/dashboard/create-test" className="default__button small-btn">+ Create Test</Link>
+          <Link to="/dashboard/create-test" className="edtp-btn edtp-btn--primary edtp-btn--md">
+            + Create Test
+          </Link>
         </div>
         {error && <p className="login__error sp_bottom_15">{error}</p>}
 
@@ -936,17 +1029,19 @@ export function TestsListPanel({ title }: { title: string }) {
                   <td>
                     <EdtpRowActions>
                       <EdtpBtn variant="secondary" onClick={() => startEdit(t)}>Edit</EdtpBtn>
-                      {t.status === 'draft' && (
+                      {(t.status === 'draft' || t.status === 'scheduled') && (
                         <>
                           <Link
                             to={`/dashboard/test-builder/${t.id}`}
                             className="edtp-btn edtp-btn--secondary edtp-btn--sm"
                           >
-                            Build
+                            {t.status === 'draft' ? 'Build / Publish' : 'Manage'}
                           </Link>
-                          <EdtpBtn variant="success" onClick={() => publish(t.id)}>
-                            Publish
-                          </EdtpBtn>
+                          {t.status === 'draft' && (
+                            <EdtpBtn variant="success" onClick={() => void publish(t.id)}>
+                              Publish Now
+                            </EdtpBtn>
+                          )}
                         </>
                       )}
                       {t.status === 'live' && (
@@ -982,6 +1077,7 @@ export function StudentTestsPanel() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [startingId, setStartingId] = useState<string | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
     setPageLoading(true);
@@ -990,6 +1086,11 @@ export function StudentTestsPanel() {
       .then(setTests)
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setPageLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick(Date.now()), 1000);
+    return () => window.clearInterval(id);
   }, []);
 
   useDashboardLoadingEffect(loading || pageLoading);
@@ -1002,7 +1103,11 @@ export function StudentTestsPanel() {
       const attempt = await examinationService.startAttempt(testId);
       navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
     } catch (err) {
-      setError(parseApiError(err));
+      const msg = parseApiError(err);
+      setError(msg);
+      showError('Cannot start', msg);
+      // Refresh list in case schedule flipped to live
+      examinationService.listMyAssignedTests().then(setTests).catch(() => undefined);
     } finally {
       setLoading(false);
       setStartingId(null);
@@ -1013,6 +1118,16 @@ export function StudentTestsPanel() {
     if (t.attempt_id) navigate(`/dashboard/exam/${t.id}/attempt/${t.attempt_id}`);
   };
 
+  const opensInMs = (t: ExamTest) => {
+    void nowTick;
+    const startAt = t.scheduled_start ?? t.scheduled_at;
+    if (!startAt) return null;
+    const ms = msUntil(startAt);
+    if (ms == null) return null;
+    if (t.status === 'scheduled' || ms > 0) return Math.max(0, ms);
+    return null;
+  };
+
   const statusMeta = (t: ExamTest) => {
     const st = t.attempt_status;
     if (st === 'submitted' || st === 'auto_submitted') {
@@ -1020,6 +1135,10 @@ export function StudentTestsPanel() {
     }
     if (st === 'in_progress') {
       return { label: 'In progress', cls: 'edtp-badge--role' };
+    }
+    const wait = opensInMs(t);
+    if (wait != null && wait > 0) {
+      return { label: 'Scheduled', cls: 'edtp-badge--role' };
     }
     return { label: 'Not started', cls: 'edtp-badge--inactive' };
   };
@@ -1043,11 +1162,19 @@ export function StudentTestsPanel() {
         </EdtpBtn>
       );
     }
+    const wait = opensInMs(t);
+    if (wait != null && wait > 0) {
+      return (
+        <span className="sca-exam-countdown" title={t.scheduled_start ?? t.scheduled_at ?? ''}>
+          Starts in {formatCountdown(wait)}
+        </span>
+      );
+    }
     return (
       <EdtpBtn
         variant="primary"
         size="md"
-        disabled={loading}
+        disabled={loading || startingId === t.id}
         onClick={() => void start(t.id)}
       >
         {startingId === t.id ? 'Starting…' : 'Start Test'}
@@ -1269,6 +1396,7 @@ export function CreateTestPanel() {
   const [topicsLoading, setTopicsLoading] = useState(false);
   const { branches } = useOrganization();
   const withLoader = useDashboardLoader();
+  useDashboardLoadingEffect(deptsLoading);
   const {
     register,
     handleSubmit,
@@ -1518,11 +1646,60 @@ export function ExamAttemptPage() {
   return <ExamAttemptPlayer />;
 }
 
+function questionText(content: ExamResultQuestion['content']): string {
+  if (!content) return 'Question';
+  if (typeof content === 'string') {
+    try {
+      const parsed = JSON.parse(content) as { text?: string };
+      return parsed.text ?? content;
+    } catch {
+      return content;
+    }
+  }
+  return content.text ?? 'Question';
+}
+
+function formatStudentAnswer(q: ExamResultQuestion): string {
+  const answer = q.answer;
+  if (!answer) return '—';
+  if (answer.text != null && String(answer.text).trim() !== '') return String(answer.text);
+  if (answer.value != null && String(answer.value) !== '') return String(answer.value);
+  const selected = answer.selectedOptionIds ?? [];
+  if (selected.length === 0) return '—';
+  const labels = selected.map((id) => {
+    const opt = q.options?.find((o) => o.id === id);
+    const text = opt?.content?.text;
+    const value = opt?.content?.value;
+    return text ?? (value != null ? String(value) : id.slice(0, 8));
+  });
+  return labels.join(', ');
+}
+
+function formatCorrectAnswer(q: ExamResultQuestion): string {
+  const correct = (q.options ?? []).filter((o) => o.is_correct);
+  if (correct.length === 0) return '—';
+  return correct
+    .map((o) => o.content?.text ?? (o.content?.value != null ? String(o.content.value) : '—'))
+    .join(', ');
+}
+
 export function ExamResultPage() {
   const { attemptId } = useParams();
+  const { user } = useAuth();
   const [result, setResult] = useState<ExamResult | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const roles = user?.roles ?? [];
+  const isStaffLike = roles.some((r) =>
+    ['super_admin', 'org_admin', 'staff', 'branch_admin'].includes(r),
+  );
+  const isTeacherOnly = roles.includes('teacher') && !isStaffLike;
+  const isStudent = roles.includes('student') && !isStaffLike && !roles.includes('teacher');
+  const backHref = isStudent
+    ? '/dashboard/student-reviews'
+    : isTeacherOnly
+      ? '/dashboard/teacher-reviews'
+      : '/dashboard/admin-reviews';
 
   useEffect(() => {
     if (!attemptId) return;
@@ -1539,10 +1716,14 @@ export function ExamResultPage() {
   if (error) return <p className="login__error">{error}</p>;
   if (!result) return null;
 
+  const studentName = [result.first_name, result.last_name].filter(Boolean).join(' ');
+  const questions = result.questions ?? [];
+
   return (
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title">
         <h4>Result — {result.test_title}</h4>
+        {studentName ? <p className="text-muted mb-0">Student: {studentName}</p> : null}
       </div>
       <div className="row">
         <div className="col-xl-3 col-lg-6 sp_bottom_20">
@@ -1582,7 +1763,38 @@ export function ExamResultPage() {
           </div>
         </div>
       </div>
-      <Link className="default__button" to="/dashboard/student-reviews">
+
+      <div className="edtp-form-card sp_bottom_20">
+        <h5 className="sp_bottom_15">Question-wise analysis</h5>
+        {questions.length === 0 ? (
+          <p className="text-muted mb-0">No per-question details available for this attempt.</p>
+        ) : (
+          questions.map((q, index) => (
+            <div key={q.question_id} className="sca-exam-result-q">
+              <div className="sca-exam-result-q__head">
+                <strong>Q{index + 1}.</strong>
+                <span>{questionText(q.content)}</span>
+                <span className={`edtp-badge ${q.is_correct ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
+                  {q.is_correct ? 'Correct' : 'Incorrect'}
+                </span>
+                <span className="sca-exam-result-q__meta">
+                  Marks: {Number(q.marks_awarded ?? 0)} / {Number(q.marks)}
+                </span>
+              </div>
+              <div className="sca-exam-result-q__answers">
+                <div>
+                  <strong>Correct answer:</strong> {formatCorrectAnswer(q)}
+                </div>
+                <div>
+                  <strong>Student answered:</strong> {formatStudentAnswer(q)}
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      <Link className="edtp-btn edtp-btn--primary edtp-btn--md" to={backHref}>
         Back to Results
       </Link>
     </div>

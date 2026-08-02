@@ -59,6 +59,15 @@ function AuthorDash({ children }: { children: ReactNode }) {
   return dash(role, children);
 }
 
+/** Result analysis — student + staff/admin/teacher */
+function ResultDash({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) return <Loader />;
+  if (!user) return <Navigate to="/login" replace />;
+  const role = resolveLayoutRole(user.roles);
+  return dash(role, children);
+}
+
 export const dashboardRouteElements = (
   <>
     <Route path="/dashboard" element={<DashboardRootRedirect />} />
@@ -107,7 +116,10 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/student-assignments" element={dash('student', <DashboardAssignmentsContent />)} />
     <Route path="/dashboard/student-settings" element={dash('student', <DashboardSettingsContent />)} />
     <Route path="/dashboard/exam/:testId/attempt/:attemptId" element={dash('student', <ExamAttemptPage />)} />
-    <Route path="/dashboard/exam-result/:attemptId" element={dash('student', <ExamResultPage />)} />
+    <Route
+      path="/dashboard/exam-result/:attemptId"
+      element={<ResultDash><ExamResultPage /></ResultDash>}
+    />
 
     {/* Admin */}
     <Route path="/dashboard/admin-dashboard" element={dash('admin', <AdminDashboardHome />)} />

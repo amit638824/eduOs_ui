@@ -163,8 +163,19 @@ export async function createTest(input: CreateTestInput) {
   return data.data;
 }
 
-export async function publishTest(id: string) {
-  const { data } = await api.post<ApiResponse<ExamTest>>(`${base}/tests/${id}/publish`);
+export async function publishTest(
+  id: string,
+  options?: {
+    mode?: 'live_now' | 'schedule';
+    scheduledStart?: string | null;
+    scheduledEnd?: string | null;
+  },
+) {
+  const { data } = await api.post<ApiResponse<ExamTest>>(`${base}/tests/${id}/publish`, {
+    mode: options?.mode ?? 'live_now',
+    scheduledStart: options?.scheduledStart ?? null,
+    scheduledEnd: options?.scheduledEnd ?? null,
+  });
   return data.data;
 }
 

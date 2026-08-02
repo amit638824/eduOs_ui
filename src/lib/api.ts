@@ -2,6 +2,7 @@ import axios from 'axios';
 import { env } from '@/config/env';
 import { tokenStorage } from '@/lib/storage';
 import { getSelectedOrganizationId } from '@/lib/orgScope';
+import { forceSessionExpiredLogout } from '@/lib/session';
 import type { ApiResponse } from '@/types/api';
 import { isSuperAdmin } from '@/utils/dashboardRole';
 
@@ -62,7 +63,9 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const original = error.config;
+    const original = error.config as
+      | (typeof error.config & { _retry?: boolean })
+      | undefined;
     if (
       error.response?.status === 401 &&
       original &&
@@ -77,12 +80,16 @@ api.interceptors.response.use(
             ApiResponse<{ user: unknown; tokens: { accessToken: string; refreshToken: string } }>
           >(`${env.apiBaseUrl}/auth/refresh`, { refreshToken });
           tokenStorage.setTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
+          original.headers = original.headers ?? {};
           original.headers.Authorization = `Bearer ${data.data.tokens.accessToken}`;
           return api(original);
         } catch {
-          tokenStorage.clear();
+          forceSessionExpiredLogout('expired');
+          return Promise.reject(error);
         }
       }
+      forceSessionExpiredLogout('expired');
+      return Promise.reject(error);
     }
     return Promise.reject(error);
   },

@@ -22,7 +22,7 @@ import {
   EdtpRowActions,
   EdtpSelect,
 } from '@/components/ui/CrudUI';
-import { confirmDelete, showSuccess } from '@/lib/swal';
+import { confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
 import * as yup from 'yup';
@@ -498,9 +498,9 @@ export function UsersManagementPanel({
 
   const removeUser = async (userId: string, name: string) => {
     const ok = await confirmDelete({
-      title: 'Delete user?',
-      text: `“${name}” will be removed from this organization.`,
-      confirmText: 'Yes, delete',
+      title: 'Permanently delete user?',
+      text: `“${name}” will be permanently deleted from the database. This cannot be undone.`,
+      confirmText: 'Yes, delete forever',
     });
     if (!ok) return;
     setError('');
@@ -849,6 +849,7 @@ export function ReportsPanel() {
                         <th>Score</th>
                         <th>%</th>
                         <th>Accuracy</th>
+                        <th>Analysis</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -867,6 +868,18 @@ export function ReportsPanel() {
                           <td>{Number(r.percentage).toFixed(1)}%</td>
                           <td>
                             {r.accuracy != null ? `${Number(r.accuracy).toFixed(1)}%` : '—'}
+                          </td>
+                          <td>
+                            {r.attempt_id ? (
+                              <Link
+                                to={`/dashboard/exam-result/${r.attempt_id as string}`}
+                                className="edtp-btn edtp-btn--secondary edtp-btn--sm"
+                              >
+                                View
+                              </Link>
+                            ) : (
+                              '—'
+                            )}
                           </td>
                         </tr>
                       ))}
@@ -1204,6 +1217,9 @@ export function TestBuilderPanel() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [phase, setPhase] = useState<'build' | 'publish' | 'assign'>('build');
+  const [publishMode, setPublishMode] = useState<'live_now' | 'schedule'>('live_now');
+  const [scheduleStart, setScheduleStart] = useState('');
+  const [scheduleEnd, setScheduleEnd] = useState('');
   const withLoader = useDashboardLoader();
 
   const load = async () => {
@@ -1263,17 +1279,18 @@ export function TestBuilderPanel() {
   const assignments = test?.assignments ?? [];
   const assignedIds = new Set(assignments.map((a) => a.student_id));
   const isLive = test?.status === 'live';
+  const isPublished = isLive || test?.status === 'scheduled';
 
   useEffect(() => {
     if (!test) return;
-    if (isLive) {
+    if (isPublished) {
       setPhase('assign');
       return;
     }
     if (testQuestions.length === 0) {
       setPhase('build');
     }
-  }, [isLive, test, testQuestions.length]);
+  }, [isPublished, test, testQuestions.length]);
 
   const activeStep = phase === 'assign' ? 5 : phase === 'publish' ? 4 : 3;
 
@@ -1415,15 +1432,48 @@ export function TestBuilderPanel() {
   const publish = async () => {
     if (!testId) return;
     setMessage('');
+    setError('');
+    if (testQuestions.length === 0) {
+      setError('Add at least one question before publishing.');
+      return;
+    }
+    if (publishMode === 'schedule' && !scheduleStart.trim()) {
+      setError('Choose schedule date & time.');
+      return;
+    }
     await withLoader(async () => {
       try {
-        await examinationService.publishTest(testId);
-        setMessage('Test is live. Assign students so they can attempt it.');
+        const scheduledStart =
+          publishMode === 'schedule' && scheduleStart
+            ? new Date(scheduleStart).toISOString()
+            : null;
+        const scheduledEnd =
+          publishMode === 'schedule' && scheduleEnd
+            ? new Date(scheduleEnd).toISOString()
+            : null;
+        const published = await examinationService.publishTest(testId, {
+          mode: publishMode,
+          scheduledStart,
+          scheduledEnd,
+        });
         await load();
+        const isScheduled = (published as { status?: string }).status === 'scheduled';
+        setMessage(
+          isScheduled
+            ? 'Test scheduled. Assign students — they will see a countdown until it goes live.'
+            : 'Test is live. Assign students so they can attempt it.',
+        );
         setPhase('assign');
-        showSuccess('Published', 'Test is live. Assign students next.');
+        showSuccess(
+          isScheduled ? 'Scheduled' : 'Published',
+          isScheduled
+            ? 'Test will go live at the scheduled time.'
+            : 'Test is live. Assign students next.',
+        );
       } catch (err) {
-        setError(parseApiError(err));
+        const msg = parseApiError(err);
+        setError(msg);
+        showError('Publish failed', msg);
       }
     });
   };
@@ -1502,13 +1552,15 @@ export function TestBuilderPanel() {
           <section className="edtp-form-card">
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_10">
               <h5 className="mb-0">Questions in this test ({testQuestions.length})</h5>
-              {phase === 'publish' && !isLive && (
+              {phase === 'publish' && !isPublished && (
                 <EdtpBtn variant="secondary" onClick={() => setPhase('build')}>
                   ← Edit questions
                 </EdtpBtn>
               )}
-              {phase === 'assign' && isLive && (
-                <span className="edtp-badge edtp-badge--active">Published</span>
+              {phase === 'assign' && isPublished && (
+                <span className={`edtp-badge ${isLive ? 'edtp-badge--active' : 'edtp-badge--role'}`}>
+                  {isLive ? 'Published' : 'Scheduled'}
+                </span>
               )}
             </div>
             {testQuestions.length === 0 ? (
@@ -1531,7 +1583,7 @@ export function TestBuilderPanel() {
                     <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
                     <span>{content?.text ?? 'Question'}</span>
                     <span className="edtp-badge edtp-badge--role">{tq.type ?? '—'}</span>
-                    {phase === 'build' && !isLive && (
+                    {phase === 'build' && !isPublished && (
                       <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
                         Remove
                       </EdtpBtn>
@@ -1555,23 +1607,61 @@ export function TestBuilderPanel() {
               </div>
             )}
 
-            {phase === 'publish' && !isLive && (
+            {phase === 'publish' && !isPublished && (
               <div className="sca-exam-builder-publish">
                 <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>
-                  Publishing makes this test live. After that you can assign students.
+                  Choose when this test should become available to students.
                 </p>
+                <div className="row g-3 sp_bottom_15">
+                  <div className="col-md-6">
+                    <EdtpField label="Publish mode">
+                      <EdtpSelect
+                        value={publishMode}
+                        onChange={(e) => setPublishMode(e.target.value as 'live_now' | 'schedule')}
+                      >
+                        <option value="live_now">Live now</option>
+                        <option value="schedule">Schedule for later</option>
+                      </EdtpSelect>
+                    </EdtpField>
+                  </div>
+                  {publishMode === 'schedule' && (
+                    <>
+                      <div className="col-md-6">
+                        <EdtpField label="Go live at" hint="Students see a countdown until this time.">
+                          <input
+                            type="datetime-local"
+                            className="register__input"
+                            value={scheduleStart}
+                            onChange={(e) => setScheduleStart(e.target.value)}
+                          />
+                        </EdtpField>
+                      </div>
+                      <div className="col-md-6">
+                        <EdtpField label="End at (optional)">
+                          <input
+                            type="datetime-local"
+                            className="register__input"
+                            value={scheduleEnd}
+                            onChange={(e) => setScheduleEnd(e.target.value)}
+                          />
+                        </EdtpField>
+                      </div>
+                    </>
+                  )}
+                </div>
                 <EdtpBtn
                   variant="primary"
+                  size="md"
                   disabled={testQuestions.length === 0}
                   onClick={() => void publish()}
                 >
-                  Publish Test
+                  {publishMode === 'schedule' ? 'Schedule Test' : 'Publish Test'}
                 </EdtpBtn>
               </div>
             )}
           </section>
 
-          {phase === 'build' && !isLive && (
+          {phase === 'build' && !isPublished && (
             <section className="edtp-form-card">
               <h5 className="sp_bottom_15">Add from Question Bank</h5>
               <SearchField

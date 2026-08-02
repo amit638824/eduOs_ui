@@ -1008,6 +1008,66 @@ html {
   background: #f59e0b !important;
 }
 
+/* Dashboard buttons — keep label visible over theme/dark-mode overrides */
+body.sca-dashboard-body .sca-dashboard .default__button,
+body.sca-dashboard-body .sca-dashboard a.default__button,
+.is_dark body.sca-dashboard-body .sca-dashboard .default__button,
+.is_dark body.sca-dashboard-body .sca-dashboard a.default__button {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}
+
+body.sca-dashboard-body .sca-dashboard .edtp-btn--primary,
+.is_dark body.sca-dashboard-body .sca-dashboard .edtp-btn--primary {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}
+
+.sca-exam-result-q {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  background: #fff;
+}
+
+.sca-exam-result-q__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sca-exam-result-q__meta {
+  font-size: 0.8125rem;
+  color: #64748b;
+}
+
+.sca-exam-result-q__answers {
+  display: grid;
+  gap: 6px;
+  font-size: 0.875rem;
+}
+
+.sca-exam-result-q__answers strong {
+  color: #0f172a;
+}
+
+.sca-exam-countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 0.875rem;
+}
+
 .Toastify__toast-icon svg {
   width: 22px;
   height: 22px;

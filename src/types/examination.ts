@@ -56,6 +56,8 @@ export interface ExamTest {
   total_marks?: number | null;
   published_at?: string | null;
   scheduled_at?: string | null;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
   attempt_id?: string | null;
   attempt_status?: string | null;
   attempt_submitted_at?: string | null;
@@ -108,11 +110,34 @@ export interface AttemptQuestion {
   options: QuestionOption[];
 }
 
+export interface ExamResultQuestion {
+  question_id: string;
+  type: QuestionType | string;
+  content?: { text?: string } | string;
+  marks: number | string;
+  answer?: {
+    selectedOptionIds?: string[];
+    text?: string;
+    value?: number | string;
+  } | null;
+  is_correct?: boolean | null;
+  marks_awarded?: number | string | null;
+  options?: {
+    id: string;
+    content?: { text?: string; value?: number };
+    is_correct?: boolean;
+    sort_order?: number;
+  }[];
+}
+
 export interface ExamResult {
   id: string;
   attempt_id: string;
   test_id: string;
+  student_id?: string;
   test_title?: string;
+  first_name?: string;
+  last_name?: string;
   total_score: number;
   max_score: number;
   percentage: number;
@@ -121,6 +146,7 @@ export interface ExamResult {
   percentile?: number | null;
   passing_marks?: number | null;
   created_at: string;
+  questions?: ExamResultQuestion[];
 }
 
 export interface OrgAnalytics {

@@ -1,11 +1,16 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
 import { useAuth } from '@/context/AuthContext';
 import { parseApiError } from '@/lib/errors';
+import {
+  clearRememberedLogin,
+  loadRememberedLogin,
+  saveRememberedLogin,
+} from '@/lib/rememberLogin';
 import { siteContent } from '@/data/siteContent';
 import { loginSchema, quickSignupSchema, type LoginFormValues, type QuickSignupFormValues } from '@/validators/schemas';
 
@@ -13,21 +18,42 @@ export default function LoginPage() {
   const { brand } = siteContent;
   const { login, completeMfaLogin } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const remembered = loadRememberedLogin();
   const [apiError, setApiError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [mfaToken, setMfaToken] = useState('');
   const [mfaCode, setMfaCode] = useState('');
+  const [rememberMe, setRememberMe] = useState(() => Boolean(remembered));
 
   const {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,
+    reset: resetLogin,
     formState: { errors: loginErrors },
   } = useForm<LoginFormValues>({
     resolver: yupResolver(loginSchema),
     mode: 'onTouched',
     reValidateMode: 'onChange',
-    defaultValues: { loginId: '', password: '' },
+    defaultValues: {
+      loginId: remembered?.loginId ?? '',
+      password: remembered?.password ?? '',
+    },
   });
+
+  useEffect(() => {
+    if (searchParams.get('session') === 'expired') {
+      setApiError('Your session expired. Please log in again.');
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    const saved = loadRememberedLogin();
+    if (saved) {
+      setRememberMe(true);
+      resetLogin({ loginId: saved.loginId, password: saved.password });
+    }
+  }, [resetLogin]);
 
   const {
     register: registerSignup,
@@ -44,6 +70,11 @@ export default function LoginPage() {
     setApiError('');
     setSubmitting(true);
     try {
+      if (rememberMe) {
+        saveRememberedLogin(values.loginId, values.password);
+      } else {
+        clearRememberedLogin();
+      }
       const result = await login({
         email: values.loginId.trim(),
         password: values.password,
@@ -168,14 +199,23 @@ export default function LoginPage() {
                           inputClass="common__login__input"
                           hasError={!!loginErrors.password}
                           placeholder="Enter your password"
-                          autoComplete="off"
+                          autoComplete={rememberMe ? 'current-password' : 'off'}
                           {...registerLogin('password')}
                         />
                         <FormError message={loginErrors.password?.message} />
                       </div>
                       <div className="login__form d-flex justify-content-between flex-wrap gap-2">
                         <div className="form__check">
-                          <input id="rememberMe" type="checkbox" />
+                          <input
+                            id="rememberMe"
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              setRememberMe(checked);
+                              if (!checked) clearRememberedLogin();
+                            }}
+                          />
                           <label htmlFor="rememberMe">Remember me</label>
                         </div>
                         <div className="text-end login__form__link">

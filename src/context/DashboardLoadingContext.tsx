@@ -11,6 +11,10 @@ import {
 } from 'react';
 import { useLocation } from 'react-router-dom';
 
+const ROUTE_LOADER_ID = '__dashboard_route__';
+/** Brief spinner on every sidebar navigation (covers pages with no API fetch) */
+const ROUTE_LOADER_MIN_MS = 450;
+
 interface DashboardLoadingContextValue {
   loading: boolean;
   setLoading: (id: string, active: boolean) => void;
@@ -22,6 +26,7 @@ const DashboardLoadingContext = createContext<DashboardLoadingContextValue | nul
 export function DashboardLoadingProvider({ children }: { children: ReactNode }) {
   const [pending, setPending] = useState<Set<string>>(() => new Set());
   const location = useLocation();
+  const routeTimerRef = useRef<number | null>(null);
 
   const setLoading = useCallback((id: string, active: boolean) => {
     setPending((prev) => {
@@ -39,10 +44,38 @@ export function DashboardLoadingProvider({ children }: { children: ReactNode }) 
     setPending((prev) => (prev.size === 0 ? prev : new Set()));
   }, []);
 
-  // Drop any stuck loaders when navigating between dashboard pages
+  // Every dashboard route change: show content-area loader.
+  // Only add/remove the route token — do not wipe page loaders (children register after mount).
   useEffect(() => {
-    clearAll();
-  }, [location.pathname, clearAll]);
+    if (routeTimerRef.current != null) {
+      window.clearTimeout(routeTimerRef.current);
+      routeTimerRef.current = null;
+    }
+
+    setPending((prev) => {
+      if (prev.has(ROUTE_LOADER_ID)) return prev;
+      const next = new Set(prev);
+      next.add(ROUTE_LOADER_ID);
+      return next;
+    });
+
+    routeTimerRef.current = window.setTimeout(() => {
+      setPending((prev) => {
+        if (!prev.has(ROUTE_LOADER_ID)) return prev;
+        const next = new Set(prev);
+        next.delete(ROUTE_LOADER_ID);
+        return next;
+      });
+      routeTimerRef.current = null;
+    }, ROUTE_LOADER_MIN_MS);
+
+    return () => {
+      if (routeTimerRef.current != null) {
+        window.clearTimeout(routeTimerRef.current);
+        routeTimerRef.current = null;
+      }
+    };
+  }, [location.pathname]);
 
   const loading = pending.size > 0;
 
