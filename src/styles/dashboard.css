@@ -319,6 +319,28 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   display: inline-flex;
 }
 
+.sca-db-notif-btn {
+  position: relative;
+  text-decoration: none;
+}
+
+.sca-db-notif-btn__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #e11d48;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  pointer-events: none;
+}
+
 .sca-db-breadcrumb {
   font-size: 0.8125rem;
   color: var(--db-muted);

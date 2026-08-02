@@ -71,9 +71,15 @@ export function NotificationsPanel() {
   };
 
   return (
+    <>
+    <DashboardPageHeader
+      badge="Inbox"
+      title="Notifications"
+      subtitle="Updates for your account, assigned tests, exam submissions and results."
+    />
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title d-flex justify-content-between align-items-center">
-        <h4>Notifications {unread > 0 && <span className="badge bg-primary ms-2">{unread}</span>}</h4>
+        <h4>All notifications {unread > 0 && <span className="badge bg-primary ms-2">{unread}</span>}</h4>
         {unread > 0 && (
           <button type="button" className="default__button small-btn" onClick={markAll}>
             Mark all read
@@ -115,6 +121,7 @@ export function NotificationsPanel() {
         </table>
       </div>
     </div>
+    </>
   );
 }
 

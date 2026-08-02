@@ -1153,9 +1153,13 @@ export function DashboardSettingsContent() {
   const isAdmin = user?.roles.some((r) =>
     ['super_admin', 'org_admin', 'branch_admin'].includes(r),
   );
+  const isStudent = Boolean(user?.roles.includes('student'));
+  // Branding is org-level; never show to students
   const tabs = isAdmin
     ? ['Profile', 'Organization', 'Password', 'Branding']
-    : ['Profile', 'Password', 'Branding'];
+    : isStudent
+      ? ['Profile', 'Password']
+      : ['Profile', 'Password', 'Branding'];
   const [activeTab, setActiveTab] = useState('Profile');
 
   useDashboardLoadingEffect(orgLoading && activeTab === 'Organization');
@@ -1167,7 +1171,11 @@ export function DashboardSettingsContent() {
       <DashboardPageHeader
         badge="Account"
         title="Settings"
-        subtitle="Manage organization profile, branding, password and preferences for the selected tenant."
+        subtitle={
+          isStudent
+            ? 'Manage your profile and password.'
+            : 'Manage organization profile, branding, password and preferences for the selected tenant.'
+        }
       />
       <div className="dashboard__content__wraper">
         <DashboardTabButtons tabs={tabs} active={activeTab} onChange={setActiveTab} />
@@ -1177,7 +1185,7 @@ export function DashboardSettingsContent() {
             <OrganizationSettingsForm organization={organization} onSaved={refresh} />
           )}
           {activeTab === 'Password' && <PasswordChangeForm />}
-          {activeTab === 'Branding' && <SocialLinksForm />}
+          {activeTab === 'Branding' && !isStudent && <SocialLinksForm />}
         </div>
       </div>
     </>
