@@ -30,7 +30,7 @@ export default function BlogPostPage() {
                   {post.author && <p>{post.author}</p>}
                   <p>
                     {post.excerpt ??
-                      'Read the latest news, online exam updates, and IT training tips from Super Computer Academy.'}
+                      'Read the latest news, online exam updates, and IT training tips from Edumatra.'}
                   </p>
                   <Link className="default__button sp_top_20" to="/blog">
                     Back to Blog

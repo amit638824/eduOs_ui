@@ -186,7 +186,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
         key: order.keyId,
         amount: order.amount,
         currency: order.currency,
-        name: 'Super Computer Academy',
+        name: 'Edumatra',
         description: 'Wallet Top-up',
         order_id: order.orderId,
         prefill: {

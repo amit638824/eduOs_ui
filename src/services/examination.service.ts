@@ -110,6 +110,32 @@ export async function approveQuestion(id: string) {
   return data.data;
 }
 
+export interface QuestionImportRow {
+  row: number;
+  status: 'created' | 'skipped' | 'error';
+  reason?: string;
+  question?: string;
+}
+
+export interface QuestionImportSummary {
+  total: number;
+  created: number;
+  skipped: number;
+  errors: number;
+  createdDepartments: number;
+  createdSubjects: number;
+  createdChapters: number;
+  createdTopics: number;
+  rows: QuestionImportRow[];
+}
+
+export async function importQuestionsFromCsv(csvText: string) {
+  const { data } = await api.post<ApiResponse<QuestionImportSummary>>(`${base}/questions/import`, {
+    csvText,
+  });
+  return data.data;
+}
+
 export async function listTests(page = 1, limit = 20, status?: string) {
   const { data } = await api.get<PaginatedResponse<ExamTest>>(`${base}/tests`, {
     params: { page, limit, status },

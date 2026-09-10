@@ -2,17 +2,17 @@ import type { SiteContent } from '@/types/content';
 
 export const siteContent: SiteContent = {
   brand: {
-    name: 'Super Computer Academy',
+    name: 'Edumatra',
     tagline: 'ISO 9001-2015 Certified · Online Exam Platform',
     logo: '/img/logo/sca-logo.png',
     logoFooter: '/img/logo/sca-logo.png',
   },
   parentCompany: {
-    name: 'Super Computer Academy',
+    name: 'Edumatra',
     tagline: 'Computer Software, Hardware & Networking Institute',
     website: 'https://supercomputeracademy.com/',
     description:
-      'Super Computer Academy commenced vocational & professional IT training in 2010 at Kerakat, Jaunpur. We offer certificate, diploma & advanced diploma courses with online exam facilities, placement support, and government & self-funded programs.',
+      'Edumatra commenced vocational & professional IT training in 2010 at Kerakat, Jaunpur. We offer certificate, diploma & advanced diploma courses with online exam facilities, placement support, and government & self-funded programs.',
   },
   contact: {
     phone: '+91 998 428 2776, +91 842 317 2829',
@@ -30,12 +30,12 @@ export const siteContent: SiteContent = {
     badge: 'Online Exam & Mock Test Portal',
     title: 'Make Your Career Bright in IT — Practice & Appear for Online Tests',
     description:
-      'Super Computer Academy offers timed online mock tests, certificate course exams, diploma assessments, and institute-level practice papers for Hardware, Networking, Software, and Computer Application programs.',
+      'Edumatra offers timed online mock tests, certificate course exams, diploma assessments, and institute-level practice papers for Hardware, Networking, Software, and Computer Application programs.',
     primaryCta: { label: 'Browse Online Tests', href: '/exams' },
     secondaryCta: { label: 'About Academy', href: '/about' },
   },
   about: {
-    badge: 'About Super Computer Academy',
+    badge: 'About Edumatra',
     title: 'Trusted IT Training',
     highlight: 'Since 2010',
     description:
@@ -61,7 +61,7 @@ export const siteContent: SiteContent = {
     badge: 'Test Categories',
     title: 'Online Tests For Every\nIT Course & Certificate',
     description:
-      'Practice mock papers for PC Hardware & Networking, Computer Application, Diploma programs, CCC, O Level, and professional IT certifications — aligned with Super Computer Academy curriculum.',
+      'Practice mock papers for PC Hardware & Networking, Computer Application, Diploma programs, CCC, O Level, and professional IT certifications — aligned with Edumatra curriculum.',
     secondaryDescription:
       'Students enrolled at our Kerakat center and partner institutes can log in to attempt assigned tests, view results, rank, and download performance reports.',
     items: [
@@ -113,7 +113,7 @@ export const siteContent: SiteContent = {
         duration: '60 min',
         price: '₹0.00',
         originalPrice: '₹199.00',
-        instructor: 'SCA Faculty',
+        instructor: 'Edumatra Faculty',
         instructorImg: '/img/grid/grid_small_1.jpg',
         rating: 5,
         reviews: 428,
@@ -129,7 +129,7 @@ export const siteContent: SiteContent = {
         lessons: 40,
         duration: '45 min',
         price: '₹0.00',
-        instructor: 'SCA Faculty',
+        instructor: 'Edumatra Faculty',
         instructorImg: '/img/grid/grid_small_2.jpg',
         rating: 5,
         reviews: 312,
@@ -146,7 +146,7 @@ export const siteContent: SiteContent = {
         duration: '90 min',
         price: '₹49.00',
         originalPrice: '₹149.00',
-        instructor: 'SCA Faculty',
+        instructor: 'Edumatra Faculty',
         instructorImg: '/img/grid/grid_small_3.jpg',
         rating: 5,
         reviews: 189,
@@ -162,7 +162,7 @@ export const siteContent: SiteContent = {
         lessons: 100,
         duration: '90 min',
         price: '₹0.00',
-        instructor: 'SCA Faculty',
+        instructor: 'Edumatra Faculty',
         instructorImg: '/img/grid/grid_small_4.jpg',
         rating: 5,
         reviews: 567,
@@ -178,7 +178,7 @@ export const siteContent: SiteContent = {
         lessons: 80,
         duration: '120 min',
         price: '₹0.00',
-        instructor: 'SCA Faculty',
+        instructor: 'Edumatra Faculty',
         instructorImg: '/img/grid/grid_small_5.jpg',
         rating: 5,
         reviews: 234,
@@ -195,7 +195,7 @@ export const siteContent: SiteContent = {
         duration: '60 min',
         price: '₹99.00',
         originalPrice: '₹299.00',
-        instructor: 'SCA Faculty',
+        instructor: 'Edumatra Faculty',
         instructorImg: '/img/grid/grid_small_5.jpg',
         rating: 5,
         reviews: 156,
@@ -209,7 +209,7 @@ export const siteContent: SiteContent = {
     highlight: '50+',
     count: '50+',
     videoText:
-      'Join Super Computer Academy online test portal — practice mock exams from home and track your results instantly.',
+      'Join Edumatra online test portal — practice mock exams from home and track your results instantly.',
     formTitle: 'Create Your Student Account',
   },
   pricing: {
@@ -268,11 +268,11 @@ export const siteContent: SiteContent = {
     badge: 'Student Success',
     title: 'What Our Students\nSay About Online Tests',
     description:
-      'Thousands of students from Kerakat, Jaunpur and nearby districts trust Super Computer Academy for IT training and online examination.',
+      'Thousands of students from Kerakat, Jaunpur and nearby districts trust Edumatra for IT training and online examination.',
     items: [
       {
         quote:
-          '"Online exam facility helped me practice CCC and diploma papers before the real test. Faculty support at SCA is excellent."',
+          '"Online exam facility helped me practice CCC and diploma papers before the real test. Faculty support at Edumatra is excellent."',
         name: 'Rahul Verma',
         role: 'Diploma Student, Jaunpur',
         image: '/img/about/about_5.png',
@@ -288,7 +288,7 @@ export const siteContent: SiteContent = {
   },
   blog: {
     badge: 'News & Updates',
-    title: 'Latest From Super Computer Academy',
+    title: 'Latest From Edumatra',
     posts: [
       {
         slug: 'online-exam-facility',
@@ -296,7 +296,7 @@ export const siteContent: SiteContent = {
         date: '10',
         month: 'Jul',
         image: '/img/blog/blog_1.png',
-        author: 'By SCA Admin',
+        author: 'By Edumatra Admin',
         excerpt:
           'Students can now log in to attempt assigned tests, view instant results, and download performance certificates online...',
         featured: true,
@@ -320,14 +320,14 @@ export const siteContent: SiteContent = {
   footer: {
     newsletter: {
       title: 'Stay Updated With',
-      titleHighlight: 'SCA',
+      titleHighlight: 'EDUMATRA',
       description:
         'Get admission alerts, new mock tests, exam schedules, and academy news delivered to your inbox.',
       placeholder: 'Enter your email',
       buttonText: 'Subscribe',
     },
     about:
-      'Super Computer Academy — ISO 9001-2015 certified computer software, hardware & networking institute at Kerakat, Jaunpur. Online exams, placement support, and job-oriented IT training since 2010.',
+      'Edumatra — ISO 9001-2015 certified computer software, hardware & networking institute at Kerakat, Jaunpur. Online exams, placement support, and job-oriented IT training since 2010.',
     hours: {
       title: 'Academy Hours',
       weekdays: 'Mon – Sat (8:00 AM – 8:00 PM)',
@@ -370,7 +370,7 @@ export const siteContent: SiteContent = {
     ],
     copyright: {
       year: new Date().getFullYear().toString(),
-      brand: 'Super Computer Academy',
+      brand: 'Edumatra',
       product: 'Online Exam Portal',
     },
     social: [

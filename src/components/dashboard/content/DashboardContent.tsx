@@ -1256,7 +1256,7 @@ export function DashboardBecomeInstructorContent() {
           <div className="become__instructor__text">
             <h3 className="become__instructor__small__heading">Become an Instructor</h3>
             <p>
-              Join Super Computer Academy and help students prepare for online mock tests, certificate
+              Join Edumatra and help students prepare for online mock tests, certificate
               exams, CCC, O Level, and diploma assessments in Hardware, Software & Networking.
             </p>
             <h3 className="become__instructor__small__heading">Instructor Rules</h3>

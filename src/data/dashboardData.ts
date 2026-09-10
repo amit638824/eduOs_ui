@@ -26,7 +26,7 @@ export const dashboardCourses: DashboardCourseItem[] = [
     price: '₹0.00',
     originalPrice: '/₹199.00',
     free: true,
-    instructor: 'SCA Faculty',
+    instructor: 'Edumatra Faculty',
     instructorImg: '/img/grid/grid_small_2.jpg',
     rating: 5,
     reviews: 428,
@@ -40,7 +40,7 @@ export const dashboardCourses: DashboardCourseItem[] = [
     lessons: '100 Questions',
     duration: '90 min',
     price: '₹0.00',
-    instructor: 'SCA Faculty',
+    instructor: 'Edumatra Faculty',
     instructorImg: '/img/grid/grid_small_3.jpg',
     rating: 5,
     reviews: 567,
@@ -55,7 +55,7 @@ export const dashboardCourses: DashboardCourseItem[] = [
     duration: '90 min',
     price: '₹49.00',
     originalPrice: '/₹149.00',
-    instructor: 'SCA Faculty',
+    instructor: 'Edumatra Faculty',
     instructorImg: '/img/grid/grid_small_1.jpg',
     rating: 5,
     reviews: 189,
@@ -64,8 +64,8 @@ export const dashboardCourses: DashboardCourseItem[] = [
 ];
 
 export const messageContacts = [
-  { name: 'SCA Admin', preview: 'Your online test result is ready.', time: '12 min', img: '/img/teacher/teacher__1.png' },
-  { name: 'Super Computer Academy', preview: 'Welcome to the online exam portal!', time: '4:35pm', img: '/img/teacher/teacher__2.png' },
+  { name: 'Edumatra Admin', preview: 'Your online test result is ready.', time: '12 min', img: '/img/teacher/teacher__1.png' },
+  { name: 'Edumatra', preview: 'Welcome to the online exam portal!', time: '4:35pm', img: '/img/teacher/teacher__2.png' },
   { name: 'Faculty — Networking', preview: 'New CCC mock test uploaded.', time: '1:40pm', img: '/img/teacher/teacher__3.png' },
 ];
 
@@ -80,7 +80,7 @@ export const profileFields = [
   {
     label: 'Biography',
     value:
-      'Student at Super Computer Academy, Kerakat. Preparing for certificate and diploma online exams with regular mock test practice.',
+      'Student at Edumatra, Kerakat. Preparing for certificate and diploma online exams with regular mock test practice.',
   },
 ];
 
@@ -109,8 +109,8 @@ export const reviewsReceived = [
 ];
 
 export const orderHistory = [
-  { id: '#SCA1001', course: 'Student Plan — 1 Month', date: 'July 1, 2026', price: '₹199.00', status: 'Success' },
-  { id: '#SCA1002', course: 'Wallet Top-up', date: 'June 20, 2026', price: '₹500.00', status: 'Success' },
+  { id: '#EDUMATRA1001', course: 'Student Plan — 1 Month', date: 'July 1, 2026', price: '₹199.00', status: 'Success' },
+  { id: '#EDUMATRA1002', course: 'Wallet Top-up', date: 'June 20, 2026', price: '₹500.00', status: 'Success' },
 ];
 
 export const announcements = [

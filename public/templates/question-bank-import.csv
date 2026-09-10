@@ -1,0 +1,7 @@
+DEPARTMENT,SUBJECT,CHAPTER,TOPIC,TYPE,QUESTION,OPTION_A,OPTION_B,OPTION_C,OPTION_D,OPTION_E,CORRECT_ANSWER,MARKS,NEGATIVE_MARKS,DIFFICULTY,EXPLANATION,LANGUAGE,TAGS
+Computer Science,Operating Systems,Process Management,CPU Scheduling,mcq,"Which scheduling algorithm may cause starvation?",FCFS,SJF,Round Robin,Priority,,B,1,0.25,2,"SJF can starve long processes",en,os;scheduling
+Computer Science,Operating Systems,Process Management,CPU Scheduling,msq,"Which are preemptive scheduling algorithms?",Round Robin,FCFS,SRTF,Priority,,"A,C",1,0.25,3,"RR and SRTF can preempt a running process",en,os
+Computer Science,Digital Logic,Boolean Algebra,Gates,true_false,"NAND is a universal gate.",,,,,,True,1,0,1,"NAND can implement any Boolean function",en,dl
+Computer Science,DBMS,SQL,Joins,fill_blank,"The clause used to filter groups is _____.",,,,,,HAVING,1,0,2,"HAVING filters aggregated groups",en,sql
+Computer Science,Computer Networks,OSI Model,Layers,integer,"How many layers are there in the OSI model?",,,,,,7,1,0,1,,en,cn
+Computer Science,Algorithms,Complexity,Big-O,numerical,"log2(n) for n=16 equals?",,,,,,4,1,0,2,"2^4 = 16",en,algo

@@ -1,4 +1,4 @@
-/* ═══ Super Computer Academy — Dashboard Shell ═══ */
+/* ═══ Edumatra — Dashboard Shell ═══ */
 
 body.sca-dashboard-body {
   overflow-x: hidden;
@@ -438,6 +438,49 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 /* Page header */
 .sca-page-header {
   margin-bottom: clamp(16px, 2vw, 24px);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 16px;
+}
+
+.sca-page-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.qb-csv-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: -4px 0 16px;
+}
+
+.qb-csv-bar__hint {
+  flex: 1 1 100%;
+  margin: 0;
+  color: var(--db-muted);
+  font-size: 0.8125rem;
+}
+
+.qb-import-summary {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--db-card);
+  border: 1px solid var(--db-border);
+  font-size: 0.875rem;
+  color: var(--db-text);
+}
+
+.qb-import-summary__errors {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--db-muted);
 }
 
 .sca-page-header__badge {

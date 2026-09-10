@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { examinationService, platformService } from '@/services';
+import type { QuestionImportSummary } from '@/services/examination.service';
 import { parseApiError } from '@/lib/errors';
 import { FormError, inputClassName } from '@/components/ui/FormField';
 import { createTestApiSchema, type CreateTestApiFormValues } from '@/validators/schemas';
@@ -115,6 +116,10 @@ export function QuestionBankPanel() {
   const [opt1, setOpt1] = useState('');
   const [message, setMessage] = useState('');
   const [selectedDeleteIds, setSelectedDeleteIds] = useState<string[]>([]);
+  const [hierarchyTick, setHierarchyTick] = useState(0);
+  const [importingCsv, setImportingCsv] = useState(false);
+  const [importSummary, setImportSummary] = useState<QuestionImportSummary | null>(null);
+  const csvFileRef = useRef<HTMLInputElement>(null);
   const withLoader = useDashboardLoader();
 
   const loadQuestions = async () => {
@@ -169,7 +174,7 @@ export function QuestionBankPanel() {
       })
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setDeptsLoading(false));
-  }, [branches]);
+  }, [branches, hierarchyTick]);
 
   useEffect(() => {
     if (!departmentId) {
@@ -427,6 +432,50 @@ export function QuestionBankPanel() {
     }
   };
 
+  const handleCsvImport = async (file: File | undefined) => {
+    if (!file) return;
+    setError('');
+    setMessage('');
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      setError('Upload a .csv file.');
+      showError('Invalid file', 'Only CSV files are supported.');
+      return;
+    }
+    if (file.size > 1_500_000) {
+      setError('CSV is too large. Maximum size is 1.5 MB (~500 questions).');
+      showError('File too large', 'Maximum size is 1.5 MB.');
+      return;
+    }
+    const csvText = await file.text();
+    setImportingCsv(true);
+    try {
+      const summary = await withLoader(() => examinationService.importQuestionsFromCsv(csvText));
+      setImportSummary(summary);
+      setHierarchyTick((n) => n + 1);
+      await loadQuestions();
+      const parts = [
+        `${summary.created} added`,
+        `${summary.skipped} duplicates skipped`,
+        `${summary.errors} errors`,
+      ];
+      if (summary.errors > 0) {
+        showError('Import finished with errors', parts.join(', '));
+        setError(
+          `Imported with errors: ${parts.join(', ')}. Check the summary below.`,
+        );
+      } else {
+        showSuccess('Bulk import complete', parts.join(', '));
+        setMessage(`Bulk import complete: ${parts.join(', ')}.`);
+      }
+    } catch (err) {
+      setError(parseApiError(err));
+      showError('Import failed', parseApiError(err));
+    } finally {
+      setImportingCsv(false);
+      if (csvFileRef.current) csvFileRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage('');
@@ -479,6 +528,62 @@ export function QuestionBankPanel() {
         title="Question Bank"
         subtitle="Department → subject → topic stay selected after each add. Edit or delete anytime from the list."
       />
+      <div className="qb-csv-bar">
+        <input
+          ref={csvFileRef}
+          type="file"
+          accept=".csv,text/csv"
+          hidden
+          onChange={(e) => void handleCsvImport(e.target.files?.[0])}
+        />
+        <a
+          className="edtp-btn edtp-btn--secondary edtp-btn--sm"
+          href="/templates/question-bank-import.csv"
+          download="question-bank-import-example.csv"
+        >
+          Download example CSV
+        </a>
+        <EdtpBtn
+          variant="primary"
+          disabled={importingCsv}
+          onClick={() => csvFileRef.current?.click()}
+        >
+          {importingCsv ? 'Importing…' : 'Bulk import CSV'}
+        </EdtpBtn>
+        <p className="qb-csv-bar__hint">
+          Matching department, subject, chapter and topic names are reused. Duplicate questions
+          (same topic + type + text) are skipped. Max 500 rows.
+        </p>
+      </div>
+      {importSummary && (
+        <div className="qb-import-summary">
+          <strong>Last import:</strong> {importSummary.created} created, {importSummary.skipped} skipped,{' '}
+          {importSummary.errors} errors
+          {(importSummary.createdDepartments > 0 ||
+            importSummary.createdSubjects > 0 ||
+            importSummary.createdTopics > 0) && (
+            <>
+              {' '}
+              · new master data: {importSummary.createdDepartments} departments,{' '}
+              {importSummary.createdSubjects} subjects, {importSummary.createdChapters} chapters,{' '}
+              {importSummary.createdTopics} topics
+            </>
+          )}
+          {importSummary.rows.filter((r) => r.status === 'error').length > 0 && (
+            <ul className="qb-import-summary__errors">
+              {importSummary.rows
+                .filter((r) => r.status === 'error')
+                .slice(0, 8)
+                .map((r) => (
+                  <li key={r.row}>
+                    Row {r.row}: {r.reason}
+                    {r.question ? ` — ${r.question}` : ''}
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+      )}
       <AdminExamGuide activeStep={1} compact />
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title">
