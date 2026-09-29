@@ -9,6 +9,7 @@ const icons: Record<string, string> = {
   bookmark: 'icofont-book-mark',
   star: 'icofont-star',
   quiz: 'icofont-question-circle',
+  certificate: 'icofont-certificate-alt-1',
   assignment: 'icofont-file-document',
   settings: 'icofont-settings',
   logout: 'icofont-logout',

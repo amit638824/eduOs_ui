@@ -47,7 +47,8 @@ function DashboardShellInner({
 }: DashboardShellProps) {
   const { isDark } = useTheme();
   const { loading } = useDashboardLoading();
-  const { selectedOrgId, isSuperAdmin } = useOrgScope();
+  const { selectedOrgId, isSuperAdmin, scopeReady, loading: orgLoading, organizations } =
+    useOrgScope();
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem(COLLAPSE_KEY);
     // Default: sidebar open (expanded)
@@ -78,6 +79,9 @@ function DashboardShellInner({
 
   // Remount panels when superadmin switches org so data reloads for that tenant
   const contentKey = isSuperAdmin ? selectedOrgId ?? 'no-org' : 'tenant';
+  const waitingForOrg = isSuperAdmin && !scopeReady;
+  const noOrganizations =
+    isSuperAdmin && scopeReady && !selectedOrgId && organizations.length === 0;
 
   return (
     <div
@@ -105,8 +109,15 @@ function DashboardShellInner({
           onToggleMenu={handleToggleMenu}
         />
         <div className="sca-dashboard__content" key={contentKey}>
-          {loading && <LoaderInner />}
-          {children}
+          {(loading || waitingForOrg || orgLoading) && <LoaderInner />}
+          {noOrganizations ? (
+            <div className="sca-empty-state" style={{ padding: '2rem' }}>
+              <h2>No organization selected</h2>
+              <p>Create or approve an organization first, then pick it from the Organization switcher.</p>
+            </div>
+          ) : waitingForOrg ? null : (
+            children
+          )}
         </div>
       </div>
 

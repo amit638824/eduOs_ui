@@ -51,7 +51,7 @@ export function StudentDashboardHome() {
       <DashboardPageHeader
         badge="Student Portal"
         title="Dashboard"
-        subtitle="Quick access to your tests, attempts, results and wallet."
+        subtitle="Quick access to your tests, assignments, results and certificates."
       />
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title">
@@ -62,21 +62,25 @@ export function StudentDashboardHome() {
             <i className="icofont-book-alt" />
             My Tests
           </Link>
+          <Link to="/dashboard/student-assignments" className="edtp-quick-action">
+            <i className="icofont-tasks-alt" />
+            Assignments
+          </Link>
           <Link to="/dashboard/student-my-quiz-attempts" className="edtp-quick-action">
             <i className="icofont-ui-clock" />
             Attempts
           </Link>
           <Link to="/dashboard/student-reviews" className="edtp-quick-action">
-            <i className="icofont-certificate-alt-1" />
+            <i className="icofont-chart-histogram" />
             Results
+          </Link>
+          <Link to="/dashboard/student-certificates" className="edtp-quick-action">
+            <i className="icofont-certificate-alt-1" />
+            Certificates
           </Link>
           <Link to="/dashboard/student-wishlist" className="edtp-quick-action">
             <i className="icofont-wallet" />
             Wallet
-          </Link>
-          <Link to="/exams" className="edtp-quick-action">
-            <i className="icofont-search" />
-            Browse
           </Link>
         </div>
       </div>

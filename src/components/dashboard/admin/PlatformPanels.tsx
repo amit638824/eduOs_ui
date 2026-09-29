@@ -25,6 +25,8 @@ import {
 import { confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
+import { getQuestionText } from '@/utils/questionContent';
+import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
 import * as yup from 'yup';
 
 export function NotificationsPanel() {
@@ -1364,6 +1366,7 @@ export function TestBuilderPanel() {
   const [publishMode, setPublishMode] = useState<'live_now' | 'schedule'>('live_now');
   const [scheduleStart, setScheduleStart] = useState('');
   const [scheduleEnd, setScheduleEnd] = useState('');
+  const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
   const withLoader = useDashboardLoader();
 
   const load = async () => {
@@ -1446,9 +1449,8 @@ export function TestBuilderPanel() {
     .filter((q) => !testQuestions.some((tq) => tq.question_id === q.id))
     .filter((q) => {
       if (!qSearch) return true;
-      const text = (q.content?.text ?? '').toLowerCase();
-      const type = (q.type ?? '').toLowerCase();
-      return text.includes(qSearch) || type.includes(qSearch);
+      const text = getQuestionText(q.content, '').toLowerCase();
+      return text.includes(qSearch) || (q.type ?? '').toLowerCase().includes(qSearch);
     });
 
   const unassignedStudents = students
@@ -1712,21 +1714,15 @@ export function TestBuilderPanel() {
             ) : (
               <ol className="sca-exam-builder-qlist">
                 {testQuestions.map((tq, i) => {
-                  const content =
-                    typeof tq.content === 'string'
-                      ? (() => {
-                          try {
-                            return JSON.parse(tq.content) as { text?: string };
-                          } catch {
-                            return { text: tq.content };
-                          }
-                        })()
-                      : tq.content;
+                  const label = getQuestionText(tq.content);
                   return (
                   <li key={tq.question_id}>
                     <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
-                    <span>{content?.text ?? 'Question'}</span>
+                    <span className="edtp-q-cell">{label}</span>
                     <span className="edtp-badge edtp-badge--role">{tq.type ?? '—'}</span>
+                    <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(tq.question_id)}>
+                      Preview
+                    </EdtpBtn>
                     {phase === 'build' && !isPublished && (
                       <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
                         Remove
@@ -1829,10 +1825,13 @@ export function TestBuilderPanel() {
                       </th>
                       <th>Question</th>
                       <th>Type</th>
+                      <th style={{ width: 100 }} />
                     </tr>
                   </thead>
                   <tbody>
-                    {availableQuestions.map((q) => (
+                    {availableQuestions.map((q) => {
+                      const label = getQuestionText(q.content);
+                      return (
                       <tr key={q.id}>
                         <td>
                           <input
@@ -1840,16 +1839,22 @@ export function TestBuilderPanel() {
                             className="form-check-input"
                             checked={selectedQuestionIds.includes(q.id)}
                             onChange={() => toggleQuestion(q.id)}
-                            aria-label={`Select question ${q.content?.text ?? q.id}`}
+                            aria-label={`Select question ${label}`}
                           />
                         </td>
-                        <td>{q.content?.text}</td>
+                        <td className="edtp-q-cell">{label}</td>
                         <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
+                        <td>
+                          <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(q.id)}>
+                            Preview
+                          </EdtpBtn>
+                        </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                     {availableQuestions.length === 0 && (
                       <tr>
-                        <td colSpan={3}>
+                        <td colSpan={4}>
                           {qSearch
                             ? 'No questions match your search.'
                             : bankQuestions.length === 0
@@ -2016,6 +2021,10 @@ export function TestBuilderPanel() {
           )}
         </div>
       </div>
+      <QuestionPreviewModal
+        questionId={previewQuestionId}
+        onClose={() => setPreviewQuestionId(null)}
+      />
     </>
   );
 }

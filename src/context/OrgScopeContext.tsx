@@ -24,6 +24,8 @@ interface OrgScopeValue {
   selectedOrgId: string | null;
   selectedOrg: Organization | null;
   loading: boolean;
+  /** False until super admin has a valid org scope (or org list finished empty) */
+  scopeReady: boolean;
   setSelectedOrgId: (id: string) => void;
   refreshOrganizations: () => Promise<void>;
 }
@@ -62,7 +64,8 @@ export function OrgScopeProvider({ children }: { children: ReactNode }) {
       }
       setSelectedOrgIdState(nextId);
     } catch {
-      // Keep previous list on error — avoid [] churn that retriggers consumers
+      // Mark session fetched so UI does not spin forever; keep prior list if any
+      fetchedForUser.current = user.id;
       setOrganizations((prev) => prev);
     } finally {
       setLoading(false);
@@ -109,6 +112,10 @@ export function OrgScopeProvider({ children }: { children: ReactNode }) {
     [organizations, selectedOrgId],
   );
 
+  const scopeReady = !superAdmin
+    ? Boolean(user)
+    : !loading && (Boolean(selectedOrgId) || (fetchedForUser.current === user?.id && organizations.length === 0));
+
   const value = useMemo(
     () => ({
       isSuperAdmin: superAdmin,
@@ -116,6 +123,7 @@ export function OrgScopeProvider({ children }: { children: ReactNode }) {
       selectedOrgId: superAdmin ? selectedOrgId : user?.organizationId ?? null,
       selectedOrg: superAdmin ? selectedOrg : null,
       loading,
+      scopeReady,
       setSelectedOrgId,
       refreshOrganizations,
     }),
@@ -125,6 +133,7 @@ export function OrgScopeProvider({ children }: { children: ReactNode }) {
       selectedOrgId,
       selectedOrg,
       loading,
+      scopeReady,
       setSelectedOrgId,
       refreshOrganizations,
       user?.organizationId,
@@ -143,6 +152,7 @@ export function useOrgScope(): OrgScopeValue {
       selectedOrgId: null,
       selectedOrg: null,
       loading: false,
+      scopeReady: false,
       setSelectedOrgId: () => undefined,
       refreshOrganizations: async () => undefined,
     };

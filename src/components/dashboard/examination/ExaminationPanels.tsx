@@ -21,6 +21,8 @@ import { confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDateTime } from '@/utils/dateFormat';
 import { formatCountdown, msUntil } from '@/utils/countdown';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
+import { getOptionText, getQuestionText } from '@/utils/questionContent';
+import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
 import type { ExamResultQuestion } from '@/types/examination';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
@@ -119,6 +121,7 @@ export function QuestionBankPanel() {
   const [hierarchyTick, setHierarchyTick] = useState(0);
   const [importingCsv, setImportingCsv] = useState(false);
   const [importSummary, setImportSummary] = useState<QuestionImportSummary | null>(null);
+  const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
   const csvFileRef = useRef<HTMLInputElement>(null);
   const withLoader = useDashboardLoader();
 
@@ -351,26 +354,27 @@ export function QuestionBankPanel() {
         const q = await examinationService.getQuestion(id);
         setEditingId(q.id);
         setQuestionType(q.type as QuestionType);
-        setNewQ(q.content?.text ?? '');
+        setNewQ(getQuestionText(q.content, ''));
         if (q.department_id) setDepartmentId(q.department_id);
         if (q.subject_id) setSubjectId(q.subject_id);
         if (q.topic_id) setTopicId(q.topic_id);
 
         const opts = q.options ?? [];
         if (q.type === 'true_false') {
-          const trueOpt = opts.find((o) => o.content?.text === 'True');
+          const trueOpt = opts.find((o) => getOptionText(o.content) === 'True');
           setCorrect(trueOpt?.is_correct ? 'true' : 'false');
           setOpt1('');
         } else if (q.type === 'fill_blank' || q.type === 'integer' || q.type === 'numerical') {
-          const text = opts[0]?.content?.text;
-          const value = opts[0]?.content?.value;
-          setOpt1(text != null ? String(text) : value != null ? String(value) : '');
+          setOpt1(getOptionText(opts[0]?.content) === '—' ? '' : getOptionText(opts[0]?.content));
           setCorrect('1');
         } else {
           const count = Math.min(5, Math.max(2, opts.length || 4)) as McqOptionCount;
           setOptionCount(count);
           setOptionTexts(
-            Array.from({ length: 5 }, (_, i) => opts[i]?.content?.text ?? ''),
+            Array.from({ length: 5 }, (_, i) => {
+              const t = getOptionText(opts[i]?.content);
+              return t === '—' ? '' : t;
+            }),
           );
           const correctIdx = opts.findIndex((o) => o.is_correct ?? o.isCorrect);
           setCorrect(String(correctIdx >= 0 ? correctIdx + 1 : 1));
@@ -855,7 +859,7 @@ export function QuestionBankPanel() {
             const qSearch = questionSearch.trim().toLowerCase();
             if (!qSearch) return true;
             return (
-              (q.content?.text ?? '').toLowerCase().includes(qSearch) ||
+              getQuestionText(q.content, '').toLowerCase().includes(qSearch) ||
               (q.department_name ?? '').toLowerCase().includes(qSearch) ||
               (q.subject_name ?? '').toLowerCase().includes(qSearch) ||
               (q.topic_name ?? '').toLowerCase().includes(qSearch) ||
@@ -915,7 +919,9 @@ export function QuestionBankPanel() {
               </tr>
             </thead>
             <tbody>
-              {filteredQuestions.map((q) => (
+              {filteredQuestions.map((q) => {
+                const label = getQuestionText(q.content);
+                return (
                 <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
                   <td>
                     <input
@@ -927,10 +933,10 @@ export function QuestionBankPanel() {
                           prev.includes(q.id) ? prev.filter((x) => x !== q.id) : [...prev, q.id],
                         )
                       }
-                      aria-label={`Select ${q.content?.text ?? q.id}`}
+                      aria-label={`Select ${label}`}
                     />
                   </td>
-                  <td>{q.content?.text ?? '—'}</td>
+                  <td className="edtp-q-cell">{label}</td>
                   <td>{q.department_name ?? '—'}</td>
                   <td>{q.subject_name ?? '—'}</td>
                   <td>{q.topic_name ?? '—'}</td>
@@ -938,6 +944,9 @@ export function QuestionBankPanel() {
                   <td>{q.status}</td>
                   <td>
                     <EdtpRowActions>
+                      <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(q.id)}>
+                        Preview
+                      </EdtpBtn>
                       <EdtpBtn variant="secondary" onClick={() => void handleEdit(q.id)}>
                         Edit
                       </EdtpBtn>
@@ -947,7 +956,8 @@ export function QuestionBankPanel() {
                     </EdtpRowActions>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
               {filteredQuestions.length === 0 && (
                 <tr>
                   <td colSpan={8}>No questions yet. Select department → subject → topic and add your first question.</td>
@@ -959,6 +969,10 @@ export function QuestionBankPanel() {
           );
         })()}
       </div>
+      <QuestionPreviewModal
+        questionId={previewQuestionId}
+        onClose={() => setPreviewQuestionId(null)}
+      />
     </>
   );
 }
@@ -1752,20 +1766,19 @@ export function ExamAttemptPage() {
 }
 
 function questionText(content: ExamResultQuestion['content']): string {
-  if (!content) return 'Question';
-  if (typeof content === 'string') {
-    try {
-      const parsed = JSON.parse(content) as { text?: string };
-      return parsed.text ?? content;
-    } catch {
-      return content;
-    }
-  }
-  return content.text ?? 'Question';
+  return getQuestionText(content);
 }
 
 function formatStudentAnswer(q: ExamResultQuestion): string {
-  const answer = q.answer;
+  const raw = q.answer as unknown;
+  let answer = raw as ExamResultQuestion['answer'];
+  if (typeof raw === 'string') {
+    try {
+      answer = JSON.parse(raw) as ExamResultQuestion['answer'];
+    } catch {
+      answer = null;
+    }
+  }
   if (!answer) return '—';
   if (answer.text != null && String(answer.text).trim() !== '') return String(answer.text);
   if (answer.value != null && String(answer.value) !== '') return String(answer.value);
@@ -1773,9 +1786,8 @@ function formatStudentAnswer(q: ExamResultQuestion): string {
   if (selected.length === 0) return '—';
   const labels = selected.map((id) => {
     const opt = q.options?.find((o) => o.id === id);
-    const text = opt?.content?.text;
-    const value = opt?.content?.value;
-    return text ?? (value != null ? String(value) : id.slice(0, 8));
+    const label = getOptionText(opt?.content);
+    return label === '—' ? id.slice(0, 8) : label;
   });
   return labels.join(', ');
 }
@@ -1783,9 +1795,7 @@ function formatStudentAnswer(q: ExamResultQuestion): string {
 function formatCorrectAnswer(q: ExamResultQuestion): string {
   const correct = (q.options ?? []).filter((o) => o.is_correct);
   if (correct.length === 0) return '—';
-  return correct
-    .map((o) => o.content?.text ?? (o.content?.value != null ? String(o.content.value) : '—'))
-    .join(', ');
+  return correct.map((o) => getOptionText(o.content)).join(', ');
 }
 
 export function ExamResultPage() {

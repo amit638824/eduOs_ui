@@ -7,6 +7,7 @@ import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { useExamProctoring } from '@/hooks/useExamProctoring';
 import { siteContent } from '@/data/siteContent';
 import type { AttemptQuestion, ExamSecurityConfig, TestAttempt } from '@/types/examination';
+import { getOptionText, getQuestionText } from '@/utils/questionContent';
 import '@/styles/exam-player.css';
 
 const DEFAULT_CONFIG: ExamSecurityConfig = {
@@ -465,7 +466,7 @@ export default function ExamAttemptPlayer() {
             </span>
           </div>
 
-          <p className="exam-question-text">{current.content?.text}</p>
+          <p className="exam-question-text">{getQuestionText(current.content)}</p>
 
           {(current.type === 'mcq' || current.type === 'msq' || current.type === 'true_false') && (
             <ul
@@ -489,7 +490,7 @@ export default function ExamAttemptPlayer() {
                       <span className="exam-option__label">
                         {OPTION_LETTERS[optIdx] ?? optIdx + 1}
                       </span>
-                      <span className="exam-option__text">{opt.content?.text}</span>
+                      <span className="exam-option__text">{getOptionText(opt.content)}</span>
                     </label>
                   </li>
                 );

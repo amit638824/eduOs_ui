@@ -44,6 +44,12 @@ export default function OrgSwitcher() {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!isSuperAdmin || loading || organizations.length === 0) return;
+    if (selectedOrgId && organizations.some((o) => o.id === selectedOrgId)) return;
+    setSelectedOrgId(organizations[0].id);
+  }, [isSuperAdmin, loading, organizations, selectedOrgId, setSelectedOrgId]);
+
   if (!isSuperAdmin) return null;
 
   const disabled = loading && organizations.length === 0;

@@ -214,7 +214,7 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
         { label: 'Assignments', href: `${base}/student-assignments`, icon: 'assignment' },
         { label: 'My Attempts', href: `${base}/student-my-quiz-attempts`, icon: 'quiz' },
         { label: 'Results', href: `${base}/student-reviews`, icon: 'star' },
-        { label: 'Certificates', href: `${base}/student-certificates`, icon: 'quiz' },
+        { label: 'Certificates', href: `${base}/student-certificates`, icon: 'certificate' },
         { label: 'Notifications', href: `${base}/student-message`, icon: 'message' },
         { label: 'Settings', href: `${base}/student-settings`, icon: 'settings' },
         logoutItem,
