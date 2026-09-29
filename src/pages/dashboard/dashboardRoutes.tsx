@@ -19,6 +19,7 @@ import {
   OrgStructurePanel,
   TestBuilderPanel,
 } from '@/components/dashboard/admin/PlatformPanels';
+import { CertificatesPanel } from '@/components/dashboard/CertificatesPanel';
 import { OrganizationsPanel } from '@/components/dashboard/admin/OrganizationsPanel';
 import {
   StudentDashboardHome,
@@ -99,6 +100,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/teacher-reviews" element={dash('teacher', <ReportsPanel />)} />
     <Route path="/dashboard/teacher-settings" element={dash('teacher', <DashboardSettingsContent />)} />
     <Route path="/dashboard/teacher-assignments" element={dash('teacher', <DashboardAssignmentsContent />)} />
+    <Route path="/dashboard/teacher-certificates" element={dash('teacher', <CertificatesPanel mode="org" />)} />
 
     {/* Shared authoring (admin + teacher) */}
     <Route path="/dashboard/create-test" element={<AuthorDash><CreateTestPanel /></AuthorDash>} />
@@ -114,6 +116,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/student-reviews" element={dash('student', <ResultsPanel />)} />
     <Route path="/dashboard/student-my-quiz-attempts" element={dash('student', <AttemptsListPanel title="My Attempts" />)} />
     <Route path="/dashboard/student-assignments" element={dash('student', <DashboardAssignmentsContent />)} />
+    <Route path="/dashboard/student-certificates" element={dash('student', <CertificatesPanel mode="mine" />)} />
     <Route path="/dashboard/student-settings" element={dash('student', <DashboardSettingsContent />)} />
     <Route path="/dashboard/exam/:testId/attempt/:attemptId" element={dash('student', <ExamAttemptPage />)} />
     <Route
@@ -128,6 +131,8 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/admin-course" element={dash('admin', <TestsListPanel title="All Tests" />)} />
     <Route path="/dashboard/admin-quiz-attempts" element={dash('admin', <AttemptsListPanel title="All Attempts" readOnly />)} />
     <Route path="/dashboard/admin-reviews" element={dash('admin', <ReportsPanel />)} />
+    <Route path="/dashboard/admin-assignments" element={dash('admin', <DashboardAssignmentsContent />)} />
+    <Route path="/dashboard/admin-certificates" element={dash('admin', <CertificatesPanel mode="org" />)} />
     <Route path="/dashboard/admin-wishlist" element={dash('admin', <PaymentsPanel />)} />
     <Route path="/dashboard/admin-settings" element={dash('admin', <DashboardSettingsContent />)} />
     <Route path="/dashboard/admin-users" element={dash('admin', <UsersManagementPanel />)} />

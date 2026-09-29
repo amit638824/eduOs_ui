@@ -157,6 +157,23 @@ export interface OrgAnalytics {
   attempts: number;
   results: number;
   branches: number;
+  assignments?: number;
+  certificates_issued?: number;
+  pass_rate?: number;
+  score_distribution?: {
+    below_40: number;
+    from_40_60: number;
+    from_60_80: number;
+    above_80: number;
+  };
+  recent_tests?: {
+    id: string;
+    title: string;
+    status: string;
+    attempt_count: number;
+    result_count: number;
+    avg_percentage: number;
+  }[];
 }
 
 export interface StudentStats {

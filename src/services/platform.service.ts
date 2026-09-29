@@ -280,11 +280,19 @@ export async function getTestReport(testId: string) {
   return data.data;
 }
 
-export async function exportTestReport(testId: string) {
+export async function exportTestReport(testId: string, format: 'csv' | 'pdf' = 'csv') {
   const response = await api.get(`${base}/reports/tests/${testId}/export`, {
+    params: { format },
     responseType: 'blob',
   });
   return response.data as Blob;
+}
+
+export async function computeRanks(testId: string) {
+  const { data } = await api.post<ApiResponse<{ message: string; count: number }>>(
+    `${base}/reports/tests/${testId}/compute-ranks`,
+  );
+  return data.data;
 }
 
 export async function enableMfa() {

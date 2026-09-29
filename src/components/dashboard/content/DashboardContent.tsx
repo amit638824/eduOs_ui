@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import DashboardProfilePage from '@/components/dashboard/DashboardProfilePage';
 import { useOrganization } from '@/hooks/useOrganization';
-import { organizationService, platformService } from '@/services';
+import { organizationService, platformService, examinationService } from '@/services';
 import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
@@ -35,7 +35,6 @@ import {
   dashboardCourses,
   messageContacts,
   quizAttempts,
-  assignments,
   reviewsReceived,
   orderHistory,
   announcements,
@@ -361,62 +360,161 @@ export function DashboardQuizAttemptsContent({ title }: { title: string }) {
 }
 
 export function DashboardAssignmentsContent() {
+  const { user } = useAuth();
+  const isStudent = user?.roles.includes('student') && !user.roles.some((r) =>
+    ['org_admin', 'super_admin', 'staff', 'teacher'].includes(r),
+  );
+  const [rows, setRows] = useState<
+    {
+      id: string;
+      title: string;
+      status?: string;
+      total_marks?: number;
+      duration_minutes?: number;
+      assigned_count?: number;
+      submitted_count?: number;
+      attempt_count?: number;
+      attempt_status?: string | null;
+      result_percentage?: number | null;
+      result_attempt_id?: string | null;
+      attempt_id?: string | null;
+    }[]
+  >([]);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    const load = isStudent
+      ? examinationService.listMyAssignedTests().then((data) =>
+          setRows(
+            data.map((t) => ({
+              id: t.id,
+              title: t.title,
+              status: t.status,
+              total_marks: t.total_marks ?? undefined,
+              duration_minutes: t.duration_minutes,
+              attempt_status: t.attempt_status,
+              result_percentage: t.result_percentage,
+              result_attempt_id: t.result_attempt_id,
+              attempt_id: t.attempt_id,
+            })),
+          ),
+        )
+      : examinationService.listAssignmentSummaries().then(setRows);
+
+    load
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setLoading(false));
+  }, [isStudent]);
+
+  useDashboardLoadingEffect(loading);
+
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>Assignment</h4>
-      </div>
-      <DashboardFilterRow />
-      <hr className="mt-40" />
-      <div className="row">
-        <div className="col-xl-12">
-          <div className="dashboard__table table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Assignment Name</th>
-                  <th>Total Marks</th>
-                  <th>Total Submit</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {assignments.map((row, i) => (
-                  <tr key={row.title} className={i % 2 === 1 ? 'dashboard__table__row' : undefined}>
-                    <th>
-                      <span>{row.title}</span>
-                      <p>
-                        course: <a href="#!">{row.course}</a>
+    <>
+      <DashboardPageHeader
+        badge="Exams"
+        title="Assignments"
+        subtitle={
+          isStudent
+            ? 'Tests assigned to you. Start or continue from My Tests when ready.'
+            : 'Assignment coverage across tests — who is assigned and how many have submitted.'
+        }
+      />
+      <div className="dashboard__content__wraper">
+        {error && <p className="login__error sp_bottom_15">{error}</p>}
+        <div className="dashboard__table table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Assignment / Test</th>
+                <th>Marks</th>
+                {isStudent ? (
+                  <>
+                    <th>Status</th>
+                    <th>Progress</th>
+                  </>
+                ) : (
+                  <>
+                    <th>Assigned</th>
+                    <th>Submitted</th>
+                    <th>Attempts</th>
+                  </>
+                )}
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.id}>
+                  <td>
+                    <strong>{row.title}</strong>
+                    {row.status && (
+                      <p className="mb-0 text-muted" style={{ fontSize: '0.8125rem' }}>
+                        {row.status}
+                        {row.duration_minutes ? ` · ${row.duration_minutes} min` : ''}
                       </p>
-                    </th>
-                    <td>
-                      <p>{row.marks}</p>
-                    </td>
-                    <td>
-                      <p>{row.submitted}</p>
-                    </td>
-                    <td>
-                      <div className="dashboard__button__group">
-                        <a className="dashboard__small__btn__2" href="#!">
-                          <i className="icofont-edit" />
-                          Edit
-                        </a>
-                        <a className="dashboard__small__btn__2 dashboard__small__btn__3" href="#!">
-                          <i className="icofont-paper-plane" /> Submit
-                        </a>
-                        <a className="dashboard__small__btn__2" href="#!">
-                          <i className="icofont-download" /> Download
-                        </a>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    )}
+                  </td>
+                  <td>{row.total_marks ?? '—'}</td>
+                  {isStudent ? (
+                    <>
+                      <td>{row.attempt_status?.replace('_', ' ') ?? 'Not started'}</td>
+                      <td>
+                        {row.result_percentage != null
+                          ? `${Number(row.result_percentage).toFixed(1)}%`
+                          : '—'}
+                      </td>
+                      <td>
+                        {row.result_attempt_id ? (
+                          <Link
+                            to={`/dashboard/exam-result/${row.result_attempt_id}`}
+                            className="dashboard__small__btn__2"
+                          >
+                            Result
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/dashboard/student-enrolled-courses"
+                            className="dashboard__small__btn__2"
+                          >
+                            Open My Tests
+                          </Link>
+                        )}
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td>{row.assigned_count ?? 0}</td>
+                      <td>{row.submitted_count ?? 0}</td>
+                      <td>{row.attempt_count ?? 0}</td>
+                      <td>
+                        <Link
+                          to={`/dashboard/test-builder/${row.id}`}
+                          className="dashboard__small__btn__2"
+                        >
+                          Manage
+                        </Link>
+                      </td>
+                    </>
+                  )}
+                </tr>
+              ))}
+              {rows.length === 0 && (
+                <tr>
+                  <td colSpan={isStudent ? 5 : 6}>
+                    {isStudent
+                      ? 'No tests assigned yet.'
+                      : 'No tests found. Create and assign a test from Test Builder.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

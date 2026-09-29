@@ -19,6 +19,7 @@ import BlogPostPage from '@/pages/BlogPostPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+import VerifyCertificatePage from '@/pages/VerifyCertificatePage';
 import { dashboardRouteElements } from '@/pages/dashboard/dashboardRoutes';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -44,6 +45,7 @@ export default function App() {
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/blog" element={<BlogPage />} />
                 <Route path="/blog/:slug" element={<BlogPostPage />} />
+                <Route path="/verify-certificate" element={<VerifyCertificatePage />} />
 
                 <Route path="/instructor" element={<Navigate to="/dashboard/become-a-teacher" replace />} />
                 <Route path="/instructor-details" element={<Navigate to="/dashboard/become-a-teacher" replace />} />

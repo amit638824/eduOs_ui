@@ -1794,6 +1794,8 @@ export function ExamResultPage() {
   const [result, setResult] = useState<ExamResult | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [certBusy, setCertBusy] = useState(false);
+  const withLoader = useDashboardLoader();
   const roles = user?.roles ?? [];
   const isStaffLike = roles.some((r) =>
     ['super_admin', 'org_admin', 'staff', 'branch_admin'].includes(r),
@@ -1818,17 +1820,50 @@ export function ExamResultPage() {
 
   useDashboardLoadingEffect(loading);
 
+  const handleIssueCertificate = async () => {
+    if (!result?.id) return;
+    setCertBusy(true);
+    await withLoader(async () => {
+      try {
+        const cert = await examinationService.issueCertificate(result.id);
+        showSuccess('Certificate issued', cert.certificate_no);
+        const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
+        await downloadCertificateReactPdf(cert);
+      } catch (err) {
+        showError('Certificate', parseApiError(err));
+      } finally {
+        setCertBusy(false);
+      }
+    });
+  };
+
   if (error) return <p className="login__error">{error}</p>;
   if (!result) return null;
 
   const studentName = [result.first_name, result.last_name].filter(Boolean).join(' ');
   const questions = result.questions ?? [];
+  const passing = result.passing_marks != null && Number(result.passing_marks) > 0
+    ? Number(result.total_score) >= Number(result.passing_marks)
+    : Number(result.percentage) >= 40;
 
   return (
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title">
         <h4>Result — {result.test_title}</h4>
         {studentName ? <p className="text-muted mb-0">Student: {studentName}</p> : null}
+      </div>
+      <div className="d-flex flex-wrap gap-2 sp_bottom_20">
+        <Link to={backHref} className="edtp-btn edtp-btn--secondary edtp-btn--sm">
+          Back
+        </Link>
+        {passing && (
+          <EdtpBtn variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
+            {certBusy ? 'Issuing…' : 'Get certificate PDF'}
+          </EdtpBtn>
+        )}
+        <Link to="/verify-certificate" className="edtp-btn edtp-btn--ghost edtp-btn--sm">
+          Verify certificate
+        </Link>
       </div>
       <div className="row">
         <div className="col-xl-3 col-lg-6 sp_bottom_20">

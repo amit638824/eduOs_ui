@@ -698,10 +698,27 @@ export function ReportsPanel() {
       avg_score?: number | string;
       max_score?: number | string;
       min_score?: number | string;
+      pass_rate?: number;
+      passed?: number;
     };
     results?: Record<string, unknown>[];
   } | null>(null);
   const [overview, setOverview] = useState<Record<string, unknown> | null>(null);
+  const [analytics, setAnalytics] = useState<import('@/types/examination').OrgAnalytics | null>(null);
+  const [testAnalytics, setTestAnalytics] = useState<{
+    total_attempts?: number;
+    completed?: number;
+    avg_percentage?: number | string;
+    highest_score?: number | string;
+    lowest_score?: number | string;
+    pass_rate?: number;
+    score_distribution?: {
+      below_40: number;
+      from_40_60: number;
+      from_60_80: number;
+      above_80: number;
+    };
+  } | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [reportLoading, setReportLoading] = useState(false);
@@ -712,6 +729,7 @@ export function ReportsPanel() {
     Promise.all([
       examinationService.listTests(1, 50).then((r) => setTests(r.data)),
       platformService.getOrgOverviewReport().then(setOverview),
+      examinationService.getAnalyticsOverview().then(setAnalytics).catch(() => null),
     ])
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setLoading(false));
@@ -724,25 +742,51 @@ export function ReportsPanel() {
     setError('');
     if (!testId) {
       setReport(null);
+      setTestAnalytics(null);
       return;
     }
     setReportLoading(true);
     try {
-      const data = await platformService.getTestReport(testId);
+      const [data, ta] = await Promise.all([
+        platformService.getTestReport(testId),
+        examinationService.getTestAnalytics(testId).catch(() => null),
+      ]);
       setReport(data as typeof report);
+      setTestAnalytics(ta?.stats ?? null);
     } catch (err) {
       setError(parseApiError(err));
       setReport(null);
+      setTestAnalytics(null);
     } finally {
       setReportLoading(false);
     }
   };
 
-  const exportCsv = async () => {
+  const exportReport = async (format: 'csv' | 'pdf') => {
     if (!selected) return;
     await withLoader(async () => {
       try {
-        const blob = await platformService.exportTestReport(selected);
+        if (format === 'pdf') {
+          const data = report ?? ((await platformService.getTestReport(selected)) as unknown as NonNullable<typeof report>);
+          if (!data) throw new Error('No report data');
+          const { downloadTestReportReactPdf } = await import('@/pdf/downloadCertificate');
+          await downloadTestReportReactPdf({
+            testTitle: String(data.test?.title ?? selectedTitle ?? 'Test'),
+            stats: {
+              attempt_count: Number(data.stats?.attempt_count ?? data.results?.length ?? 0),
+              avg_score: data.stats?.avg_score,
+              max_score: data.stats?.max_score,
+              min_score: data.stats?.min_score,
+              pass_rate: data.stats?.pass_rate,
+              passed: data.stats?.passed,
+            },
+            results: (data.results ?? []) as import('@/pdf/TestReportDocument').TestReportPdfRow[],
+            filename: `test-report-${selected}.pdf`,
+          });
+          showSuccess('Exported', 'PDF download started.');
+          return;
+        }
+        const blob = await platformService.exportTestReport(selected, 'csv');
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -756,23 +800,61 @@ export function ReportsPanel() {
     });
   };
 
-  const overviewCards = [
-    { key: 'users' as const, label: 'Users', hint: 'Active accounts', prefix: '' },
-    { key: 'tests' as const, label: 'Tests', hint: 'Created exams', prefix: '' },
-    { key: 'attempts' as const, label: 'Attempts', hint: 'Student attempts', prefix: '' },
-    { key: 'revenue' as const, label: 'Revenue', hint: 'Completed payments', prefix: '₹' },
+  const recomputeRanks = async () => {
+    if (!selected) return;
+    await withLoader(async () => {
+      try {
+        const res = await platformService.computeRanks(selected);
+        showSuccess('Ranks updated', `${res.count} result(s) ranked.`);
+        await loadReport(selected);
+      } catch (err) {
+        showError('Rank update failed', parseApiError(err));
+      }
+    });
+  };
+
+  const issueCert = async (resultId: string) => {
+    await withLoader(async () => {
+      try {
+        const cert = await examinationService.issueCertificate(resultId);
+        showSuccess('Certificate issued', cert.certificate_no);
+        const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
+        await downloadCertificateReactPdf(cert);
+        if (selected) await loadReport(selected);
+      } catch (err) {
+        showError('Could not issue', parseApiError(err));
+      }
+    });
+  };
+
+  const overviewCards: {
+    key: string;
+    label: string;
+    hint: string;
+    prefix?: string;
+    suffix?: string;
+  }[] = [
+    { key: 'users', label: 'Users', hint: 'Active accounts' },
+    { key: 'tests', label: 'Tests', hint: 'Created exams' },
+    { key: 'attempts', label: 'Attempts', hint: 'Student attempts' },
+    { key: 'assignments', label: 'Assignments', hint: 'Student–test links' },
+    { key: 'certificates', label: 'Certificates', hint: 'Issued' },
+    { key: 'pass_rate', label: 'Pass rate', hint: 'Org-wide', suffix: '%' },
+    { key: 'revenue', label: 'Revenue', hint: 'Completed payments', prefix: '₹' },
   ];
 
   const results = report?.results ?? [];
   const stats = report?.stats;
   const selectedTitle = tests.find((t) => t.id === selected)?.title ?? report?.test?.title;
+  const dist = testAnalytics?.score_distribution ?? analytics?.score_distribution;
+  const distTitle = selected && testAnalytics?.score_distribution ? 'Test score distribution' : 'Org score distribution';
 
   return (
     <>
       <DashboardPageHeader
         badge="Insights"
         title="Reports & Analytics"
-        subtitle="Organization overview and per-test performance. Export results when you need a spreadsheet."
+        subtitle="Organization overview, score distribution, per-test ranks, CSV/PDF export, and certificates."
       />
       <div className="dashboard__content__wraper">
         {error && <EdtpAlert type="error">{error}</EdtpAlert>}
@@ -784,24 +866,72 @@ export function ReportsPanel() {
               <strong className="sca-report-stat__value">
                 {card.prefix ?? ''}
                 {overview ? String(overview[card.key] ?? '0') : '—'}
+                {card.suffix ?? ''}
               </strong>
               <span className="sca-report-stat__hint">{card.hint}</span>
             </div>
           ))}
         </div>
 
+        {dist && (
+          <section className="edtp-form-card sca-report-panel sp_bottom_20">
+            <h5 className="mb-2">{distTitle}</h5>
+            {selected && testAnalytics && (
+              <p className="text-muted sp_bottom_15" style={{ fontSize: '0.8125rem' }}>
+                Attempts {testAnalytics.total_attempts ?? 0} · Completed {testAnalytics.completed ?? 0} · Avg{' '}
+                {Number(testAnalytics.avg_percentage ?? 0).toFixed(1)}% · Pass rate{' '}
+                {Number(testAnalytics.pass_rate ?? 0).toFixed(1)}%
+              </p>
+            )}
+            <div className="sca-score-bars">
+              {[
+                { label: '< 40%', value: Number(dist.below_40 ?? 0) },
+                { label: '40–60%', value: Number(dist.from_40_60 ?? 0) },
+                { label: '60–80%', value: Number(dist.from_60_80 ?? 0) },
+                { label: '80%+', value: Number(dist.above_80 ?? 0) },
+              ].map((b) => {
+                const total =
+                  Number(dist.below_40 ?? 0) +
+                  Number(dist.from_40_60 ?? 0) +
+                  Number(dist.from_60_80 ?? 0) +
+                  Number(dist.above_80 ?? 0);
+                const pct = total > 0 ? Math.round((b.value / total) * 100) : 0;
+                return (
+                  <div key={b.label} className="sca-score-bars__row">
+                    <span className="sca-score-bars__label">{b.label}</span>
+                    <div className="sca-score-bars__track">
+                      <div className="sca-score-bars__fill" style={{ width: `${pct}%` }} />
+                    </div>
+                    <span className="sca-score-bars__value">
+                      {b.value} ({pct}%)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
         <section className="edtp-form-card sca-report-panel">
           <div className="sca-report-panel__head">
             <div>
               <h5 className="mb-1">Test report</h5>
               <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
-                Choose a test to view ranks, scores, and export CSV.
+                Choose a test to view ranks, export CSV/PDF, and issue certificates for passers.
               </p>
             </div>
             {selected && (
-              <EdtpBtn variant="primary" onClick={() => void exportCsv()} disabled={results.length === 0}>
-                Export CSV
-              </EdtpBtn>
+              <div className="d-flex flex-wrap gap-2">
+                <EdtpBtn variant="ghost" onClick={() => void recomputeRanks()}>
+                  Recompute ranks
+                </EdtpBtn>
+                <EdtpBtn variant="secondary" onClick={() => void exportReport('csv')} disabled={results.length === 0}>
+                  Export CSV
+                </EdtpBtn>
+                <EdtpBtn variant="primary" onClick={() => void exportReport('pdf')} disabled={results.length === 0}>
+                  Export PDF
+                </EdtpBtn>
+              </div>
             )}
           </div>
 
@@ -836,8 +966,8 @@ export function ReportsPanel() {
                   <strong>{Number(stats?.avg_score ?? 0).toFixed(1)}</strong>
                 </div>
                 <div>
-                  <span className="sca-report-meta__label">Best</span>
-                  <strong>{Number(stats?.max_score ?? 0).toFixed(1)}</strong>
+                  <span className="sca-report-meta__label">Pass rate</span>
+                  <strong>{Number(stats?.pass_rate ?? 0).toFixed(1)}%</strong>
                 </div>
               </div>
 
@@ -855,13 +985,13 @@ export function ReportsPanel() {
                         <th>Email</th>
                         <th>Score</th>
                         <th>%</th>
-                        <th>Accuracy</th>
-                        <th>Analysis</th>
+                        <th>Certificate</th>
+                        <th />
                       </tr>
                     </thead>
                     <tbody>
                       {results.map((r, i) => (
-                        <tr key={(r.id as string) ?? i}>
+                        <tr key={(r.result_id as string) ?? (r.id as string) ?? i}>
                           <td>
                             <span className="sca-report-rank">{(r.rank as number) ?? i + 1}</span>
                           </td>
@@ -874,7 +1004,14 @@ export function ReportsPanel() {
                           </td>
                           <td>{Number(r.percentage).toFixed(1)}%</td>
                           <td>
-                            {r.accuracy != null ? `${Number(r.accuracy).toFixed(1)}%` : '—'}
+                            {(r.certificate_no as string) || (
+                              <EdtpBtn
+                                variant="ghost"
+                                onClick={() => void issueCert(String(r.result_id ?? r.id))}
+                              >
+                                Issue
+                              </EdtpBtn>
+                            )}
                           </td>
                           <td>
                             {r.attempt_id ? (

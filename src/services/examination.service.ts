@@ -19,6 +19,32 @@ export async function getAnalyticsOverview(): Promise<OrgAnalytics> {
   return data.data;
 }
 
+export async function getTestAnalytics(testId: string) {
+  const { data } = await api.get<
+    ApiResponse<{
+      test: { id: string; title: string; passing_marks?: number | null; total_marks?: number | null };
+      stats: {
+        total_attempts: number;
+        completed: number;
+        avg_percentage: number | string;
+        highest_score: number | string;
+        lowest_score: number | string;
+        avg_accuracy?: number | string;
+        pass_rate?: number;
+        passed?: number;
+        graded?: number;
+        score_distribution?: {
+          below_40: number;
+          from_40_60: number;
+          from_60_80: number;
+          above_80: number;
+        };
+      };
+    } | null>
+  >(`${base}/analytics/tests/${testId}`);
+  return data.data;
+}
+
 export async function listSubjects(page = 1, limit = 50, departmentId?: string) {
   const { data } = await api.get<PaginatedResponse<Subject>>(`${base}/subjects`, {
     params: { page, limit, departmentId },
@@ -107,6 +133,87 @@ export async function deleteQuestion(id: string) {
 
 export async function approveQuestion(id: string) {
   const { data } = await api.post<ApiResponse<Question>>(`${base}/questions/${id}/approve`);
+  return data.data;
+}
+
+export interface Certificate {
+  id: string;
+  result_id: string;
+  student_id: string;
+  certificate_no: string;
+  verification_code: string;
+  status: 'issued' | 'revoked';
+  issued_at: string;
+  test_title?: string;
+  percentage?: number;
+  total_score?: number;
+  max_score?: number;
+  student_name?: string;
+  org_name?: string;
+  verify_url?: string;
+  enrollment_no?: string | null;
+}
+
+export async function listMyCertificates() {
+  const { data } = await api.get<ApiResponse<Certificate[]>>(`${base}/certificates/mine`);
+  return data.data;
+}
+
+export async function listCertificates(page = 1, limit = 50) {
+  const { data } = await api.get<PaginatedResponse<Certificate>>(`${base}/certificates`, {
+    params: { page, limit },
+  });
+  return data;
+}
+
+export async function getCertificate(id: string) {
+  const { data } = await api.get<ApiResponse<Certificate>>(`${base}/certificates/${id}`);
+  return data.data;
+}
+
+export async function issueCertificate(resultId: string) {
+  const { data } = await api.post<ApiResponse<Certificate>>(
+    `${base}/results/${resultId}/certificate`,
+  );
+  return data.data;
+}
+
+export async function downloadCertificatePdf(id: string) {
+  const response = await api.get(`${base}/certificates/${id}/pdf`, { responseType: 'blob' });
+  return response.data as Blob;
+}
+
+export async function revokeCertificate(id: string) {
+  const { data } = await api.post<ApiResponse<{ id: string; status: string }>>(
+    `${base}/certificates/${id}/revoke`,
+  );
+  return data.data;
+}
+
+export async function verifyCertificatePublic(code: string) {
+  const { data } = await api.get<ApiResponse<Record<string, unknown>>>(
+    `/certificates/verify/${encodeURIComponent(code)}`,
+  );
+  return data.data;
+}
+
+export async function listAssignmentSummaries() {
+  const { data } = await api.get<
+    ApiResponse<
+      {
+        id: string;
+        title: string;
+        status: string;
+        total_marks: number;
+        duration_minutes?: number;
+        assigned_count: number;
+        attempt_count: number;
+        submitted_count: number;
+        scheduled_start?: string;
+        scheduled_end?: string;
+      }[]
+    >
+  >(`${base}/assignments/summary`);
   return data.data;
 }
 
