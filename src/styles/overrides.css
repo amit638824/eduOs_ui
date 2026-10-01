@@ -1054,6 +1054,36 @@ body.sca-dashboard-body .sca-dashboard .edtp-btn--primary,
   color: #0f172a;
 }
 
+.sca-exam-result-q__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.sca-exam-result-opt {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.875rem;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.sca-exam-result-opt--correct {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #166534;
+  font-weight: 600;
+}
+
+.sca-exam-result-opt--wrong {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
 .sca-exam-countdown {
   display: inline-flex;
   align-items: center;

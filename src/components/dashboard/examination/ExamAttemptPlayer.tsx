@@ -20,6 +20,7 @@ const DEFAULT_CONFIG: ExamSecurityConfig = {
   autoSubmit: true,
   allowResume: true,
   maxTabSwitches: 5,
+  releaseAnswers: false,
 };
 
 type AttemptData = TestAttempt & {

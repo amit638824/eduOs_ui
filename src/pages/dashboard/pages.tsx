@@ -26,25 +26,37 @@ import {
   DashboardBecomeInstructorContent,
   DashboardSettingsContent,
 } from '@/components/dashboard/content/DashboardContent';
-import { feedbackRows } from '@/data/dashboardData';
 import { useOrganization } from '@/hooks/useOrganization';
 import { examinationService } from '@/services';
-import type { OrgAnalytics, StudentStats } from '@/types/examination';
+import type { ExamResult, OrgAnalytics, StudentStats } from '@/types/examination';
+import type { DashboardTableRow } from '@/types/dashboard';
+import { feedbackRows } from '@/data/dashboardData';
 
 export function StudentDashboardHome() {
   const [stats, setStats] = useState<StudentStats | null>(null);
+  const [recentResults, setRecentResults] = useState<ExamResult[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    examinationService
-      .getMyStats()
-      .then(setStats)
-      .catch(() => setStats(null))
+    Promise.all([
+      examinationService.getMyStats().catch(() => null),
+      examinationService.listMyResults().catch(() => [] as ExamResult[]),
+    ])
+      .then(([s, results]) => {
+        setStats(s);
+        setRecentResults((results ?? []).slice(0, 5));
+      })
       .finally(() => setLoading(false));
   }, []);
 
   useDashboardLoadingEffect(loading);
+
+  const feedbackRows: DashboardTableRow[] = recentResults.map((r) => ({
+    name: r.test_title || 'Test',
+    enrolled: `${Number(r.percentage).toFixed(1)}% · ${r.total_score}/${r.max_score}`,
+    rating: Math.max(1, Math.min(5, Math.round(Number(r.percentage) / 20))),
+  }));
 
   return (
     <>
@@ -90,9 +102,14 @@ export function StudentDashboardHome() {
           { value: String(stats?.assigned_tests ?? '—'), label: 'Assigned Tests', icon: '/img/counter/counter__1.png' },
           { value: String(stats?.in_progress ?? '—'), label: 'In Progress', icon: '/img/counter/counter__2.png' },
           { value: String(stats?.results ?? '—'), label: 'Results', icon: '/img/counter/counter__3.png' },
+          { value: String(stats?.certificates_count ?? '—'), label: 'Certificates', icon: '/img/counter/counter__1.png' },
         ]}
       />
-      <DashboardFeedbackTable title="Recent Test Feedbacks" rows={feedbackRows} />
+      <DashboardFeedbackTable
+        title="Recent Results"
+        rows={feedbackRows}
+        seeMoreHref="/dashboard/student-reviews"
+      />
     </>
   );
 }

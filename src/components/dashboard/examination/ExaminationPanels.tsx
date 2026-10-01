@@ -112,6 +112,8 @@ export function QuestionBankPanel() {
   const [newQ, setNewQ] = useState('');
   const [questionType, setQuestionType] = useState<QuestionType>('mcq');
   const [marksInput, setMarksInput] = useState(() => String(loadQbPrefs().marksPerQuestion ?? 1));
+  const [difficultyInput, setDifficultyInput] = useState('2');
+  const [negativeMarksInput, setNegativeMarksInput] = useState('0');
   const [optionCount, setOptionCount] = useState<McqOptionCount>(() => loadQbPrefs().optionCount ?? 4);
   const [optionTexts, setOptionTexts] = useState<string[]>(() => [...DEFAULT_OPTION_TEXTS]);
   const [correct, setCorrect] = useState('1');
@@ -358,6 +360,8 @@ export function QuestionBankPanel() {
         if (q.department_id) setDepartmentId(q.department_id);
         if (q.subject_id) setSubjectId(q.subject_id);
         if (q.topic_id) setTopicId(q.topic_id);
+        setDifficultyInput(String(q.difficulty ?? 2));
+        setNegativeMarksInput(String((q as { negative_marks?: number }).negative_marks ?? 0));
 
         const opts = q.options ?? [];
         if (q.type === 'true_false') {
@@ -493,11 +497,22 @@ export function QuestionBankPanel() {
       setError('Marks per question must be at least 1.');
       return;
     }
+    const difficulty = Number(difficultyInput);
+    if (!Number.isInteger(difficulty) || difficulty < 1 || difficulty > 5) {
+      setError('Difficulty must be an integer from 1 to 5.');
+      return;
+    }
+    const negativeMarks = Number(negativeMarksInput);
+    if (!Number.isFinite(negativeMarks) || negativeMarks < 0) {
+      setError('Negative marks must be 0 or more.');
+      return;
+    }
     const payload = {
       type: questionType,
       content: { text: newQ },
       marks,
-      difficulty: 2,
+      difficulty,
+      negativeMarks,
       topicId,
       options: buildOptions(),
     };
@@ -745,6 +760,29 @@ export function QuestionBankPanel() {
               </EdtpField>
             </div>
             <div className="col-md-4">
+              <EdtpField label="Difficulty (1–5)" hint="1 = easy, 5 = hard.">
+                <EdtpSelect value={difficultyInput} onChange={(e) => setDifficultyInput(e.target.value)}>
+                  <option value="1">1 — Easy</option>
+                  <option value="2">2</option>
+                  <option value="3">3 — Medium</option>
+                  <option value="4">4</option>
+                  <option value="5">5 — Hard</option>
+                </EdtpSelect>
+              </EdtpField>
+            </div>
+            <div className="col-md-4">
+              <EdtpField label="Negative marks" hint="Penalty if wrong (0 = none).">
+                <input
+                  type="number"
+                  className="register__input edtp-number-input"
+                  min={0}
+                  step={0.25}
+                  value={negativeMarksInput}
+                  onChange={(e) => setNegativeMarksInput(e.target.value)}
+                />
+              </EdtpField>
+            </div>
+            <div className="col-md-4">
               <EdtpField
                 label="Number of Options"
                 hint={
@@ -984,6 +1022,15 @@ export function TestsListPanel({ title }: { title: string }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDuration, setEditDuration] = useState('60');
+  const [editPassingMarks, setEditPassingMarks] = useState('40');
+  const [editInstructions, setEditInstructions] = useState('');
+  const [editShuffleQuestions, setEditShuffleQuestions] = useState(false);
+  const [editShuffleOptions, setEditShuffleOptions] = useState(false);
+  const [editNegativeMarking, setEditNegativeMarking] = useState(false);
+  const [editFullScreen, setEditFullScreen] = useState(true);
+  const [editAllowResume, setEditAllowResume] = useState(true);
+  const [editReleaseAnswers, setEditReleaseAnswers] = useState(false);
+  const [editMaxTabSwitches, setEditMaxTabSwitches] = useState('5');
   const withLoader = useDashboardLoader();
 
   const load = () => {
@@ -1020,6 +1067,16 @@ export function TestsListPanel({ title }: { title: string }) {
     setEditingId(t.id);
     setEditTitle(t.title);
     setEditDuration(String(t.duration_minutes ?? 60));
+    setEditPassingMarks(String(t.passing_marks ?? 40));
+    setEditInstructions(t.instructions ?? '');
+    const cfg = (t.config ?? {}) as Record<string, unknown>;
+    setEditShuffleQuestions(Boolean(cfg.shuffleQuestions));
+    setEditShuffleOptions(Boolean(cfg.shuffleOptions));
+    setEditNegativeMarking(Boolean(cfg.negativeMarking));
+    setEditFullScreen(cfg.fullScreen !== false);
+    setEditAllowResume(cfg.allowResume !== false);
+    setEditReleaseAnswers(Boolean(cfg.releaseAnswers));
+    setEditMaxTabSwitches(String(cfg.maxTabSwitches ?? 5));
   };
 
   const saveEdit = async () => {
@@ -1029,12 +1086,39 @@ export function TestsListPanel({ title }: { title: string }) {
       setError('Duration must be at least 1 minute.');
       return;
     }
+    const passing = Number(editPassingMarks);
+    if (!Number.isFinite(passing) || passing < 0) {
+      setError('Passing marks must be 0 or more.');
+      return;
+    }
+    const maxTabs = Number(editMaxTabSwitches);
+    if (!Number.isInteger(maxTabs) || maxTabs < 0) {
+      setError('Max tab switches must be 0 or more.');
+      return;
+    }
     setError('');
     await withLoader(async () => {
       try {
+        const current = tests.find((x) => x.id === editingId);
+        const prevConfig = (current?.config ?? {}) as Record<string, unknown>;
         await examinationService.updateTest(editingId, {
           title: editTitle.trim(),
           durationMinutes: duration,
+          passingMarks: passing,
+          instructions: editInstructions.trim(),
+          config: {
+            ...prevConfig,
+            shuffleQuestions: editShuffleQuestions,
+            shuffleOptions: editShuffleOptions,
+            negativeMarking: editNegativeMarking,
+            fullScreen: editFullScreen,
+            allowResume: editAllowResume,
+            releaseAnswers: editReleaseAnswers,
+            maxTabSwitches: maxTabs,
+            browserLock: true,
+            blockCopyPaste: true,
+            autoSubmit: true,
+          },
         });
         setEditingId(null);
         showSuccess('Updated', 'Test details saved.');
@@ -1116,6 +1200,75 @@ export function TestsListPanel({ title }: { title: string }) {
                   onChange={(e) => setEditDuration(e.target.value)}
                   onBlur={() => setEditDuration(normalizePositiveIntInput(editDuration, 60))}
                 />
+              </div>
+              <div className="col-md-3">
+                <label>Passing marks</label>
+                <input
+                  className="register__input edtp-number-input"
+                  type="number"
+                  min={0}
+                  value={editPassingMarks}
+                  onChange={(e) => setEditPassingMarks(e.target.value)}
+                />
+              </div>
+              <div className="col-12">
+                <label>Instructions</label>
+                <textarea
+                  className="register__input"
+                  rows={2}
+                  value={editInstructions}
+                  onChange={(e) => setEditInstructions(e.target.value)}
+                />
+              </div>
+              <div className="col-12">
+                <div className="row g-2">
+                  <div className="col-md-4">
+                    <label className="d-flex align-items-center gap-2">
+                      <input type="checkbox" checked={editShuffleQuestions} onChange={(e) => setEditShuffleQuestions(e.target.checked)} />
+                      Shuffle questions
+                    </label>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="d-flex align-items-center gap-2">
+                      <input type="checkbox" checked={editShuffleOptions} onChange={(e) => setEditShuffleOptions(e.target.checked)} />
+                      Shuffle options
+                    </label>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="d-flex align-items-center gap-2">
+                      <input type="checkbox" checked={editNegativeMarking} onChange={(e) => setEditNegativeMarking(e.target.checked)} />
+                      Negative marking
+                    </label>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="d-flex align-items-center gap-2">
+                      <input type="checkbox" checked={editFullScreen} onChange={(e) => setEditFullScreen(e.target.checked)} />
+                      Fullscreen
+                    </label>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="d-flex align-items-center gap-2">
+                      <input type="checkbox" checked={editAllowResume} onChange={(e) => setEditAllowResume(e.target.checked)} />
+                      Allow resume
+                    </label>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="d-flex align-items-center gap-2">
+                      <input type="checkbox" checked={editReleaseAnswers} onChange={(e) => setEditReleaseAnswers(e.target.checked)} />
+                      Release answer key
+                    </label>
+                  </div>
+                  <div className="col-md-4">
+                    <label>Max tab switches</label>
+                    <input
+                      className="register__input edtp-number-input"
+                      type="number"
+                      min={0}
+                      value={editMaxTabSwitches}
+                      onChange={(e) => setEditMaxTabSwitches(e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
               <div className="col-12">
                 <EdtpFormActions>
@@ -1532,6 +1685,15 @@ export function CreateTestPanel() {
       departmentId: '',
       subjectId: '',
       topicId: '',
+      passingMarks: '40',
+      instructions: 'Read all questions carefully. Do not switch tabs during the exam.',
+      shuffleQuestions: false,
+      shuffleOptions: false,
+      negativeMarking: false,
+      fullScreen: true,
+      allowResume: true,
+      releaseAnswers: false,
+      maxTabSwitches: '5',
     },
   });
 
@@ -1629,8 +1791,8 @@ export function CreateTestPanel() {
           title: values.title,
           description: values.description,
           durationMinutes: duration,
-          passingMarks: 40,
-          instructions: 'Read all questions carefully. Do not switch tabs during the exam.',
+          passingMarks: Number(values.passingMarks),
+          instructions: values.instructions || 'Read all questions carefully.',
           config: {
             departmentId: values.departmentId,
             departmentName: dept?.name,
@@ -1638,6 +1800,16 @@ export function CreateTestPanel() {
             subjectName: subject?.name,
             topicId: values.topicId,
             topicName: topic?.name,
+            shuffleQuestions: Boolean(values.shuffleQuestions),
+            shuffleOptions: Boolean(values.shuffleOptions),
+            negativeMarking: Boolean(values.negativeMarking),
+            fullScreen: Boolean(values.fullScreen),
+            allowResume: Boolean(values.allowResume),
+            releaseAnswers: Boolean(values.releaseAnswers),
+            maxTabSwitches: Number(values.maxTabSwitches) || 5,
+            browserLock: true,
+            blockCopyPaste: true,
+            autoSubmit: true,
           },
         });
         reset();
@@ -1747,9 +1919,77 @@ export function CreateTestPanel() {
               />
               <FormError message={errors.duration?.message} />
             </div>
+            <div className="col-md-6">
+              <label htmlFor="passingMarks">Passing marks</label>
+              <input
+                id="passingMarks"
+                type="number"
+                min={0}
+                step={1}
+                className={inputClassName('register__input edtp-number-input', !!errors.passingMarks)}
+                {...register('passingMarks')}
+              />
+              <FormError message={errors.passingMarks?.message} />
+            </div>
             <div className="col-12">
               <label htmlFor="aboutExam">Description (optional)</label>
-              <textarea id="aboutExam" rows={3} className={inputClassName('register__input', !!errors.description)} {...register('description')} />
+              <textarea id="aboutExam" rows={2} className={inputClassName('register__input', !!errors.description)} {...register('description')} />
+            </div>
+            <div className="col-12">
+              <label htmlFor="instructions">Exam instructions</label>
+              <textarea
+                id="instructions"
+                rows={3}
+                className={inputClassName('register__input', !!errors.instructions)}
+                {...register('instructions')}
+              />
+              <FormError message={errors.instructions?.message} />
+            </div>
+            <div className="col-12">
+              <h5 className="mb-2">Exam rules</h5>
+              <div className="row g-2">
+                <div className="col-md-4">
+                  <label className="d-flex align-items-center gap-2">
+                    <input type="checkbox" {...register('shuffleQuestions')} /> Shuffle questions
+                  </label>
+                </div>
+                <div className="col-md-4">
+                  <label className="d-flex align-items-center gap-2">
+                    <input type="checkbox" {...register('shuffleOptions')} /> Shuffle options
+                  </label>
+                </div>
+                <div className="col-md-4">
+                  <label className="d-flex align-items-center gap-2">
+                    <input type="checkbox" {...register('negativeMarking')} /> Negative marking
+                  </label>
+                </div>
+                <div className="col-md-4">
+                  <label className="d-flex align-items-center gap-2">
+                    <input type="checkbox" {...register('fullScreen')} /> Fullscreen required
+                  </label>
+                </div>
+                <div className="col-md-4">
+                  <label className="d-flex align-items-center gap-2">
+                    <input type="checkbox" {...register('allowResume')} /> Allow resume
+                  </label>
+                </div>
+                <div className="col-md-4">
+                  <label className="d-flex align-items-center gap-2">
+                    <input type="checkbox" {...register('releaseAnswers')} /> Release answer key
+                  </label>
+                </div>
+                <div className="col-md-4">
+                  <label htmlFor="maxTabSwitches">Max tab switches</label>
+                  <input
+                    id="maxTabSwitches"
+                    type="number"
+                    min={0}
+                    className={inputClassName('register__input edtp-number-input', !!errors.maxTabSwitches)}
+                    {...register('maxTabSwitches')}
+                  />
+                  <FormError message={errors.maxTabSwitches?.message} />
+                </div>
+              </div>
             </div>
             <div className="col-12">
               <button type="submit" className="default__button auth-submit-btn">Save &amp; Build Test</button>
@@ -1805,6 +2045,9 @@ export function ExamResultPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [certBusy, setCertBusy] = useState(false);
+  const [existingCert, setExistingCert] = useState<Awaited<
+    ReturnType<typeof examinationService.listMyCertificates>
+  >[number] | null>(null);
   const withLoader = useDashboardLoader();
   const roles = user?.roles ?? [];
   const isStaffLike = roles.some((r) =>
@@ -1812,6 +2055,7 @@ export function ExamResultPage() {
   );
   const isTeacherOnly = roles.includes('teacher') && !isStaffLike;
   const isStudent = roles.includes('student') && !isStaffLike && !roles.includes('teacher');
+  const canIssueAsStaff = isStaffLike || isTeacherOnly;
   const backHref = isStudent
     ? '/dashboard/student-reviews'
     : isTeacherOnly
@@ -1823,10 +2067,25 @@ export function ExamResultPage() {
     setLoading(true);
     examinationService
       .getResult(attemptId)
-      .then(setResult)
+      .then(async (res) => {
+        setResult(res);
+        try {
+          if (isStudent) {
+            const mine = await examinationService.listMyCertificates();
+            setExistingCert(mine.find((c) => c.result_id === res.id && c.status === 'issued') ?? null);
+          } else {
+            const org = await examinationService.listCertificates(1, 100);
+            setExistingCert(
+              org.data.find((c) => c.result_id === res.id && c.status === 'issued') ?? null,
+            );
+          }
+        } catch {
+          setExistingCert(null);
+        }
+      })
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setLoading(false));
-  }, [attemptId]);
+  }, [attemptId, isStudent]);
 
   useDashboardLoadingEffect(loading);
 
@@ -1836,9 +2095,25 @@ export function ExamResultPage() {
     await withLoader(async () => {
       try {
         const cert = await examinationService.issueCertificate(result.id);
+        setExistingCert(cert);
         showSuccess('Certificate issued', cert.certificate_no);
         const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
         await downloadCertificateReactPdf(cert);
+      } catch (err) {
+        showError('Certificate', parseApiError(err));
+      } finally {
+        setCertBusy(false);
+      }
+    });
+  };
+
+  const handleDownloadCertificate = async () => {
+    if (!existingCert) return;
+    setCertBusy(true);
+    await withLoader(async () => {
+      try {
+        const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
+        await downloadCertificateReactPdf(existingCert);
       } catch (err) {
         showError('Certificate', parseApiError(err));
       } finally {
@@ -1855,6 +2130,33 @@ export function ExamResultPage() {
   const passing = result.passing_marks != null && Number(result.passing_marks) > 0
     ? Number(result.total_score) >= Number(result.passing_marks)
     : Number(result.percentage) >= 40;
+  const showAnswerKey = Boolean(result.answers_released) || canIssueAsStaff;
+
+  const renderCertCta = () => {
+    if (existingCert) {
+      return (
+        <EdtpBtn variant="primary" disabled={certBusy} onClick={() => void handleDownloadCertificate()}>
+          {certBusy ? 'Preparing…' : 'Download PDF'}
+        </EdtpBtn>
+      );
+    }
+    if (!passing) return null;
+    if (canIssueAsStaff) {
+      return (
+        <EdtpBtn variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
+          {certBusy ? 'Issuing…' : 'Issue certificate'}
+        </EdtpBtn>
+      );
+    }
+    if (isStudent) {
+      return (
+        <EdtpBtn variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
+          {certBusy ? 'Issuing…' : 'Get certificate PDF'}
+        </EdtpBtn>
+      );
+    }
+    return null;
+  };
 
   return (
     <div className="dashboard__content__wraper">
@@ -1866,11 +2168,7 @@ export function ExamResultPage() {
         <Link to={backHref} className="edtp-btn edtp-btn--secondary edtp-btn--sm">
           Back
         </Link>
-        {passing && (
-          <EdtpBtn variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
-            {certBusy ? 'Issuing…' : 'Get certificate PDF'}
-          </EdtpBtn>
-        )}
+        {renderCertCta()}
         <Link to="/verify-certificate" className="edtp-btn edtp-btn--ghost edtp-btn--sm">
           Verify certificate
         </Link>
@@ -1916,31 +2214,65 @@ export function ExamResultPage() {
 
       <div className="edtp-form-card sp_bottom_20">
         <h5 className="sp_bottom_15">Question-wise analysis</h5>
+        {!showAnswerKey && isStudent ? (
+          <p className="text-muted sp_bottom_15 mb-0">
+            Answer key is hidden until the instructor releases it.
+          </p>
+        ) : null}
         {questions.length === 0 ? (
           <p className="text-muted mb-0">No per-question details available for this attempt.</p>
         ) : (
-          questions.map((q, index) => (
-            <div key={q.question_id} className="sca-exam-result-q">
-              <div className="sca-exam-result-q__head">
-                <strong>Q{index + 1}.</strong>
-                <span>{questionText(q.content)}</span>
-                <span className={`edtp-badge ${q.is_correct ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
-                  {q.is_correct ? 'Correct' : 'Incorrect'}
-                </span>
-                <span className="sca-exam-result-q__meta">
-                  Marks: {Number(q.marks_awarded ?? 0)} / {Number(q.marks)}
-                </span>
-              </div>
-              <div className="sca-exam-result-q__answers">
-                <div>
-                  <strong>Correct answer:</strong> {formatCorrectAnswer(q)}
+          questions.map((q, index) => {
+            const selectedIds = new Set(q.answer?.selectedOptionIds ?? []);
+            const opts = q.options ?? [];
+            const hasOptions = opts.length > 0;
+            return (
+              <div key={q.question_id} className="sca-exam-result-q">
+                <div className="sca-exam-result-q__head">
+                  <strong>Q{index + 1}.</strong>
+                  <span>{questionText(q.content)}</span>
+                  {showAnswerKey && q.is_correct != null ? (
+                    <span className={`edtp-badge ${q.is_correct ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
+                      {q.is_correct ? 'Correct' : 'Incorrect'}
+                    </span>
+                  ) : null}
+                  <span className="sca-exam-result-q__meta">
+                    Marks: {Number(q.marks_awarded ?? 0)} / {Number(q.marks)}
+                  </span>
                 </div>
-                <div>
-                  <strong>Student answered:</strong> {formatStudentAnswer(q)}
-                </div>
+                {showAnswerKey && hasOptions ? (
+                  <ul className="sca-exam-result-q__options">
+                    {opts.map((o) => {
+                      const selected = selectedIds.has(o.id);
+                      const correct = Boolean(o.is_correct);
+                      let cls = 'sca-exam-result-opt';
+                      if (correct) cls += ' sca-exam-result-opt--correct';
+                      else if (selected) cls += ' sca-exam-result-opt--wrong';
+                      return (
+                        <li key={o.id} className={cls}>
+                          {getOptionText(o.content)}
+                          {correct ? ' ✓' : ''}
+                          {selected && !correct ? ' (your answer)' : ''}
+                          {selected && correct ? ' (your answer)' : ''}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : (
+                  <div className="sca-exam-result-q__answers">
+                    {showAnswerKey ? (
+                      <div>
+                        <strong>Correct answer:</strong> {formatCorrectAnswer(q)}
+                      </div>
+                    ) : null}
+                    <div>
+                      <strong>Student answered:</strong> {formatStudentAnswer(q)}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { DashboardCounter, DashboardTableRow } from '@/types/dashboard';
@@ -12,8 +12,9 @@ import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
-import { EdtpSelect } from '@/components/ui/CrudUI';
-import { confirmDelete } from '@/lib/swal';
+import { EdtpSelect, EdtpBtn } from '@/components/ui/CrudUI';
+import { confirmDelete, showError } from '@/lib/swal';
+import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { useOrgScope } from '@/context/OrgScopeContext';
@@ -361,6 +362,7 @@ export function DashboardQuizAttemptsContent({ title }: { title: string }) {
 
 export function DashboardAssignmentsContent() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isStudent = user?.roles.includes('student') && !user.roles.some((r) =>
     ['org_admin', 'super_admin', 'staff', 'teacher'].includes(r),
   );
@@ -378,10 +380,14 @@ export function DashboardAssignmentsContent() {
       result_percentage?: number | null;
       result_attempt_id?: string | null;
       attempt_id?: string | null;
+      scheduled_start?: string | null;
+      scheduled_at?: string | null;
     }[]
   >([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [startingId, setStartingId] = useState<string | null>(null);
+  const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
     setLoading(true);
@@ -399,6 +405,8 @@ export function DashboardAssignmentsContent() {
               result_percentage: t.result_percentage,
               result_attempt_id: t.result_attempt_id,
               attempt_id: t.attempt_id,
+              scheduled_start: t.scheduled_start,
+              scheduled_at: t.scheduled_at,
             })),
           ),
         )
@@ -409,7 +417,86 @@ export function DashboardAssignmentsContent() {
       .finally(() => setLoading(false));
   }, [isStudent]);
 
+  useEffect(() => {
+    if (!isStudent) return;
+    const id = window.setInterval(() => setNowTick(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [isStudent]);
+
   useDashboardLoadingEffect(loading);
+
+  const start = async (testId: string) => {
+    setStartingId(testId);
+    setError('');
+    try {
+      const attempt = await examinationService.startAttempt(testId);
+      navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
+    } catch (err) {
+      const msg = parseApiError(err);
+      setError(msg);
+      showError('Cannot start', msg);
+      examinationService.listMyAssignedTests().then((data) =>
+        setRows(
+          data.map((t) => ({
+            id: t.id,
+            title: t.title,
+            status: t.status,
+            total_marks: t.total_marks ?? undefined,
+            duration_minutes: t.duration_minutes,
+            attempt_status: t.attempt_status,
+            result_percentage: t.result_percentage,
+            result_attempt_id: t.result_attempt_id,
+            attempt_id: t.attempt_id,
+            scheduled_start: t.scheduled_start,
+            scheduled_at: t.scheduled_at,
+          })),
+        ),
+      ).catch(() => undefined);
+    } finally {
+      setStartingId(null);
+    }
+  };
+
+  const renderStudentAction = (row: (typeof rows)[number]) => {
+    const st = row.attempt_status;
+    if (st === 'submitted' || st === 'auto_submitted') {
+      const resultId = row.result_attempt_id ?? row.attempt_id;
+      return resultId ? (
+        <Link to={`/dashboard/exam-result/${resultId}`} className="dashboard__small__btn__2">
+          View Result
+        </Link>
+      ) : (
+        <span className="text-muted">Completed</span>
+      );
+    }
+    if (st === 'in_progress' && row.attempt_id) {
+      return (
+        <EdtpBtn
+          variant="primary"
+          size="sm"
+          onClick={() => navigate(`/dashboard/exam/${row.id}/attempt/${row.attempt_id}`)}
+        >
+          Resume
+        </EdtpBtn>
+      );
+    }
+    void nowTick;
+    const startAt = row.scheduled_start ?? row.scheduled_at;
+    const wait = startAt ? msUntil(startAt) : null;
+    if (wait != null && wait > 0) {
+      return <span className="text-muted">Starts in {formatCountdown(wait)}</span>;
+    }
+    return (
+      <EdtpBtn
+        variant="primary"
+        size="sm"
+        disabled={startingId === row.id}
+        onClick={() => void start(row.id)}
+      >
+        {startingId === row.id ? 'Starting…' : 'Start'}
+      </EdtpBtn>
+    );
+  };
 
   return (
     <>
@@ -418,7 +505,7 @@ export function DashboardAssignmentsContent() {
         title="Assignments"
         subtitle={
           isStudent
-            ? 'Tests assigned to you. Start or continue from My Tests when ready.'
+            ? 'Tests assigned to you. Start, resume, or view results here.'
             : 'Assignment coverage across tests — who is assigned and how many have submitted.'
         }
       />
@@ -466,23 +553,7 @@ export function DashboardAssignmentsContent() {
                           ? `${Number(row.result_percentage).toFixed(1)}%`
                           : '—'}
                       </td>
-                      <td>
-                        {row.result_attempt_id ? (
-                          <Link
-                            to={`/dashboard/exam-result/${row.result_attempt_id}`}
-                            className="dashboard__small__btn__2"
-                          >
-                            Result
-                          </Link>
-                        ) : (
-                          <Link
-                            to="/dashboard/student-enrolled-courses"
-                            className="dashboard__small__btn__2"
-                          >
-                            Open My Tests
-                          </Link>
-                        )}
-                      </td>
+                      <td>{renderStudentAction(row)}</td>
                     </>
                   ) : (
                     <>
@@ -747,6 +818,63 @@ function OrganizationSettingsForm({
         </div>
       </div>
     </form>
+  );
+}
+
+function AutoIssueCertificatesForm() {
+  const [enabled, setEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+  const [apiError, setApiError] = useState('');
+  const withLoader = useDashboardLoader();
+  const { selectedOrgId } = useOrgScope();
+
+  useEffect(() => {
+    setLoading(true);
+    platformService
+      .getSettings(['certificates.auto_issue'])
+      .then((rows) => {
+        const raw = rows.find((r) => r.key === 'certificates.auto_issue')?.value;
+        setEnabled(raw === true || raw === 'true');
+      })
+      .catch(() => setEnabled(false))
+      .finally(() => setLoading(false));
+  }, [selectedOrgId]);
+
+  useDashboardLoadingEffect(loading);
+
+  const save = async (next: boolean) => {
+    setApiError('');
+    setMessage('');
+    await withLoader(async () => {
+      try {
+        await platformService.upsertSetting('certificates.auto_issue', next);
+        setEnabled(next);
+        setMessage(next ? 'Certificates will auto-issue on pass.' : 'Auto-issue certificates turned off.');
+      } catch (err) {
+        setApiError(parseApiError(err));
+      }
+    });
+  };
+
+  return (
+    <div className="sp_top_30">
+      <h5 className="sp_bottom_15">Certificates</h5>
+      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <label className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
+        <input
+          type="checkbox"
+          checked={enabled}
+          disabled={loading}
+          onChange={(e) => void save(e.target.checked)}
+        />
+        <span>Auto-issue certificates when a student passes</span>
+      </label>
+      <p className="text-muted mb-0 sp_top_10" style={{ fontSize: '0.8125rem' }}>
+        When enabled, submitting a passing attempt issues a certificate automatically.
+      </p>
+    </div>
   );
 }
 
@@ -1280,7 +1408,10 @@ export function DashboardSettingsContent() {
         <div>
           {activeTab === 'Profile' && <ProfileSettingsApiForm />}
           {activeTab === 'Organization' && isAdmin && (
-            <OrganizationSettingsForm organization={organization} onSaved={refresh} />
+            <>
+              <OrganizationSettingsForm organization={organization} onSaved={refresh} />
+              <AutoIssueCertificatesForm />
+            </>
           )}
           {activeTab === 'Password' && <PasswordChangeForm />}
           {activeTab === 'Branding' && !isStudent && <SocialLinksForm />}

@@ -54,6 +54,8 @@ export interface ExamTest {
   duration_minutes: number;
   passing_marks?: number | null;
   total_marks?: number | null;
+  instructions?: string | null;
+  config?: Record<string, unknown> | null;
   published_at?: string | null;
   scheduled_at?: string | null;
   scheduled_start?: string | null;
@@ -75,6 +77,7 @@ export interface ExamSecurityConfig {
   autoSubmit: boolean;
   allowResume: boolean;
   maxTabSwitches: number;
+  releaseAnswers: boolean;
 }
 
 export interface TestAttempt {
@@ -146,6 +149,8 @@ export interface ExamResult {
   percentile?: number | null;
   passing_marks?: number | null;
   created_at: string;
+  answers_released?: boolean;
+  release_answers?: boolean;
   questions?: ExamResultQuestion[];
 }
 
@@ -181,6 +186,7 @@ export interface StudentStats {
   attempts: number;
   results: number;
   in_progress: number;
+  certificates_count?: number;
 }
 
 export interface CreateQuestionInput {
@@ -188,6 +194,7 @@ export interface CreateQuestionInput {
   content: { text: string };
   explanation?: string;
   marks?: number;
+  negativeMarks?: number;
   difficulty?: number;
   topicId: string;
   options?: { content: { text?: string; value?: number }; isCorrect: boolean }[];

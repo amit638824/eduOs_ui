@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer';
+import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 
 export interface CertificatePdfData {
   organizationName: string;
@@ -7,6 +7,7 @@ export interface CertificatePdfData {
   certificateNo: string;
   verificationCode: string;
   verifyUrl?: string;
+  qrDataUrl?: string;
   percentage: number;
   totalScore: number | string;
   maxScore: number | string;
@@ -330,6 +331,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
   },
+  qrWrap: {
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  qrImage: {
+    width: 56,
+    height: 56,
+  },
+  qrHint: {
+    fontSize: 6,
+    color: MUTED,
+    marginTop: 3,
+  },
 });
 
 export function CertificateDocument({ data }: { data: CertificatePdfData }) {
@@ -429,6 +443,12 @@ export function CertificateDocument({ data }: { data: CertificatePdfData }) {
                   <Text style={styles.bottomMotto}>EDUCATION INTO OPPORTUNITY</Text>
                   <View style={styles.bottomLine} />
                 </View>
+                {data.qrDataUrl ? (
+                  <View style={styles.qrWrap}>
+                    <Image src={data.qrDataUrl} style={styles.qrImage} />
+                    <Text style={styles.qrHint}>Scan to verify</Text>
+                  </View>
+                ) : null}
                 <Text style={styles.verifyLine}>
                   No: {data.certificateNo} · Code: {data.verificationCode}
                   {data.verifyUrl ? ` · Verify: ${data.verifyUrl}` : ''}

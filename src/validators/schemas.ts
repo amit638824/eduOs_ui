@@ -113,6 +113,27 @@ export const createTestApiSchema = yup.object({
   departmentId: yup.string().required('Department is required'),
   subjectId: yup.string().required('Subject is required'),
   topicId: yup.string().required('Topic is required'),
+  passingMarks: yup
+    .string()
+    .required('Passing marks is required')
+    .test('pm', 'Passing marks must be 0 or more', (v) => {
+      const n = Number(v);
+      return Number.isFinite(n) && n >= 0;
+    }),
+  instructions: yup.string().trim().max(10000).optional().default(''),
+  shuffleQuestions: yup.boolean().default(false),
+  shuffleOptions: yup.boolean().default(false),
+  negativeMarking: yup.boolean().default(false),
+  fullScreen: yup.boolean().default(true),
+  allowResume: yup.boolean().default(true),
+  releaseAnswers: yup.boolean().default(false),
+  maxTabSwitches: yup
+    .string()
+    .required('Tab switch limit is required')
+    .test('tabs', 'Must be 0 or more', (v) => {
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 0;
+    }),
 });
 
 export type CreateTestApiFormValues = yup.InferType<typeof createTestApiSchema>;

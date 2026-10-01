@@ -284,6 +284,13 @@ export async function addQuestionToTest(testId: string, questionId: string) {
   return data.data;
 }
 
+export async function reorderTestQuestions(testId: string, questionIds: string[]) {
+  const { data } = await api.patch<ApiResponse<ExamTest>>(`${base}/tests/${testId}/questions/reorder`, {
+    questionIds,
+  });
+  return data.data;
+}
+
 export async function removeQuestionFromTest(testId: string, questionId: string) {
   const { data } = await api.delete<ApiResponse<{ removed: boolean }>>(
     `${base}/tests/${testId}/questions/${questionId}`,
@@ -345,9 +352,9 @@ export interface TestAssignment {
   created_at: string;
 }
 
-export async function listAssignableStudents(page = 1, limit = 100) {
+export async function listAssignableStudents(page = 1, limit = 100, departmentId?: string) {
   const { data } = await api.get<PaginatedResponse<AssignableStudent>>(`${base}/students`, {
-    params: { page, limit },
+    params: { page, limit, departmentId: departmentId || undefined },
   });
   return data;
 }

@@ -1344,6 +1344,9 @@ export function TestBuilderPanel() {
     status?: string;
     duration_minutes?: number;
     total_marks?: number;
+    passing_marks?: number | null;
+    instructions?: string | null;
+    config?: Record<string, unknown> | null;
     questions?: {
       question_id: string;
       type?: string;
@@ -1354,6 +1357,8 @@ export function TestBuilderPanel() {
   } | null>(null);
   const [bankQuestions, setBankQuestions] = useState<{ id: string; content?: { text?: string }; type?: string }[]>([]);
   const [students, setStudents] = useState<Awaited<ReturnType<typeof examinationService.listAssignableStudents>>['data']>([]);
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [assignDepartmentId, setAssignDepartmentId] = useState('');
   const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [questionSearch, setQuestionSearch] = useState('');
@@ -1368,16 +1373,27 @@ export function TestBuilderPanel() {
   const [scheduleEnd, setScheduleEnd] = useState('');
   const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
   const withLoader = useDashboardLoader();
+  const { branches } = useOrganization();
+
+  const loadStudents = async (departmentId?: string) => {
+    const sResult = await examinationService.listAssignableStudents(1, 200, departmentId || undefined);
+    setStudents(sResult.data.filter((st) => st.status === 'active'));
+  };
 
   const load = async () => {
     if (!testId) return;
     setLoading(true);
     setError('');
     try {
-      const [tResult, qResult, sResult] = await Promise.allSettled([
+      const [tResult, qResult, sResult, deptLists] = await Promise.allSettled([
         examinationService.getTest(testId),
         examinationService.listQuestions(1, 100, 'approved'),
-        examinationService.listAssignableStudents(1, 100),
+        examinationService.listAssignableStudents(1, 200, assignDepartmentId || undefined),
+        Promise.all(
+          branches.map((b) =>
+            platformService.listDepartments(b.id, 1, 100).then((r) => r.data).catch(() => []),
+          ),
+        ),
       ]);
 
       if (tResult.status === 'fulfilled') {
@@ -1398,10 +1414,15 @@ export function TestBuilderPanel() {
         setStudents(sResult.value.data.filter((st) => st.status === 'active'));
       } else {
         setStudents([]);
-        // Don't wipe test/questions if only students list failed
         if (qResult.status === 'fulfilled') {
           setError(parseApiError(sResult.reason));
         }
+      }
+
+      if (deptLists.status === 'fulfilled') {
+        const flat = deptLists.value.flat().map((d) => ({ id: d.id, name: d.name }));
+        const seen = new Set<string>();
+        setDepartments(flat.filter((d) => (seen.has(d.id) ? false : (seen.add(d.id), true))));
       }
     } catch (err) {
       setError(parseApiError(err));
@@ -1410,7 +1431,12 @@ export function TestBuilderPanel() {
     }
   };
 
-  useEffect(() => { void load(); }, [testId]);
+  useEffect(() => { void load(); }, [testId, branches]);
+
+  useEffect(() => {
+    if (!testId) return;
+    void loadStudents(assignDepartmentId).catch((err) => setError(parseApiError(err)));
+  }, [assignDepartmentId, testId]);
 
   useEffect(() => {
     setPhase('build');
@@ -1575,6 +1601,35 @@ export function TestBuilderPanel() {
     });
   };
 
+  const moveQuestion = async (questionId: string, direction: -1 | 1) => {
+    if (!testId) return;
+    const ids = testQuestions.map((q) => q.question_id);
+    const idx = ids.indexOf(questionId);
+    const swapWith = idx + direction;
+    if (idx < 0 || swapWith < 0 || swapWith >= ids.length) return;
+    const next = [...ids];
+    [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
+    setError('');
+    await withLoader(async () => {
+      try {
+        const updated = await examinationService.reorderTestQuestions(testId, next);
+        setTest(updated as typeof test);
+        setMessage('Question order updated.');
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
+  const checklist = {
+    hasQuestions: testQuestions.length > 0,
+    hasDuration: Number(test?.duration_minutes ?? 0) > 0,
+    hasPassingMarks: test?.passing_marks != null && Number(test.passing_marks) >= 0,
+    hasInstructions: Boolean(String(test?.instructions ?? '').trim()),
+    hasAssignees: assignments.length > 0,
+  };
+  const canPublish = checklist.hasQuestions && checklist.hasDuration;
+
   const publish = async () => {
     if (!testId) return;
     setMessage('');
@@ -1724,9 +1779,25 @@ export function TestBuilderPanel() {
                       Preview
                     </EdtpBtn>
                     {phase === 'build' && !isPublished && (
-                      <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
-                        Remove
-                      </EdtpBtn>
+                      <>
+                        <EdtpBtn
+                          variant="ghost"
+                          disabled={i === 0}
+                          onClick={() => void moveQuestion(tq.question_id, -1)}
+                        >
+                          Up
+                        </EdtpBtn>
+                        <EdtpBtn
+                          variant="ghost"
+                          disabled={i === testQuestions.length - 1}
+                          onClick={() => void moveQuestion(tq.question_id, 1)}
+                        >
+                          Down
+                        </EdtpBtn>
+                        <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
+                          Remove
+                        </EdtpBtn>
+                      </>
                     )}
                   </li>
                   );
@@ -1750,8 +1821,25 @@ export function TestBuilderPanel() {
             {phase === 'publish' && !isPublished && (
               <div className="sca-exam-builder-publish">
                 <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>
-                  Choose when this test should become available to students.
+                  Review the checklist, then choose when this test becomes available.
                 </p>
+                <ul className="sp_bottom_15" style={{ fontSize: '0.9rem', paddingLeft: '1.1rem' }}>
+                  <li style={{ color: checklist.hasQuestions ? '#15803d' : '#b91c1c' }}>
+                    {checklist.hasQuestions ? '✓' : '✗'} At least one question ({testQuestions.length})
+                  </li>
+                  <li style={{ color: checklist.hasDuration ? '#15803d' : '#b91c1c' }}>
+                    {checklist.hasDuration ? '✓' : '✗'} Duration set ({test?.duration_minutes ?? 0} min)
+                  </li>
+                  <li style={{ color: checklist.hasPassingMarks ? '#15803d' : '#64748b' }}>
+                    {checklist.hasPassingMarks ? '✓' : '○'} Passing marks ({test?.passing_marks ?? '—'})
+                  </li>
+                  <li style={{ color: checklist.hasInstructions ? '#15803d' : '#64748b' }}>
+                    {checklist.hasInstructions ? '✓' : '○'} Instructions filled
+                  </li>
+                  <li style={{ color: checklist.hasAssignees ? '#15803d' : '#64748b' }}>
+                    {checklist.hasAssignees ? '✓' : '○'} Students assigned ({assignments.length}) — can assign after publish
+                  </li>
+                </ul>
                 <div className="row g-3 sp_bottom_15">
                   <div className="col-md-6">
                     <EdtpField label="Publish mode">
@@ -1792,7 +1880,7 @@ export function TestBuilderPanel() {
                 <EdtpBtn
                   variant="primary"
                   size="md"
-                  disabled={testQuestions.length === 0}
+                  disabled={!canPublish}
                   onClick={() => void publish()}
                 >
                   {publishMode === 'schedule' ? 'Schedule Test' : 'Publish Test'}
@@ -1895,14 +1983,34 @@ export function TestBuilderPanel() {
               <div className="sp_bottom_15">
                 <h5 className="mb-1">Assign to Students</h5>
                 <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
-                  Search, select students, then submit. Students see this test under My Tests.
+                  Filter by department, search, select students, then submit.
                 </p>
               </div>
-              <SearchField
-                value={studentSearch}
-                onChange={setStudentSearch}
-                placeholder="Search by name or email…"
-              />
+              <div className="row g-2 sp_bottom_15">
+                <div className="col-md-4">
+                  <EdtpField label="Department filter">
+                    <EdtpSelect
+                      value={assignDepartmentId}
+                      onChange={(e) => {
+                        setAssignDepartmentId(e.target.value);
+                        setSelectedStudentIds([]);
+                      }}
+                    >
+                      <option value="">All departments</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
+                      ))}
+                    </EdtpSelect>
+                  </EdtpField>
+                </div>
+                <div className="col-md-8 d-flex align-items-end">
+                  <SearchField
+                    value={studentSearch}
+                    onChange={setStudentSearch}
+                    placeholder="Search by name or email…"
+                  />
+                </div>
+              </div>
               <div className="dashboard__table table-responsive sp_bottom_15">
                 <table>
                   <thead>
