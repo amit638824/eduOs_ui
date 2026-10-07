@@ -19,7 +19,6 @@ import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpField, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDateTime } from '@/utils/dateFormat';
-import { formatCountdown, msUntil } from '@/utils/countdown';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
 import { getOptionText, getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
@@ -1344,6 +1343,7 @@ export function TestsListPanel({ title }: { title: string }) {
 
 export function StudentTestsPanel() {
   const navigate = useNavigate();
+
   const [tests, setTests] = useState<ExamTest[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -1353,6 +1353,7 @@ export function StudentTestsPanel() {
 
   useEffect(() => {
     setPageLoading(true);
+
     examinationService
       .listMyAssignedTests()
       .then(setTests)
@@ -1360,8 +1361,12 @@ export function StudentTestsPanel() {
       .finally(() => setPageLoading(false));
   }, []);
 
+  // Update countdown every second
   useEffect(() => {
-    const id = window.setInterval(() => setNowTick(Date.now()), 1000);
+    const id = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 1000);
+
     return () => window.clearInterval(id);
   }, []);
 
@@ -1371,15 +1376,22 @@ export function StudentTestsPanel() {
     setLoading(true);
     setStartingId(testId);
     setError('');
+
     try {
       const attempt = await examinationService.startAttempt(testId);
+
       navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
     } catch (err) {
       const msg = parseApiError(err);
+
       setError(msg);
       showError('Cannot start', msg);
-      // Refresh list in case schedule flipped to live
-      examinationService.listMyAssignedTests().then(setTests).catch(() => undefined);
+
+      // Refresh in case the exam became live
+      examinationService
+        .listMyAssignedTests()
+        .then(setTests)
+        .catch(() => undefined);
     } finally {
       setLoading(false);
       setStartingId(null);
@@ -1387,70 +1399,202 @@ export function StudentTestsPanel() {
   };
 
   const resume = (t: ExamTest) => {
-    if (t.attempt_id) navigate(`/dashboard/exam/${t.id}/attempt/${t.attempt_id}`);
+    if (t.attempt_id) {
+      navigate(`/dashboard/exam/${t.id}/attempt/${t.attempt_id}`);
+    }
+  };
+
+  /*
+   * Assignment schedule has priority.
+   * If there is no assignment schedule, use test schedule.
+   */
+  const getScheduledStart = (t: ExamTest) => {
+    return (
+      t.effective_scheduled_start ??
+      t.scheduled_start ??
+      t.scheduled_at ??
+      null
+    );
   };
 
   const opensInMs = (t: ExamTest) => {
+    // Make React re-render every second.
     void nowTick;
-    const startAt = t.scheduled_start ?? t.scheduled_at;
-    if (!startAt) return null;
-    const ms = msUntil(startAt);
-    if (ms == null) return null;
-    if (t.status === 'scheduled' || ms > 0) return Math.max(0, ms);
+
+    const startAt = getScheduledStart(t);
+
+    if (!startAt) {
+      return null;
+    }
+
+    const target = new Date(startAt).getTime();
+
+    if (!Number.isFinite(target)) {
+      return null;
+    }
+
+    const remaining = target - Date.now();
+
+    if (remaining > 0) {
+      return remaining;
+    }
+
     return null;
+  };
+
+  const formatExamCountdown = (milliseconds: number) => {
+    const totalSeconds = Math.max(
+      0,
+      Math.floor(milliseconds / 1000),
+    );
+
+    const days = Math.floor(totalSeconds / 86400);
+
+    const hours = Math.floor(
+      (totalSeconds % 86400) / 3600,
+    );
+
+    const minutes = Math.floor(
+      (totalSeconds % 3600) / 60,
+    );
+
+    const seconds = totalSeconds % 60;
+
+    return [
+      `${String(days).padStart(2, '0')} Days`,
+      `${String(hours).padStart(2, '0')} Hours`,
+      `${String(minutes).padStart(2, '0')} Minutes`,
+      `${String(seconds).padStart(2, '0')} Seconds`,
+    ].join(' : ');
   };
 
   const statusMeta = (t: ExamTest) => {
     const st = t.attempt_status;
-    if (st === 'submitted' || st === 'auto_submitted') {
-      return { label: 'Completed', cls: 'edtp-badge--active' };
+
+    if (
+      st === 'submitted' ||
+      st === 'auto_submitted'
+    ) {
+      return {
+        label: 'Completed',
+        cls: 'edtp-badge--active',
+      };
     }
+
     if (st === 'in_progress') {
-      return { label: 'In progress', cls: 'edtp-badge--role' };
+      return {
+        label: 'In progress',
+        cls: 'edtp-badge--role',
+      };
     }
+
     const wait = opensInMs(t);
+
     if (wait != null && wait > 0) {
-      return { label: 'Scheduled', cls: 'edtp-badge--role' };
+      return {
+        label: 'Scheduled',
+        cls: 'edtp-badge--role',
+      };
     }
-    return { label: 'Not started', cls: 'edtp-badge--inactive' };
+
+    return {
+      label: 'Live',
+      cls: 'edtp-badge--active',
+    };
   };
 
   const renderAction = (t: ExamTest) => {
     const st = t.attempt_status;
-    if (st === 'submitted' || st === 'auto_submitted') {
-      const resultId = t.result_attempt_id ?? t.attempt_id;
+
+    /*
+     * Completed exam
+     */
+    if (
+      st === 'submitted' ||
+      st === 'auto_submitted'
+    ) {
+      const resultId =
+        t.result_attempt_id ?? t.attempt_id;
+
       return resultId ? (
-        <Link to={`/dashboard/exam-result/${resultId}`} className="edtp-btn edtp-btn--secondary edtp-btn--md">
+        <Link
+          to={`/dashboard/exam-result/${resultId}`}
+          className="edtp-btn edtp-btn--secondary edtp-btn--md"
+        >
           View Result
         </Link>
       ) : (
-        <span className="text-muted">Completed</span>
+        <span className="text-muted">
+          Completed
+        </span>
       );
     }
-    if (st === 'in_progress' && t.attempt_id) {
+
+    /*
+     * Exam already started but not submitted
+     */
+    if (
+      st === 'in_progress' &&
+      t.attempt_id
+    ) {
       return (
-        <EdtpBtn variant="primary" size="md" disabled={loading} onClick={() => resume(t)}>
+        <EdtpBtn
+          variant="primary"
+          size="md"
+          disabled={loading}
+          onClick={() => resume(t)}
+        >
           Resume Test
         </EdtpBtn>
       );
     }
+
+    /*
+     * Scheduled exam
+     */
     const wait = opensInMs(t);
+
     if (wait != null && wait > 0) {
       return (
-        <span className="sca-exam-countdown" title={t.scheduled_start ?? t.scheduled_at ?? ''}>
-          Starts in {formatCountdown(wait)}
-        </span>
+        <div className="sca-student-exam-schedule">
+          <div className="sca-student-exam-schedule__label">
+            Exam starts in
+          </div>
+
+          <div
+            className="sca-student-exam-countdown-large"
+            title={getScheduledStart(t) ?? ''}
+          >
+            {formatExamCountdown(wait)}
+          </div>
+        </div>
       );
     }
+
+    /*
+     * Exam is live
+     */
     return (
-      <EdtpBtn
-        variant="primary"
-        size="md"
-        disabled={loading || startingId === t.id}
-        onClick={() => void start(t.id)}
-      >
-        {startingId === t.id ? 'Starting…' : 'Start Test'}
-      </EdtpBtn>
+      <div className="sca-student-exam-live">
+        <div className="sca-student-exam-live__status">
+          <span className="sca-student-exam-live__dot" />
+          Exam is Live
+        </div>
+
+        <EdtpBtn
+          variant="primary"
+          size="md"
+          disabled={
+            loading ||
+            startingId === t.id
+          }
+          onClick={() => void start(t.id)}
+        >
+          {startingId === t.id
+            ? 'Starting…'
+            : 'Start Exam'}
+        </EdtpBtn>
+      </div>
     );
   };
 
@@ -1461,52 +1605,172 @@ export function StudentTestsPanel() {
         title="My Assigned Tests"
         subtitle="Start, resume or view results for your institute examinations."
       />
+
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <h4 className="mb-0">Available Tests</h4>
-          <span className="badge bg-primary">{tests.length}</span>
-        </div>
-        {error && <p className="login__error sp_bottom_15">{error}</p>}
+          <h4 className="mb-0">
+            Available Tests
+          </h4>
 
-        {tests.length === 0 && !error && !pageLoading ? (
+          <span className="badge bg-primary">
+            {tests.length}
+          </span>
+        </div>
+
+        {error && (
+          <p className="login__error sp_bottom_15">
+            {error}
+          </p>
+        )}
+
+        {tests.length === 0 &&
+        !error &&
+        !pageLoading ? (
           <div className="sca-student-tests-empty">
             <h5>No tests assigned yet</h5>
+
             <p className="text-muted mb-0">
-              When your institute publishes and assigns an exam, it will appear here.
+              When your institute publishes and
+              assigns an exam, it will appear here.
             </p>
           </div>
         ) : (
           <div className="sca-student-tests-grid">
             {tests.map((t) => {
               const status = statusMeta(t);
+
+              const scheduledStart =
+                getScheduledStart(t);
+
+              const wait = opensInMs(t);
+
               return (
-                <article key={t.id} className="sca-student-test-card">
+                <article
+                  key={t.id}
+                  className="sca-student-test-card"
+                >
                   <div className="sca-student-test-card__top">
-                    <span className={`edtp-badge ${status.cls}`}>{status.label}</span>
+                    <span
+                      className={`edtp-badge ${status.cls}`}
+                    >
+                      {status.label}
+                    </span>
+
                     {t.result_percentage != null && (
                       <span className="sca-student-test-card__score">
-                        {Number(t.result_percentage).toFixed(1)}%
+                        {Number(
+                          t.result_percentage,
+                        ).toFixed(1)}
+                        %
                       </span>
                     )}
                   </div>
-                  <h5 className="sca-student-test-card__title">{t.title}</h5>
+
+                  <h5 className="sca-student-test-card__title">
+                    {t.title}
+                  </h5>
+
+                  {scheduledStart && (
+                    <div className="sca-student-exam-date-time">
+                      <div>
+                        <span>
+                          Scheduled Date
+                        </span>
+
+                        <strong>
+                          {new Date(
+                            scheduledStart,
+                          ).toLocaleDateString(
+                            'en-IN',
+                            {
+                              day: '2-digit',
+                              month: 'long',
+                              year: 'numeric',
+                            },
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Scheduled Time
+                        </span>
+
+                        <strong>
+                          {new Date(
+                            scheduledStart,
+                          ).toLocaleTimeString(
+                            'en-IN',
+                            {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                            },
+                          )}
+                        </strong>
+                      </div>
+                    </div>
+                  )}
+
+                  {wait != null &&
+                    wait > 0 && (
+                      <div className="sca-student-exam-countdown-box">
+                        <span>
+                          Exam starts in
+                        </span>
+
+                        <strong>
+                          {formatExamCountdown(
+                            wait,
+                          )}
+                        </strong>
+                      </div>
+                    )}
+
+                  {wait == null &&
+                    scheduledStart && (
+                      <div className="sca-student-exam-live-banner">
+                        <span className="sca-student-exam-live__dot" />
+
+                        <strong>
+                          Exam is Live
+                        </strong>
+                      </div>
+                    )}
+
                   <ul className="sca-student-test-card__meta">
                     <li>
                       <span>Duration</span>
-                      <strong>{t.duration_minutes} min</strong>
+
+                      <strong>
+                        {t.duration_minutes} min
+                      </strong>
                     </li>
+
                     <li>
                       <span>Passing</span>
-                      <strong>{t.passing_marks ?? '—'}</strong>
+
+                      <strong>
+                        {t.passing_marks ?? '—'}
+                      </strong>
                     </li>
+
                     {t.total_marks != null && (
                       <li>
-                        <span>Total marks</span>
-                        <strong>{t.total_marks}</strong>
+                        <span>
+                          Total marks
+                        </span>
+
+                        <strong>
+                          {t.total_marks}
+                        </strong>
                       </li>
                     )}
                   </ul>
-                  <div className="sca-student-test-card__action">{renderAction(t)}</div>
+
+                  <div className="sca-student-test-card__action">
+                    {renderAction(t)}
+                  </div>
                 </article>
               );
             })}

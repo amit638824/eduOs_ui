@@ -3173,3 +3173,119 @@ body.sca-dashboard-body .sca-dashboard .row > [class*='col-'] {
     gap: 4px;
   }
 }
+
+.sca-student-exam-date-time {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.sca-student-exam-date-time > div {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f5f7fa;
+  border: 1px solid #e5e7eb;
+}
+
+.sca-student-exam-date-time span {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.sca-student-exam-date-time strong {
+  display: block;
+  font-size: 14px;
+}
+
+.sca-student-exam-countdown-box {
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #dbe3ec;
+}
+
+.sca-student-exam-countdown-box > span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #64748b;
+}
+
+.sca-student-exam-countdown-box > strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.sca-student-exam-live-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.sca-student-exam-live-banner strong {
+  font-size: 14px;
+}
+
+.sca-student-exam-live {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.sca-student-exam-live__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.sca-student-exam-live__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: #16a34a;
+}
+
+.sca-student-exam-schedule {
+  width: 100%;
+}
+
+.sca-student-exam-schedule__label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #64748b;
+}
+
+.sca-student-exam-countdown-large {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+@media (max-width: 576px) {
+  .sca-student-exam-date-time {
+    grid-template-columns: 1fr;
+  }
+
+  .sca-student-exam-live {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
