@@ -35,6 +35,7 @@ import {
   CreateTestPanel,
   ExamAttemptPage,
   ExamResultPage,
+  StudentExamCalendar,
 } from './pages';
 
 function dash(role: DashboardRole, children: ReactNode) {
@@ -115,6 +116,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/student-wishlist" element={dash('student', <PaymentsPanel allowTopUp />)} />
     <Route path="/dashboard/student-reviews" element={dash('student', <ResultsPanel />)} />
     <Route path="/dashboard/student-my-quiz-attempts" element={dash('student', <AttemptsListPanel title="My Attempts" />)} />
+    <Route path="/dashboard/student-calendar" element={dash('student', <StudentExamCalendar />)} />
     <Route path="/dashboard/student-assignments" element={dash('student', <DashboardAssignmentsContent />)} />
     <Route path="/dashboard/student-certificates" element={dash('student', <CertificatesPanel mode="mine" />)} />
     <Route path="/dashboard/student-settings" element={dash('student', <DashboardSettingsContent />)} />

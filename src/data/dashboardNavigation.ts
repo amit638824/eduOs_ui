@@ -1,7 +1,15 @@
 import type { ApiUser } from '@/types/api';
-import type { DashboardNavSection, DashboardProfile, DashboardRole } from '@/types/dashboard';
+
+import type {
+  DashboardNavSection,
+  DashboardProfile,
+  DashboardRole,
+} from '@/types/dashboard';
+
 import { resolveImageUrl } from '@/utils/image';
+
 import { isOrgStaff, isSuperAdmin } from '@/utils/dashboardRole';
+
 import { formatDateTime } from '@/utils/dateFormat';
 
 const base = '/dashboard';
@@ -16,27 +24,47 @@ const defaultImages: Record<DashboardRole, string> = {
   admin: '/img/dashbord/dashbord__2.jpg',
 };
 
-export function buildDashboardProfile(user: ApiUser, role: DashboardRole): DashboardProfile {
+export function buildDashboardProfile(
+  user: ApiUser,
+  role: DashboardRole,
+): DashboardProfile {
   const name = fullName(user);
 
-  const profiles: Record<DashboardRole, Omit<DashboardProfile, 'name'>> = {
+  const profiles: Record<
+    DashboardRole,
+    Omit<DashboardProfile, 'name'>
+  > = {
     student: {
       role: 'student',
       image: resolveImageUrl(user.avatarUrl) || defaultImages.student,
       innerClass: 'student__dashboard__inner',
       stats: [
-        { icon: 'icofont-book-alt', text: 'My Tests & Enrollment' },
-        { icon: 'icofont-certificate-alt-1', text: 'Results & Rank' },
+        {
+          icon: 'icofont-book-alt',
+          text: 'My Tests & Enrollment',
+        },
+        {
+          icon: 'icofont-certificate-alt-1',
+          text: 'Results & Rank',
+        },
       ],
-      cta: { label: 'Start a Test', href: `${base}/student-enrolled-courses` },
+      cta: {
+        label: 'Start a Test',
+        href: `${base}/student-enrolled-courses`,
+      },
     },
+
     teacher: {
       role: 'teacher',
       greeting: 'Hello',
       image: resolveImageUrl(user.avatarUrl) || defaultImages.teacher,
       showRating: true,
-      cta: { label: 'Create Test', href: `${base}/create-test` },
+      cta: {
+        label: 'Create Test',
+        href: `${base}/create-test`,
+      },
     },
+
     admin: {
       role: 'admin',
       greeting: 'Hello',
@@ -44,179 +72,588 @@ export function buildDashboardProfile(user: ApiUser, role: DashboardRole): Dashb
       innerClass: 'admin__dashboard__inner',
       showRating: true,
       cta: {
-        label: isSuperAdmin(user.roles) ? 'Manage Organizations' : 'Add Students',
-        href: isSuperAdmin(user.roles) ? `${base}/admin-organizations` : `${base}/admin-students`,
+        label: isSuperAdmin(user.roles)
+          ? 'Manage Organizations'
+          : 'Add Students',
+
+        href: isSuperAdmin(user.roles)
+          ? `${base}/admin-organizations`
+          : `${base}/admin-students`,
       },
     },
   };
 
-  return { name, ...profiles[role] };
+  return {
+    name,
+    ...profiles[role],
+  };
 }
 
-const logoutItem = { label: 'Logout', href: '/login', icon: 'logout', action: 'logout' as const };
+const logoutItem = {
+  label: 'Logout',
+  href: '/login',
+  icon: 'logout',
+  action: 'logout' as const,
+};
 
 /**
  * Role-based sidebar:
+ *
  * - Super Admin → full platform access
  * - Org Admin → departments, faculty, students + oversight
- * - Teacher → create tests (dept–subject–topic), question bank
- * - Student → take tests + results
+ * - Teacher → create tests, question bank
+ * - Student → take tests, assignments, calendar + results
  */
-export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): DashboardNavSection[] {
+export function buildDashboardNavigation(
+  user: ApiUser,
+  role: DashboardRole,
+): DashboardNavSection[] {
+  /*
+   * ============================================================
+   * ADMIN
+   * ============================================================
+   */
   if (role === 'admin') {
     const superAdmin = isSuperAdmin(user.roles);
-    const staffOnly = isOrgStaff(user.roles) && !superAdmin && !user.roles.includes('org_admin');
 
+    const staffOnly =
+      isOrgStaff(user.roles) &&
+      !superAdmin &&
+      !user.roles.includes('org_admin');
+
+    /*
+     * ----------------------------------------------------------
+     * SUPER ADMIN
+     * ----------------------------------------------------------
+     */
     if (superAdmin) {
       return [
         {
           title: 'Platform',
+
           items: [
-            { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
-            { label: 'Organizations', href: `${base}/admin-organizations`, icon: 'course' },
-            { label: 'Users', href: `${base}/admin-users`, icon: 'user' },
-            { label: 'Departments', href: `${base}/admin-org`, icon: 'bookmark' },
-            { label: 'Faculty', href: `${base}/admin-faculty`, icon: 'user' },
-            { label: 'Staff', href: `${base}/admin-staff`, icon: 'user' },
-            { label: 'Students', href: `${base}/admin-students`, icon: 'bookmark' },
-            { label: 'Audit Logs', href: `${base}/admin-audit`, icon: 'assignment' },
-            { label: 'Payments', href: `${base}/admin-wishlist`, icon: 'cart' },
-            { label: 'Sessions', href: `${base}/admin-sessions`, icon: 'monitor' },
-            { label: 'Settings', href: `${base}/admin-settings`, icon: 'settings' },
+            {
+              label: 'Dashboard',
+              href: `${base}/admin-dashboard`,
+              icon: 'home',
+            },
+
+            {
+              label: 'Organizations',
+              href: `${base}/admin-organizations`,
+              icon: 'course',
+            },
+
+            {
+              label: 'Users',
+              href: `${base}/admin-users`,
+              icon: 'user',
+            },
+
+            {
+              label: 'Departments',
+              href: `${base}/admin-org`,
+              icon: 'bookmark',
+            },
+
+            {
+              label: 'Faculty',
+              href: `${base}/admin-faculty`,
+              icon: 'user',
+            },
+
+            {
+              label: 'Staff',
+              href: `${base}/admin-staff`,
+              icon: 'user',
+            },
+
+            {
+              label: 'Students',
+              href: `${base}/admin-students`,
+              icon: 'bookmark',
+            },
+
+            {
+              label: 'Audit Logs',
+              href: `${base}/admin-audit`,
+              icon: 'assignment',
+            },
+
+            {
+              label: 'Payments',
+              href: `${base}/admin-wishlist`,
+              icon: 'cart',
+            },
+
+            {
+              label: 'Sessions',
+              href: `${base}/admin-sessions`,
+              icon: 'monitor',
+            },
+
+            {
+              label: 'Settings',
+              href: `${base}/admin-settings`,
+              icon: 'settings',
+            },
           ],
         },
+
         {
           title: 'Examinations (selected org)',
+
           items: [
-            { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
-            { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
-            { label: 'All Tests', href: `${base}/admin-course`, icon: 'monitor' },
-            { label: 'Attempts', href: `${base}/admin-quiz-attempts`, icon: 'assignment' },
-            { label: 'Assignments', href: `${base}/admin-assignments`, icon: 'bookmark' },
-            { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },
-            { label: 'Certificates', href: `${base}/admin-certificates`, icon: 'quiz' },
+            {
+              label: 'Question Bank',
+              href: `${base}/admin-question-bank`,
+              icon: 'quiz',
+            },
+
+            {
+              label: 'Create Test',
+              href: `${base}/create-test`,
+              icon: 'course',
+            },
+
+            {
+              label: 'All Tests',
+              href: `${base}/admin-course`,
+              icon: 'monitor',
+            },
+
+            {
+              label: 'Attempts',
+              href: `${base}/admin-quiz-attempts`,
+              icon: 'assignment',
+            },
+
+            {
+              label: 'Assignments',
+              href: `${base}/admin-assignments`,
+              icon: 'bookmark',
+            },
+
+            {
+              label: 'Reports',
+              href: `${base}/admin-reviews`,
+              icon: 'star',
+            },
+
+            {
+              label: 'Certificates',
+              href: `${base}/admin-certificates`,
+              icon: 'quiz',
+            },
           ],
         },
+
         {
           title: 'Account',
+
           items: [
-            { label: 'My Profile', href: `${base}/admin-profile`, icon: 'user' },
-            { label: 'Notifications', href: `${base}/admin-message`, icon: 'message' },
+            {
+              label: 'My Profile',
+              href: `${base}/admin-profile`,
+              icon: 'user',
+            },
+
+            {
+              label: 'Notifications',
+              href: `${base}/admin-message`,
+              icon: 'message',
+            },
+
             logoutItem,
           ],
         },
       ];
     }
 
+    /*
+     * ----------------------------------------------------------
+     * STAFF
+     * ----------------------------------------------------------
+     */
     if (staffOnly) {
       return [
         {
           title: 'Operations',
+
           items: [
-            { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
-            { label: 'Departments', href: `${base}/admin-org`, icon: 'course' },
-            { label: 'Students', href: `${base}/admin-students`, icon: 'bookmark' },
+            {
+              label: 'Dashboard',
+              href: `${base}/admin-dashboard`,
+              icon: 'home',
+            },
+
+            {
+              label: 'Departments',
+              href: `${base}/admin-org`,
+              icon: 'course',
+            },
+
+            {
+              label: 'Students',
+              href: `${base}/admin-students`,
+              icon: 'bookmark',
+            },
           ],
         },
+
         {
           title: 'Examinations',
+
           items: [
-            { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
-            { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
-            { label: 'All Tests', href: `${base}/admin-course`, icon: 'monitor' },
-            { label: 'Attempts', href: `${base}/admin-quiz-attempts`, icon: 'assignment' },
-            { label: 'Assignments', href: `${base}/admin-assignments`, icon: 'bookmark' },
-            { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },
-            { label: 'Certificates', href: `${base}/admin-certificates`, icon: 'quiz' },
+            {
+              label: 'Question Bank',
+              href: `${base}/admin-question-bank`,
+              icon: 'quiz',
+            },
+
+            {
+              label: 'Create Test',
+              href: `${base}/create-test`,
+              icon: 'course',
+            },
+
+            {
+              label: 'All Tests',
+              href: `${base}/admin-course`,
+              icon: 'monitor',
+            },
+
+            {
+              label: 'Attempts',
+              href: `${base}/admin-quiz-attempts`,
+              icon: 'assignment',
+            },
+
+            {
+              label: 'Assignments',
+              href: `${base}/admin-assignments`,
+              icon: 'bookmark',
+            },
+
+            {
+              label: 'Reports',
+              href: `${base}/admin-reviews`,
+              icon: 'star',
+            },
+
+            {
+              label: 'Certificates',
+              href: `${base}/admin-certificates`,
+              icon: 'quiz',
+            },
           ],
         },
+
         {
           title: 'Account',
+
           items: [
-            { label: 'My Profile', href: `${base}/admin-profile`, icon: 'user' },
-            { label: 'Notifications', href: `${base}/admin-message`, icon: 'message' },
-            { label: 'Settings', href: `${base}/admin-settings`, icon: 'settings' },
+            {
+              label: 'My Profile',
+              href: `${base}/admin-profile`,
+              icon: 'user',
+            },
+
+            {
+              label: 'Notifications',
+              href: `${base}/admin-message`,
+              icon: 'message',
+            },
+
+            {
+              label: 'Settings',
+              href: `${base}/admin-settings`,
+              icon: 'settings',
+            },
+
             logoutItem,
           ],
         },
       ];
     }
 
-    // Organization Admin — departments, faculty, students, staff
+    /*
+     * ----------------------------------------------------------
+     * ORGANIZATION ADMIN
+     * ----------------------------------------------------------
+     */
     return [
       {
         title: 'Organization',
+
         items: [
-          { label: 'Dashboard', href: `${base}/admin-dashboard`, icon: 'home' },
-          { label: 'Departments', href: `${base}/admin-org`, icon: 'course' },
-          { label: 'Faculty', href: `${base}/admin-faculty`, icon: 'user' },
-          { label: 'Staff', href: `${base}/admin-staff`, icon: 'user' },
-          { label: 'Students', href: `${base}/admin-students`, icon: 'bookmark' },
+          {
+            label: 'Dashboard',
+            href: `${base}/admin-dashboard`,
+            icon: 'home',
+          },
+
+          {
+            label: 'Departments',
+            href: `${base}/admin-org`,
+            icon: 'course',
+          },
+
+          {
+            label: 'Faculty',
+            href: `${base}/admin-faculty`,
+            icon: 'user',
+          },
+
+          {
+            label: 'Staff',
+            href: `${base}/admin-staff`,
+            icon: 'user',
+          },
+
+          {
+            label: 'Students',
+            href: `${base}/admin-students`,
+            icon: 'bookmark',
+          },
         ],
       },
+
       {
         title: 'Examinations',
+
         items: [
-          { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
-          { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
-          { label: 'All Tests', href: `${base}/admin-course`, icon: 'monitor' },
-          { label: 'Attempts', href: `${base}/admin-quiz-attempts`, icon: 'assignment' },
-          { label: 'Assignments', href: `${base}/admin-assignments`, icon: 'bookmark' },
-          { label: 'Reports', href: `${base}/admin-reviews`, icon: 'star' },
-          { label: 'Certificates', href: `${base}/admin-certificates`, icon: 'quiz' },
+          {
+            label: 'Question Bank',
+            href: `${base}/admin-question-bank`,
+            icon: 'quiz',
+          },
+
+          {
+            label: 'Create Test',
+            href: `${base}/create-test`,
+            icon: 'course',
+          },
+
+          {
+            label: 'All Tests',
+            href: `${base}/admin-course`,
+            icon: 'monitor',
+          },
+
+          {
+            label: 'Attempts',
+            href: `${base}/admin-quiz-attempts`,
+            icon: 'assignment',
+          },
+
+          {
+            label: 'Assignments',
+            href: `${base}/admin-assignments`,
+            icon: 'bookmark',
+          },
+
+          {
+            label: 'Reports',
+            href: `${base}/admin-reviews`,
+            icon: 'star',
+          },
+
+          {
+            label: 'Certificates',
+            href: `${base}/admin-certificates`,
+            icon: 'quiz',
+          },
         ],
       },
+
       {
         title: 'Account',
+
         items: [
-          { label: 'My Profile', href: `${base}/admin-profile`, icon: 'user' },
-          { label: 'Notifications', href: `${base}/admin-message`, icon: 'message' },
-          { label: 'Settings', href: `${base}/admin-settings`, icon: 'settings' },
+          {
+            label: 'My Profile',
+            href: `${base}/admin-profile`,
+            icon: 'user',
+          },
+
+          {
+            label: 'Notifications',
+            href: `${base}/admin-message`,
+            icon: 'message',
+          },
+
+          {
+            label: 'Settings',
+            href: `${base}/admin-settings`,
+            icon: 'settings',
+          },
+
           logoutItem,
         ],
       },
     ];
   }
 
+  /*
+   * ============================================================
+   * TEACHER
+   * ============================================================
+   */
   if (role === 'teacher') {
     return [
       {
         title: 'Teaching',
+
         items: [
-          { label: 'Dashboard', href: `${base}/teacher-dashboard`, icon: 'home' },
-          { label: 'Question Bank', href: `${base}/admin-question-bank`, icon: 'quiz' },
-          { label: 'Create Test', href: `${base}/create-test`, icon: 'course' },
-          { label: 'My Tests', href: `${base}/teacher-course`, icon: 'monitor' },
-          { label: 'Assignments', href: `${base}/teacher-assignments`, icon: 'assignment' },
-          { label: 'Reports', href: `${base}/teacher-reviews`, icon: 'star' },
-          { label: 'Certificates', href: `${base}/teacher-certificates`, icon: 'quiz' },
+          {
+            label: 'Dashboard',
+            href: `${base}/teacher-dashboard`,
+            icon: 'home',
+          },
+
+          {
+            label: 'Question Bank',
+            href: `${base}/admin-question-bank`,
+            icon: 'quiz',
+          },
+
+          {
+            label: 'Create Test',
+            href: `${base}/create-test`,
+            icon: 'course',
+          },
+
+          {
+            label: 'My Tests',
+            href: `${base}/teacher-course`,
+            icon: 'monitor',
+          },
+
+          {
+            label: 'Assignments',
+            href: `${base}/teacher-assignments`,
+            icon: 'assignment',
+          },
+
+          {
+            label: 'Reports',
+            href: `${base}/teacher-reviews`,
+            icon: 'star',
+          },
+
+          {
+            label: 'Certificates',
+            href: `${base}/teacher-certificates`,
+            icon: 'quiz',
+          },
         ],
       },
+
       {
         title: 'Account',
+
         items: [
-          { label: 'My Profile', href: `${base}/teacher-profile`, icon: 'user' },
-          { label: 'Notifications', href: `${base}/teacher-message`, icon: 'message' },
-          { label: 'Settings', href: `${base}/teacher-settings`, icon: 'settings' },
+          {
+            label: 'My Profile',
+            href: `${base}/teacher-profile`,
+            icon: 'user',
+          },
+
+          {
+            label: 'Notifications',
+            href: `${base}/teacher-message`,
+            icon: 'message',
+          },
+
+          {
+            label: 'Settings',
+            href: `${base}/teacher-settings`,
+            icon: 'settings',
+          },
+
           logoutItem,
         ],
       },
     ];
   }
 
+  /*
+   * ============================================================
+   * STUDENT
+   * ============================================================
+   */
   return [
     {
       title: '',
+
       items: [
-        { label: 'Dashboard', href: `${base}/student-dashboard`, icon: 'home' },
-        { label: 'My Profile', href: `${base}/student-profile`, icon: 'user' },
-        { label: 'My Tests', href: `${base}/student-enrolled-courses`, icon: 'bookmark' },
-        { label: 'Assignments', href: `${base}/student-assignments`, icon: 'assignment' },
-        { label: 'My Attempts', href: `${base}/student-my-quiz-attempts`, icon: 'quiz' },
-        { label: 'Results', href: `${base}/student-reviews`, icon: 'star' },
-        { label: 'Certificates', href: `${base}/student-certificates`, icon: 'certificate' },
-        { label: 'Notifications', href: `${base}/student-message`, icon: 'message' },
-        { label: 'Settings', href: `${base}/student-settings`, icon: 'settings' },
+        {
+          label: 'Dashboard',
+          href: `${base}/student-dashboard`,
+          icon: 'home',
+        },
+
+        {
+          label: 'My Profile',
+          href: `${base}/student-profile`,
+          icon: 'user',
+        },
+
+        {
+          label: 'My Tests',
+          href: `${base}/student-enrolled-courses`,
+          icon: 'bookmark',
+        },
+
+        {
+          label: 'Assignments',
+          href: `${base}/student-assignments`,
+          icon: 'assignment',
+        },
+
+        {
+          label: 'My Attempts',
+          href: `${base}/student-my-quiz-attempts`,
+          icon: 'quiz',
+        },
+
+        /*
+         * Student Exam Calendar
+         *
+         * Scheduled tests assigned to this student
+         * are displayed on this calendar.
+         */
+        {
+          label: 'Calendar',
+          href: `${base}/student-calendar`,
+          icon: 'calendar',
+        },
+
+        {
+          label: 'Results',
+          href: `${base}/student-reviews`,
+          icon: 'star',
+        },
+
+        {
+          label: 'Certificates',
+          href: `${base}/student-certificates`,
+          icon: 'certificate',
+        },
+
+        {
+          label: 'Notifications',
+          href: `${base}/student-message`,
+          icon: 'message',
+        },
+
+        {
+          label: 'Settings',
+          href: `${base}/student-settings`,
+          icon: 'settings',
+        },
+
         logoutItem,
       ],
     },
@@ -225,14 +662,48 @@ export function buildDashboardNavigation(user: ApiUser, role: DashboardRole): Da
 
 export function buildProfileFields(user: ApiUser) {
   return [
-    { label: 'Registration Date', value: user.createdAt ? formatDateTime(user.createdAt) : '—' },
-    { label: 'First Name', value: user.firstName },
-    { label: 'Last Name', value: user.lastName },
-    { label: 'Username', value: user.email.split('@')[0] },
-    { label: 'Email', value: user.email },
-    { label: 'Phone Number', value: user.phone ?? '—' },
-    { label: 'Role', value: user.roles.join(', ') },
-    { label: 'Status', value: user.status },
+    {
+      label: 'Registration Date',
+      value: user.createdAt
+        ? formatDateTime(user.createdAt)
+        : '—',
+    },
+
+    {
+      label: 'First Name',
+      value: user.firstName,
+    },
+
+    {
+      label: 'Last Name',
+      value: user.lastName,
+    },
+
+    {
+      label: 'Username',
+      value: user.email.split('@')[0],
+    },
+
+    {
+      label: 'Email',
+      value: user.email,
+    },
+
+    {
+      label: 'Phone Number',
+      value: user.phone ?? '—',
+    },
+
+    {
+      label: 'Role',
+      value: user.roles.join(', '),
+    },
+
+    {
+      label: 'Status',
+      value: user.status,
+    },
+
     {
       label: 'Organization ID',
       value: user.organizationId ?? 'Platform user',
