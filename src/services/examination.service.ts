@@ -15,14 +15,22 @@ import type {
 const base = '/examination';
 
 export async function getAnalyticsOverview(): Promise<OrgAnalytics> {
-  const { data } = await api.get<ApiResponse<OrgAnalytics>>(`${base}/analytics/overview`);
+  const { data } = await api.get<ApiResponse<OrgAnalytics>>(
+    `${base}/analytics/overview`,
+  );
+
   return data.data;
 }
 
 export async function getTestAnalytics(testId: string) {
   const { data } = await api.get<
     ApiResponse<{
-      test: { id: string; title: string; passing_marks?: number | null; total_marks?: number | null };
+      test: {
+        id: string;
+        title: string;
+        passing_marks?: number | null;
+        total_marks?: number | null;
+      };
       stats: {
         total_attempts: number;
         completed: number;
@@ -42,13 +50,22 @@ export async function getTestAnalytics(testId: string) {
       };
     } | null>
   >(`${base}/analytics/tests/${testId}`);
+
   return data.data;
 }
 
-export async function listSubjects(page = 1, limit = 50, departmentId?: string) {
-  const { data } = await api.get<PaginatedResponse<Subject>>(`${base}/subjects`, {
-    params: { page, limit, departmentId },
-  });
+export async function listSubjects(
+  page = 1,
+  limit = 50,
+  departmentId?: string,
+) {
+  const { data } = await api.get<PaginatedResponse<Subject>>(
+    `${base}/subjects`,
+    {
+      params: { page, limit, departmentId },
+    },
+  );
+
   return data;
 }
 
@@ -57,51 +74,74 @@ export async function createSubject(input: {
   code?: string;
   departmentId: string;
 }) {
-  const { data } = await api.post<ApiResponse<Subject>>(`${base}/subjects`, input);
+  const { data } = await api.post<ApiResponse<Subject>>(
+    `${base}/subjects`,
+    input,
+  );
+
   return data.data;
 }
 
 export async function listChapters(subjectId: string) {
-  const { data } = await api.get<ApiResponse<import('@/types/examination').Chapter[]>>(
-    `${base}/subjects/${subjectId}/chapters`,
-  );
+  const { data } = await api.get<
+    ApiResponse<import('@/types/examination').Chapter[]>
+  >(`${base}/subjects/${subjectId}/chapters`);
+
   return data.data;
 }
 
 export async function listTopics(chapterId: string) {
-  const { data } = await api.get<ApiResponse<import('@/types/examination').Topic[]>>(
-    `${base}/chapters/${chapterId}/topics`,
-  );
+  const { data } = await api.get<
+    ApiResponse<import('@/types/examination').Topic[]>
+  >(`${base}/chapters/${chapterId}/topics`);
+
   return data.data;
 }
 
 export async function listTopicsForSubject(subjectId: string) {
-  const { data } = await api.get<ApiResponse<import('@/types/examination').Topic[]>>(
-    `${base}/subjects/${subjectId}/topics`,
-  );
+  const { data } = await api.get<
+    ApiResponse<import('@/types/examination').Topic[]>
+  >(`${base}/subjects/${subjectId}/topics`);
+
   return data.data;
 }
 
 export async function createTopicForSubject(
   subjectId: string,
-  input: { name: string; difficulty?: number; chapterName?: string },
+  input: {
+    name: string;
+    difficulty?: number;
+    chapterName?: string;
+  },
 ) {
-  const { data } = await api.post<ApiResponse<import('@/types/examination').Topic>>(
-    `${base}/subjects/${subjectId}/topics`,
-    input,
-  );
+  const { data } = await api.post<
+    ApiResponse<import('@/types/examination').Topic>
+  >(`${base}/subjects/${subjectId}/topics`, input);
+
   return data.data;
 }
 
-export async function listQuestions(page = 1, limit = 20, status?: string) {
-  const { data } = await api.get<PaginatedResponse<Question>>(`${base}/questions`, {
-    params: { page, limit, status },
-  });
+export async function listQuestions(
+  page = 1,
+  limit = 20,
+  status?: string,
+) {
+  const { data } = await api.get<PaginatedResponse<Question>>(
+    `${base}/questions`,
+    {
+      params: { page, limit, status },
+    },
+  );
+
   return data;
 }
 
 export async function createQuestion(input: CreateQuestionInput) {
-  const { data } = await api.post<ApiResponse<Question>>(`${base}/questions`, input);
+  const { data } = await api.post<ApiResponse<Question>>(
+    `${base}/questions`,
+    input,
+  );
+
   return data.data;
 }
 
@@ -112,29 +152,55 @@ export async function getQuestion(id: string) {
         topic_id?: string;
         subject_id?: string;
         department_id?: string;
-        options?: { id: string; content: { text?: string; value?: number }; is_correct: boolean }[];
+        options?: {
+          id: string;
+          content: {
+            text?: string;
+            value?: number;
+          };
+          is_correct: boolean;
+        }[];
       }
     >
   >(`${base}/questions/${id}`);
+
   return data.data;
 }
 
-export async function updateQuestion(id: string, input: CreateQuestionInput) {
-  const { data } = await api.patch<ApiResponse<Question>>(`${base}/questions/${id}`, input);
+export async function updateQuestion(
+  id: string,
+  input: CreateQuestionInput,
+) {
+  const { data } = await api.patch<ApiResponse<Question>>(
+    `${base}/questions/${id}`,
+    input,
+  );
+
   return data.data;
 }
 
 export async function deleteQuestion(id: string) {
-  const { data } = await api.delete<ApiResponse<{ id: string; deleted: boolean }>>(
-    `${base}/questions/${id}`,
-  );
+  const { data } = await api.delete<
+    ApiResponse<{
+      id: string;
+      deleted: boolean;
+    }>
+  >(`${base}/questions/${id}`);
+
   return data.data;
 }
 
 export async function approveQuestion(id: string) {
-  const { data } = await api.post<ApiResponse<Question>>(`${base}/questions/${id}/approve`);
+  const { data } = await api.post<ApiResponse<Question>>(
+    `${base}/questions/${id}/approve`,
+  );
+
   return data.data;
 }
+
+/* =========================================================
+   CERTIFICATES
+   ========================================================= */
 
 export interface Certificate {
   id: string;
@@ -144,30 +210,53 @@ export interface Certificate {
   verification_code: string;
   status: 'issued' | 'revoked';
   issued_at: string;
+
   test_title?: string;
   percentage?: number;
   total_score?: number;
   max_score?: number;
+
   student_name?: string;
   org_name?: string;
+
   verify_url?: string;
   enrollment_no?: string | null;
 }
 
+/**
+ * Result returned after submitting an exam.
+ *
+ * The backend automatically creates a certificate when
+ * the student passes the exam.
+ */
+export type SubmitAttemptResult = ExamResult & {
+  certificate?: Certificate | null;
+};
+
 export async function listMyCertificates() {
-  const { data } = await api.get<ApiResponse<Certificate[]>>(`${base}/certificates/mine`);
+  const { data } = await api.get<ApiResponse<Certificate[]>>(
+    `${base}/certificates/mine`,
+  );
+
   return data.data;
 }
 
 export async function listCertificates(page = 1, limit = 50) {
-  const { data } = await api.get<PaginatedResponse<Certificate>>(`${base}/certificates`, {
-    params: { page, limit },
-  });
+  const { data } = await api.get<PaginatedResponse<Certificate>>(
+    `${base}/certificates`,
+    {
+      params: { page, limit },
+    },
+  );
+
   return data;
 }
 
 export async function getCertificate(id: string) {
-  const { data } = await api.get<ApiResponse<Certificate>>(`${base}/certificates/${id}`);
+  const { data } = await api.get<ApiResponse<Certificate>>(
+    `${base}/certificates/${id}`,
+  );
+
   return data.data;
 }
 
@@ -175,27 +264,43 @@ export async function issueCertificate(resultId: string) {
   const { data } = await api.post<ApiResponse<Certificate>>(
     `${base}/results/${resultId}/certificate`,
   );
+
   return data.data;
 }
 
 export async function downloadCertificatePdf(id: string) {
-  const response = await api.get(`${base}/certificates/${id}/pdf`, { responseType: 'blob' });
+  const response = await api.get(
+    `${base}/certificates/${id}/pdf`,
+    {
+      responseType: 'blob',
+    },
+  );
+
   return response.data as Blob;
 }
 
 export async function revokeCertificate(id: string) {
-  const { data } = await api.post<ApiResponse<{ id: string; status: string }>>(
-    `${base}/certificates/${id}/revoke`,
-  );
+  const { data } = await api.post<
+    ApiResponse<{
+      id: string;
+      status: string;
+    }>
+  >(`${base}/certificates/${id}/revoke`);
+
   return data.data;
 }
 
 export async function verifyCertificatePublic(code: string) {
-  const { data } = await api.get<ApiResponse<Record<string, unknown>>>(
-    `/certificates/verify/${encodeURIComponent(code)}`,
-  );
+  const { data } = await api.get<
+    ApiResponse<Record<string, unknown>>
+  >(`/certificates/verify/${encodeURIComponent(code)}`);
+
   return data.data;
 }
+
+/* =========================================================
+   ASSIGNMENTS
+   ========================================================= */
 
 export async function listAssignmentSummaries() {
   const { data } = await api.get<
@@ -214,8 +319,13 @@ export async function listAssignmentSummaries() {
       }[]
     >
   >(`${base}/assignments/summary`);
+
   return data.data;
 }
+
+/* =========================================================
+   QUESTION IMPORT
+   ========================================================= */
 
 export interface QuestionImportRow {
   row: number;
@@ -237,69 +347,140 @@ export interface QuestionImportSummary {
 }
 
 export async function importQuestionsFromCsv(csvText: string) {
-  const { data } = await api.post<ApiResponse<QuestionImportSummary>>(`${base}/questions/import`, {
-    csvText,
-  });
+  const { data } = await api.post<ApiResponse<QuestionImportSummary>>(
+    `${base}/questions/import`,
+    {
+      csvText,
+    },
+  );
+
   return data.data;
 }
 
-export async function listTests(page = 1, limit = 20, status?: string) {
-  const { data } = await api.get<PaginatedResponse<ExamTest>>(`${base}/tests`, {
-    params: { page, limit, status },
-  });
+/* =========================================================
+   TESTS
+   ========================================================= */
+
+export async function listTests(
+  page = 1,
+  limit = 20,
+  status?: string,
+) {
+  const { data } = await api.get<PaginatedResponse<ExamTest>>(
+    `${base}/tests`,
+    {
+      params: { page, limit, status },
+    },
+  );
+
   return data;
 }
 
 export async function listMyAssignedTests() {
-  const { data } = await api.get<ApiResponse<ExamTest[]>>(`${base}/tests/my`);
+  const { data } = await api.get<ApiResponse<ExamTest[]>>(
+    `${base}/tests/my`,
+  );
+
   return data.data;
 }
 
 export async function getTest(id: string) {
-  const { data } = await api.get<ApiResponse<ExamTest & { sections?: unknown[]; questions?: unknown[] }>>(
-    `${base}/tests/${id}`,
-  );
+  const { data } = await api.get<
+    ApiResponse<
+      ExamTest & {
+        sections?: unknown[];
+        questions?: unknown[];
+      }
+    >
+  >(`${base}/tests/${id}`);
+
   return data.data;
 }
 
-export async function updateTest(id: string, input: Partial<CreateTestInput & { status?: string }>) {
-  const { data } = await api.patch<ApiResponse<ExamTest>>(`${base}/tests/${id}`, input);
+export async function updateTest(
+  id: string,
+  input: Partial<CreateTestInput & { status?: string }>,
+) {
+  const { data } = await api.patch<ApiResponse<ExamTest>>(
+    `${base}/tests/${id}`,
+    input,
+  );
+
   return data.data;
 }
 
 export async function deleteTest(id: string) {
-  const { data } = await api.delete<ApiResponse<{ id: string; deleted: boolean }>>(`${base}/tests/${id}`);
+  const { data } = await api.delete<
+    ApiResponse<{
+      id: string;
+      deleted: boolean;
+    }>
+  >(`${base}/tests/${id}`);
+
   return data.data;
 }
 
-export async function addTestSection(testId: string, name: string) {
-  const { data } = await api.post<ApiResponse<unknown>>(`${base}/tests/${testId}/sections`, { name });
-  return data.data;
-}
-
-export async function addQuestionToTest(testId: string, questionId: string) {
-  const { data } = await api.post<ApiResponse<unknown>>(`${base}/tests/${testId}/questions`, {
-    questionId,
-  });
-  return data.data;
-}
-
-export async function reorderTestQuestions(testId: string, questionIds: string[]) {
-  const { data } = await api.patch<ApiResponse<ExamTest>>(`${base}/tests/${testId}/questions/reorder`, {
-    questionIds,
-  });
-  return data.data;
-}
-
-export async function removeQuestionFromTest(testId: string, questionId: string) {
-  const { data } = await api.delete<ApiResponse<{ removed: boolean }>>(
-    `${base}/tests/${testId}/questions/${questionId}`,
+export async function addTestSection(
+  testId: string,
+  name: string,
+) {
+  const { data } = await api.post<ApiResponse<unknown>>(
+    `${base}/tests/${testId}/sections`,
+    {
+      name,
+    },
   );
+
+  return data.data;
+}
+
+export async function addQuestionToTest(
+  testId: string,
+  questionId: string,
+) {
+  const { data } = await api.post<ApiResponse<unknown>>(
+    `${base}/tests/${testId}/questions`,
+    {
+      questionId,
+    },
+  );
+
+  return data.data;
+}
+
+export async function reorderTestQuestions(
+  testId: string,
+  questionIds: string[],
+) {
+  const { data } = await api.patch<ApiResponse<ExamTest>>(
+    `${base}/tests/${testId}/questions/reorder`,
+    {
+      questionIds,
+    },
+  );
+
+  return data.data;
+}
+
+export async function removeQuestionFromTest(
+  testId: string,
+  questionId: string,
+) {
+  const { data } = await api.delete<
+    ApiResponse<{
+      removed: boolean;
+    }>
+  >(`${base}/tests/${testId}/questions/${questionId}`);
+
   return data.data;
 }
 
 export async function createTest(input: CreateTestInput) {
-  const { data } = await api.post<ApiResponse<ExamTest>>(`${base}/tests`, input);
+  const { data } = await api.post<ApiResponse<ExamTest>>(
+    `${base}/tests`,
+    input,
+  );
+
   return data.data;
 }
 
@@ -311,27 +492,48 @@ export async function publishTest(
     scheduledEnd?: string | null;
   },
 ) {
-  const { data } = await api.post<ApiResponse<ExamTest>>(`${base}/tests/${id}/publish`, {
-    mode: options?.mode ?? 'live_now',
-    scheduledStart: options?.scheduledStart ?? null,
-    scheduledEnd: options?.scheduledEnd ?? null,
-  });
-  return data.data;
-}
-
-export async function assignTestToStudent(testId: string, studentId: string) {
-  const { data } = await api.post<ApiResponse<unknown>>(`${base}/tests/${testId}/assign`, {
-    studentId,
-  });
-  return data.data;
-}
-
-export async function unassignStudentFromTest(testId: string, studentId: string) {
-  const { data } = await api.delete<ApiResponse<{ removed: boolean }>>(
-    `${base}/tests/${testId}/assign/${studentId}`,
+  const { data } = await api.post<ApiResponse<ExamTest>>(
+    `${base}/tests/${id}/publish`,
+    {
+      mode: options?.mode ?? 'live_now',
+      scheduledStart: options?.scheduledStart ?? null,
+      scheduledEnd: options?.scheduledEnd ?? null,
+    },
   );
+
   return data.data;
 }
+
+export async function assignTestToStudent(
+  testId: string,
+  studentId: string,
+) {
+  const { data } = await api.post<ApiResponse<unknown>>(
+    `${base}/tests/${testId}/assign`,
+    {
+      studentId,
+    },
+  );
+
+  return data.data;
+}
+
+export async function unassignStudentFromTest(
+  testId: string,
+  studentId: string,
+) {
+  const { data } = await api.delete<
+    ApiResponse<{
+      removed: boolean;
+    }>
+  >(`${base}/tests/${testId}/assign/${studentId}`);
+
+  return data.data;
+}
+
+/* =========================================================
+   STUDENTS / ASSIGNMENTS
+   ========================================================= */
 
 export interface AssignableStudent {
   student_id: string;
@@ -352,22 +554,46 @@ export interface TestAssignment {
   created_at: string;
 }
 
-export async function listAssignableStudents(page = 1, limit = 100, departmentId?: string) {
-  const { data } = await api.get<PaginatedResponse<AssignableStudent>>(`${base}/students`, {
-    params: { page, limit, departmentId: departmentId || undefined },
+export async function listAssignableStudents(
+  page = 1,
+  limit = 100,
+  departmentId?: string,
+) {
+  const { data } = await api.get<
+    PaginatedResponse<AssignableStudent>
+  >(`${base}/students`, {
+    params: {
+      page,
+      limit,
+      departmentId: departmentId || undefined,
+    },
   });
+
   return data;
 }
 
+/* =========================================================
+   ATTEMPTS
+   ========================================================= */
+
 export async function startAttempt(testId: string) {
-  const { data } = await api.post<ApiResponse<TestAttempt>>(`${base}/tests/${testId}/start`);
+  const { data } = await api.post<ApiResponse<TestAttempt>>(
+    `${base}/tests/${testId}/start`,
+  );
+
   return data.data;
 }
 
 export async function getAttempt(attemptId: string) {
   const { data } = await api.get<
-    ApiResponse<TestAttempt & { questions: AttemptQuestion[]; duration_minutes: number }>
+    ApiResponse<
+      TestAttempt & {
+        questions: AttemptQuestion[];
+        duration_minutes: number;
+      }
+    >
   >(`${base}/attempts/${attemptId}`);
+
   return data.data;
 }
 
@@ -376,17 +602,35 @@ export async function saveAnswer(
   questionId: string,
   answer: Record<string, unknown>,
 ) {
-  const { data } = await api.post<ApiResponse<unknown>>(`${base}/attempts/${attemptId}/answers`, {
-    questionId,
-    answer,
-  });
+  const { data } = await api.post<ApiResponse<unknown>>(
+    `${base}/attempts/${attemptId}/answers`,
+    {
+      questionId,
+      answer,
+    },
+  );
+
   return data.data;
 }
 
-export async function submitAttempt(attemptId: string, autoSubmit = false) {
-  const { data } = await api.post<ApiResponse<ExamResult>>(`${base}/attempts/${attemptId}/submit`, {
+/**
+ * Submit an exam attempt.
+ *
+ * When the student passes, the backend automatically creates
+ * a certificate and returns it inside:
+ *
+ * result.certificate
+ */
+export async function submitAttempt(
+  attemptId: string,
+  autoSubmit = false,
+): Promise<SubmitAttemptResult> {
+  const { data } = await api.post<
+    ApiResponse<SubmitAttemptResult>
+  >(`${base}/attempts/${attemptId}/submit`, {
     autoSubmit,
   });
+
   return data.data;
 }
 
@@ -395,42 +639,74 @@ export async function logProctoringEvent(
   event: string,
   detail?: Record<string, unknown>,
 ) {
-  const { data } = await api.post<ApiResponse<{ tab_switch_count: number }>>(
-    `${base}/attempts/${attemptId}/proctoring`,
-    { event, detail },
-  );
+  const { data } = await api.post<
+    ApiResponse<{
+      tab_switch_count: number;
+    }>
+  >(`${base}/attempts/${attemptId}/proctoring`, {
+    event,
+    detail,
+  });
+
   return data.data;
 }
+
+/* =========================================================
+   RESULTS / STATS
+   ========================================================= */
 
 export async function getMyStats() {
-  const { data } = await api.get<ApiResponse<import('@/types/examination').StudentStats>>(
-    `${base}/stats/my`,
-  );
+  const { data } = await api.get<
+    ApiResponse<
+      import('@/types/examination').StudentStats
+    >
+  >(`${base}/stats/my`);
+
   return data.data;
 }
 
-export async function listAttempts(page = 1, limit = 20) {
-  const { data } = await api.get<PaginatedResponse<TestAttempt>>(`${base}/attempts`, {
+export async function listAttempts(
+  page = 1,
+  limit = 20,
+) {
+  const { data } = await api.get<
+    PaginatedResponse<TestAttempt>
+  >(`${base}/attempts`, {
     params: { page, limit },
   });
+
   return data;
 }
 
 export async function listMyResults() {
-  const { data } = await api.get<ApiResponse<ExamResult[]>>(`${base}/results/my`);
+  const { data } = await api.get<ApiResponse<ExamResult[]>>(
+    `${base}/results/my`,
+  );
+
   return data.data;
 }
 
 export async function getResult(attemptId: string) {
-  const { data } = await api.get<ApiResponse<ExamResult>>(`${base}/results/${attemptId}`);
+  const { data } = await api.get<ApiResponse<ExamResult>>(
+    `${base}/results/${attemptId}`,
+  );
+
   return data.data;
 }
+
+/* =========================================================
+   PROFILE
+   ========================================================= */
 
 export async function updateProfile(input: {
   firstName?: string;
   lastName?: string;
   phone?: string;
 }) {
-  const { data } = await api.patch<ApiResponse<unknown>>('/users/me', input);
+  const { data } = await api.patch<ApiResponse<unknown>>(
+    '/users/me',
+    input,
+  );
+
   return data.data;
 }

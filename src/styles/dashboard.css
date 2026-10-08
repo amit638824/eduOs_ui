@@ -224,7 +224,7 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 }
 
 .sca-db-nav-item--active {
-  background: rgba(59, 130, 246, 0.22) !important;
+  background: var(--db-sidebar-bg) !important;
   color: #fff !important;
   font-weight: 600;
   border-left-color: var(--db-accent);
@@ -3171,5 +3171,353 @@ body.sca-dashboard-body .sca-dashboard .row > [class*='col-'] {
   .sca-profile__info-row {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+}
+
+.sca-student-exam-date-time {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.sca-student-exam-date-time > div {
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #f5f7fa;
+  border: 1px solid #e5e7eb;
+}
+
+.sca-student-exam-date-time span {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.sca-student-exam-date-time strong {
+  display: block;
+  font-size: 14px;
+}
+
+.sca-student-exam-countdown-box {
+  margin: 16px 0;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+  background: #f8fafc;
+  border: 1px solid #dbe3ec;
+}
+
+.sca-student-exam-countdown-box > span {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #64748b;
+}
+
+.sca-student-exam-countdown-box > strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 700;
+}
+
+.sca-student-exam-live-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.sca-student-exam-live-banner strong {
+  font-size: 14px;
+}
+
+.sca-student-exam-live {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.sca-student-exam-live__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.sca-student-exam-live__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  background: #16a34a;
+}
+
+.sca-student-exam-schedule {
+  width: 100%;
+}
+
+.sca-student-exam-schedule__label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #64748b;
+}
+
+.sca-student-exam-countdown-large {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+@media (max-width: 576px) {
+  .sca-student-exam-date-time {
+    grid-template-columns: 1fr;
+  }
+
+  .sca-student-exam-live {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* =========================================================
+   Student Exam Calendar
+   ========================================================= */
+
+.student-exam-calendar {
+  width: 100%;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+.student-exam-calendar .fc {
+  width: 100%;
+  font-family: inherit;
+}
+
+.student-exam-calendar .fc-toolbar {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.student-exam-calendar .fc-toolbar-title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* =========================================================
+   Calendar Buttons - Navy Blue
+   ========================================================= */
+
+.student-exam-calendar .fc-button {
+  background: #0b2c5f !important;
+  border: 1px solid #0b2c5f !important;
+  border-radius: 5px !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.student-exam-calendar .fc-button:hover {
+  background: #071f45 !important;
+  border-color: #071f45 !important;
+  color: #ffffff !important;
+}
+
+.student-exam-calendar .fc-button-active,
+.student-exam-calendar .fc-button:active {
+  background: #071f45 !important;
+  border-color: #071f45 !important;
+  color: #ffffff !important;
+}
+
+.student-exam-calendar .fc-button:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.student-exam-calendar .fc-button:disabled {
+  background: #0b2c5f !important;
+  border-color: #0b2c5f !important;
+  color: #ffffff !important;
+  opacity: 0.65;
+}
+
+/* =========================================================
+   Calendar Events
+   ========================================================= */
+
+.student-exam-calendar .fc-event {
+  cursor: pointer;
+  border-radius: 5px;
+  padding: 3px 5px;
+}
+
+.student-exam-calendar .fc-event-title {
+  font-weight: 600;
+}
+
+.student-exam-calendar .fc-daygrid-event {
+  white-space: normal;
+}
+
+/* =========================================================
+   Calendar Modal
+   ========================================================= */
+
+.student-calendar-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.student-calendar-modal {
+  width: min(520px, 100%);
+  background: #ffffff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  border-top: 4px solid #0b2c5f;
+}
+
+.student-calendar-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.student-calendar-modal__label {
+  display: block;
+  margin-bottom: 5px;
+  color: #0b2c5f;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.student-calendar-modal__header h4 {
+  margin: 0;
+  color: #0b2c5f;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.student-calendar-modal__close {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #0b2c5f;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.student-calendar-modal__close:hover {
+  background: #0b2c5f;
+  color: #ffffff;
+}
+
+.student-calendar-modal__body {
+  padding: 20px;
+}
+
+.student-calendar-detail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 0;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.student-calendar-detail span {
+  color: #666666;
+  opacity: 0.85;
+}
+
+.student-calendar-detail strong {
+  color: #0b2c5f;
+  text-align: right;
+}
+
+.student-calendar-description {
+  padding-top: 18px;
+}
+
+.student-calendar-description > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #0b2c5f;
+  font-weight: 600;
+}
+
+.student-calendar-description p {
+  margin: 0;
+  color: #444444;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   Mobile
+   ========================================================= */
+
+@media (max-width: 767px) {
+  .student-exam-calendar {
+    padding: 10px;
+  }
+
+  .student-exam-calendar .fc-toolbar {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .student-exam-calendar .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+  }
+
+  .student-exam-calendar .fc-toolbar-title {
+    font-size: 18px;
+  }
+
+  .student-calendar-modal {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .student-calendar-detail {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .student-calendar-detail strong {
+    text-align: left;
   }
 }

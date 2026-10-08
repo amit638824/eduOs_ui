@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { OrgScopeProvider } from '@/context/OrgScopeContext';
+
 import Layout from '@/components/layout/Layout';
+
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import RegisterPage from '@/pages/RegisterPage';
@@ -19,8 +22,12 @@ import BlogPostPage from '@/pages/BlogPostPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import NotFoundPage from '@/pages/NotFoundPage';
+
 import VerifyCertificatePage from '@/pages/VerifyCertificatePage';
+import CertificatePage from '@/pages/CertificatePage';
+
 import { dashboardRouteElements } from '@/pages/dashboard/dashboardRoutes';
+
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function App() {
@@ -30,31 +37,92 @@ export default function App() {
         <OrgScopeProvider>
           <BrowserRouter>
             <Routes>
+              {/* Certificate page without normal website layout */}
+              <Route
+                path="/certificate/:studentName?"
+                element={<CertificatePage />}
+              />
+
+              {/* Normal website pages */}
               <Route element={<Layout />}>
                 <Route path="/" element={<HomePage />} />
+
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+                <Route
+                  path="/forgot-password"
+                  element={<ForgotPasswordPage />}
+                />
+
+                <Route
+                  path="/reset-password"
+                  element={<ResetPasswordPage />}
+                />
+
                 <Route path="/register" element={<RegisterPage />} />
+
                 <Route path="/about" element={<AboutPage />} />
+
                 <Route path="/exams" element={<ExamsPage />} />
-                <Route path="/exams/:slug" element={<ExamSlugPage />} />
+
+                <Route
+                  path="/exams/:slug"
+                  element={<ExamSlugPage />}
+                />
+
                 <Route path="/pricing" element={<PricingPage />} />
+
                 <Route path="/schools" element={<SchoolsPage />} />
+
                 <Route path="/help" element={<HelpPage />} />
+
                 <Route path="/privacy" element={<PrivacyPage />} />
+
                 <Route path="/blog" element={<BlogPage />} />
-                <Route path="/blog/:slug" element={<BlogPostPage />} />
-                <Route path="/verify-certificate" element={<VerifyCertificatePage />} />
 
-                <Route path="/instructor" element={<Navigate to="/dashboard/become-a-teacher" replace />} />
-                <Route path="/instructor-details" element={<Navigate to="/dashboard/become-a-teacher" replace />} />
+                <Route
+                  path="/blog/:slug"
+                  element={<BlogPostPage />}
+                />
 
+                {/* Certificate verification */}
+                <Route
+                  path="/verify-certificate"
+                  element={<VerifyCertificatePage />}
+                />
+
+                {/* Instructor */}
+                <Route
+                  path="/instructor"
+                  element={
+                    <Navigate
+                      to="/dashboard/become-a-teacher"
+                      replace
+                    />
+                  }
+                />
+
+                <Route
+                  path="/instructor-details"
+                  element={
+                    <Navigate
+                      to="/dashboard/become-a-teacher"
+                      replace
+                    />
+                  }
+                />
+
+                {/* Dashboard */}
                 {dashboardRouteElements}
 
-                <Route path="*" element={<NotFoundPage />} />
+                {/* 404 */}
+                <Route
+                  path="*"
+                  element={<NotFoundPage />}
+                />
               </Route>
             </Routes>
+
             <ToastContainer
               position="top-right"
               autoClose={3200}

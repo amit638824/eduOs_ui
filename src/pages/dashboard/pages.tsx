@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
+import StudentExamCalendar from '@/components/dashboard/examination/StudentExamCalendar';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
-import {
-  QuestionBankPanel,
-  TestsListPanel,
+import { QuestionBankPanel, TestsListPanel,
   StudentTestsPanel,
   AttemptsListPanel,
   ResultsPanel,
@@ -230,4 +229,5 @@ export {
   ExamAttemptPage,
   ExamResultPage,
   ProfileSettingsApiForm,
+  StudentExamCalendar,
 };
