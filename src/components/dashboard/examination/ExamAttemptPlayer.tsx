@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { examinationService } from '@/services';
 import { parseApiError } from '@/lib/errors';
@@ -21,6 +21,10 @@ const DEFAULT_CONFIG: ExamSecurityConfig = {
   allowResume: true,
   maxTabSwitches: 5,
   releaseAnswers: false,
+  maxAttempts: 1,
+  scoringPolicy: 'latest',
+  maxFullscreenExits: 3,
+  maxCopyPasteAttempts: 3,
 };
 
 type AttemptData = TestAttempt & {
@@ -98,10 +102,22 @@ export default function ExamAttemptPlayer() {
   const [saveMsg, setSaveMsg] = useState('');
   const [pageLoading, setPageLoading] = useState(true);
   const [draftText, setDraftText] = useState('');
+  const questionEnteredAtRef = useRef<number>(Date.now());
 
   const config = attempt?.config ?? DEFAULT_CONFIG;
   const questions = attempt?.questions ?? [];
   const current = questions[currentIdx];
+
+  const takeQuestionTime = () => {
+    const now = Date.now();
+    const sec = Math.max(0, Math.round((now - questionEnteredAtRef.current) / 1000));
+    questionEnteredAtRef.current = now;
+    return sec;
+  };
+
+  useEffect(() => {
+    questionEnteredAtRef.current = Date.now();
+  }, [current?.question_id]);
 
   useEffect(() => {
     if (!current) {
@@ -259,7 +275,7 @@ export default function ExamAttemptPlayer() {
     flashSave();
 
     void examinationService
-      .saveAnswer(attemptId, questionId, { selectedOptionIds: selected })
+      .saveAnswer(attemptId, questionId, { selectedOptionIds: selected }, takeQuestionTime())
       .catch((err) => setError(parseApiError(err)));
   };
 
@@ -279,6 +295,7 @@ export default function ExamAttemptPlayer() {
         field === 'text'
           ? { text: value }
           : { value: value === '' ? null : Number(value) },
+        takeQuestionTime(),
       )
       .catch((err) => setError(parseApiError(err)));
   };
@@ -302,11 +319,16 @@ export default function ExamAttemptPlayer() {
     flashSave();
 
     void examinationService
-      .saveAnswer(attemptId, current.question_id, {
-        selectedOptionIds: [],
-        text: '',
-        value: null,
-      })
+      .saveAnswer(
+        attemptId,
+        current.question_id,
+        {
+          selectedOptionIds: [],
+          text: '',
+          value: null,
+        },
+        takeQuestionTime(),
+      )
       .catch((err) => setError(parseApiError(err)));
   };
 

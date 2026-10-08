@@ -134,6 +134,28 @@ export const createTestApiSchema = yup.object({
       const n = Number(v);
       return Number.isInteger(n) && n >= 0;
     }),
+  maxAttempts: yup
+    .string()
+    .required('Max attempts is required')
+    .test('ma', 'Must be at least 1', (v) => {
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 1;
+    }),
+  scoringPolicy: yup.mixed<'latest' | 'highest'>().oneOf(['latest', 'highest']).default('latest'),
+  maxFullscreenExits: yup
+    .string()
+    .required()
+    .test('fe', 'Must be 0 or more', (v) => {
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 0;
+    }),
+  maxCopyPasteAttempts: yup
+    .string()
+    .required()
+    .test('cp', 'Must be 0 or more', (v) => {
+      const n = Number(v);
+      return Number.isInteger(n) && n >= 0;
+    }),
 });
 
 export type CreateTestApiFormValues = yup.InferType<typeof createTestApiSchema>;

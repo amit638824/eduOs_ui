@@ -1030,6 +1030,10 @@ export function TestsListPanel({ title }: { title: string }) {
   const [editAllowResume, setEditAllowResume] = useState(true);
   const [editReleaseAnswers, setEditReleaseAnswers] = useState(false);
   const [editMaxTabSwitches, setEditMaxTabSwitches] = useState('5');
+  const [editMaxAttempts, setEditMaxAttempts] = useState('1');
+  const [editScoringPolicy, setEditScoringPolicy] = useState<'latest' | 'highest'>('latest');
+  const [editMaxFullscreenExits, setEditMaxFullscreenExits] = useState('3');
+  const [editMaxCopyPasteAttempts, setEditMaxCopyPasteAttempts] = useState('3');
   const withLoader = useDashboardLoader();
 
   const load = () => {
@@ -1076,6 +1080,10 @@ export function TestsListPanel({ title }: { title: string }) {
     setEditAllowResume(cfg.allowResume !== false);
     setEditReleaseAnswers(Boolean(cfg.releaseAnswers));
     setEditMaxTabSwitches(String(cfg.maxTabSwitches ?? 5));
+    setEditMaxAttempts(String(cfg.maxAttempts ?? 1));
+    setEditScoringPolicy(cfg.scoringPolicy === 'highest' ? 'highest' : 'latest');
+    setEditMaxFullscreenExits(String(cfg.maxFullscreenExits ?? 3));
+    setEditMaxCopyPasteAttempts(String(cfg.maxCopyPasteAttempts ?? 3));
   };
 
   const saveEdit = async () => {
@@ -1114,6 +1122,10 @@ export function TestsListPanel({ title }: { title: string }) {
             allowResume: editAllowResume,
             releaseAnswers: editReleaseAnswers,
             maxTabSwitches: maxTabs,
+            maxAttempts: Math.max(1, Number(editMaxAttempts) || 1),
+            scoringPolicy: editScoringPolicy,
+            maxFullscreenExits: Math.max(0, Number(editMaxFullscreenExits) || 0),
+            maxCopyPasteAttempts: Math.max(0, Number(editMaxCopyPasteAttempts) || 0),
             browserLock: true,
             blockCopyPaste: true,
             autoSubmit: true,
@@ -1265,6 +1277,47 @@ export function TestsListPanel({ title }: { title: string }) {
                       min={0}
                       value={editMaxTabSwitches}
                       onChange={(e) => setEditMaxTabSwitches(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label>Max attempts</label>
+                    <input
+                      className="register__input edtp-number-input"
+                      type="number"
+                      min={1}
+                      value={editMaxAttempts}
+                      onChange={(e) => setEditMaxAttempts(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label>Scoring policy</label>
+                    <select
+                      className="register__input"
+                      value={editScoringPolicy}
+                      onChange={(e) => setEditScoringPolicy(e.target.value as 'latest' | 'highest')}
+                    >
+                      <option value="latest">Latest attempt</option>
+                      <option value="highest">Highest score</option>
+                    </select>
+                  </div>
+                  <div className="col-md-4">
+                    <label>Flag: max fullscreen exits</label>
+                    <input
+                      className="register__input edtp-number-input"
+                      type="number"
+                      min={0}
+                      value={editMaxFullscreenExits}
+                      onChange={(e) => setEditMaxFullscreenExits(e.target.value)}
+                    />
+                  </div>
+                  <div className="col-md-4">
+                    <label>Flag: max copy/paste</label>
+                    <input
+                      className="register__input edtp-number-input"
+                      type="number"
+                      min={0}
+                      value={editMaxCopyPasteAttempts}
+                      onChange={(e) => setEditMaxCopyPasteAttempts(e.target.value)}
                     />
                   </div>
                 </div>
@@ -1824,7 +1877,12 @@ export function AttemptsListPanel({
           <tbody>
             {attempts.map((a) => (
               <tr key={a.id}>
-                <td>{a.test_title ?? a.test_id}</td>
+                <td>
+                  {a.test_title ?? a.test_id}{' '}
+                  {a.proctoring_flagged ? (
+                    <span className="edtp-badge edtp-badge--inactive">Flagged</span>
+                  ) : null}
+                </td>
                 <td>{a.status.replace('_', ' ')}</td>
                 <td>{a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : '—'}</td>
                 <td>{formatDateTime(a.started_at)}</td>
@@ -1958,6 +2016,10 @@ export function CreateTestPanel() {
       allowResume: true,
       releaseAnswers: false,
       maxTabSwitches: '5',
+      maxAttempts: '1',
+      scoringPolicy: 'latest',
+      maxFullscreenExits: '3',
+      maxCopyPasteAttempts: '3',
     },
   });
 
@@ -2071,6 +2133,10 @@ export function CreateTestPanel() {
             allowResume: Boolean(values.allowResume),
             releaseAnswers: Boolean(values.releaseAnswers),
             maxTabSwitches: Number(values.maxTabSwitches) || 5,
+            maxAttempts: Math.max(1, Number(values.maxAttempts) || 1),
+            scoringPolicy: values.scoringPolicy === 'highest' ? 'highest' : 'latest',
+            maxFullscreenExits: Math.max(0, Number(values.maxFullscreenExits) || 0),
+            maxCopyPasteAttempts: Math.max(0, Number(values.maxCopyPasteAttempts) || 0),
             browserLock: true,
             blockCopyPaste: true,
             autoSubmit: true,
@@ -2253,6 +2319,44 @@ export function CreateTestPanel() {
                   />
                   <FormError message={errors.maxTabSwitches?.message} />
                 </div>
+                <div className="col-md-4">
+                  <label htmlFor="maxAttempts">Max attempts</label>
+                  <input
+                    id="maxAttempts"
+                    type="number"
+                    min={1}
+                    className={inputClassName('register__input edtp-number-input', !!errors.maxAttempts)}
+                    {...register('maxAttempts')}
+                  />
+                  <FormError message={errors.maxAttempts?.message} />
+                </div>
+                <div className="col-md-4">
+                  <label htmlFor="scoringPolicy">Scoring policy</label>
+                  <select id="scoringPolicy" className="register__input" {...register('scoringPolicy')}>
+                    <option value="latest">Latest attempt</option>
+                    <option value="highest">Highest score</option>
+                  </select>
+                </div>
+                <div className="col-md-4">
+                  <label htmlFor="maxFullscreenExits">Flag: fullscreen exits</label>
+                  <input
+                    id="maxFullscreenExits"
+                    type="number"
+                    min={0}
+                    className={inputClassName('register__input edtp-number-input', !!errors.maxFullscreenExits)}
+                    {...register('maxFullscreenExits')}
+                  />
+                </div>
+                <div className="col-md-4">
+                  <label htmlFor="maxCopyPasteAttempts">Flag: copy/paste</label>
+                  <input
+                    id="maxCopyPasteAttempts"
+                    type="number"
+                    min={0}
+                    className={inputClassName('register__input edtp-number-input', !!errors.maxCopyPasteAttempts)}
+                    {...register('maxCopyPasteAttempts')}
+                  />
+                </div>
               </div>
             </div>
             <div className="col-12">
@@ -2304,6 +2408,7 @@ function formatCorrectAnswer(q: ExamResultQuestion): string {
 
 export function ExamResultPage() {
   const { attemptId } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [result, setResult] = useState<ExamResult | null>(null);
   const [error, setError] = useState('');
@@ -2312,6 +2417,9 @@ export function ExamResultPage() {
   const [existingCert, setExistingCert] = useState<Awaited<
     ReturnType<typeof examinationService.listMyCertificates>
   >[number] | null>(null);
+  const [history, setHistory] = useState<Awaited<
+    ReturnType<typeof examinationService.listAttemptHistory>
+  > | null>(null);
   const withLoader = useDashboardLoader();
   const roles = user?.roles ?? [];
   const isStaffLike = roles.some((r) =>
@@ -2346,12 +2454,54 @@ export function ExamResultPage() {
         } catch {
           setExistingCert(null);
         }
+        try {
+          const hist = await examinationService.listAttemptHistory(
+            res.test_id,
+            canIssueAsStaff ? res.student_id : undefined,
+          );
+          setHistory(hist);
+        } catch {
+          setHistory(null);
+        }
       })
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setLoading(false));
-  }, [attemptId, isStudent]);
+  }, [attemptId, isStudent, canIssueAsStaff]);
 
   useDashboardLoadingEffect(loading);
+
+  const handlePreviewCertificate = async () => {
+    if (!result) return;
+    setCertBusy(true);
+    await withLoader(async () => {
+      try {
+        const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
+        const studentName = [result.first_name, result.last_name].filter(Boolean).join(' ') || 'Student';
+        await downloadCertificateReactPdf({
+          id: 'preview',
+          result_id: result.id,
+          student_id: result.student_id ?? '',
+          certificate_no: 'PREVIEW-DRAFT',
+          verification_code: 'PREVIEW',
+          status: 'issued',
+          issued_at: new Date().toISOString(),
+          test_title: result.test_title,
+          percentage: Number(result.percentage),
+          total_score: Number(result.total_score),
+          max_score: Number(result.max_score),
+          student_name: studentName,
+          org_name: undefined,
+          verify_url: `${window.location.origin}/verify-certificate?code=PREVIEW`,
+          enrollment_no: null,
+        });
+        showSuccess('Preview', 'Draft certificate PDF downloaded (not issued).');
+      } catch (err) {
+        showError('Preview', parseApiError(err));
+      } finally {
+        setCertBusy(false);
+      }
+    });
+  };
 
   const handleIssueCertificate = async () => {
     if (!result?.id) return;
@@ -2395,39 +2545,72 @@ export function ExamResultPage() {
     ? Number(result.total_score) >= Number(result.passing_marks)
     : Number(result.percentage) >= 40;
   const showAnswerKey = Boolean(result.answers_released) || canIssueAsStaff;
+  const flagged = Boolean(result.proctoring_flagged || result.proctoring_summary?.flagged);
 
   const renderCertCta = () => {
+    const buttons = [];
+    if (passing && !existingCert) {
+      buttons.push(
+        <EdtpBtn key="preview" variant="ghost" disabled={certBusy} onClick={() => void handlePreviewCertificate()}>
+          Preview certificate
+        </EdtpBtn>,
+      );
+    }
     if (existingCert) {
-      return (
-        <EdtpBtn variant="primary" disabled={certBusy} onClick={() => void handleDownloadCertificate()}>
+      buttons.push(
+        <EdtpBtn key="dl" variant="primary" disabled={certBusy} onClick={() => void handleDownloadCertificate()}>
           {certBusy ? 'Preparing…' : 'Download PDF'}
-        </EdtpBtn>
+        </EdtpBtn>,
       );
-    }
-    if (!passing) return null;
-    if (canIssueAsStaff) {
-      return (
-        <EdtpBtn variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
+    } else if (passing && canIssueAsStaff) {
+      buttons.push(
+        <EdtpBtn key="issue" variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
           {certBusy ? 'Issuing…' : 'Issue certificate'}
-        </EdtpBtn>
+        </EdtpBtn>,
       );
-    }
-    if (isStudent) {
-      return (
-        <EdtpBtn variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
+    } else if (passing && isStudent) {
+      buttons.push(
+        <EdtpBtn key="get" variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
           {certBusy ? 'Issuing…' : 'Get certificate PDF'}
-        </EdtpBtn>
+        </EdtpBtn>,
       );
     }
-    return null;
+    return buttons;
   };
 
   return (
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title">
-        <h4>Result — {result.test_title}</h4>
+        <h4>
+          Result — {result.test_title}{' '}
+          {flagged ? <span className="edtp-badge edtp-badge--inactive">Flagged</span> : null}
+        </h4>
         {studentName ? <p className="text-muted mb-0">Student: {studentName}</p> : null}
       </div>
+      {history && history.attempts.length > 1 ? (
+        <div className="sp_bottom_15 d-flex flex-wrap align-items-center gap-2">
+          <label className="mb-0" htmlFor="attemptHistory">Attempt history</label>
+          <select
+            id="attemptHistory"
+            className="register__input"
+            style={{ maxWidth: 360 }}
+            value={attemptId}
+            onChange={(e) => navigate(`/dashboard/exam-result/${e.target.value}`)}
+          >
+            {history.attempts.map((a) => (
+              <option key={a.attempt_id} value={a.attempt_id}>
+                #{a.attempt_number}
+                {a.is_official ? ' (official)' : ''}
+                {' · '}
+                {a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : a.status}
+              </option>
+            ))}
+          </select>
+          <span className="text-muted" style={{ fontSize: '0.8125rem' }}>
+            Policy: {history.scoring_policy} · max {history.max_attempts}
+          </span>
+        </div>
+      ) : null}
       <div className="d-flex flex-wrap gap-2 sp_bottom_20">
         <Link to={backHref} className="edtp-btn edtp-btn--secondary edtp-btn--sm">
           Back
@@ -2475,6 +2658,33 @@ export function ExamResultPage() {
           </div>
         </div>
       </div>
+
+      {canIssueAsStaff && result.proctoring_timeline ? (
+        <div className="edtp-form-card sp_bottom_20">
+          <h5 className="sp_bottom_15">
+            Proctoring timeline{' '}
+            {flagged ? <span className="edtp-badge edtp-badge--inactive">Flagged</span> : null}
+          </h5>
+          {result.proctoring_summary?.flag_reasons?.length ? (
+            <ul className="sp_bottom_10">
+              {result.proctoring_summary.flag_reasons.map((r) => (
+                <li key={r}>{r}</li>
+              ))}
+            </ul>
+          ) : null}
+          {result.proctoring_timeline.length === 0 ? (
+            <p className="text-muted mb-0">No proctoring events recorded.</p>
+          ) : (
+            <ul className="sca-proctor-timeline">
+              {result.proctoring_timeline.map((ev, i) => (
+                <li key={`${ev.at}-${i}`}>
+                  <code>{ev.event}</code> · {formatDateTime(ev.at)}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      ) : null}
 
       <div className="edtp-form-card sp_bottom_20">
         <h5 className="sp_bottom_15">Question-wise analysis</h5>

@@ -878,6 +878,100 @@ function AutoIssueCertificatesForm() {
   );
 }
 
+function CertificateBrandingForm() {
+  const [logoUrl, setLogoUrl] = useState('');
+  const [primaryColor, setPrimaryColor] = useState('#102A43');
+  const [accentColor, setAccentColor] = useState('#C9A227');
+  const [sealText, setSealText] = useState('AUTHENTIC');
+  const [templateId, setTemplateId] = useState<'classic' | 'modern' | 'minimal'>('classic');
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+  const [apiError, setApiError] = useState('');
+  const withLoader = useDashboardLoader();
+  const { selectedOrgId } = useOrgScope();
+
+  useEffect(() => {
+    setLoading(true);
+    platformService
+      .getSettings(['certificates.branding'])
+      .then((rows) => {
+        const raw = rows.find((r) => r.key === 'certificates.branding')?.value as
+          | Record<string, string>
+          | undefined;
+        if (raw) {
+          setLogoUrl(String(raw.logoUrl ?? ''));
+          setPrimaryColor(String(raw.primaryColor ?? '#102A43'));
+          setAccentColor(String(raw.accentColor ?? '#C9A227'));
+          setSealText(String(raw.sealText ?? 'AUTHENTIC'));
+          const t = String(raw.templateId ?? 'classic');
+          setTemplateId(t === 'modern' || t === 'minimal' ? t : 'classic');
+        }
+      })
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
+  }, [selectedOrgId]);
+
+  useDashboardLoadingEffect(loading);
+
+  const save = async () => {
+    setApiError('');
+    setMessage('');
+    await withLoader(async () => {
+      try {
+        await platformService.upsertSetting('certificates.branding', {
+          logoUrl: logoUrl.trim() || undefined,
+          primaryColor,
+          accentColor,
+          sealText: sealText.trim() || 'AUTHENTIC',
+          templateId,
+        });
+        setMessage('Certificate branding saved.');
+      } catch (err) {
+        setApiError(parseApiError(err));
+      }
+    });
+  };
+
+  return (
+    <div className="sp_top_30">
+      <h5 className="sp_bottom_15">Certificate branding</h5>
+      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
+      {message && <p className="form-success sp_bottom_15">{message}</p>}
+      <div className="row">
+        <div className="col-md-6 sp_bottom_15">
+          <label>Logo URL</label>
+          <input className="register__input" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://…" />
+        </div>
+        <div className="col-md-3 sp_bottom_15">
+          <label>Primary color</label>
+          <input className="register__input" type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+        </div>
+        <div className="col-md-3 sp_bottom_15">
+          <label>Accent color</label>
+          <input className="register__input" type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
+        </div>
+        <div className="col-md-6 sp_bottom_15">
+          <label>Seal text</label>
+          <input className="register__input" value={sealText} onChange={(e) => setSealText(e.target.value)} />
+        </div>
+        <div className="col-md-6 sp_bottom_15">
+          <label>Template</label>
+          <EdtpSelect value={templateId} onChange={(e) => setTemplateId(e.target.value as typeof templateId)}>
+            <option value="classic">Classic</option>
+            <option value="modern">Modern</option>
+            <option value="minimal">Minimal</option>
+          </EdtpSelect>
+        </div>
+        <div className="col-12">
+          <button type="button" className="default__button" onClick={() => void save()} disabled={loading}>
+            Save branding
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PasswordChangeForm() {
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
@@ -1411,6 +1505,7 @@ export function DashboardSettingsContent() {
             <>
               <OrganizationSettingsForm organization={organization} onSaved={refresh} />
               <AutoIssueCertificatesForm />
+              <CertificateBrandingForm />
             </>
           )}
           {activeTab === 'Password' && <PasswordChangeForm />}

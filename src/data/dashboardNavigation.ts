@@ -229,6 +229,12 @@ export function buildDashboardNavigation(
             },
 
             {
+              label: 'Flagged Attempts',
+              href: `${base}/admin-flagged-attempts`,
+              icon: 'assignment',
+            },
+
+            {
               label: 'Assignments',
               href: `${base}/admin-assignments`,
               icon: 'bookmark',
@@ -326,6 +332,12 @@ export function buildDashboardNavigation(
             {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
+              icon: 'assignment',
+            },
+
+            {
+              label: 'Flagged Attempts',
+              href: `${base}/admin-flagged-attempts`,
               icon: 'assignment',
             },
 
@@ -448,6 +460,12 @@ export function buildDashboardNavigation(
           },
 
           {
+            label: 'Flagged Attempts',
+            href: `${base}/admin-flagged-attempts`,
+            icon: 'assignment',
+          },
+
+          {
             label: 'Assignments',
             href: `${base}/admin-assignments`,
             icon: 'bookmark',
@@ -533,6 +551,12 @@ export function buildDashboardNavigation(
           {
             label: 'Assignments',
             href: `${base}/teacher-assignments`,
+            icon: 'assignment',
+          },
+
+          {
+            label: 'Flagged Attempts',
+            href: `${base}/teacher-flagged-attempts`,
             icon: 'assignment',
           },
 

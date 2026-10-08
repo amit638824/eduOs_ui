@@ -7,6 +7,14 @@ import {
   Image,
 } from '@react-pdf/renderer';
 
+export interface CertificateBranding {
+  logoUrl?: string;
+  primaryColor?: string;
+  accentColor?: string;
+  sealText?: string;
+  templateId?: 'classic' | 'modern' | 'minimal';
+}
+
 export interface CertificatePdfData {
   organizationName: string;
   studentName: string;
@@ -21,6 +29,7 @@ export interface CertificatePdfData {
   issuedAt: string;
   enrollmentNo?: string | null;
   brandName?: string;
+  branding?: CertificateBranding;
 }
 
 /* =========================================================
@@ -538,6 +547,12 @@ export function CertificateDocument({
   const brand =
     data.brandName || organizationName || 'TechWagger';
 
+  const primary = data.branding?.primaryColor || NAVY;
+  const accent = data.branding?.accentColor || GOLD;
+  const sealText = data.branding?.sealText || 'AUTHENTIC';
+  const templateId = data.branding?.templateId || 'classic';
+  const logoUrl = data.branding?.logoUrl;
+
   const score =
     Number.isFinite(Number(data.percentage))
       ? Number(data.percentage).toFixed(1)
@@ -545,6 +560,8 @@ export function CertificateDocument({
 
   const scoreLine =
     `${data.totalScore}/${data.maxScore} (${score}%)`;
+
+  const borderColor = templateId === 'minimal' ? accent : primary;
 
   return (
     <Document
@@ -557,7 +574,7 @@ export function CertificateDocument({
         orientation="landscape"
         style={styles.page}
       >
-        <View style={styles.certificate}>
+        <View style={[styles.certificate, { borderColor }]}>
 
           {/* =====================================================
               DECORATIVE CORNERS
@@ -787,24 +804,20 @@ export function CertificateDocument({
                 {/* GOLDEN SEAL */}
                 <View style={styles.sealContainer}>
 
-                  <View style={styles.sealOuter}>
+                  <View style={[styles.sealOuter, { backgroundColor: primary }]}>
 
-                    <View style={styles.sealInner}>
+                    <View style={[styles.sealInner, { borderColor: accent }]}>
 
-                      <Text style={styles.sealLogo}>
-                        Tw
-                      </Text>
-
-                      <Text style={styles.sealText}>
-                        IDEAS
-                      </Text>
-
-                      <Text style={styles.sealText}>
-                        PEOPLE
-                      </Text>
+                      {logoUrl ? (
+                        <Image src={logoUrl} style={{ width: 28, height: 28 }} />
+                      ) : (
+                        <Text style={styles.sealLogo}>
+                          {brand.slice(0, 2).toUpperCase()}
+                        </Text>
+                      )}
 
                       <Text style={styles.sealText}>
-                        IMPACT
+                        {sealText}
                       </Text>
 
                     </View>

@@ -1,8 +1,8 @@
 import QRCode from 'qrcode';
 
 import type { Certificate } from '@/services/examination.service';
-
-import { CertificateDocument } from '@/pdf/CertificateDocument';
+import { platformService } from '@/services';
+import { CertificateDocument, type CertificateBranding } from '@/pdf/CertificateDocument';
 import { downloadReactPdf } from '@/pdf/downloadReactPdf';
 import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { siteContent } from '@/data/siteContent';
@@ -24,10 +24,24 @@ function buildVerifyUrl(cert: Certificate): string {
   )}`;
 }
 
+async function loadCertBranding(): Promise<CertificateBranding | undefined> {
+  try {
+    const rows = await platformService.getSettings(['certificates.branding']);
+    const raw = rows.find((r) => r.key === 'certificates.branding')?.value;
+    if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+      return raw as CertificateBranding;
+    }
+  } catch {
+    /* ignore */
+  }
+  return undefined;
+}
+
 export async function downloadCertificateReactPdf(
   cert: Certificate,
 ) {
   const verifyUrl = buildVerifyUrl(cert);
+  const branding = await loadCertBranding();
 
   let qrDataUrl: string | undefined;
 
@@ -44,42 +58,20 @@ export async function downloadCertificateReactPdf(
   await downloadReactPdf(
     <CertificateDocument
       data={{
-        organizationName: cert.org_name || 'TechWagger',
-
-        studentName:
-          cert.student_name || 'Student',
-
-        testTitle:
-          cert.test_title || 'Examination',
-
-        certificateNo:
-          cert.certificate_no,
-
-        verificationCode:
-          cert.verification_code,
-
+        organizationName: cert.org_name || siteContent.brand.name,
+        studentName: cert.student_name || 'Student',
+        testTitle: cert.test_title || 'Examination',
+        certificateNo: cert.certificate_no,
+        verificationCode: cert.verification_code,
         verifyUrl,
-
         qrDataUrl,
-
-        percentage:
-          Number(cert.percentage ?? 0),
-
-        totalScore:
-          cert.total_score ?? '—',
-
-        maxScore:
-          cert.max_score ?? '—',
-
-        issuedAt:
-          formatDate(cert.issued_at),
-
-        enrollmentNo:
-          cert.enrollment_no,
-
-        // The new CertificateDocument uses
-        // organizationName for the TechWagger branding.
-        // No brandName override is needed here.
+        percentage: Number(cert.percentage ?? 0),
+        totalScore: cert.total_score ?? '—',
+        maxScore: cert.max_score ?? '—',
+        issuedAt: formatDate(cert.issued_at),
+        enrollmentNo: cert.enrollment_no,
+        brandName: siteContent.brand.name,
+        branding,
       }}
     />,
     `certificate-${cert.certificate_no}.pdf`,
@@ -100,16 +92,10 @@ export async function downloadTestReportReactPdf(
     <TestReportDocument
       data={{
         ...data,
-
-        brandName:
-          data.brandName || siteContent.brand.name,
-
-        generatedAt:
-          data.generatedAt ||
-          formatDateTime(new Date()),
+        brandName: data.brandName || siteContent.brand.name,
+        generatedAt: data.generatedAt || formatDateTime(new Date()),
       }}
     />,
-    data.filename ||
-      `test-report-${Date.now()}.pdf`,
+    data.filename || `test-report-${Date.now()}.pdf`,
   );
 }

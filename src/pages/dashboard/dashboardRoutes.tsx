@@ -21,6 +21,7 @@ import {
 } from '@/components/dashboard/admin/PlatformPanels';
 import { CertificatesPanel } from '@/components/dashboard/CertificatesPanel';
 import { OrganizationsPanel } from '@/components/dashboard/admin/OrganizationsPanel';
+import { FlaggedAttemptsPanel } from '@/components/dashboard/examination/FlaggedAttemptsPanel';
 import {
   StudentDashboardHome,
   AdminDashboardHome,
@@ -99,6 +100,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/teacher-message" element={dash('teacher', <NotificationsPanel />)} />
     <Route path="/dashboard/teacher-course" element={dash('teacher', <TestsListPanel title="My Tests" />)} />
     <Route path="/dashboard/teacher-reviews" element={dash('teacher', <ReportsPanel />)} />
+    <Route path="/dashboard/teacher-flagged-attempts" element={dash('teacher', <FlaggedAttemptsPanel />)} />
     <Route path="/dashboard/teacher-settings" element={dash('teacher', <DashboardSettingsContent />)} />
     <Route path="/dashboard/teacher-assignments" element={dash('teacher', <DashboardAssignmentsContent />)} />
     <Route path="/dashboard/teacher-certificates" element={dash('teacher', <CertificatesPanel mode="org" />)} />
@@ -132,6 +134,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/admin-message" element={dash('admin', <NotificationsPanel />)} />
     <Route path="/dashboard/admin-course" element={dash('admin', <TestsListPanel title="All Tests" />)} />
     <Route path="/dashboard/admin-quiz-attempts" element={dash('admin', <AttemptsListPanel title="All Attempts" readOnly />)} />
+    <Route path="/dashboard/admin-flagged-attempts" element={dash('admin', <FlaggedAttemptsPanel />)} />
     <Route path="/dashboard/admin-reviews" element={dash('admin', <ReportsPanel />)} />
     <Route path="/dashboard/admin-assignments" element={dash('admin', <DashboardAssignmentsContent />)} />
     <Route path="/dashboard/admin-certificates" element={dash('admin', <CertificatesPanel mode="org" />)} />

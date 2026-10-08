@@ -117,6 +117,8 @@ export interface ExamTest {
   result_percentage?: number | null;
 }
 
+export type ScoringPolicy = 'latest' | 'highest';
+
 export interface ExamSecurityConfig {
   shuffleQuestions: boolean;
   shuffleOptions: boolean;
@@ -128,6 +130,26 @@ export interface ExamSecurityConfig {
   allowResume: boolean;
   maxTabSwitches: number;
   releaseAnswers: boolean;
+  maxAttempts: number;
+  scoringPolicy: ScoringPolicy;
+  maxFullscreenExits: number;
+  maxCopyPasteAttempts: number;
+}
+
+export interface ProctoringSummary {
+  tab_switches: number;
+  fullscreen_exits: number;
+  copy_paste_attempts: number;
+  window_blurs?: number;
+  total_events?: number;
+  flagged: boolean;
+  flag_reasons?: string[];
+}
+
+export interface ProctoringEvent {
+  event: string;
+  detail?: Record<string, unknown>;
+  at: string;
 }
 
 export interface TestAttempt {
@@ -163,6 +185,10 @@ export interface TestAttempt {
   duration_minutes?: number;
 
   passing_marks?: number | null;
+
+  proctoring_flagged?: boolean | number;
+
+  proctoring_review_status?: string;
 }
 
 export interface AttemptQuestion {
@@ -256,6 +282,18 @@ export interface ExamResult {
   answers_released?: boolean;
 
   release_answers?: boolean;
+
+  scoring_policy?: ScoringPolicy;
+
+  max_attempts?: number;
+
+  proctoring_flagged?: boolean;
+
+  proctoring_review_status?: string;
+
+  proctoring_timeline?: ProctoringEvent[];
+
+  proctoring_summary?: ProctoringSummary;
 
   questions?: ExamResultQuestion[];
 }

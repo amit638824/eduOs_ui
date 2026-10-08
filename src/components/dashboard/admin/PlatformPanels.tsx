@@ -721,6 +721,9 @@ export function ReportsPanel() {
       above_80: number;
     };
   } | null>(null);
+  const [questionAnalytics, setQuestionAnalytics] = useState<Awaited<
+    ReturnType<typeof examinationService.getTestQuestionAnalytics>
+  > | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [reportLoading, setReportLoading] = useState(false);
@@ -745,20 +748,24 @@ export function ReportsPanel() {
     if (!testId) {
       setReport(null);
       setTestAnalytics(null);
+      setQuestionAnalytics(null);
       return;
     }
     setReportLoading(true);
     try {
-      const [data, ta] = await Promise.all([
+      const [data, ta, qa] = await Promise.all([
         platformService.getTestReport(testId),
         examinationService.getTestAnalytics(testId).catch(() => null),
+        examinationService.getTestQuestionAnalytics(testId).catch(() => null),
       ]);
       setReport(data as typeof report);
       setTestAnalytics(ta?.stats ?? null);
+      setQuestionAnalytics(qa);
     } catch (err) {
       setError(parseApiError(err));
       setReport(null);
       setTestAnalytics(null);
+      setQuestionAnalytics(null);
     } finally {
       setReportLoading(false);
     }
@@ -913,6 +920,65 @@ export function ReportsPanel() {
             </div>
           </section>
         )}
+
+        {selected && questionAnalytics ? (
+          <section className="edtp-form-card sca-report-panel sp_bottom_20">
+            <h5 className="mb-2">Question analytics</h5>
+            <p className="text-muted sp_bottom_15" style={{ fontSize: '0.8125rem' }}>
+              Correct %, average time, distractors, and hardest items for this test.
+            </p>
+            {questionAnalytics.hard_questions.length > 0 ? (
+              <div className="sp_bottom_15">
+                <strong>Hard questions</strong>
+                <ul className="mb-0">
+                  {questionAnalytics.hard_questions.map((q) => (
+                    <li key={q.question_id}>
+                      {q.text || q.question_id.slice(0, 8)} —{' '}
+                      {q.correct_pct != null ? `${q.correct_pct}% correct` : 'n/a'} · avg{' '}
+                      {q.avg_time_sec}s · n={q.answered_count}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+            <div className="dashboard__table table-responsive">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Question</th>
+                    <th>Correct %</th>
+                    <th>Avg time</th>
+                    <th>Top distractor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {questionAnalytics.questions.map((q) => {
+                    const wrong = [...q.distractors]
+                      .filter((d) => !d.is_correct)
+                      .sort((a, b) => b.selected_count - a.selected_count)[0];
+                    return (
+                      <tr key={q.question_id}>
+                        <td>{q.text || q.question_id.slice(0, 8)}</td>
+                        <td>{q.correct_pct != null ? `${q.correct_pct}%` : '—'}</td>
+                        <td>{q.avg_time_sec}s</td>
+                        <td>
+                          {wrong
+                            ? `${wrong.selected_pct}% (${wrong.selected_count})`
+                            : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {questionAnalytics.questions.length === 0 ? (
+                    <tr>
+                      <td colSpan={4}>No graded answers yet for this test.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        ) : null}
 
         <section className="edtp-form-card sca-report-panel">
           <div className="sca-report-panel__head">
@@ -1372,6 +1438,9 @@ export function TestBuilderPanel() {
   const [scheduleStart, setScheduleStart] = useState('');
   const [scheduleEnd, setScheduleEnd] = useState('');
   const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
+  const [hardQuestions, setHardQuestions] = useState<
+    { question_id: string; text: string; correct_pct: number | null; answered_count: number }[]
+  >([]);
   const withLoader = useDashboardLoader();
   const { branches } = useOrganization();
 
@@ -1423,6 +1492,13 @@ export function TestBuilderPanel() {
         const flat = deptLists.value.flat().map((d) => ({ id: d.id, name: d.name }));
         const seen = new Set<string>();
         setDepartments(flat.filter((d) => (seen.has(d.id) ? false : (seen.add(d.id), true))));
+      }
+
+      try {
+        const qa = await examinationService.getTestQuestionAnalytics(testId);
+        setHardQuestions(qa?.hard_questions ?? []);
+      } catch {
+        setHardQuestions([]);
       }
     } catch (err) {
       setError(parseApiError(err));
@@ -1803,6 +1879,20 @@ export function TestBuilderPanel() {
                   );
                 })}
               </ol>
+            )}
+
+            {phase === 'build' && hardQuestions.length > 0 && (
+              <div className="edtp-form-card sp_bottom_15">
+                <h6 className="mb-2">Hard questions (from past attempts)</h6>
+                <ul className="mb-0" style={{ fontSize: '0.875rem' }}>
+                  {hardQuestions.slice(0, 5).map((q) => (
+                    <li key={q.question_id}>
+                      {q.text || q.question_id.slice(0, 8)} —{' '}
+                      {q.correct_pct != null ? `${q.correct_pct}%` : 'n/a'} correct (n={q.answered_count})
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             {phase === 'build' && testQuestions.length > 0 && (
