@@ -706,6 +706,8 @@ export async function listAttemptHistory(testId: string, studentId?: string) {
   const { data } = await api.get<ApiResponse<{
     scoring_policy: string;
     max_attempts: number;
+    completed_attempts: number;
+    attempts_remaining: number;
     official_attempt_id: string | null;
     attempts: {
       attempt_id: string;

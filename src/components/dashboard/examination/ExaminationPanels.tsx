@@ -580,13 +580,13 @@ export function QuestionBankPanel() {
           {(importSummary.createdDepartments > 0 ||
             importSummary.createdSubjects > 0 ||
             importSummary.createdTopics > 0) && (
-            <>
-              {' '}
-              · new master data: {importSummary.createdDepartments} departments,{' '}
-              {importSummary.createdSubjects} subjects, {importSummary.createdChapters} chapters,{' '}
-              {importSummary.createdTopics} topics
-            </>
-          )}
+              <>
+                {' '}
+                · new master data: {importSummary.createdDepartments} departments,{' '}
+                {importSummary.createdSubjects} subjects, {importSummary.createdChapters} chapters,{' '}
+                {importSummary.createdTopics} topics
+              </>
+            )}
           {importSummary.rows.filter((r) => r.status === 'error').length > 0 && (
             <ul className="qb-import-summary__errors">
               {importSummary.rows
@@ -907,102 +907,102 @@ export function QuestionBankPanel() {
             filteredQuestions.length > 0 &&
             filteredQuestions.every((q) => selectedDeleteIds.includes(q.id));
           return (
-        <div className="dashboard__table table-responsive">
-          <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_15">
-            <span className="text-muted" style={{ fontSize: '0.875rem' }}>
-              {selectedDeleteIds.length > 0
-                ? `${selectedDeleteIds.length} selected`
-                : 'Select questions to delete in bulk'}
-            </span>
-            <EdtpBtn
-              variant="danger"
-              disabled={selectedDeleteIds.length === 0}
-              onClick={() => void handleBulkDelete()}
-            >
-              Delete Selected ({selectedDeleteIds.length})
-            </EdtpBtn>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th style={{ width: 48 }}>
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    checked={allFilteredSelected}
-                    onChange={() => {
-                      if (allFilteredSelected) {
-                        setSelectedDeleteIds((prev) =>
-                          prev.filter((id) => !filteredQuestions.some((q) => q.id === id)),
-                        );
-                      } else {
-                        setSelectedDeleteIds((prev) => {
-                          const next = new Set(prev);
-                          filteredQuestions.forEach((q) => next.add(q.id));
-                          return [...next];
-                        });
-                      }
-                    }}
-                    aria-label="Select all questions"
-                  />
-                </th>
-                <th>Question</th>
-                <th>Department</th>
-                <th>Subject</th>
-                <th>Topic</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredQuestions.map((q) => {
-                const label = getQuestionText(q.content);
-                return (
-                <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
-                  <td>
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      checked={selectedDeleteIds.includes(q.id)}
-                      onChange={() =>
-                        setSelectedDeleteIds((prev) =>
-                          prev.includes(q.id) ? prev.filter((x) => x !== q.id) : [...prev, q.id],
-                        )
-                      }
-                      aria-label={`Select ${label}`}
-                    />
-                  </td>
-                  <td className="edtp-q-cell">{label}</td>
-                  <td>{q.department_name ?? '—'}</td>
-                  <td>{q.subject_name ?? '—'}</td>
-                  <td>{q.topic_name ?? '—'}</td>
-                  <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
-                  <td>{q.status}</td>
-                  <td>
-                    <EdtpRowActions>
-                      <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(q.id)}>
-                        Preview
-                      </EdtpBtn>
-                      <EdtpBtn variant="secondary" onClick={() => void handleEdit(q.id)}>
-                        Edit
-                      </EdtpBtn>
-                      <EdtpBtn variant="danger" onClick={() => void handleDelete(q.id)}>
-                        Delete
-                      </EdtpBtn>
-                    </EdtpRowActions>
-                  </td>
-                </tr>
-                );
-              })}
-              {filteredQuestions.length === 0 && (
-                <tr>
-                  <td colSpan={8}>No questions yet. Select department → subject → topic and add your first question.</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+            <div className="dashboard__table table-responsive">
+              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_15">
+                <span className="text-muted" style={{ fontSize: '0.875rem' }}>
+                  {selectedDeleteIds.length > 0
+                    ? `${selectedDeleteIds.length} selected`
+                    : 'Select questions to delete in bulk'}
+                </span>
+                <EdtpBtn
+                  variant="danger"
+                  disabled={selectedDeleteIds.length === 0}
+                  onClick={() => void handleBulkDelete()}
+                >
+                  Delete Selected ({selectedDeleteIds.length})
+                </EdtpBtn>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ width: 48 }}>
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={allFilteredSelected}
+                        onChange={() => {
+                          if (allFilteredSelected) {
+                            setSelectedDeleteIds((prev) =>
+                              prev.filter((id) => !filteredQuestions.some((q) => q.id === id)),
+                            );
+                          } else {
+                            setSelectedDeleteIds((prev) => {
+                              const next = new Set(prev);
+                              filteredQuestions.forEach((q) => next.add(q.id));
+                              return [...next];
+                            });
+                          }
+                        }}
+                        aria-label="Select all questions"
+                      />
+                    </th>
+                    <th>Question</th>
+                    <th>Department</th>
+                    <th>Subject</th>
+                    <th>Topic</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredQuestions.map((q) => {
+                    const label = getQuestionText(q.content);
+                    return (
+                      <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
+                        <td>
+                          <input
+                            type="checkbox"
+                            className="form-check-input"
+                            checked={selectedDeleteIds.includes(q.id)}
+                            onChange={() =>
+                              setSelectedDeleteIds((prev) =>
+                                prev.includes(q.id) ? prev.filter((x) => x !== q.id) : [...prev, q.id],
+                              )
+                            }
+                            aria-label={`Select ${label}`}
+                          />
+                        </td>
+                        <td className="edtp-q-cell">{label}</td>
+                        <td>{q.department_name ?? '—'}</td>
+                        <td>{q.subject_name ?? '—'}</td>
+                        <td>{q.topic_name ?? '—'}</td>
+                        <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
+                        <td>{q.status}</td>
+                        <td>
+                          <EdtpRowActions>
+                            <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(q.id)}>
+                              Preview
+                            </EdtpBtn>
+                            <EdtpBtn variant="secondary" onClick={() => void handleEdit(q.id)}>
+                              Edit
+                            </EdtpBtn>
+                            <EdtpBtn variant="danger" onClick={() => void handleDelete(q.id)}>
+                              Delete
+                            </EdtpBtn>
+                          </EdtpRowActions>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {filteredQuestions.length === 0 && (
+                    <tr>
+                      <td colSpan={8}>No questions yet. Select department → subject → topic and add your first question.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           );
         })()}
       </div>
@@ -1677,8 +1677,8 @@ export function StudentTestsPanel() {
         )}
 
         {tests.length === 0 &&
-        !error &&
-        !pageLoading ? (
+          !error &&
+          !pageLoading ? (
           <div className="sca-student-tests-empty">
             <h5>No tests assigned yet</h5>
 
@@ -2436,6 +2436,7 @@ export function ExamResultPage() {
 
   useEffect(() => {
     if (!attemptId) return;
+
     setLoading(true);
     examinationService
       .getResult(attemptId)
@@ -2455,6 +2456,7 @@ export function ExamResultPage() {
           setExistingCert(null);
         }
         try {
+
           const hist = await examinationService.listAttemptHistory(
             res.test_id,
             canIssueAsStaff ? res.student_id : undefined,
@@ -2463,6 +2465,9 @@ export function ExamResultPage() {
         } catch {
           setHistory(null);
         }
+
+
+
       })
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setLoading(false));
@@ -2587,30 +2592,50 @@ export function ExamResultPage() {
         </h4>
         {studentName ? <p className="text-muted mb-0">Student: {studentName}</p> : null}
       </div>
-      {history && history.attempts.length > 1 ? (
+
+      {history ? (
         <div className="sp_bottom_15 d-flex flex-wrap align-items-center gap-2">
-          <label className="mb-0" htmlFor="attemptHistory">Attempt history</label>
-          <select
-            id="attemptHistory"
-            className="register__input"
-            style={{ maxWidth: 360 }}
-            value={attemptId}
-            onChange={(e) => navigate(`/dashboard/exam-result/${e.target.value}`)}
-          >
-            {history.attempts.map((a) => (
-              <option key={a.attempt_id} value={a.attempt_id}>
-                #{a.attempt_number}
-                {a.is_official ? ' (official)' : ''}
-                {' · '}
-                {a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : a.status}
-              </option>
-            ))}
-          </select>
+          {history.attempts.length > 1 ? (
+            <>
+              <label className="mb-0" htmlFor="attemptHistory">
+                Attempt history
+              </label>
+              <select
+                id="attemptHistory"
+                className="register__input"
+                style={{ maxWidth: 360 }}
+                value={attemptId}
+                onChange={(e) =>
+                  navigate(`/dashboard/exam-result/${e.target.value}`)
+                }
+              >
+                {history.attempts.map((a) => (
+                  <option key={a.attempt_id} value={a.attempt_id}>
+                    #{a.attempt_number}
+                    {a.is_official ? ' (official)' : ''}
+                    {' · '}
+                    {a.percentage != null
+                      ? `${Number(a.percentage).toFixed(1)}%`
+                      : a.status}
+                  </option>
+                ))}
+              </select>
+            </>
+          ) : null}
+
+          <span className="text-muted" style={{ fontSize: '0.8125rem' }}>
+            Attempt progress: {history.completed_attempts} completed
+            {' · '}
+            {history.attempts_remaining} remaining
+          </span>
+
           <span className="text-muted" style={{ fontSize: '0.8125rem' }}>
             Policy: {history.scoring_policy} · max {history.max_attempts}
           </span>
         </div>
       ) : null}
+
+
       <div className="d-flex flex-wrap gap-2 sp_bottom_20">
         <Link to={backHref} className="edtp-btn edtp-btn--secondary edtp-btn--sm">
           Back
