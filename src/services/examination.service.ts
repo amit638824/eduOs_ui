@@ -601,12 +601,14 @@ export async function saveAnswer(
   attemptId: string,
   questionId: string,
   answer: Record<string, unknown>,
+  timeSpentSec?: number,
 ) {
   const { data } = await api.post<ApiResponse<unknown>>(
     `${base}/attempts/${attemptId}/answers`,
     {
       questionId,
       answer,
+      ...(timeSpentSec != null ? { timeSpentSec } : {}),
     },
   );
 
@@ -642,12 +644,115 @@ export async function logProctoringEvent(
   const { data } = await api.post<
     ApiResponse<{
       tab_switch_count: number;
+      flagged?: boolean;
     }>
   >(`${base}/attempts/${attemptId}/proctoring`, {
     event,
     detail,
   });
 
+  return data.data;
+}
+
+export async function listFlaggedAttempts(
+  page = 1,
+  limit = 20,
+  reviewStatus?: string,
+) {
+  const { data } = await api.get<PaginatedResponse<TestAttempt & {
+    proctoring_summary?: import('@/types/examination').ProctoringSummary;
+    proctoring_review_status?: string;
+  }>>(`${base}/attempts/flagged`, {
+    params: { page, limit, reviewStatus },
+  });
+  return data;
+}
+
+export async function getAttemptProctoring(attemptId: string) {
+  const { data } = await api.get<ApiResponse<{
+    id: string;
+    test_title?: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    status: string;
+    result_attempt_id?: string | null;
+    percentage?: number | null;
+    proctoring_flagged: boolean;
+    proctoring_review_status: string;
+    proctoring_summary: import('@/types/examination').ProctoringSummary;
+    proctoring_timeline: import('@/types/examination').ProctoringEvent[];
+    thresholds: {
+      maxTabSwitches: number;
+      maxFullscreenExits: number;
+      maxCopyPasteAttempts: number;
+    };
+  }>>(`${base}/attempts/${attemptId}/proctoring`);
+  return data.data;
+}
+
+export async function updateProctoringReview(
+  attemptId: string,
+  status: 'reviewed' | 'dismissed' | 'pending',
+) {
+  const { data } = await api.patch<ApiResponse<unknown>>(
+    `${base}/attempts/${attemptId}/proctoring-review`,
+    { status },
+  );
+  return data.data;
+}
+
+export async function listAttemptHistory(testId: string, studentId?: string) {
+  const { data } = await api.get<ApiResponse<{
+    scoring_policy: string;
+    max_attempts: number;
+    official_attempt_id: string | null;
+    attempts: {
+      attempt_id: string;
+      attempt_number: number;
+      status: string;
+      started_at: string;
+      submitted_at?: string | null;
+      percentage?: number | null;
+      total_score?: number | null;
+      max_score?: number | null;
+      is_official: boolean;
+      proctoring_flagged?: boolean;
+    }[];
+  }>>(`${base}/tests/${testId}/attempt-history`, {
+    params: studentId ? { studentId } : undefined,
+  });
+  return data.data;
+}
+
+export async function getTestQuestionAnalytics(testId: string) {
+  const { data } = await api.get<ApiResponse<{
+    test: { id: string; title: string };
+    questions: {
+      question_id: string;
+      type: string;
+      text: string;
+      difficulty?: number;
+      answered_count: number;
+      correct_count: number;
+      correct_pct: number | null;
+      avg_time_sec: number;
+      distractors: {
+        option_id: string;
+        content: unknown;
+        is_correct: boolean;
+        selected_count: number;
+        selected_pct: number;
+      }[];
+    }[];
+    hard_questions: {
+      question_id: string;
+      text: string;
+      correct_pct: number | null;
+      answered_count: number;
+      avg_time_sec: number;
+    }[];
+  }>>(`${base}/analytics/tests/${testId}/questions`);
   return data.data;
 }
 

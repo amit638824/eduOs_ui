@@ -60,7 +60,25 @@ export function useExamProctoring({
       }
     };
 
-    const block = (e: Event) => {
+    const onCopy = (e: Event) => {
+      if (config.blockCopyPaste) {
+        e.preventDefault();
+        void logEvent('copy_attempt');
+      }
+    };
+    const onPaste = (e: Event) => {
+      if (config.blockCopyPaste) {
+        e.preventDefault();
+        void logEvent('paste_attempt');
+      }
+    };
+    const onCut = (e: Event) => {
+      if (config.blockCopyPaste) {
+        e.preventDefault();
+        void logEvent('cut_attempt');
+      }
+    };
+    const onContext = (e: Event) => {
       if (config.blockCopyPaste) e.preventDefault();
     };
 
@@ -77,19 +95,19 @@ export function useExamProctoring({
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
     document.addEventListener('fullscreenchange', onFullscreenExit);
-    document.addEventListener('copy', block);
-    document.addEventListener('paste', block);
-    document.addEventListener('cut', block);
-    document.addEventListener('contextmenu', block);
+    document.addEventListener('copy', onCopy);
+    document.addEventListener('paste', onPaste);
+    document.addEventListener('cut', onCut);
+    document.addEventListener('contextmenu', onContext);
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('fullscreenchange', onFullscreenExit);
-      document.removeEventListener('copy', block);
-      document.removeEventListener('paste', block);
-      document.removeEventListener('cut', block);
-      document.removeEventListener('contextmenu', block);
+      document.removeEventListener('copy', onCopy);
+      document.removeEventListener('paste', onPaste);
+      document.removeEventListener('cut', onCut);
+      document.removeEventListener('contextmenu', onContext);
     };
   }, [enabled, config, logEvent, onMaxViolations]);
 
