@@ -23,11 +23,16 @@ type FlaggedRow = {
   result_attempt_id?: string | null;
   proctoring_review_status?: string;
   proctoring_summary?: ProctoringSummary;
+  total_violations?: number;
+  severity?: 'low' | 'medium' | 'high' | null;
 };
-
 export function FlaggedAttemptsPanel() {
   const [rows, setRows] = useState<FlaggedRow[]>([]);
   const [filter, setFilter] = useState('pending');
+  const [testId, setTestId] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [severity, setSeverity] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -35,8 +40,17 @@ export function FlaggedAttemptsPanel() {
 
   const load = () => {
     setLoading(true);
+    setError('');
+
     examinationService
-      .listFlaggedAttempts(1, 50, filter)
+      .listFlaggedAttempts(1, 50, filter, {
+        testId: testId || undefined,
+        dateFrom: dateFrom || undefined,
+        dateTo: dateTo || undefined,
+        severity: severity
+          ? (severity as 'low' | 'medium' | 'high')
+          : undefined,
+      })
       .then((res) => setRows(res.data as FlaggedRow[]))
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setLoading(false));
@@ -44,7 +58,8 @@ export function FlaggedAttemptsPanel() {
 
   useEffect(() => {
     load();
-  }, [filter]);
+  }, [filter, testId, dateFrom, dateTo, severity]);
+
 
   useDashboardLoadingEffect(loading);
 
@@ -81,14 +96,54 @@ export function FlaggedAttemptsPanel() {
       />
       <div className="dashboard__content__wraper">
         {error && <p className="login__error sp_bottom_15">{error}</p>}
-        <div className="sp_bottom_15" style={{ maxWidth: 280 }}>
+        <div
+          className="sp_bottom_15 d-flex flex-wrap gap-2"
+          style={{ alignItems: 'center' }}
+        >
           <EdtpSelect value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="pending">Pending review</option>
             <option value="reviewed">Reviewed</option>
             <option value="dismissed">Dismissed</option>
             <option value="all">All flagged</option>
           </EdtpSelect>
+
+          <input
+            type="text"
+            placeholder="Test ID"
+            value={testId}
+            onChange={(e) => setTestId(e.target.value)}
+            className="form-control"
+            style={{ maxWidth: 200 }}
+          />
+
+          <label>
+            From
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="form-control"
+            />
+          </label>
+
+          <label>
+            To
+            <input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="form-control"
+            />
+          </label>
+
+          <EdtpSelect value={severity} onChange={(e) => setSeverity(e.target.value)}>
+            <option value="">Any severity</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </EdtpSelect>
         </div>
+
         <div className="dashboard__table table-responsive">
           <table>
             <thead>
@@ -117,11 +172,33 @@ export function FlaggedAttemptsPanel() {
                       <td>{row.test_title}</td>
                       <td>
                         <span className="edtp-badge edtp-badge--inactive">Flagged</span>
+
+
+                        {row.severity && (
+                          <span
+                            className={`edtp-badge ${row.severity === 'high'
+                              ? 'edtp-severity--high'
+                              : row.severity === 'medium'
+                                ? 'edtp-severity--medium'
+                                : 'edtp-severity--low'
+                              }`}
+                            style={{ marginLeft: 6 }}
+                          >
+                            {row.severity.toUpperCase()}
+                          </span>
+                        )}
+
+
+                        <p className="mb-0 mt-1" style={{ fontSize: '0.75rem' }}>
+                          Total violations: {row.total_violations ?? 0}
+                        </p>
                         <p className="mb-0 mt-1" style={{ fontSize: '0.75rem' }}>
                           Tabs {s?.tab_switches ?? 0} · FS {s?.fullscreen_exits ?? 0} · CP{' '}
                           {s?.copy_paste_attempts ?? 0}
                         </p>
                       </td>
+
+
                       <td>{row.percentage != null ? `${Number(row.percentage).toFixed(1)}%` : '—'}</td>
                       <td>{row.proctoring_review_status ?? 'pending'}</td>
                       <td className="d-flex flex-wrap gap-1">

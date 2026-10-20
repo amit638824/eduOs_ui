@@ -653,20 +653,33 @@ export async function logProctoringEvent(
 
   return data.data;
 }
-
 export async function listFlaggedAttempts(
   page = 1,
-  limit = 20,
+  limit = 50,
   reviewStatus?: string,
+  filters?: {
+    testId?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    severity?: 'low' | 'medium' | 'high';
+  },
 ) {
   const { data } = await api.get<PaginatedResponse<TestAttempt & {
     proctoring_summary?: import('@/types/examination').ProctoringSummary;
     proctoring_review_status?: string;
+    total_violations?: number;
+    severity?: 'low' | 'medium' | 'high' | null;
   }>>(`${base}/attempts/flagged`, {
-    params: { page, limit, reviewStatus },
+    params: {
+      page,
+      limit,
+      reviewStatus,
+      ...filters,
+    },
   });
   return data;
 }
+
 
 export async function getAttemptProctoring(attemptId: string) {
   const { data } = await api.get<ApiResponse<{
