@@ -120,6 +120,11 @@ export const createTestApiSchema = yup.object({
       const n = Number(v);
       return Number.isFinite(n) && n >= 0;
     }),
+    examType: yup
+    .mixed<'official' | 'practice'>()
+    .oneOf(['official', 'practice'])
+    .default('official'),
+  certificationEnabled: yup.boolean().default(true),
   instructions: yup.string().trim().max(10000).optional().default(''),
   shuffleQuestions: yup.boolean().default(false),
   shuffleOptions: yup.boolean().default(false),

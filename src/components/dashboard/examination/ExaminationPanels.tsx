@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -1034,6 +1034,8 @@ export function TestsListPanel({ title }: { title: string }) {
   const [editScoringPolicy, setEditScoringPolicy] = useState<'latest' | 'highest'>('latest');
   const [editMaxFullscreenExits, setEditMaxFullscreenExits] = useState('3');
   const [editMaxCopyPasteAttempts, setEditMaxCopyPasteAttempts] = useState('3');
+  const [editExamType, setEditExamType] = useState<'official' | 'practice'>('official');
+  const [editCertificationEnabled, setEditCertificationEnabled] = useState(true);
   const withLoader = useDashboardLoader();
 
   const load = () => {
@@ -1073,6 +1075,8 @@ export function TestsListPanel({ title }: { title: string }) {
     setEditPassingMarks(String(t.passing_marks ?? 40));
     setEditInstructions(t.instructions ?? '');
     const cfg = (t.config ?? {}) as Record<string, unknown>;
+    setEditExamType(cfg.examType === 'practice' ? 'practice' : 'official');
+    setEditCertificationEnabled(cfg.certificationEnabled !== false);
     setEditShuffleQuestions(Boolean(cfg.shuffleQuestions));
     setEditShuffleOptions(Boolean(cfg.shuffleOptions));
     setEditNegativeMarking(Boolean(cfg.negativeMarking));
@@ -1115,6 +1119,8 @@ export function TestsListPanel({ title }: { title: string }) {
           instructions: editInstructions.trim(),
           config: {
             ...prevConfig,
+            examType: editExamType,
+            certificationEnabled: editExamType === 'official' && editCertificationEnabled,
             shuffleQuestions: editShuffleQuestions,
             shuffleOptions: editShuffleOptions,
             negativeMarking: editNegativeMarking,
@@ -1122,7 +1128,10 @@ export function TestsListPanel({ title }: { title: string }) {
             allowResume: editAllowResume,
             releaseAnswers: editReleaseAnswers,
             maxTabSwitches: maxTabs,
-            maxAttempts: Math.max(1, Number(editMaxAttempts) || 1),
+            maxAttempts:
+              editExamType === 'official'
+                ? 1
+                : Math.min(10, Math.max(1, Number(editMaxAttempts) || 1)),
             scoringPolicy: editScoringPolicy,
             maxFullscreenExits: Math.max(0, Number(editMaxFullscreenExits) || 0),
             maxCopyPasteAttempts: Math.max(0, Number(editMaxCopyPasteAttempts) || 0),
@@ -1222,6 +1231,43 @@ export function TestsListPanel({ title }: { title: string }) {
                   onChange={(e) => setEditPassingMarks(e.target.value)}
                 />
               </div>
+              <div className="col-md-6">
+                <label htmlFor="editExamType">Exam Type</label>
+                <select
+                  id="editExamType"
+                  className="register__input"
+                  value={editExamType}
+                  onChange={(e) => {
+                    const type = e.target.value as 'official' | 'practice';
+                    setEditExamType(type);
+                    if (type === 'official') {
+                      setEditMaxAttempts('1');
+                      setEditCertificationEnabled(true);
+                    } else {
+                      setEditCertificationEnabled(false);
+                    }
+                  }}
+                >
+                  <option value="official">Official Exam</option>
+                  <option value="practice">Practice Exam</option>
+                </select>
+              </div>
+              <div className="col-md-6">
+                <label className="d-flex align-items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={editCertificationEnabled}
+                    disabled={editExamType === 'practice'}
+                    onChange={(e) => setEditCertificationEnabled(e.target.checked)}
+                  />
+                  Enable Certificate Generation
+                </label>
+                <small className="text-muted">
+                  {editExamType === 'practice'
+                    ? 'Certificates are disabled for practice exams.'
+                    : 'Certificates are available for eligible students.'}
+                </small>
+              </div>
               <div className="col-12">
                 <label>Instructions</label>
                 <textarea
@@ -1280,14 +1326,19 @@ export function TestsListPanel({ title }: { title: string }) {
                     />
                   </div>
                   <div className="col-md-4">
-                    <label>Max attempts</label>
-                    <input
-                      className="register__input edtp-number-input"
-                      type="number"
-                      min={1}
-                      value={editMaxAttempts}
-                      onChange={(e) => setEditMaxAttempts(e.target.value)}
-                    />
+                    <label htmlFor="editMaxAttempts">Max attempts</label>
+                    {editExamType === 'official' ? (
+                      <>
+                        <input id="editMaxAttempts" className="register__input edtp-number-input" type="number" value={1} disabled />
+                        <small className="text-muted">Official exams allow one attempt only.</small>
+                      </>
+                    ) : (
+                      <select id="editMaxAttempts" className="register__input" value={editMaxAttempts} onChange={(e) => setEditMaxAttempts(e.target.value)}>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
+                          <option key={count} value={String(count)}>{count} {count === 1 ? 'Attempt' : 'Attempts'}</option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                   <div className="col-md-4">
                     <label>Scoring policy</label>
@@ -1702,22 +1753,35 @@ export function StudentTestsPanel() {
                   key={t.id}
                   className="sca-student-test-card"
                 >
+                  
                   <div className="sca-student-test-card__top">
-                    <span
-                      className={`edtp-badge ${status.cls}`}
-                    >
+                    <span className={`edtp-badge ${status.cls}`}>
                       {status.label}
                     </span>
 
+                    {(() => {
+                      let config: Record<string, unknown> = {};
+                      try {
+                        config = typeof t.config === 'string'
+                          ? JSON.parse(t.config) as Record<string, unknown>
+                          : (t.config ?? {}) as Record<string, unknown>;
+                      } catch {
+                        config = {};
+                      }
+                      const isPractice = config.examType === 'practice';
+                      return (
+                        <span className={`edtp-badge ${isPractice ? 'edtp-badge--role' : 'edtp-badge--active'}`}>
+                          {isPractice ? 'Practice Exam' : 'Official Exam'}
+                        </span>
+                      );
+                    })()}
+
                     {t.result_percentage != null && (
                       <span className="sca-student-test-card__score">
-                        {Number(
-                          t.result_percentage,
-                        ).toFixed(1)}
-                        %
+                        {Number(t.result_percentage).toFixed(1)}%
                       </span>
                     )}
-                  </div>
+                  </div>  
 
                   <h5 className="sca-student-test-card__title">
                     {t.title}
@@ -2008,6 +2072,8 @@ export function CreateTestPanel() {
       subjectId: '',
       topicId: '',
       passingMarks: '40',
+      examType: 'official',
+      certificationEnabled: true,
       instructions: 'Read all questions carefully. Do not switch tabs during the exam.',
       shuffleQuestions: false,
       shuffleOptions: false,
@@ -2025,6 +2091,7 @@ export function CreateTestPanel() {
 
   const departmentId = watch('departmentId');
   const subjectId = watch('subjectId');
+  const examType = watch('examType');
 
   useEffect(() => {
     let cancelled = false;
@@ -2126,6 +2193,8 @@ export function CreateTestPanel() {
             subjectName: subject?.name,
             topicId: values.topicId,
             topicName: topic?.name,
+            examType: values.examType,
+            certificationEnabled: values.examType === 'official' && Boolean(values.certificationEnabled),
             shuffleQuestions: Boolean(values.shuffleQuestions),
             shuffleOptions: Boolean(values.shuffleOptions),
             negativeMarking: Boolean(values.negativeMarking),
@@ -2133,7 +2202,10 @@ export function CreateTestPanel() {
             allowResume: Boolean(values.allowResume),
             releaseAnswers: Boolean(values.releaseAnswers),
             maxTabSwitches: Number(values.maxTabSwitches) || 5,
-            maxAttempts: Math.max(1, Number(values.maxAttempts) || 1),
+            maxAttempts:
+              values.examType === 'official'
+                ? 1
+                : Math.min(10, Math.max(1, Number(values.maxAttempts) || 1)),
             scoringPolicy: values.scoringPolicy === 'highest' ? 'highest' : 'latest',
             maxFullscreenExits: Math.max(0, Number(values.maxFullscreenExits) || 0),
             maxCopyPasteAttempts: Math.max(0, Number(values.maxCopyPasteAttempts) || 0),
@@ -2261,6 +2333,34 @@ export function CreateTestPanel() {
               />
               <FormError message={errors.passingMarks?.message} />
             </div>
+            <div className="col-md-6">
+              <label htmlFor="examType">Exam Type</label>
+              <select id="examType" className="register__input" {...register('examType', {
+                onChange: (e) => {
+                  const type = e.target.value as 'official' | 'practice';
+                  if (type === 'official') {
+                    setValue('maxAttempts', '1');
+                    setValue('certificationEnabled', true);
+                  } else {
+                    setValue('certificationEnabled', false);
+                  }
+                },
+              })}>
+                <option value="official">Official Exam</option>
+                <option value="practice">Practice Exam</option>
+              </select>
+            </div>
+            <div className="col-md-6">
+              <label className="d-flex align-items-center gap-2">
+                <input type="checkbox" disabled={examType === 'practice'} {...register('certificationEnabled')} />
+                Enable Certificate Generation
+              </label>
+              <small className="text-muted">
+                {examType === 'practice'
+                  ? 'Certificates are disabled for practice exams.'
+                  : 'Certificates can be issued for eligible students when enabled.'}
+              </small>
+            </div>
             <div className="col-12">
               <label htmlFor="aboutExam">Description (optional)</label>
               <textarea id="aboutExam" rows={2} className={inputClassName('register__input', !!errors.description)} {...register('description')} />
@@ -2321,13 +2421,18 @@ export function CreateTestPanel() {
                 </div>
                 <div className="col-md-4">
                   <label htmlFor="maxAttempts">Max attempts</label>
-                  <input
-                    id="maxAttempts"
-                    type="number"
-                    min={1}
-                    className={inputClassName('register__input edtp-number-input', !!errors.maxAttempts)}
-                    {...register('maxAttempts')}
-                  />
+                  {examType === 'official' ? (
+                    <>
+                      <input id="maxAttempts" type="number" className="register__input edtp-number-input" value={1} disabled />
+                      <small className="text-muted">Official exams allow one attempt only.</small>
+                    </>
+                  ) : (
+                    <select id="maxAttempts" className="register__input" {...register('maxAttempts')}>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
+                        <option key={count} value={String(count)}>{count} {count === 1 ? 'Attempt' : 'Attempts'}</option>
+                      ))}
+                    </select>
+                  )}
                   <FormError message={errors.maxAttempts?.message} />
                 </div>
                 <div className="col-md-4">
@@ -2409,6 +2514,25 @@ function formatCorrectAnswer(q: ExamResultQuestion): string {
 export function ExamResultPage() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
+  const handleReattempt = async () => {
+  if (!result?.test_id) return;
+
+  try {
+    setError('');
+
+    const attempt = await examinationService.startAttempt(
+      result.test_id,
+    );
+
+    navigate(
+      `/dashboard/exam/${result.test_id}/attempt/${attempt.id}`,
+    );
+  } catch (err) {
+    const msg = parseApiError(err);
+    setError(msg);
+    showError('Cannot start', msg);
+  }
+};
   const { user } = useAuth();
   const [result, setResult] = useState<ExamResult | null>(null);
   const [error, setError] = useState('');
@@ -2459,8 +2583,10 @@ export function ExamResultPage() {
             res.test_id,
             canIssueAsStaff ? res.student_id : undefined,
           );
+          console.log('Attempt history response:', hist);
           setHistory(hist);
-        } catch {
+        } catch (err){
+          console.error('Attempt history error:', err);
           setHistory(null);
         }
       })
@@ -2548,7 +2674,28 @@ export function ExamResultPage() {
   const flagged = Boolean(result.proctoring_flagged || result.proctoring_summary?.flagged);
 
   const renderCertCta = () => {
-    const buttons = [];
+    const buttons: ReactNode[] = [];
+    const resultMeta = result as ExamResult & {
+      exam_type?: 'official' | 'practice';
+      certification_enabled?: boolean;
+      config?: unknown;
+    };
+    let resultConfig: Record<string, unknown> = {};
+    try {
+      resultConfig = typeof resultMeta.config === 'string'
+        ? JSON.parse(resultMeta.config) as Record<string, unknown>
+        : (resultMeta.config ?? {}) as Record<string, unknown>;
+    } catch {
+      resultConfig = {};
+    }
+    if (
+      resultMeta.exam_type === 'practice' ||
+      resultConfig.examType === 'practice' ||
+      resultMeta.certification_enabled === false ||
+      resultConfig.certificationEnabled === false
+    ) {
+      return buttons;
+    }
     if (passing && !existingCert) {
       buttons.push(
         <EdtpBtn key="preview" variant="ghost" disabled={certBusy} onClick={() => void handlePreviewCertificate()}>
@@ -2611,15 +2758,73 @@ export function ExamResultPage() {
           </span>
         </div>
       ) : null}
-      <div className="d-flex flex-wrap gap-2 sp_bottom_20">
-        <Link to={backHref} className="edtp-btn edtp-btn--secondary edtp-btn--sm">
-          Back
-        </Link>
-        {renderCertCta()}
-        <Link to="/verify-certificate" className="edtp-btn edtp-btn--ghost edtp-btn--sm">
-          Verify certificate
-        </Link>
-      </div>
+      
+<div className="d-flex flex-wrap gap-2 sp_bottom_20">
+  <Link
+    to={backHref}
+    className="edtp-btn edtp-btn--secondary edtp-btn--sm"
+  >
+    Back
+  </Link>
+
+{(() => {
+  const resultMeta = result as ExamResult & {
+    exam_type?: 'official' | 'practice';
+    certification_enabled?: boolean;
+    config?: unknown;
+  };
+
+  let examConfig: Record<string, unknown> = {};
+
+  try {
+    examConfig =
+      typeof resultMeta.config === 'string'
+        ? JSON.parse(resultMeta.config) as Record<string, unknown>
+        : (resultMeta.config ?? {}) as Record<string, unknown>;
+  } catch {
+    examConfig = {};
+  }
+
+  const isPractice =
+    resultMeta.exam_type === 'practice' ||
+    examConfig.examType === 'practice' ||
+    examConfig.exam_type === 'practice';
+
+  const maxAttempts = Number(history?.max_attempts ?? 10);
+  const attemptsUsed = history?.attempts?.length ?? 0;
+  const attemptsLeft = Math.max(0, maxAttempts - attemptsUsed);
+
+  if (!isPractice || !history) {
+    return null;
+  }
+
+  return (
+    <>
+      <span className="edtp-btn edtp-btn--secondary edtp-btn--sm">
+        Attempts left: {attemptsLeft} of {maxAttempts}
+      </span>
+
+      {attemptsLeft > 0 && (
+        <button
+          type="button"
+          className="edtp-btn edtp-btn--primary edtp-btn--sm"
+          onClick={() => void handleReattempt()}
+        >
+          Reattempt Test
+        </button>
+      )}
+    </>
+  );
+})()}
+
+{renderCertCta()}
+  <Link
+    to="/verify-certificate"
+    className="edtp-btn edtp-btn--ghost edtp-btn--sm"
+  >
+    Verify certificate
+  </Link>
+</div>
       <div className="row">
         <div className="col-xl-3 col-lg-6 sp_bottom_20">
           <div className="dashboard__single__counter">
