@@ -22,6 +22,10 @@ import { formatDateTime } from '@/utils/dateFormat';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
 import { getOptionText, getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
+import {
+  CertificatePreviewModal,
+  type CertificateTemplate,
+} from '@/components/dashboard/CertificatePreviewModal';
 import type { ExamResultQuestion } from '@/types/examination';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
@@ -2538,6 +2542,9 @@ export function ExamResultPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [certBusy, setCertBusy] = useState(false);
+  const [showCertificatePreview, setShowCertificatePreview] = useState(false);
+  const [selectedCertificateTemplate, setSelectedCertificateTemplate] =
+    useState<'classic' | 'modern' | 'minimal' | null>(null);
   const [existingCert, setExistingCert] = useState<Awaited<
     ReturnType<typeof examinationService.listMyCertificates>
   >[number] | null>(null);
@@ -2569,6 +2576,7 @@ export function ExamResultPage() {
         try {
           if (isStudent) {
             const mine = await examinationService.listMyCertificates();
+
             setExistingCert(mine.find((c) => c.result_id === res.id && c.status === 'issued') ?? null);
           } else {
             const org = await examinationService.listCertificates(1, 100);
@@ -2600,50 +2608,28 @@ export function ExamResultPage() {
   }, [attemptId, isStudent, canIssueAsStaff]);
 
   useDashboardLoadingEffect(loading);
-
-  const handlePreviewCertificate = async () => {
+  const handlePreviewCertificate = () => {
     if (!result) return;
-    setCertBusy(true);
-    await withLoader(async () => {
-      try {
-        const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
-        const studentName = [result.first_name, result.last_name].filter(Boolean).join(' ') || 'Student';
-        await downloadCertificateReactPdf({
-          id: 'preview',
-          result_id: result.id,
-          student_id: result.student_id ?? '',
-          certificate_no: 'PREVIEW-DRAFT',
-          verification_code: 'PREVIEW',
-          status: 'issued',
-          issued_at: new Date().toISOString(),
-          test_title: result.test_title,
-          percentage: Number(result.percentage),
-          total_score: Number(result.total_score),
-          max_score: Number(result.max_score),
-          student_name: studentName,
-          org_name: undefined,
-          verify_url: `${window.location.origin}/verify-certificate?code=PREVIEW`,
-          enrollment_no: null,
-        });
-        showSuccess('Preview', 'Draft certificate PDF downloaded (not issued).');
-      } catch (err) {
-        showError('Preview', parseApiError(err));
-      } finally {
-        setCertBusy(false);
-      }
-    });
+    setShowCertificatePreview(true);
   };
 
-  const handleIssueCertificate = async () => {
+
+  const handleIssueCertificate = async (template: CertificateTemplate) => {
     if (!result?.id) return;
+
+    setSelectedCertificateTemplate(template);
     setCertBusy(true);
+
     await withLoader(async () => {
       try {
         const cert = await examinationService.issueCertificate(result.id);
         setExistingCert(cert);
+        setShowCertificatePreview(false);
+
         showSuccess('Certificate issued', cert.certificate_no);
+
         const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
-        await downloadCertificateReactPdf(cert);
+        await downloadCertificateReactPdf(cert, template);
       } catch (err) {
         showError('Certificate', parseApiError(err));
       } finally {
@@ -2652,13 +2638,23 @@ export function ExamResultPage() {
     });
   };
 
+
+
+  const handlePreviewExistingCertificate = () => {
+    if (!existingCert) return;
+    setShowCertificatePreview(true);
+  };
+
   const handleDownloadCertificate = async () => {
     if (!existingCert) return;
     setCertBusy(true);
     await withLoader(async () => {
       try {
         const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
-        await downloadCertificateReactPdf(existingCert);
+        await downloadCertificateReactPdf(
+          existingCert,
+          selectedCertificateTemplate ?? undefined,
+        );
       } catch (err) {
         showError('Certificate', parseApiError(err));
       } finally {
@@ -2710,19 +2706,24 @@ export function ExamResultPage() {
     }
     if (existingCert) {
       buttons.push(
-        <EdtpBtn key="dl" variant="primary" disabled={certBusy} onClick={() => void handleDownloadCertificate()}>
-          {certBusy ? 'Preparing…' : 'Download PDF'}
+        <EdtpBtn
+          key="dl"
+          variant="primary"
+          disabled={certBusy}
+          onClick={handlePreviewExistingCertificate}
+        >
+          Choose template & download
         </EdtpBtn>,
       );
     } else if (passing && canIssueAsStaff) {
       buttons.push(
-        <EdtpBtn key="issue" variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
+        <EdtpBtn key="issue" variant="primary" disabled={certBusy} onClick={handlePreviewCertificate}>
           {certBusy ? 'Issuing…' : 'Issue certificate'}
         </EdtpBtn>,
       );
     } else if (passing && isStudent) {
       buttons.push(
-        <EdtpBtn key="get" variant="primary" disabled={certBusy} onClick={() => void handleIssueCertificate()}>
+        <EdtpBtn key="get" variant="primary" disabled={certBusy} onClick={handlePreviewCertificate}>
           {certBusy ? 'Issuing…' : 'Get certificate PDF'}
         </EdtpBtn>,
       );
@@ -2984,9 +2985,38 @@ export function ExamResultPage() {
       <Link className="edtp-btn edtp-btn--primary edtp-btn--md" to={backHref}>
         Back to Results
       </Link>
+      <CertificatePreviewModal
+        open={showCertificatePreview}
+        studentName={studentName || 'Student'}
+        examTitle={result.test_title || 'Examination'}
+        percentage={Number(result.percentage ?? 0)}
+        onClose={() => setShowCertificatePreview(false)}
+
+        onConfirm={(template) => {
+          if (existingCert) {
+            setSelectedCertificateTemplate(template);
+            setCertBusy(true);
+            void withLoader(async () => {
+              try {
+                const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
+                await downloadCertificateReactPdf(existingCert, template);
+                setShowCertificatePreview(false);
+              } catch (err) {
+                showError('Certificate', parseApiError(err));
+              } finally {
+                setCertBusy(false);
+              }
+            });
+          } else {
+            void handleIssueCertificate(template);
+          }
+        }}
+        busy={certBusy}
+      />
     </div>
   );
 }
+
 
 export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }) {
   const { user, refreshUser } = useAuth();

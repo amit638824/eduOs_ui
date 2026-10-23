@@ -8,6 +8,10 @@ interface UseExamProctoringOptions {
   config: ExamSecurityConfig;
   onTabSwitch?: (count: number) => void;
   onMaxViolations?: () => void;
+  onMaxCopyPasteAttempts?: () => void;
+  onMaxFullscreenExits?: () => void;
+  onWarning?: (message: string) => void;
+
 }
 
 export function useExamProctoring({
@@ -16,9 +20,13 @@ export function useExamProctoring({
   config,
   onTabSwitch,
   onMaxViolations,
+  onMaxCopyPasteAttempts,
+  onMaxFullscreenExits,
+  onWarning,
 }: UseExamProctoringOptions) {
   const tabCountRef = useRef(0);
-
+  const copyPasteCountRef = useRef(0);
+  const fullscreenExitCountRef = useRef(0);
   const enterFullscreen = useCallback(async (): Promise<boolean> => {
     if (!config.fullScreen) return true;
     try {
@@ -60,27 +68,34 @@ export function useExamProctoring({
       }
     };
 
-    const onCopy = (e: Event) => {
-      if (config.blockCopyPaste) {
-        e.preventDefault();
-        void logEvent('copy_attempt');
+    const recordCopyPasteAttempt = (
+      event: 'copy_attempt' | 'paste_attempt' | 'cut_attempt'
+    ) => {
+      copyPasteCountRef.current += 1;
+
+      void logEvent(event);
+
+      onWarning?.(
+        `Copy-paste detected (${copyPasteCountRef.current}/${config.maxCopyPasteAttempts})`
+      );
+      if (copyPasteCountRef.current > config.maxCopyPasteAttempts) {
+        onMaxCopyPasteAttempts?.();
       }
     };
-    const onPaste = (e: Event) => {
-      if (config.blockCopyPaste) {
-        e.preventDefault();
-        void logEvent('paste_attempt');
-      }
+
+    const onCopy = () => {
+      recordCopyPasteAttempt('copy_attempt');
     };
-    const onCut = (e: Event) => {
-      if (config.blockCopyPaste) {
-        e.preventDefault();
-        void logEvent('cut_attempt');
-      }
+
+    const onPaste = () => {
+      recordCopyPasteAttempt('paste_attempt');
     };
-    const onContext = (e: Event) => {
-      if (config.blockCopyPaste) e.preventDefault();
+
+    const onCut = () => {
+      recordCopyPasteAttempt('cut_attempt');
     };
+
+
 
     const onBlur = () => {
       if (config.browserLock) void logEvent('window_blur');
@@ -88,9 +103,19 @@ export function useExamProctoring({
 
     const onFullscreenExit = () => {
       if (config.fullScreen && !document.fullscreenElement) {
+        fullscreenExitCountRef.current += 1;
         void logEvent('fullscreen_exit');
+
+        onWarning?.(
+          `Warning: Full-screen exited (${fullscreenExitCountRef.current}/${config.maxFullscreenExits})`
+        );
+
+        if (fullscreenExitCountRef.current > config.maxFullscreenExits) {
+          onMaxFullscreenExits?.();
+        }
       }
     };
+
 
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
@@ -98,7 +123,6 @@ export function useExamProctoring({
     document.addEventListener('copy', onCopy);
     document.addEventListener('paste', onPaste);
     document.addEventListener('cut', onCut);
-    document.addEventListener('contextmenu', onContext);
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
@@ -107,9 +131,17 @@ export function useExamProctoring({
       document.removeEventListener('copy', onCopy);
       document.removeEventListener('paste', onPaste);
       document.removeEventListener('cut', onCut);
-      document.removeEventListener('contextmenu', onContext);
     };
-  }, [enabled, config, logEvent, onMaxViolations]);
+  }, [
+    enabled,
+    config,
+    logEvent,
+    onMaxViolations,
+    onWarning,
+    onMaxCopyPasteAttempts,
+    onMaxFullscreenExits,
+  ]);
 
   return { enterFullscreen, logEvent, tabCountRef };
 }
+

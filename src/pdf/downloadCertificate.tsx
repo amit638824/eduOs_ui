@@ -39,9 +39,16 @@ async function loadCertBranding(): Promise<CertificateBranding | undefined> {
 
 export async function downloadCertificateReactPdf(
   cert: Certificate,
+  templateId?: CertificateBranding['templateId'],
 ) {
   const verifyUrl = buildVerifyUrl(cert);
-  const branding = await loadCertBranding();
+  const savedBranding = await loadCertBranding();
+  const branding: CertificateBranding = {
+    ...savedBranding,
+    ...(templateId ? { templateId } : {}),
+  };
+  console.log('Selected PDF template:', templateId);
+  console.log('Branding passed to PDF:', branding);
 
   let qrDataUrl: string | undefined;
 

@@ -99,6 +99,8 @@ export default function ExamAttemptPlayer() {
   const [tabWarnings, setTabWarnings] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [warning, setWarning] = useState('');
+  const [isFullscreenExited, setIsFullscreenExited] = useState(false);
+
   const [saveMsg, setSaveMsg] = useState('');
   const [pageLoading, setPageLoading] = useState(true);
   const [draftText, setDraftText] = useState('');
@@ -107,6 +109,17 @@ export default function ExamAttemptPlayer() {
   const config = attempt?.config ?? DEFAULT_CONFIG;
   const questions = attempt?.questions ?? [];
   const current = questions[currentIdx];
+  useEffect(() => {
+    if (!warning || isFullscreenExited) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setWarning('');
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [warning, isFullscreenExited]);
 
   const takeQuestionTime = () => {
     const now = Date.now();
@@ -205,12 +218,28 @@ export default function ExamAttemptPlayer() {
       setTabWarnings(count);
       setWarning(`Warning: Tab switch detected (${count}/${config.maxTabSwitches})`);
     },
+    onWarning: (message) => {
+      setWarning(message);
+      if (message.startsWith('Warning: Full-screen exited')) {
+        setIsFullscreenExited(true);
+      }
+    },
     onMaxViolations: () => {
       setWarning('Maximum tab switches exceeded. Submitting exam...');
       void handleAutoSubmit();
     },
-  });
 
+
+    onMaxCopyPasteAttempts: () => {
+      setWarning('Maximum copy-paste attempts exceeded. Submitting exam...');
+      void handleAutoSubmit();
+    },
+    onMaxFullscreenExits: () => {
+      setWarning('Maximum fullscreen exits exceeded. Submitting exam...');
+      setIsFullscreenExited(false);
+      void handleAutoSubmit();
+    },
+  });
   useEffect(() => {
     if (!examStarted || attempt?.status !== 'in_progress') return;
     if (remaining <= 0) {
@@ -473,9 +502,29 @@ export default function ExamAttemptPlayer() {
 
       {(warning || tabWarnings > 0) && (
         <div className="exam-warning-banner">
-          {warning || `Tab switches: ${tabWarnings}/${config.maxTabSwitches}`}
+          <span>
+            {warning || `Tab switches: ${tabWarnings}/${config.maxTabSwitches}`}
+          </span>
+
+          {isFullscreenExited && (
+            <button
+              type="button"
+              onClick={async () => {
+                const entered = await enterFullscreen();
+
+                if (entered) {
+                  setIsFullscreenExited(false);
+                  setWarning('');
+                }
+              }}
+            >
+              Return to Full Screen
+            </button>
+          )}
         </div>
       )}
+
+
 
       <div className="exam-player-body">
         <main className="exam-main">
@@ -506,6 +555,7 @@ export default function ExamAttemptPlayer() {
                         type={isMulti ? 'checkbox' : 'radio'}
                         name={current.question_id}
                         checked={isSelected}
+                        disabled={isFullscreenExited}
                         onChange={() =>
                           selectOption(current.question_id, opt.id, selected, isMulti)
                         }

@@ -560,8 +560,13 @@ export function CertificateDocument({
 
   const scoreLine =
     `${data.totalScore}/${data.maxScore} (${score}%)`;
+  const borderColor =
+    templateId === 'classic'
+      ? accent
+      : templateId === 'modern'
+        ? primary
+        : '#D1D5DB';
 
-  const borderColor = templateId === 'minimal' ? accent : primary;
 
   return (
     <Document
@@ -574,30 +579,59 @@ export function CertificateDocument({
         orientation="landscape"
         style={styles.page}
       >
-        <View style={[styles.certificate, { borderColor }]}>
+
+        <View
+          style={[
+            styles.certificate,
+            {
+              borderColor,
+              borderWidth: templateId === 'classic' ? 8 : templateId === 'modern' ? 5 : 1,
+              borderStyle: 'solid',
+              backgroundColor: '#FFFFFF',
+            },
+          ]}
+        >
+
 
           {/* =====================================================
               DECORATIVE CORNERS
           ===================================================== */}
+          {templateId !== 'minimal' && (
+            <>
+              <View style={styles.cornerTopLeft} />
+              <View style={styles.cornerTopLeftGold} />
 
-          <View style={styles.cornerTopLeft} />
-          <View style={styles.cornerTopLeftGold} />
+              <View style={styles.cornerTopRight} />
+              <View style={styles.cornerTopRightGold} />
 
-          <View style={styles.cornerTopRight} />
-          <View style={styles.cornerTopRightGold} />
+              <View style={styles.cornerBottomLeft} />
+              <View style={styles.cornerBottomLeftGold} />
 
-          <View style={styles.cornerBottomLeft} />
-          <View style={styles.cornerBottomLeftGold} />
+              <View style={styles.cornerBottomRight} />
+              <View style={styles.cornerBottomRightGold} />
+            </>
+          )}
 
-          <View style={styles.cornerBottomRight} />
-          <View style={styles.cornerBottomRightGold} />
 
           {/* =====================================================
               MAIN CONTENT
           ===================================================== */}
 
-          <View style={styles.inner}>
+          <View
+            style={[
+              styles.inner,
+              ...(templateId === 'minimal'
+                ? [
+                  {
+                    paddingTop: 18,
+                    paddingBottom: 14,
+                    paddingHorizontal: 30,
+                  },
+                ]
+                : []),
+            ]}
 
+          >
             {/* =================================================
                 HEADER
             ================================================= */}

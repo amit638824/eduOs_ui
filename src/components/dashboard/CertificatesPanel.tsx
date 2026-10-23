@@ -10,12 +10,18 @@ import { useAuth } from '@/context/AuthContext';
 import { formatDateTime } from '@/utils/dateFormat';
 import { showError, showSuccess, confirmAction } from '@/lib/swal';
 import { downloadCertificateReactPdf } from '@/pdf/downloadCertificate';
+import {
+  CertificatePreviewModal,
+  type CertificateTemplate,
+} from '@/components/dashboard/CertificatePreviewModal';
 
 export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) {
   const { user } = useAuth();
   const [items, setItems] = useState<Certificate[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
+  const [certBusy, setCertBusy] = useState(false);
   const withLoader = useDashboardLoader();
   const canRevoke =
     user?.roles.some((r) => ['super_admin', 'org_admin', 'staff'].includes(r)) ?? false;
@@ -42,19 +48,31 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
   }, [mode]);
 
   useDashboardLoadingEffect(loading);
+  const download = (cert: Certificate) => {
+    setSelectedCert(cert);
+  };
 
-  const download = async (cert: Certificate) => {
+  const confirmDownload = async (template: CertificateTemplate) => {
+    if (!selectedCert) return;
+
+    setCertBusy(true);
+
     await withLoader(async () => {
       try {
-        const full = await examinationService.getCertificate(cert.id).catch(() => cert);
-        await downloadCertificateReactPdf(full);
+        const full = await examinationService
+          .getCertificate(selectedCert.id)
+          .catch(() => selectedCert);
+
+        await downloadCertificateReactPdf(full, template);
+        setSelectedCert(null);
         showSuccess('Downloaded', 'Certificate PDF saved.');
       } catch (err) {
         showError('Download failed', parseApiError(err));
+      } finally {
+        setCertBusy(false);
       }
     });
   };
-
   const revoke = async (cert: Certificate) => {
     const ok = await confirmAction({
       title: 'Revoke certificate?',
@@ -148,6 +166,17 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
           </table>
         </div>
       </div>
+      <CertificatePreviewModal
+        open={selectedCert !== null}
+        studentName={selectedCert?.student_name || 'Student'}
+        examTitle={selectedCert?.test_title || 'Examination'}
+        percentage={Number(selectedCert?.percentage ?? 0)}
+        onClose={() => setSelectedCert(null)}
+        onConfirm={(template) => {
+          void confirmDownload(template);
+        }}
+        busy={certBusy}
+      />
     </>
   );
 }
