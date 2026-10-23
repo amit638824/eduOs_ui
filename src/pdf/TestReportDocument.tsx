@@ -119,7 +119,7 @@ function DataRow({ r, i }: { r: TestReportPdfRow; i: number }) {
 }
 
 export function TestReportDocument({ data }: { data: TestReportPdfData }) {
-  const brand = data.brandName || 'Edumatra';
+  const brand = data.brandName || 'Mindsprint';
   const chunks: TestReportPdfRow[][] = [];
   const pageSize = 28;
   for (let i = 0; i < data.results.length; i += pageSize) {

@@ -26,7 +26,7 @@ export const dashboardCourses: DashboardCourseItem[] = [
     price: '₹0.00',
     originalPrice: '/₹199.00',
     free: true,
-    instructor: 'Edumatra Faculty',
+    instructor: 'Mindsprint Faculty',
     instructorImg: '/img/grid/grid_small_2.jpg',
     rating: 5,
     reviews: 428,
@@ -40,7 +40,7 @@ export const dashboardCourses: DashboardCourseItem[] = [
     lessons: '100 Questions',
     duration: '90 min',
     price: '₹0.00',
-    instructor: 'Edumatra Faculty',
+    instructor: 'Mindsprint Faculty',
     instructorImg: '/img/grid/grid_small_3.jpg',
     rating: 5,
     reviews: 567,
@@ -55,7 +55,7 @@ export const dashboardCourses: DashboardCourseItem[] = [
     duration: '90 min',
     price: '₹49.00',
     originalPrice: '/₹149.00',
-    instructor: 'Edumatra Faculty',
+    instructor: 'Mindsprint Faculty',
     instructorImg: '/img/grid/grid_small_1.jpg',
     rating: 5,
     reviews: 189,
@@ -64,8 +64,8 @@ export const dashboardCourses: DashboardCourseItem[] = [
 ];
 
 export const messageContacts = [
-  { name: 'Edumatra Admin', preview: 'Your online test result is ready.', time: '12 min', img: '/img/teacher/teacher__1.png' },
-  { name: 'Edumatra', preview: 'Welcome to the online exam portal!', time: '4:35pm', img: '/img/teacher/teacher__2.png' },
+  { name: 'Mindsprint Admin', preview: 'Your online test result is ready.', time: '12 min', img: '/img/teacher/teacher__1.png' },
+  { name: 'Mindsprint', preview: 'Welcome to the online exam portal!', time: '4:35pm', img: '/img/teacher/teacher__2.png' },
   { name: 'Faculty — Networking', preview: 'New CCC mock test uploaded.', time: '1:40pm', img: '/img/teacher/teacher__3.png' },
 ];
 
@@ -80,7 +80,7 @@ export const profileFields = [
   {
     label: 'Biography',
     value:
-      'Student at Edumatra, Kerakat. Preparing for certificate and diploma online exams with regular mock test practice.',
+      'Student at Mindsprint. Preparing for certificate and diploma online exams with regular mock test practice.',
   },
 ];
 
@@ -109,12 +109,12 @@ export const reviewsReceived = [
 ];
 
 export const orderHistory = [
-  { id: '#EDUMATRA1001', course: 'Student Plan — 1 Month', date: 'July 1, 2026', price: '₹199.00', status: 'Success' },
-  { id: '#EDUMATRA1002', course: 'Wallet Top-up', date: 'June 20, 2026', price: '₹500.00', status: 'Success' },
+  { id: '#MINDSPRINT1001', course: 'Student Plan — 1 Month', date: 'July 1, 2026', price: '₹199.00', status: 'Success' },
+  { id: '#MINDSPRINT1002', course: 'Wallet Top-up', date: 'June 20, 2026', price: '₹500.00', status: 'Success' },
 ];
 
 export const announcements = [
   { title: 'Online Exam Facility — All Students', course: 'All Courses', date: 'July 10, 2026', status: 'Published' },
   { title: 'CCC Mock Test Schedule — July 2026', course: 'Govt IT', date: 'July 5, 2026', status: 'Published' },
-  { title: 'Admission Open — 3, 6 & 12 Month Courses', course: 'Academy', date: 'July 1, 2026', status: 'Published' },
+  { title: 'Admission Open — 3, 6 & 12 Month Courses', course: 'Mindsprint', date: 'July 1, 2026', status: 'Published' },
 ];

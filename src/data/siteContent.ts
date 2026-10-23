@@ -2,68 +2,69 @@ import type { SiteContent } from '@/types/content';
 
 export const siteContent: SiteContent = {
   brand: {
-    name: 'Edumatra',
-    tagline: 'ISO 9001-2015 Certified · Online Exam Platform',
-    logo: '/img/logo/sca-logo.png',
-    logoFooter: '/img/logo/sca-logo.png',
+    name: 'Mindsprint',
+    tagline: 'Enterprise Online Examination & Assessment Platform',
+    logo: '/img/logo/techwagger-logo.png',
+    logoFooter: '/img/logo/techwagger-logo.png',
   },
   parentCompany: {
-    name: 'Edumatra',
-    tagline: 'Computer Software, Hardware & Networking Institute',
-    website: 'https://supercomputeracademy.com/',
+    name: 'TechWagger',
+    tagline: 'Techwagger Solutions Private Limited',
+    website: 'https://techwagger.com/',
     description:
-      'Edumatra commenced vocational & professional IT training in 2010 at Kerakat, Jaunpur. We offer certificate, diploma & advanced diploma courses with online exam facilities, placement support, and government & self-funded programs.',
+      'TechWagger delivers cutting-edge software solutions, enterprise IT consulting, and robust cloud-based online examination platforms for institutions and businesses worldwide.',
   },
   contact: {
-    phone: '+91 998 428 2776, +91 842 317 2829',
-    email: 'info@supercomputeracademy.com',
+    phone: '+91 8840 622 729',
+    email: 'connect@techwagger.com',
     address:
-      'Behind Maa Kali Temple, Near S.L.B.S School, Kerakat, Jaunpur, Uttar Pradesh, India',
+      'L-3/141, Vinay Khand, Gomti Nagar, Lucknow, Uttar Pradesh – 226010, India',
   },
   social: [
-    { platform: 'Facebook', icon: 'icofont-facebook', href: 'https://facebook.com' },
-    { platform: 'Twitter', icon: 'icofont-twitter', href: 'https://twitter.com' },
-    { platform: 'Instagram', icon: 'icofont-instagram', href: 'https://instagram.com' },
-    { platform: 'YouTube', icon: 'icofont-youtube-play', href: 'https://youtube.com' },
+    { platform: 'Facebook', icon: 'icofont-facebook', href: 'https://facebook.com/techwagger' },
+    { platform: 'Twitter', icon: 'icofont-twitter', href: 'https://twitter.com/techwagger' },
+    { platform: 'Instagram', icon: 'icofont-instagram', href: 'https://instagram.com/techwagger' },
+    { platform: 'LinkedIn', icon: 'icofont-linkedin', href: 'https://linkedin.com/company/techwagger' },
+    { platform: 'YouTube', icon: 'icofont-youtube-play', href: 'https://youtube.com/@techwagger' },
   ],
   hero: {
     badge: 'Online Exam & Mock Test Portal',
-    title: 'Make Your Career Bright in IT — Practice & Appear for Online Tests',
+    title: 'Empower Your Future with Mindsprint — Practice & Appear for Online Exams',
     description:
-      'Edumatra offers timed online mock tests, certificate course exams, diploma assessments, and institute-level practice papers for Hardware, Networking, Software, and Computer Application programs.',
+      'Mindsprint offers timed online mock tests, certificate course exams, diploma assessments, and institute-level practice papers for Hardware, Networking, Software, and IT disciplines.',
     primaryCta: { label: 'Browse Online Tests', href: '/exams' },
-    secondaryCta: { label: 'About Academy', href: '/about' },
+    secondaryCta: { label: 'About Mindsprint', href: '/about' },
   },
   about: {
-    badge: 'About Edumatra',
-    title: 'Trusted IT Training',
-    highlight: 'Since 2010',
+    badge: 'About Mindsprint',
+    title: 'Trusted Assessment & IT Solutions',
+    highlight: 'Innovative & Secure',
     description:
-      'We have trained more than 2,500 students in government and self-funded programs over the last five years. Our online exam platform lets students practice anytime, download certificates, and prepare for real institute assessments.',
-    experienceYears: 15,
-    experienceLabel: 'YEARS OF IT TRAINING EXCELLENCE',
+      'Mindsprint provides intelligent examination platforms, proctored assessments, and automated certificate generation for institutes, enterprises, and individual learners.',
+    experienceYears: 5,
+    experienceLabel: 'YEARS OF TECHNOLOGY EXCELLENCE',
     features: [
-      'Online exam & mock test facilities',
-      '100% job-oriented IT courses',
-      'Expert engineers as faculty',
-      'Certificate, Diploma & PG Diploma programs',
-      'Installment facility in fees',
-      'Online certificate download',
+      'Secure online exam & mock test facilities',
+      'Real-time proctoring & analytics',
+      'Automated instant grading & rankings',
+      'Professional Certificate & Diploma programs',
+      'Multi-vendor & organization management',
+      'Instant verified certificate downloads',
     ],
   },
   counters: [
-    { value: 2500, suffix: '+', label: 'Students Trained', icon: '/img/counter/counter__1.png' },
-    { value: 50, suffix: '+', label: 'Online Mock Tests', icon: '/img/counter/counter__2.png' },
-    { value: 15, suffix: '+', label: 'Years Experience', icon: '/img/counter/counter__3.png' },
-    { value: 100, suffix: '%', label: 'Job Focused Training', icon: '/img/counter/counter__4.png' },
+    { value: 10000, suffix: '+', label: 'Students Assessed', icon: '/img/counter/counter__1.png' },
+    { value: 250, suffix: '+', label: 'Online Mock Tests', icon: '/img/counter/counter__2.png' },
+    { value: 50, suffix: '+', label: 'Partner Institutes', icon: '/img/counter/counter__3.png' },
+    { value: 100, suffix: '%', label: 'Secure Testing', icon: '/img/counter/counter__4.png' },
   ],
   subjects: {
     badge: 'Test Categories',
     title: 'Online Tests For Every\nIT Course & Certificate',
     description:
-      'Practice mock papers for PC Hardware & Networking, Computer Application, Diploma programs, CCC, O Level, and professional IT certifications — aligned with Edumatra curriculum.',
+      'Practice mock papers for PC Hardware & Networking, Computer Application, Diploma programs, CCC, O Level, and professional IT certifications — aligned with Mindsprint curriculum.',
     secondaryDescription:
-      'Students enrolled at our Kerakat center and partner institutes can log in to attempt assigned tests, view results, rank, and download performance reports.',
+      'Students enrolled at partner institutes and learning centers can log in to attempt assigned tests, view results, rank, and download performance reports.',
     items: [
       {
         title: 'Hardware & Networking',
@@ -113,7 +114,7 @@ export const siteContent: SiteContent = {
         duration: '60 min',
         price: '₹0.00',
         originalPrice: '₹199.00',
-        instructor: 'Edumatra Faculty',
+        instructor: 'Mindsprint Faculty',
         instructorImg: '/img/grid/grid_small_1.jpg',
         rating: 5,
         reviews: 428,
@@ -129,7 +130,7 @@ export const siteContent: SiteContent = {
         lessons: 40,
         duration: '45 min',
         price: '₹0.00',
-        instructor: 'Edumatra Faculty',
+        instructor: 'Mindsprint Faculty',
         instructorImg: '/img/grid/grid_small_2.jpg',
         rating: 5,
         reviews: 312,
@@ -146,7 +147,7 @@ export const siteContent: SiteContent = {
         duration: '90 min',
         price: '₹49.00',
         originalPrice: '₹149.00',
-        instructor: 'Edumatra Faculty',
+        instructor: 'Mindsprint Faculty',
         instructorImg: '/img/grid/grid_small_3.jpg',
         rating: 5,
         reviews: 189,
@@ -162,7 +163,7 @@ export const siteContent: SiteContent = {
         lessons: 100,
         duration: '90 min',
         price: '₹0.00',
-        instructor: 'Edumatra Faculty',
+        instructor: 'Mindsprint Faculty',
         instructorImg: '/img/grid/grid_small_4.jpg',
         rating: 5,
         reviews: 567,
@@ -178,7 +179,7 @@ export const siteContent: SiteContent = {
         lessons: 80,
         duration: '120 min',
         price: '₹0.00',
-        instructor: 'Edumatra Faculty',
+        instructor: 'Mindsprint Faculty',
         instructorImg: '/img/grid/grid_small_5.jpg',
         rating: 5,
         reviews: 234,
@@ -195,7 +196,7 @@ export const siteContent: SiteContent = {
         duration: '60 min',
         price: '₹99.00',
         originalPrice: '₹299.00',
-        instructor: 'Edumatra Faculty',
+        instructor: 'Mindsprint Faculty',
         instructorImg: '/img/grid/grid_small_5.jpg',
         rating: 5,
         reviews: 156,
@@ -209,7 +210,7 @@ export const siteContent: SiteContent = {
     highlight: '50+',
     count: '50+',
     videoText:
-      'Join Edumatra online test portal — practice mock exams from home and track your results instantly.',
+      'Join Mindsprint online test portal — practice mock exams from home and track your results instantly.',
     formTitle: 'Create Your Student Account',
   },
   pricing: {
@@ -268,18 +269,18 @@ export const siteContent: SiteContent = {
     badge: 'Student Success',
     title: 'What Our Students\nSay About Online Tests',
     description:
-      'Thousands of students from Kerakat, Jaunpur and nearby districts trust Edumatra for IT training and online examination.',
+      'Thousands of students and institutes trust Mindsprint for digital assessments and online examinations.',
     items: [
       {
         quote:
-          '"Online exam facility helped me practice CCC and diploma papers before the real test. Faculty support at Edumatra is excellent."',
+          '"Online exam facility helped me practice CCC and diploma papers before the real test. Faculty support at Mindsprint is excellent."',
         name: 'Rahul Verma',
-        role: 'Diploma Student, Jaunpur',
+        role: 'Diploma Student, Lucknow',
         image: '/img/about/about_5.png',
       },
       {
         quote:
-          '"Less fees, more benefits — and I can attempt mock tests from home. The result report shows exactly where I need to improve."',
+          '"Affordable fees, immense benefits — and I can attempt mock tests from anywhere. The result report shows exactly where I need to improve."',
         name: 'Priya Singh',
         role: 'Certificate Course, Hardware & Networking',
         image: '/img/about/about_5.png',
@@ -288,7 +289,7 @@ export const siteContent: SiteContent = {
   },
   blog: {
     badge: 'News & Updates',
-    title: 'Latest From Edumatra',
+    title: 'Latest From Mindsprint',
     posts: [
       {
         slug: 'online-exam-facility',
@@ -296,7 +297,7 @@ export const siteContent: SiteContent = {
         date: '10',
         month: 'Jul',
         image: '/img/blog/blog_1.png',
-        author: 'By Edumatra Admin',
+        author: 'By Mindsprint Admin',
         excerpt:
           'Students can now log in to attempt assigned tests, view instant results, and download performance certificates online...',
         featured: true,
@@ -320,22 +321,22 @@ export const siteContent: SiteContent = {
   footer: {
     newsletter: {
       title: 'Stay Updated With',
-      titleHighlight: 'EDUMATRA',
+      titleHighlight: 'MINDSPRINT',
       description:
-        'Get admission alerts, new mock tests, exam schedules, and academy news delivered to your inbox.',
+        'Get platform updates, new mock tests, exam schedules, and technology insights delivered to your inbox.',
       placeholder: 'Enter your email',
       buttonText: 'Subscribe',
     },
     about:
-      'Edumatra — ISO 9001-2015 certified computer software, hardware & networking institute at Kerakat, Jaunpur. Online exams, placement support, and job-oriented IT training since 2010.',
+      'Mindsprint — Enterprise digital examination & assessment platform by Techwagger Solutions Private Limited. Lucknow, Uttar Pradesh, India.',
     hours: {
-      title: 'Academy Hours',
-      weekdays: 'Mon – Sat (8:00 AM – 8:00 PM)',
+      title: 'Support Hours',
+      weekdays: 'Mon – Sat (9:00 AM – 6:00 PM)',
       weekend: 'Sunday — Closed',
     },
     usefulLinks: [
       { label: 'About Us', href: '/about' },
-      { label: 'Our Website', href: 'https://supercomputeracademy.com/' },
+      { label: 'Our Website', href: 'https://techwagger.com/' },
       { label: 'For Institutes', href: '/schools' },
       { label: 'Become a Teacher', href: '/dashboard/become-a-teacher' },
       { label: 'Help Center', href: '/help' },
@@ -370,14 +371,14 @@ export const siteContent: SiteContent = {
     ],
     copyright: {
       year: new Date().getFullYear().toString(),
-      brand: 'Edumatra',
+      brand: 'Mindsprint',
       product: 'Online Exam Portal',
     },
     social: [
-      { platform: 'Facebook', icon: 'icofont-facebook', href: 'https://facebook.com' },
-      { platform: 'Twitter', icon: 'icofont-twitter', href: 'https://twitter.com' },
-      { platform: 'LinkedIn', icon: 'icofont-linkedin', href: 'https://linkedin.com' },
-      { platform: 'YouTube', icon: 'icofont-youtube-play', href: 'https://youtube.com' },
+      { platform: 'Facebook', icon: 'icofont-facebook', href: 'https://facebook.com/techwagger' },
+      { platform: 'Twitter', icon: 'icofont-twitter', href: 'https://twitter.com/techwagger' },
+      { platform: 'LinkedIn', icon: 'icofont-linkedin', href: 'https://linkedin.com/company/techwagger' },
+      { platform: 'YouTube', icon: 'icofont-youtube-play', href: 'https://youtube.com/@techwagger' },
     ],
   },
 };

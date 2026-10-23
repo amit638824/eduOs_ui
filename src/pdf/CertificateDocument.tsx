@@ -542,10 +542,10 @@ export function CertificateDocument({
   data: CertificatePdfData;
 }) {
   const organizationName =
-    data.organizationName || 'TechWagger';
+    data.organizationName || 'Mindsprint';
 
   const brand =
-    data.brandName || organizationName || 'TechWagger';
+    data.brandName || organizationName || 'Mindsprint';
 
   const primary = data.branding?.primaryColor || NAVY;
   const accent = data.branding?.accentColor || GOLD;

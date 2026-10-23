@@ -197,7 +197,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
         key: order.keyId,
         amount: order.amount,
         currency: order.currency,
-        name: 'Edumatra',
+        name: 'Mindsprint',
         description: 'Wallet Top-up',
         order_id: order.orderId,
         prefill: {
