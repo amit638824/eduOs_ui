@@ -2543,8 +2543,6 @@ export function ExamResultPage() {
   const [loading, setLoading] = useState(true);
   const [certBusy, setCertBusy] = useState(false);
   const [showCertificatePreview, setShowCertificatePreview] = useState(false);
-  const [selectedCertificateTemplate, setSelectedCertificateTemplate] =
-    useState<'classic' | 'modern' | 'minimal' | null>(null);
   const [existingCert, setExistingCert] = useState<Awaited<
     ReturnType<typeof examinationService.listMyCertificates>
   >[number] | null>(null);
@@ -2617,7 +2615,6 @@ export function ExamResultPage() {
   const handleIssueCertificate = async (template: CertificateTemplate) => {
     if (!result?.id) return;
 
-    setSelectedCertificateTemplate(template);
     setCertBusy(true);
 
     await withLoader(async () => {
@@ -2643,24 +2640,6 @@ export function ExamResultPage() {
   const handlePreviewExistingCertificate = () => {
     if (!existingCert) return;
     setShowCertificatePreview(true);
-  };
-
-  const handleDownloadCertificate = async () => {
-    if (!existingCert) return;
-    setCertBusy(true);
-    await withLoader(async () => {
-      try {
-        const { downloadCertificateReactPdf } = await import('@/pdf/downloadCertificate');
-        await downloadCertificateReactPdf(
-          existingCert,
-          selectedCertificateTemplate ?? undefined,
-        );
-      } catch (err) {
-        showError('Certificate', parseApiError(err));
-      } finally {
-        setCertBusy(false);
-      }
-    });
   };
 
   if (error) return <p className="login__error">{error}</p>;
@@ -2994,7 +2973,6 @@ export function ExamResultPage() {
 
         onConfirm={(template) => {
           if (existingCert) {
-            setSelectedCertificateTemplate(template);
             setCertBusy(true);
             void withLoader(async () => {
               try {
