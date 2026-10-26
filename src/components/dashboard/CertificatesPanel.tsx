@@ -100,7 +100,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
         subtitle={
           mode === 'org'
             ? 'Issued exam certificates for this organization. Students can verify publicly with the verification code.'
-            : 'Download your certificates and share the verification code for authenticity checks.'
+            : 'Certificates issued for your exams. Share the verification code to confirm authenticity.'
         }
       />
       <div className="dashboard__content__wraper">
@@ -143,7 +143,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                   <td>{formatDateTime(c.issued_at)}</td>
                   <td>
                     <div className="edtp-row-actions">
-                      {c.status === 'issued' && (
+                      {mode === 'org' && c.status === 'issued' && (
                         <EdtpBtn variant="secondary" onClick={() => void download(c)}>
                           PDF
                         </EdtpBtn>
@@ -166,6 +166,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
           </table>
         </div>
       </div>
+      {mode === 'org' ? (
       <CertificatePreviewModal
         open={selectedCert !== null}
         studentName={selectedCert?.student_name || 'Student'}
@@ -177,6 +178,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
         }}
         busy={certBusy}
       />
+      ) : null}
     </>
   );
 }

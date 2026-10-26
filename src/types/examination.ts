@@ -115,6 +115,8 @@ export interface ExamTest {
   result_attempt_id?: string | null;
 
   result_percentage?: number | null;
+
+  submitted_attempt_count?: number | null;
 }
 
 export type ScoringPolicy = 'latest' | 'highest';
@@ -286,6 +288,8 @@ export interface ExamResult {
   scoring_policy?: ScoringPolicy;
 
   max_attempts?: number;
+
+  exam_type?: 'official' | 'practice';
 
   proctoring_flagged?: boolean;
 

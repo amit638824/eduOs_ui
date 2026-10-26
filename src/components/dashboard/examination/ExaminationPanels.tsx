@@ -1449,6 +1449,30 @@ export function TestsListPanel({ title }: { title: string }) {
   );
 }
 
+function readTestConfig(config: ExamTest['config']): Record<string, unknown> {
+  if (!config) return {};
+  if (typeof config === 'string') {
+    try {
+      return JSON.parse(config) as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }
+  return config;
+}
+
+function isPracticeExam(test: ExamTest) {
+  const config = readTestConfig(test.config);
+  return config.examType === 'practice' || config.exam_type === 'practice';
+}
+
+function practiceAttemptsRemaining(test: ExamTest) {
+  const config = readTestConfig(test.config);
+  const maxAttempts = Math.max(1, Number(config.maxAttempts ?? 1) || 1);
+  const used = Number(test.submitted_attempt_count ?? 0);
+  return Math.max(0, maxAttempts - used);
+}
+
 export function StudentTestsPanel() {
   const navigate = useNavigate();
 
@@ -1576,6 +1600,18 @@ export function StudentTestsPanel() {
     ].join(' : ');
   };
 
+  const officialWindowEnded = (t: ExamTest) => {
+    void nowTick;
+    if (isPracticeExam(t)) return false;
+    const st = t.attempt_status;
+    if (st === 'submitted' || st === 'auto_submitted' || st === 'in_progress') {
+      return false;
+    }
+    if (!t.scheduled_end) return false;
+    const end = new Date(t.scheduled_end).getTime();
+    return Number.isFinite(end) && end < Date.now();
+  };
+
   const statusMeta = (t: ExamTest) => {
     const st = t.attempt_status;
 
@@ -1593,6 +1629,13 @@ export function StudentTestsPanel() {
       return {
         label: 'In progress',
         cls: 'edtp-badge--role',
+      };
+    }
+
+    if (officialWindowEnded(t)) {
+      return {
+        label: 'Exam Time Ended',
+        cls: 'edtp-badge--danger',
       };
     }
 
@@ -1623,18 +1666,33 @@ export function StudentTestsPanel() {
     ) {
       const resultId =
         t.result_attempt_id ?? t.attempt_id;
+      const canRetest = isPracticeExam(t) && practiceAttemptsRemaining(t) > 0;
 
-      return resultId ? (
-        <Link
-          to={`/dashboard/exam-result/${resultId}`}
-          className="edtp-btn edtp-btn--secondary edtp-btn--md"
-        >
-          View Result
-        </Link>
-      ) : (
-        <span className="text-muted">
-          Completed
-        </span>
+      return (
+        <div className="d-flex flex-wrap gap-2">
+          {resultId ? (
+            <Link
+              to={`/dashboard/exam-result/${resultId}`}
+              className="edtp-btn edtp-btn--secondary edtp-btn--md"
+            >
+              View Result
+            </Link>
+          ) : (
+            <span className="text-muted">
+              Completed
+            </span>
+          )}
+          {canRetest ? (
+            <EdtpBtn
+              variant="primary"
+              size="md"
+              disabled={loading || startingId === t.id}
+              onClick={() => void start(t.id)}
+            >
+              {startingId === t.id ? 'Starting…' : 'Retest'}
+            </EdtpBtn>
+          ) : null}
+        </div>
       );
     }
 
@@ -1676,6 +1734,12 @@ export function StudentTestsPanel() {
             {formatExamCountdown(wait)}
           </div>
         </div>
+      );
+    }
+
+    if (officialWindowEnded(t)) {
+      return (
+        <span className="edtp-badge edtp-badge--danger">Exam Time Ended</span>
       );
     }
 
@@ -1848,8 +1912,17 @@ export function StudentTestsPanel() {
                       </div>
                     )}
 
+                  {officialWindowEnded(t) && (
+                    <div className="sca-student-exam-live-banner">
+                      <strong className="edtp-badge edtp-badge--danger">
+                        Exam Time Ended
+                      </strong>
+                    </div>
+                  )}
+
                   {wait == null &&
-                    scheduledStart && (
+                    scheduledStart &&
+                    !officialWindowEnded(t) && (
                       <div className="sca-student-exam-live-banner">
                         <span className="sca-student-exam-live__dot" />
 
@@ -2096,6 +2169,80 @@ export function CreateTestPanel() {
   const departmentId = watch('departmentId');
   const subjectId = watch('subjectId');
   const examType = watch('examType');
+  const { user } = useAuth();
+  const draftStorageKey = user?.id ? `edumatra:create-test-draft:${user.id}` : null;
+  const [draftReady, setDraftReady] = useState(false);
+  const [draftNote, setDraftNote] = useState('');
+  const preserveSubjectForDept = useRef<string | null>(null);
+  const preserveTopicForSubject = useRef<string | null>(null);
+  const pauseDraftSave = useRef(false);
+
+  useEffect(() => {
+    if (!draftStorageKey) return;
+    pauseDraftSave.current = true;
+    try {
+      const raw = localStorage.getItem(draftStorageKey);
+      if (raw) {
+        const draft = JSON.parse(raw) as Partial<CreateTestApiFormValues>;
+        if (typeof draft.departmentId === 'string' && draft.departmentId) {
+          preserveSubjectForDept.current = draft.departmentId;
+        }
+        if (typeof draft.subjectId === 'string' && draft.subjectId) {
+          preserveTopicForSubject.current = draft.subjectId;
+        }
+        reset({
+          title: '',
+          duration: '60',
+          description: '',
+          departmentId: '',
+          subjectId: '',
+          topicId: '',
+          passingMarks: '40',
+          examType: 'official',
+          certificationEnabled: true,
+          instructions: 'Read all questions carefully. Do not switch tabs during the exam.',
+          shuffleQuestions: false,
+          shuffleOptions: false,
+          negativeMarking: false,
+          fullScreen: true,
+          allowResume: true,
+          releaseAnswers: false,
+          maxTabSwitches: '5',
+          maxAttempts: '1',
+          scoringPolicy: 'latest',
+          maxFullscreenExits: '3',
+          maxCopyPasteAttempts: '3',
+          ...draft,
+        });
+        setDraftNote('Draft saved');
+      }
+    } catch {
+      /* ignore corrupt draft */
+    }
+    pauseDraftSave.current = false;
+    setDraftReady(true);
+  }, [draftStorageKey, reset]);
+
+  useEffect(() => {
+    if (!draftReady || !draftStorageKey) return;
+    let timer: number | undefined;
+    const subscription = watch((values) => {
+      if (pauseDraftSave.current) return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        try {
+          localStorage.setItem(draftStorageKey, JSON.stringify(values));
+          setDraftNote('Draft saved');
+        } catch {
+          /* ignore quota errors */
+        }
+      }, 400);
+    });
+    return () => {
+      subscription.unsubscribe();
+      window.clearTimeout(timer);
+    };
+  }, [draftReady, draftStorageKey, watch]);
 
   useEffect(() => {
     let cancelled = false;
@@ -2120,10 +2267,18 @@ export function CreateTestPanel() {
   }, [branches]);
 
   useEffect(() => {
-    setValue('subjectId', '');
-    setValue('topicId', '');
-    setSubjects([]);
-    setTopics([]);
+    if (!draftReady) return;
+    const preserveSubject =
+      preserveSubjectForDept.current != null &&
+      preserveSubjectForDept.current === departmentId;
+    if (preserveSubject) {
+      preserveSubjectForDept.current = null;
+    } else {
+      setValue('subjectId', '');
+      setValue('topicId', '');
+      setSubjects([]);
+      setTopics([]);
+    }
     if (!departmentId) {
       setSubjectsLoading(false);
       return;
@@ -2144,11 +2299,19 @@ export function CreateTestPanel() {
     return () => {
       cancelled = true;
     };
-  }, [departmentId, setValue]);
+  }, [departmentId, setValue, draftReady]);
 
   useEffect(() => {
-    setValue('topicId', '');
-    setTopics([]);
+    if (!draftReady) return;
+    const preserveTopic =
+      preserveTopicForSubject.current != null &&
+      preserveTopicForSubject.current === subjectId;
+    if (preserveTopic) {
+      preserveTopicForSubject.current = null;
+    } else {
+      setValue('topicId', '');
+      setTopics([]);
+    }
     if (!subjectId) {
       setTopicsLoading(false);
       return;
@@ -2169,7 +2332,7 @@ export function CreateTestPanel() {
     return () => {
       cancelled = true;
     };
-  }, [subjectId, setValue]);
+  }, [subjectId, setValue, draftReady]);
 
   const onSubmit = async (values: CreateTestApiFormValues) => {
     setApiError('');
@@ -2218,6 +2381,8 @@ export function CreateTestPanel() {
             autoSubmit: true,
           },
         });
+        pauseDraftSave.current = true;
+        if (draftStorageKey) localStorage.removeItem(draftStorageKey);
         reset();
         navigate(`/dashboard/test-builder/${test.id}`);
       } catch (err) {
@@ -2237,6 +2402,7 @@ export function CreateTestPanel() {
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title">
           <h4>New Exam Draft</h4>
+          {draftNote ? <p className="text-muted mb-0">{draftNote}</p> : null}
         </div>
         {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
         {message && <p className="form-success sp_bottom_15">{message}</p>}
@@ -2546,6 +2712,7 @@ export function ExamResultPage() {
   const [existingCert, setExistingCert] = useState<Awaited<
     ReturnType<typeof examinationService.listMyCertificates>
   >[number] | null>(null);
+  const [certLookupDone, setCertLookupDone] = useState(false);
   const [history, setHistory] = useState<Awaited<
     ReturnType<typeof examinationService.listAttemptHistory>
   > | null>(null);
@@ -2567,6 +2734,8 @@ export function ExamResultPage() {
     if (!attemptId) return;
 
     setLoading(true);
+    setCertLookupDone(false);
+    setExistingCert(null);
     examinationService
       .getResult(attemptId)
       .then(async (res) => {
@@ -2584,6 +2753,8 @@ export function ExamResultPage() {
           }
         } catch {
           setExistingCert(null);
+        } finally {
+          setCertLookupDone(true);
         }
         try {
 
@@ -2604,6 +2775,48 @@ export function ExamResultPage() {
       .catch((err) => setError(parseApiError(err)))
       .finally(() => setLoading(false));
   }, [attemptId, isStudent, canIssueAsStaff]);
+
+  useEffect(() => {
+    if (!certLookupDone || !isStudent || !result || existingCert) return;
+    let cfg: Record<string, unknown> = {};
+    const raw = (result as ExamResult & { config?: unknown; certification_enabled?: boolean }).config;
+    try {
+      cfg = typeof raw === 'string'
+        ? JSON.parse(raw) as Record<string, unknown>
+        : (raw ?? {}) as Record<string, unknown>;
+    } catch {
+      cfg = {};
+    }
+    const practice =
+      result.exam_type === 'practice' ||
+      cfg.examType === 'practice' ||
+      cfg.exam_type === 'practice';
+    const certDisabled =
+      (result as ExamResult & { certification_enabled?: boolean }).certification_enabled === false ||
+      cfg.certificationEnabled === false;
+    if (practice || certDisabled) return;
+    const passed =
+      result.passing_marks != null && Number(result.passing_marks) > 0
+        ? Number(result.total_score) >= Number(result.passing_marks)
+        : Number(result.percentage) >= 40;
+    if (!passed || !result.id) return;
+    let cancelled = false;
+    setCertBusy(true);
+    void examinationService
+      .issueCertificate(result.id)
+      .then((cert) => {
+        if (!cancelled) setExistingCert(cert);
+      })
+      .catch((err) => {
+        if (!cancelled) showError('Certificate', parseApiError(err));
+      })
+      .finally(() => {
+        if (!cancelled) setCertBusy(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [certLookupDone, isStudent, result, existingCert]);
 
   useDashboardLoadingEffect(loading);
   const handlePreviewCertificate = () => {
@@ -2676,6 +2889,26 @@ export function ExamResultPage() {
     ) {
       return buttons;
     }
+    if (isStudent) {
+      if (existingCert) {
+        buttons.push(
+          <Link
+            key="issued"
+            to="/dashboard/student-certificates"
+            className="edtp-btn edtp-btn--secondary edtp-btn--sm"
+          >
+            Certificate issued · {existingCert.certificate_no}
+          </Link>,
+        );
+      } else if (passing && certBusy) {
+        buttons.push(
+          <span key="issuing" className="text-muted" style={{ fontSize: '0.875rem' }}>
+            Issuing certificate…
+          </span>,
+        );
+      }
+      return buttons;
+    }
     if (passing && !existingCert) {
       buttons.push(
         <EdtpBtn key="preview" variant="ghost" disabled={certBusy} onClick={() => void handlePreviewCertificate()}>
@@ -2700,12 +2933,6 @@ export function ExamResultPage() {
           {certBusy ? 'Issuing…' : 'Issue certificate'}
         </EdtpBtn>,
       );
-    } else if (passing && isStudent) {
-      buttons.push(
-        <EdtpBtn key="get" variant="primary" disabled={certBusy} onClick={handlePreviewCertificate}>
-          {certBusy ? 'Issuing…' : 'Get certificate PDF'}
-        </EdtpBtn>,
-      );
     }
     return buttons;
   };
@@ -2715,7 +2942,7 @@ export function ExamResultPage() {
       <div className="dashboard__section__title">
         <h4>
           Result — {result.test_title}{' '}
-          {flagged ? <span className="edtp-badge edtp-badge--inactive">Flagged</span> : null}
+          {flagged ? <span className="edtp-badge edtp-badge--danger">Flagged</span> : null}
         </h4>
         {studentName ? <p className="text-muted mb-0">Student: {studentName}</p> : null}
       </div>
@@ -2771,31 +2998,9 @@ export function ExamResultPage() {
         </Link>
 
         {(() => {
-          const resultMeta = result as ExamResult & {
-            exam_type?: 'official' | 'practice';
-            certification_enabled?: boolean;
-            config?: unknown;
-          };
-
-          let examConfig: Record<string, unknown> = {};
-
-          try {
-            examConfig =
-              typeof resultMeta.config === 'string'
-                ? (JSON.parse(resultMeta.config) as Record<string, unknown>)
-                : ((resultMeta.config ?? {}) as Record<string, unknown>);
-          } catch {
-            examConfig = {};
-          }
-
-          const isPractice =
-            resultMeta.exam_type === 'practice' ||
-            examConfig.examType === 'practice' ||
-            examConfig.exam_type === 'practice';
-
-          const maxAttempts = Number(history?.max_attempts ?? 10);
-          const attemptsUsed = history?.attempts?.length ?? 0;
-          const attemptsLeft = Math.max(0, maxAttempts - attemptsUsed);
+          const isPractice = result.exam_type === 'practice';
+          const attemptsLeft = Math.max(0, Number(history?.attempts_remaining ?? 0));
+          const maxAttempts = Number(history?.max_attempts ?? 0);
 
           if (!isPractice || !history) {
             return null;
@@ -2813,7 +3018,7 @@ export function ExamResultPage() {
                   className="edtp-btn edtp-btn--primary edtp-btn--sm"
                   onClick={() => void handleReattempt()}
                 >
-                  Reattempt Test
+                  Retest
                 </button>
               )}
             </>
@@ -2874,7 +3079,7 @@ export function ExamResultPage() {
         <div className="edtp-form-card sp_bottom_20">
           <h5 className="sp_bottom_15">
             Proctoring timeline{' '}
-            {flagged ? <span className="edtp-badge edtp-badge--inactive">Flagged</span> : null}
+            {flagged ? <span className="edtp-badge edtp-badge--danger">Flagged</span> : null}
           </h5>
           {result.proctoring_summary?.flag_reasons?.length ? (
             <ul className="sp_bottom_10">

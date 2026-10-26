@@ -558,8 +558,7 @@ export function CertificateDocument({
       ? Number(data.percentage).toFixed(1)
       : '0.0';
 
-  const scoreLine =
-    `${data.totalScore}/${data.maxScore} (${score}%)`;
+  const scoreLine = `${score}%`;
   const borderColor =
     templateId === 'classic'
       ? accent

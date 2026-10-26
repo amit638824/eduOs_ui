@@ -27,6 +27,13 @@ export function useExamProctoring({
   const tabCountRef = useRef(0);
   const copyPasteCountRef = useRef(0);
   const fullscreenExitCountRef = useRef(0);
+  const ignoreNextFullscreenExitRef = useRef(false);
+  const suppressNextFullscreenExit = useCallback(() => {
+    ignoreNextFullscreenExitRef.current = true;
+  }, []);
+  const clearFullscreenExitSuppression = useCallback(() => {
+    ignoreNextFullscreenExitRef.current = false;
+  }, []);
   const enterFullscreen = useCallback(async (): Promise<boolean> => {
     if (!config.fullScreen) return true;
     try {
@@ -103,6 +110,10 @@ export function useExamProctoring({
 
     const onFullscreenExit = () => {
       if (config.fullScreen && !document.fullscreenElement) {
+        if (ignoreNextFullscreenExitRef.current) {
+          ignoreNextFullscreenExitRef.current = false;
+          return;
+        }
         fullscreenExitCountRef.current += 1;
         void logEvent('fullscreen_exit');
 
@@ -142,6 +153,6 @@ export function useExamProctoring({
     onMaxFullscreenExits,
   ]);
 
-  return { enterFullscreen, logEvent, tabCountRef };
+  return { enterFullscreen, logEvent, tabCountRef, suppressNextFullscreenExit, clearFullscreenExitSuppression };
 }
 
