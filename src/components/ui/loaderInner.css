@@ -1,18 +1,23 @@
-/* Overlay fixed to visible main area — does not sink down on tall/scroll pages */
+/* ==========================================================================
+   Clean Standalone Dashboard Loader (Single Border + Bigger Logo)
+   ========================================================================== */
+
+/* Overlay on dashboard main area only */
 .sca-loader-inner {
   position: fixed;
   top: var(--db-header-h, 72px);
-  left: var(--db-sidebar-w, 240px);
+  left: var(--db-sidebar-w, 260px);
   right: 0;
   bottom: 0;
   z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.35);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  background: rgba(248, 250, 252, 0.72);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
   pointer-events: all;
+  transition: opacity 0.2s ease;
 }
 
 .sca-dashboard--collapsed .sca-loader-inner {
@@ -26,40 +31,95 @@
   }
 }
 
-.sca-dashboard.sca-dashboard--light .sca-loader-inner {
-  background: rgba(241, 245, 249, 0.72);
-}
-
+/* Dark mode overlay */
 .sca-dashboard.sca-dashboard--dark .sca-loader-inner {
   background: rgba(15, 23, 42, 0.72);
 }
 
-.sca-loader-inner__wrap {
+/* Pure Orb Wrap - Centered, Standalone */
+.sca-loader-orb-wrap {
   position: relative;
+  width: 82px;
+  height: 82px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
 }
 
-.sca-loader-inner__spinner {
-  width: 140px;
-  height: 140px;
-  border: 0.25em solid #029aa7;
-  border-inline-end-color: transparent;
-  border-radius: 50%;
-  animation: sca-loader-inner-spin 0.75s linear infinite;
-}
-
-.sca-loader-inner__logo {
+/* Soft ambient breathing halo */
+.sca-loader-glow-ambient {
   position: absolute;
-  width: 100px;
-  height: auto;
-  object-fit: contain;
+  inset: -8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 97, 251, 0.22) 0%, rgba(56, 97, 251, 0.06) 50%, transparent 70%);
+  filter: blur(8px);
+  animation: sca-ambient-glow 2.2s ease-in-out infinite;
+  pointer-events: none;
 }
 
-@keyframes sca-loader-inner-spin {
-  to {
+/* Exactly ONE Single Spinning Border */
+.sca-loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3.5px solid rgba(56, 97, 251, 0.16);
+  border-top-color: #3861fb;
+  border-right-color: #3861fb;
+  animation: sca-spin-cw 0.85s linear infinite;
+  pointer-events: none;
+}
+
+.sca-dashboard.sca-dashboard--dark .sca-loader-ring {
+  border-color: rgba(99, 102, 241, 0.2);
+  border-top-color: #6366f1;
+  border-right-color: #6366f1;
+}
+
+/* Central Floating White Core with Bigger Techwagger Logo */
+.sca-loader-logo-core {
+  position: relative;
+  z-index: 2;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12);
+  padding: 6px;
+}
+
+.sca-dashboard.sca-dashboard--dark .sca-loader-logo-core {
+  background: #0f172a;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+.sca-loader-logo-img {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Keyframe Animations */
+@keyframes sca-spin-cw {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
     transform: rotate(360deg);
+  }
+}
+
+@keyframes sca-ambient-glow {
+  0%, 100% {
+    transform: scale(0.95);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
   }
 }

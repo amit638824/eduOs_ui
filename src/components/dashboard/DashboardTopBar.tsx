@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
 import { platformService } from '@/services';
-import DashboardBreadcrumb from './DashboardBreadcrumb';
 import HamburgerIcon from '@/components/ui/HamburgerIcon';
 import OrgSwitcher from './OrgSwitcher';
 
