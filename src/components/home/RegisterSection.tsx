@@ -185,7 +185,7 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
           </div>
 
           <div className="col-xl-4 col-lg-5 col-12 text-lg-end">
-            <Link to="/register" className="ms-btn-coral ms-btn-lg">
+            <Link to="/login" className="ms-btn-coral ms-btn-lg">
               <span>Get Started For Free</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" />

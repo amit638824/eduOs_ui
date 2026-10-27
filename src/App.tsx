@@ -9,7 +9,6 @@ import Layout from '@/components/layout/Layout';
 
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
-import RegisterPage from '@/pages/RegisterPage';
 import AboutPage from '@/pages/AboutPage';
 import CoursePage from '@/pages/CoursePage';
 import CourseDetailsPage from '@/pages/CourseDetailsPage';
@@ -66,7 +65,7 @@ export default function App() {
                   element={<ResetPasswordPage />}
                 />
 
-                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/register" element={<Navigate to="/login" replace />} />
 
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/course" element={<CoursePage />} />
