@@ -9,15 +9,17 @@ import { FormError, inputClassName } from '@/components/ui/FormField';
 import { createTestApiSchema, type CreateTestApiFormValues } from '@/validators/schemas';
 import type { ExamResult, ExamTest, Question, TestAttempt } from '@/types/examination';
 import { useAuth } from '@/context/AuthContext';
+import { getTestsListPath } from '@/utils/dashboardRole';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
 import ExamAttemptPlayer from './ExamAttemptPlayer';
+import { PracticeInsights } from './AiBuildPanel';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpField, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
-import { confirmDelete, showError, showSuccess } from '@/lib/swal';
+import { confirmAction, confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDateTime } from '@/utils/dateFormat';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
 import { getOptionText, getQuestionText } from '@/utils/questionContent';
@@ -457,7 +459,19 @@ export function QuestionBankPanel() {
       showError('File too large', 'Maximum size is 1.5 MB.');
       return;
     }
-    const csvText = await file.text();
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (bytes[0] === 0x50 && bytes[1] === 0x4b) {
+      setError('This looks like an Excel workbook. In Excel use Save As → CSV, then upload that file.');
+      showError('Save as CSV', 'Excel workbooks are not imported. Save the sheet as CSV first.');
+      return;
+    }
+    const encoding =
+      bytes[0] === 0xff && bytes[1] === 0xfe
+        ? 'utf-16le'
+        : bytes[0] === 0xfe && bytes[1] === 0xff
+          ? 'utf-16be'
+          : 'utf-8';
+    const csvText = new TextDecoder(encoding).decode(bytes);
     setImportingCsv(true);
     try {
       const summary = await withLoader(() => examinationService.importQuestionsFromCsv(csvText));
@@ -991,6 +1005,61 @@ export function QuestionBankPanel() {
                             <EdtpBtn variant="secondary" onClick={() => void handleEdit(q.id)}>
                               Edit
                             </EdtpBtn>
+                            <EdtpBtn
+                              variant="ghost"
+                              onClick={() =>
+                                void (async () => {
+                                  setError('');
+                                  try {
+                                    const improved = await withLoader(() =>
+                                      examinationService.improveQuestion(q.id),
+                                    );
+                                    setMessage(`Improved wording. Difficulty is now ${improved.difficulty}. You can edit it again.`);
+                                    showSuccess('Question improved', 'Grammar, wording, and distractors were updated. The learning objective is unchanged.');
+                                    await loadQuestions();
+                                  } catch (err) {
+                                    setError(parseApiError(err));
+                                    showError('Improve failed', parseApiError(err));
+                                  }
+                                })()
+                              }
+                            >
+                              Improve
+                            </EdtpBtn>
+                            {(q.type === 'mcq' || q.type === 'msq') && (
+                              <EdtpBtn
+                                variant="ghost"
+                                onClick={() =>
+                                  void (async () => {
+                                    setError('');
+                                    try {
+                                      const preview = await withLoader(() =>
+                                        examinationService.generateDistractors(q.id, false),
+                                      );
+                                      const lines = preview.options
+                                        .map((opt) =>
+                                          `${opt.isCorrect ? 'Correct' : 'Wrong'}: ${opt.text}${opt.whyWrong ? ` — ${opt.whyWrong}` : ''}`,
+                                        )
+                                        .join('\n');
+                                      const ok = await confirmAction({
+                                        title: 'Replace distractors?',
+                                        text: lines || 'No options returned.',
+                                        confirmText: 'Save options',
+                                      });
+                                      if (!ok) return;
+                                      await examinationService.generateDistractors(q.id, true, preview.options);
+                                      showSuccess('Distractors saved', 'Incorrect options were replaced. Review the question before using it.');
+                                      await loadQuestions();
+                                    } catch (err) {
+                                      setError(parseApiError(err));
+                                      showError('Distractors failed', parseApiError(err));
+                                    }
+                                  })()
+                                }
+                              >
+                                Distractors
+                              </EdtpBtn>
+                            )}
                             <EdtpBtn variant="danger" onClick={() => void handleDelete(q.id)}>
                               Delete
                             </EdtpBtn>
@@ -1173,15 +1242,25 @@ export function TestsListPanel({ title }: { title: string }) {
   };
 
   const statusBadge = (status: string) => {
+    const labels: Record<string, string> = {
+      draft: 'Draft',
+      scheduled: 'Scheduled',
+      live: 'Live',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+      archived: 'Archived',
+    };
     const cls =
       status === 'live'
         ? 'edtp-badge--active'
-        : status === 'scheduled'
-          ? 'edtp-badge--role'
-          : status === 'draft'
-            ? 'edtp-badge--role'
-            : 'edtp-badge--inactive';
-    return <span className={`edtp-badge ${cls}`}>{status}</span>;
+        : status === 'completed'
+          ? 'edtp-badge--danger'
+          : status === 'cancelled'
+            ? 'edtp-badge--danger'
+            : status === 'scheduled' || status === 'draft'
+              ? 'edtp-badge--role'
+              : 'edtp-badge--inactive';
+    return <span className={`edtp-badge ${cls}`}>{labels[status] ?? status}</span>;
   };
 
   return (
@@ -1407,7 +1486,16 @@ export function TestsListPanel({ title }: { title: string }) {
                   <td>{t.total_marks ?? '—'}</td>
                   <td>
                     <EdtpRowActions>
-                      <EdtpBtn variant="secondary" onClick={() => startEdit(t)}>Edit</EdtpBtn>
+                      <EdtpBtn
+                        variant="secondary"
+                        disabled={t.status === 'completed'}
+                        title={t.status === 'completed' ? 'Completed tests cannot be edited' : 'Edit test details'}
+                        onClick={() => {
+                          if (t.status !== 'completed') startEdit(t);
+                        }}
+                      >
+                        Edit
+                      </EdtpBtn>
                       {(t.status === 'draft' || t.status === 'scheduled') && (
                         <>
                           <Link
@@ -2400,9 +2488,14 @@ export function CreateTestPanel() {
       />
       <AdminExamGuide activeStep={2} compact />
       <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title">
-          <h4>New Exam Draft</h4>
-          {draftNote ? <p className="text-muted mb-0">{draftNote}</p> : null}
+        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            <h4>New Exam Draft</h4>
+            {draftNote ? <p className="text-muted mb-0">{draftNote}</p> : null}
+          </div>
+          <Link to={getTestsListPath(user?.roles ?? [])} className="edtp-btn edtp-btn--secondary edtp-btn--md">
+            Edit saved tests
+          </Link>
         </div>
         {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
         {message && <p className="form-success sp_bottom_15">{message}</p>}
@@ -2946,6 +3039,7 @@ export function ExamResultPage() {
         </h4>
         {studentName ? <p className="text-muted mb-0">Student: {studentName}</p> : null}
       </div>
+      {isStudent ? <PracticeInsights /> : null}
 
       {history ? (
         <div className="sp_bottom_15 d-flex flex-wrap align-items-center gap-2">

@@ -13,6 +13,7 @@ import { QuestionBankPanel, TestsListPanel,
   ExamResultPage,
   ProfileSettingsApiForm,
 } from '@/components/dashboard/examination/ExaminationPanels';
+import { AiBuildPanel } from '@/components/dashboard/examination/AiBuildPanel';
 import {
   DashboardCounters,
   DashboardFeedbackTable,
@@ -226,6 +227,7 @@ export {
   AttemptsListPanel,
   ResultsPanel,
   CreateTestPanel,
+  AiBuildPanel,
   ExamAttemptPage,
   ExamResultPage,
   ProfileSettingsApiForm,
