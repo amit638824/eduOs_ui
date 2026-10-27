@@ -176,7 +176,7 @@ export default function CertificatePage() {
     certificate.test_title || 'Examination';
 
   const organizationName =
-    certificate.org_name || 'TechWagger';
+    certificate.org_name || 'Mindsprint';
 
   const certificateNo =
     certificate.certificate_no;
@@ -274,7 +274,7 @@ export default function CertificatePage() {
                 <div className="brand-logo">
                   <img
                     src="/img/logo/techwagger-logo.png"
-                    alt="TechWagger"
+                    alt="Mindsprint"
                   />
                 </div>
 

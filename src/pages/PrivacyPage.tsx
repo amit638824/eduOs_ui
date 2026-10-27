@@ -13,7 +13,7 @@ export default function PrivacyPage() {
             <p>
               {parentCompany.name} protects student data in line with applicable Indian privacy
               standards. We collect account information, exam attempt data, and usage analytics only
-              to deliver online tests, results, and academy services.
+              to deliver online tests, results, and online examination services.
             </p>
             <p>
               We do not sell personal data. Institutes control organization-level access through

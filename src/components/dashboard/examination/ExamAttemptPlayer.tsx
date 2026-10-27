@@ -210,7 +210,7 @@ export default function ExamAttemptPlayer() {
     }
   }, [attemptId, navigate, submitting]);
 
-  const { enterFullscreen } = useExamProctoring({
+  const { enterFullscreen, suppressNextFullscreenExit, clearFullscreenExitSuppression } = useExamProctoring({
     attemptId: attemptId ?? '',
     enabled: examStarted && attempt?.status === 'in_progress',
     config,
@@ -371,16 +371,22 @@ export default function ExamAttemptPlayer() {
     }
   };
 
-  const submit = async () => {
+  const restoreFullscreen = async () => {
+    if (!config.fullScreen || document.fullscreenElement) return true;
+    const entered = await enterFullscreen();
+    if (entered) {
+      setIsFullscreenExited(false);
+      setWarning('');
+    }
+    return entered;
+  };
+
+  const submit = async (event?: { stopPropagation?: () => void }) => {
+    event?.stopPropagation?.();
     if (!attemptId || submitting) return;
     flushCurrentAnswer();
-    try {
-      // Leave fullscreen first so the confirm dialog is visible and clickable
-      if (document.fullscreenElement) {
-        await document.exitFullscreen().catch(() => undefined);
-      }
-    } catch {
-      /* ignore */
+    if (config.fullScreen && !document.fullscreenElement) {
+      await enterFullscreen();
     }
     const ok = await confirmAction({
       title: 'Submit test?',
@@ -389,13 +395,23 @@ export default function ExamAttemptPlayer() {
       confirmText: 'Yes, submit it!',
       confirmColor: '#dc2626',
     });
-    if (!ok) return;
+    if (!ok) {
+      if (config.fullScreen && !document.fullscreenElement) {
+        await restoreFullscreen();
+      }
+      return;
+    }
     setSubmitting(true);
     try {
-      const result = await examinationService.submitAttempt(attemptId, false);
       if (document.fullscreenElement) {
-        await document.exitFullscreen().catch(() => undefined);
+        suppressNextFullscreenExit();
+        try {
+          await document.exitFullscreen();
+        } catch {
+          clearFullscreenExitSuppression();
+        }
       }
+      const result = await examinationService.submitAttempt(attemptId, false);
       navigate(`/dashboard/exam-result/${result.attempt_id ?? attemptId}`);
     } catch (err) {
       setError(parseApiError(err));
@@ -468,7 +484,7 @@ export default function ExamAttemptPlayer() {
 
         {error && <p className="login__error exam-intro__error">{error}</p>}
         <button type="button" className="default__button exam-intro__cta" onClick={startExam}>
-          Enter Fullscreen &amp; Start Exam
+          Start Exam
         </button>
       </div>
     );
@@ -480,7 +496,13 @@ export default function ExamAttemptPlayer() {
   const isMulti = current.type === 'msq';
 
   return (
-    <div className="exam-player-overlay">
+    <div
+      className="exam-player-overlay"
+      onClick={() => {
+        if (!config.fullScreen || document.fullscreenElement || submitting) return;
+        void restoreFullscreen();
+      }}
+    >
       <header className="exam-player-topbar">
         <div className="exam-player-topbar__brand">
           <img src={siteContent.brand.logo} alt={siteContent.brand.name} />
@@ -506,21 +528,6 @@ export default function ExamAttemptPlayer() {
             {warning || `Tab switches: ${tabWarnings}/${config.maxTabSwitches}`}
           </span>
 
-          {isFullscreenExited && (
-            <button
-              type="button"
-              onClick={async () => {
-                const entered = await enterFullscreen();
-
-                if (entered) {
-                  setIsFullscreenExited(false);
-                  setWarning('');
-                }
-              }}
-            >
-              Return to Full Screen
-            </button>
-          )}
         </div>
       )}
 
@@ -555,7 +562,6 @@ export default function ExamAttemptPlayer() {
                         type={isMulti ? 'checkbox' : 'radio'}
                         name={current.question_id}
                         checked={isSelected}
-                        disabled={isFullscreenExited}
                         onChange={() =>
                           selectOption(current.question_id, opt.id, selected, isMulti)
                         }
@@ -630,7 +636,7 @@ export default function ExamAttemptPlayer() {
                 type="button"
                 className="exam-btn exam-btn--danger"
                 disabled={submitting}
-                onClick={() => void submit()}
+                onClick={(event) => void submit(event)}
               >
                 {submitting ? 'Submitting...' : 'Finish Test'}
               </button>

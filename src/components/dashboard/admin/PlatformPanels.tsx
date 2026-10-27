@@ -28,6 +28,15 @@ import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
 import { getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
 import * as yup from 'yup';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
 
 export function NotificationsPanel() {
   const [items, setItems] = useState<Awaited<ReturnType<typeof platformService.listNotifications>>['data']>([]);
@@ -74,55 +83,55 @@ export function NotificationsPanel() {
 
   return (
     <>
-    <DashboardPageHeader
-      badge="Inbox"
-      title="Notifications"
-      subtitle="Updates for your account, assigned tests, exam submissions and results."
-    />
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title d-flex justify-content-between align-items-center">
-        <h4>All notifications {unread > 0 && <span className="badge bg-primary ms-2">{unread}</span>}</h4>
-        {unread > 0 && (
-          <button type="button" className="default__button small-btn" onClick={markAll}>
-            Mark all read
-          </button>
-        )}
-      </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      <div className="dashboard__table table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Channel</th>
-              <th>Date</th>
-              <th>Status</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((n) => (
-              <tr key={n.id} className={n.is_read ? '' : 'fw-semibold'}>
-                <td>{n.title}<br /><small>{n.body}</small></td>
-                <td>{n.channel}</td>
-                <td>{formatDateTime(n.created_at)}</td>
-                <td>{n.is_read ? 'Read' : 'Unread'}</td>
-                <td>
-                  {!n.is_read && (
-                    <button type="button" className="default__button small-btn" onClick={() => markRead(n.id)}>
-                      Mark read
-                    </button>
-                  )}
-                </td>
+      <DashboardPageHeader
+        badge="Inbox"
+        title="Notifications"
+        subtitle="Updates for your account, assigned tests, exam submissions and results."
+      />
+      <div className="dashboard__content__wraper">
+        <div className="dashboard__section__title d-flex justify-content-between align-items-center">
+          <h4>All notifications {unread > 0 && <span className="badge bg-primary ms-2">{unread}</span>}</h4>
+          {unread > 0 && (
+            <button type="button" className="default__button small-btn" onClick={markAll}>
+              Mark all read
+            </button>
+          )}
+        </div>
+        {error && <p className="login__error sp_bottom_15">{error}</p>}
+        <div className="dashboard__table table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Channel</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th />
               </tr>
-            ))}
-            {items.length === 0 && (
-              <tr><td colSpan={5}>No notifications yet.</td></tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {items.map((n) => (
+                <tr key={n.id} className={n.is_read ? '' : 'fw-semibold'}>
+                  <td>{n.title}<br /><small>{n.body}</small></td>
+                  <td>{n.channel}</td>
+                  <td>{formatDateTime(n.created_at)}</td>
+                  <td>{n.is_read ? 'Read' : 'Unread'}</td>
+                  <td>
+                    {!n.is_read && (
+                      <button type="button" className="default__button small-btn" onClick={() => markRead(n.id)}>
+                        Mark read
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {items.length === 0 && (
+                <tr><td colSpan={5}>No notifications yet.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
-    </div>
     </>
   );
 }
@@ -188,7 +197,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
         key: order.keyId,
         amount: order.amount,
         currency: order.currency,
-        name: 'Edumatra',
+        name: 'Mindsprint',
         description: 'Wallet Top-up',
         order_id: order.orderId,
         prefill: {
@@ -426,11 +435,11 @@ export function UsersManagementPanel({
     setEditingId(u.id);
     const role =
       (u.roles as string[]).find((r) => ['student', 'teacher', 'org_admin', 'staff'].includes(r)) as
-        | 'student'
-        | 'teacher'
-        | 'org_admin'
-        | 'staff'
-        | undefined;
+      | 'student'
+      | 'teacher'
+      | 'org_admin'
+      | 'staff'
+      | undefined;
     reset({
       email: u.email,
       password: '',
@@ -843,14 +852,14 @@ export function ReportsPanel() {
     prefix?: string;
     suffix?: string;
   }[] = [
-    { key: 'users', label: 'Users', hint: 'Active accounts' },
-    { key: 'tests', label: 'Tests', hint: 'Created exams' },
-    { key: 'attempts', label: 'Attempts', hint: 'Student attempts' },
-    { key: 'assignments', label: 'Assignments', hint: 'Student–test links' },
-    { key: 'certificates', label: 'Certificates', hint: 'Issued' },
-    { key: 'pass_rate', label: 'Pass rate', hint: 'Org-wide', suffix: '%' },
-    { key: 'revenue', label: 'Revenue', hint: 'Completed payments', prefix: '₹' },
-  ];
+      { key: 'users', label: 'Users', hint: 'Active accounts' },
+      { key: 'tests', label: 'Tests', hint: 'Created exams' },
+      { key: 'attempts', label: 'Attempts', hint: 'Student attempts' },
+      { key: 'assignments', label: 'Assignments', hint: 'Student–test links' },
+      { key: 'certificates', label: 'Certificates', hint: 'Issued' },
+      { key: 'pass_rate', label: 'Pass rate', hint: 'Org-wide', suffix: '%' },
+      { key: 'revenue', label: 'Revenue', hint: 'Completed payments', prefix: '₹' },
+    ];
 
   const results = report?.results ?? [];
   const stats = report?.stats;
@@ -939,6 +948,67 @@ export function ReportsPanel() {
                     </li>
                   ))}
                 </ul>
+              </div>
+            ) : null}
+            {questionAnalytics.questions.length > 0 ? (
+              <div className="sp_bottom_20">
+                <h6 className="mb-3">Answer option selection</h6>
+                <p className="text-muted" style={{ fontSize: '0.8125rem' }}>
+                  Compare how many students selected each answer option. Wrong options
+                  can help identify confusing questions or distractors.
+                </p>
+
+                {questionAnalytics.questions.map((q) => {
+                  const chartData = q.distractors.map((d, index) => ({
+                    option: `Option ${index + 1}`,
+                    selected: d.selected_count,
+                    percentage: d.selected_pct,
+                    correct: d.is_correct,
+                  }));
+
+                  return (
+                    <div key={q.question_id} className="sp_bottom_20">
+                      <strong>
+                        {q.text || q.question_id.slice(0, 8)}
+                      </strong>
+
+                      {chartData.length > 0 ? (
+                        <div style={{ width: '100%', height: 260, marginTop: 12 }}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                              data={chartData}
+                              layout="vertical"
+                              margin={{ top: 8, right: 24, left: 16, bottom: 8 }}
+                            >
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis type="number" allowDecimals={false} />
+                              <YAxis
+                                type="category"
+                                dataKey="option"
+                                width={90}
+                              />
+                              <Tooltip
+                                formatter={(value, _name, item) => [
+                                  `${value} students (${item.payload.percentage}%)`,
+                                  item.payload.correct ? 'Correct option' : 'Wrong option',
+                                ]}
+                              />
+                              <Bar
+                                dataKey="selected"
+                                name="Students"
+                                fill="#6366f1"
+                              />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <p className="text-muted mb-0">
+                          No answer-option data available for this question.
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : null}
             <div className="dashboard__table table-responsive">
@@ -1847,35 +1917,35 @@ export function TestBuilderPanel() {
                 {testQuestions.map((tq, i) => {
                   const label = getQuestionText(tq.content);
                   return (
-                  <li key={tq.question_id}>
-                    <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
-                    <span className="edtp-q-cell">{label}</span>
-                    <span className="edtp-badge edtp-badge--role">{tq.type ?? '—'}</span>
-                    <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(tq.question_id)}>
-                      Preview
-                    </EdtpBtn>
-                    {phase === 'build' && !isPublished && (
-                      <>
-                        <EdtpBtn
-                          variant="ghost"
-                          disabled={i === 0}
-                          onClick={() => void moveQuestion(tq.question_id, -1)}
-                        >
-                          Up
-                        </EdtpBtn>
-                        <EdtpBtn
-                          variant="ghost"
-                          disabled={i === testQuestions.length - 1}
-                          onClick={() => void moveQuestion(tq.question_id, 1)}
-                        >
-                          Down
-                        </EdtpBtn>
-                        <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
-                          Remove
-                        </EdtpBtn>
-                      </>
-                    )}
-                  </li>
+                    <li key={tq.question_id}>
+                      <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
+                      <span className="edtp-q-cell">{label}</span>
+                      <span className="edtp-badge edtp-badge--role">{tq.type ?? '—'}</span>
+                      <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(tq.question_id)}>
+                        Preview
+                      </EdtpBtn>
+                      {phase === 'build' && !isPublished && (
+                        <>
+                          <EdtpBtn
+                            variant="ghost"
+                            disabled={i === 0}
+                            onClick={() => void moveQuestion(tq.question_id, -1)}
+                          >
+                            Up
+                          </EdtpBtn>
+                          <EdtpBtn
+                            variant="ghost"
+                            disabled={i === testQuestions.length - 1}
+                            onClick={() => void moveQuestion(tq.question_id, 1)}
+                          >
+                            Down
+                          </EdtpBtn>
+                          <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
+                            Remove
+                          </EdtpBtn>
+                        </>
+                      )}
+                    </li>
                   );
                 })}
               </ol>
@@ -2010,24 +2080,24 @@ export function TestBuilderPanel() {
                     {availableQuestions.map((q) => {
                       const label = getQuestionText(q.content);
                       return (
-                      <tr key={q.id}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={selectedQuestionIds.includes(q.id)}
-                            onChange={() => toggleQuestion(q.id)}
-                            aria-label={`Select question ${label}`}
-                          />
-                        </td>
-                        <td className="edtp-q-cell">{label}</td>
-                        <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
-                        <td>
-                          <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(q.id)}>
-                            Preview
-                          </EdtpBtn>
-                        </td>
-                      </tr>
+                        <tr key={q.id}>
+                          <td>
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={selectedQuestionIds.includes(q.id)}
+                              onChange={() => toggleQuestion(q.id)}
+                              aria-label={`Select question ${label}`}
+                            />
+                          </td>
+                          <td className="edtp-q-cell">{label}</td>
+                          <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
+                          <td>
+                            <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(q.id)}>
+                              Preview
+                            </EdtpBtn>
+                          </td>
+                        </tr>
                       );
                     })}
                     {availableQuestions.length === 0 && (
@@ -2037,8 +2107,8 @@ export function TestBuilderPanel() {
                             ? 'No questions match your search.'
                             : bankQuestions.length === 0
                               ? (
-                                  <>No approved questions. <Link to="/dashboard/admin-question-bank">Add questions</Link> first.</>
-                                )
+                                <>No approved questions. <Link to="/dashboard/admin-question-bank">Add questions</Link> first.</>
+                              )
                               : 'All available questions are already in this test.'}
                         </td>
                       </tr>

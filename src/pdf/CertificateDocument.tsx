@@ -542,10 +542,10 @@ export function CertificateDocument({
   data: CertificatePdfData;
 }) {
   const organizationName =
-    data.organizationName || 'TechWagger';
+    data.organizationName || 'Mindsprint';
 
   const brand =
-    data.brandName || organizationName || 'TechWagger';
+    data.brandName || organizationName || 'Mindsprint';
 
   const primary = data.branding?.primaryColor || NAVY;
   const accent = data.branding?.accentColor || GOLD;
@@ -558,8 +558,7 @@ export function CertificateDocument({
       ? Number(data.percentage).toFixed(1)
       : '0.0';
 
-  const scoreLine =
-    `${data.totalScore}/${data.maxScore} (${score}%)`;
+  const scoreLine = `${score}%`;
   const borderColor =
     templateId === 'classic'
       ? accent

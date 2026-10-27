@@ -97,24 +97,28 @@ export default function VerifyCertificatePage() {
                 <strong>Student:</strong> {String(result.student_name ?? '—')}
               </div>
               <div>
+                <strong>Enrollment No:</strong> {String(result.enrollment_no ?? '—')}
+              </div>
+              <div>
                 <strong>Exam:</strong> {String(result.test_title ?? '—')}
               </div>
               <div>
                 <strong>Organization:</strong> {String(result.organization ?? '—')}
               </div>
               <div>
-                <strong>Score:</strong> {String(result.score ?? '—')} (
-                {Number(result.percentage ?? 0).toFixed(1)}%)
+                <strong>Performance:</strong> {Number(result.percentage ?? 0).toFixed(1)}%
               </div>
               <div>
                 <strong>Certificate No:</strong> {String(result.certificate_no ?? '—')}
               </div>
               <div>
-                <strong>Issued:</strong> {formatDateTime(result.issued_at as string)}
+                <strong>Verification code:</strong> {String(result.verification_code ?? '—')}
               </div>
               <div>
-                <strong>Fingerprint:</strong>{' '}
-                <code className="edtp-code">{String(result.fingerprint ?? '')}</code>
+                <strong>Status:</strong> {String(result.status ?? '—')}
+              </div>
+              <div>
+                <strong>Issued:</strong> {formatDateTime(result.issued_at as string)}
               </div>
             </dl>
           )}

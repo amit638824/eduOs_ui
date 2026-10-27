@@ -8,7 +8,7 @@ function readApiEnvironment(): ApiEnvironment {
 const isProd = readApiEnvironment() === 'prod';
 
 export const env = {
-  appName: import.meta.env.VITE_APP_NAME ?? 'Edumatra',
+  appName: import.meta.env.VITE_APP_NAME ?? 'Mindsprint',
   apiEnvironment: readApiEnvironment(),
   isProd,
 

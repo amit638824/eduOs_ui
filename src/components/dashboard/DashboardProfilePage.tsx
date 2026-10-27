@@ -118,7 +118,7 @@ export default function DashboardProfilePage() {
   }, [user, branches]);
 
   const locationText = useMemo(() => {
-    if (branchName) return `${branchName}, Jaunpur`;
+    if (branchName) return branchName;
     return organizationName;
   }, [branchName, organizationName]);
 

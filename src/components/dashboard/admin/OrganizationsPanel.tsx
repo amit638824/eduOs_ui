@@ -253,7 +253,7 @@ export function OrganizationsPanel() {
                 className="register__input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Sunrise Academy"
+                placeholder="e.g. TechWagger Solutions"
               />
             </EdtpField>
             <EdtpField
@@ -271,7 +271,7 @@ export function OrganizationsPanel() {
                 className="register__input"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
-                placeholder="admin@academy.com"
+                placeholder="admin@organization.com"
                 required={!editingId}
               />
             </EdtpField>

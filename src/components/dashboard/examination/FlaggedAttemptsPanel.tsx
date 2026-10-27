@@ -80,6 +80,14 @@ export function FlaggedAttemptsPanel() {
   const review = async (attemptId: string, status: 'reviewed' | 'dismissed') => {
     try {
       await examinationService.updateProctoringReview(attemptId, status);
+      setRows((current) => {
+        if (filter === 'all' || filter === status) {
+          return current.map((row) =>
+            row.id === attemptId ? { ...row, proctoring_review_status: status } : row,
+          );
+        }
+        return current.filter((row) => row.id !== attemptId);
+      });
       showSuccess('Updated', `Marked as ${status}`);
       load();
     } catch (err) {
@@ -216,9 +224,11 @@ export function FlaggedAttemptsPanel() {
                         <EdtpBtn variant="success" size="sm" onClick={() => void review(row.id, 'reviewed')}>
                           Reviewed
                         </EdtpBtn>
-                        <EdtpBtn variant="ghost" size="sm" onClick={() => void review(row.id, 'dismissed')}>
-                          Dismiss
-                        </EdtpBtn>
+                        {row.proctoring_review_status !== 'dismissed' ? (
+                          <EdtpBtn variant="ghost" size="sm" onClick={() => void review(row.id, 'dismissed')}>
+                            Dismiss
+                          </EdtpBtn>
+                        ) : null}
                       </td>
                     </tr>
                     {expandedId === row.id ? (
