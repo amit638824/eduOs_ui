@@ -34,6 +34,7 @@ export default function DashboardSidebar({
           onClick={onNavigate}
         >
           <img src={brand.logo} alt={brand.name} className="sca-db-sidebar__logo" />
+          {!collapsed && <span className="sca-db-sidebar__brand-title">{brand.name}</span>}
         </Link>
       </div>
 

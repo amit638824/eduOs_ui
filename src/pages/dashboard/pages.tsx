@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import StudentExamCalendar from '@/components/dashboard/examination/StudentExamCalendar';
 import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
+import ModernAdminDashboard from '@/components/dashboard/admin/ModernAdminDashboard';
 import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { QuestionBankPanel, TestsListPanel,
   StudentTestsPanel,
@@ -149,7 +150,7 @@ export function TeacherDashboardHome() {
 }
 
 export function AdminDashboardHome() {
-  const { organization, branches, organizations, loading, error } = useOrganization();
+  const { error } = useOrganization();
   const [examStats, setExamStats] = useState<OrgAnalytics | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -162,54 +163,9 @@ export function AdminDashboardHome() {
       .finally(() => setStatsLoading(false));
   }, []);
 
-  useDashboardLoadingEffect(loading || statsLoading);
+  useDashboardLoadingEffect(statsLoading);
 
-  const counters = useMemo(() => {
-    if (examStats) {
-      return [
-        { value: String(examStats.students), label: 'Students', icon: '/img/counter/counter__1.png' },
-        { value: String(examStats.tests), label: 'Tests', icon: '/img/counter/counter__2.png' },
-        { value: String(examStats.questions), label: 'Questions', icon: '/img/counter/counter__3.png' },
-        { value: String(examStats.attempts), label: 'Attempts', icon: '/img/counter/counter__4.png' },
-      ];
-    }
-    if (organization) {
-      return [
-        { value: String(branches.length), label: 'Branches', icon: '/img/counter/counter__1.png' },
-        { value: String(organizations.length || 1), label: 'Organizations', icon: '/img/counter/counter__2.png' },
-        { value: organization.isActive ? 'Active' : 'Inactive', label: 'Org Status', icon: '/img/counter/counter__3.png' },
-      ];
-    }
-    return [
-      { value: '—', label: 'Students', icon: '/img/counter/counter__1.png' },
-      { value: '—', label: 'Tests', icon: '/img/counter/counter__2.png' },
-      { value: '—', label: 'Questions', icon: '/img/counter/counter__3.png' },
-    ];
-  }, [organization, branches.length, organizations.length, examStats]);
-
-  return (
-    <>
-      <DashboardPageHeader
-        badge="Admin Portal"
-        title={organization ? organization.name : 'Admin Dashboard'}
-        subtitle={
-          organization
-            ? `Managing ${organization.name} — students, teachers, exams and results stay org-scoped.`
-            : 'Manage exams, users, payments and organization settings.'
-        }
-      />
-      <AdminExamGuide />
-      {error && (
-        <div className="dashboard__content__wraper sp_bottom_20">
-          <p className="login__error">{error}</p>
-        </div>
-      )}
-      <DashboardCounters
-        title={organization ? `${organization.name} Overview` : 'Admin Overview'}
-        counters={counters}
-      />
-    </>
-  );
+  return <ModernAdminDashboard examStats={examStats} error={error} />;
 }
 
 export {
