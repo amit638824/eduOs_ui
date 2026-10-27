@@ -1,109 +1,51 @@
 import { Link } from 'react-router-dom';
 
+const posts = [
+  {
+    img: '/eduleb/img/blog/1.jpg',
+    date: 'May 10, 2024',
+    category: 'Education',
+    title: 'Professional Mobile Painting and Sculpting',
+  },
+  {
+    img: '/eduleb/img/blog/2.jpg',
+    date: 'May 16, 2024',
+    category: 'Education',
+    title: 'Professional Ceramic Moulding for Beginner',
+  },
+  {
+    img: '/eduleb/img/blog/3.jpg',
+    date: 'May 18, 2024',
+    category: 'Programing',
+    title: 'Education Is About Create Leaders For Tomorrow ',
+  },
+];
+
 export default function BlogSection() {
-  const posts = [
-    {
-      slug: 'cat-2026-guide',
-      category: 'Study Tips',
-      title: 'How to Prepare for CAT 2026: A Complete Guide',
-      img: '/img/blog/blog_1.png',
-    },
-    {
-      slug: 'jee-time-management',
-      category: 'Exam Strategy',
-      title: '5 Proven Time Management Tips for JEE Aspirants',
-      img: '/img/blog/blog_3.png',
-    },
-    {
-      slug: 'mistakes-in-mock-tests',
-      category: 'General',
-      title: 'Mistakes to Avoid in Mock Tests',
-      img: '/img/blog/blog_4.png',
-    },
-    {
-      slug: 'choose-right-coaching',
-      category: 'Guidance',
-      title: 'How to Choose the Right Coaching for You',
-      img: '/img/blog/blog_15.png',
-    },
-  ];
-
   return (
-    <section className="ms-blog-exact">
+    <section id="blog" className="blog_area section-padding">
       <div className="container">
-        {/* Header */}
-        <div className="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4" data-aos="fade-up">
-          <div>
-            <h2 className="ms-sec-title">Latest From MindSprint</h2>
-            <p className="ms-sec-subtitle">
-              Tips, strategies and study resources to help you prepare better.
-            </p>
-          </div>
-
-          <Link to="/blog" className="ms-view-link">
-            <span>View All Articles</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12" />
-              <polyline points="12 5 19 12 12 19" />
-            </svg>
-          </Link>
+        <div className="section-title text-center">
+          <h2>Latest Blog &amp; news</h2>
+          <p>
+            We offer a brand new approach to the most basic learning paradigms. Choose from a wide
+            range of learning options and gain new skills! Our school is know.
+          </p>
         </div>
-
-        {/* 4 Blog Cards Grid */}
-        <div className="row g-4">
-          {posts.map((post, idx) => (
-            <div key={post.slug} className="col-xl-3 col-lg-3 col-md-6 col-12" data-aos="fade-up" data-aos-delay={idx * 70}>
-              <div className="ms-article-card-exact">
-                {/* Thumbnail */}
-                <div style={{ position: 'relative', aspectRatio: '16 / 10', overflow: 'hidden', background: '#f1f5f9' }}>
-                  <Link to={`/blog/${post.slug}`}>
-                    <img
-                      src={post.img}
-                      alt={post.title}
-                      loading="lazy"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  </Link>
-                </div>
-
-                {/* Content */}
-                <div className="p-3 d-flex flex-column flex-grow-1">
-                  <div className="mb-2">
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        background: '#eff6ff',
-                        color: 'var(--ms-primary)',
-                        fontSize: '0.725rem',
-                        fontWeight: 700,
-                        padding: '3px 10px',
-                        borderRadius: '6px',
-                      }}
-                    >
-                      {post.category}
-                    </span>
-                  </div>
-
-                  <h3 style={{ fontSize: '0.925rem', fontWeight: 700, lineHeight: 1.4, margin: 0, marginBottom: '14px', flexGrow: 1 }}>
-                    <Link
-                      to={`/blog/${post.slug}`}
-                      style={{ color: 'var(--ms-dark)', textDecoration: 'none' }}
-                      className="ms-blog-title-link"
-                    >
-                      {post.title}
-                    </Link>
-                  </h3>
-
-                  <Link
-                    to={`/blog/${post.slug}`}
-                    className="d-inline-flex align-items-center gap-1 mt-auto"
-                    style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--ms-primary)', textDecoration: 'none' }}
-                  >
-                    <span>Read More</span>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <line x1="5" y1="12" x2="19" y2="12" />
-                      <polyline points="12 5 19 12 12 19" />
-                    </svg>
+        <div className="row">
+          {posts.map((post) => (
+            <div key={post.title} className="col-lg-4 col-sm-4 col-xs-12">
+              <div className="single_blog">
+                <img src={post.img} className="img-fluid" alt="image" />
+                <div className="content_box">
+                  <span>
+                    {post.date} | <Link to="/blog">{post.category}</Link>
+                  </span>
+                  <h2>
+                    <Link to="/blog">{post.title}</Link>
+                  </h2>
+                  <Link className="btn_one" to="/blog">
+                    Read More <i className="ti-arrow-top-right" />
                   </Link>
                 </div>
               </div>

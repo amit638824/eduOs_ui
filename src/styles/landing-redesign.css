@@ -26,22 +26,22 @@
   --ms-font-roboto: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
 
-/* Global Font Override to Roboto */
-html,
-body,
-#root,
+/* Global Font Override to Roboto — do not use * so icon fonts keep working */
+html:not(:has(body.eduleb-page)),
+body:not(.eduleb-page),
+body:not(.eduleb-page) #root,
 .ms-landing-wrapper,
-.ms-landing-wrapper *,
+.ms-landing-wrapper *:not([class^='ti-']):not([class*=' ti-']):not(.fa):not([class^='fa-']):not([class*=' fa-']),
 .ms-navbar,
-.ms-navbar *,
+.ms-navbar *:not([class^='ti-']):not([class*=' ti-']):not(.fa):not([class^='fa-']):not([class*=' fa-']),
 .ms-footer-clean,
-.ms-footer-clean *,
+.ms-footer-clean *:not([class^='ti-']):not([class*=' ti-']):not(.fa):not([class^='fa-']):not([class*=' fa-']),
 .ms-footer-exact,
-.ms-footer-exact *,
-button,
-input,
-select,
-textarea {
+.ms-footer-exact *:not([class^='ti-']):not([class*=' ti-']):not(.fa):not([class^='fa-']):not([class*=' fa-']),
+body:not(.eduleb-page) button,
+body:not(.eduleb-page) input,
+body:not(.eduleb-page) select,
+body:not(.eduleb-page) textarea {
   font-family: var(--ms-font-roboto) !important;
 }
 

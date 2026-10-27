@@ -1,23 +1,31 @@
 import HeroSection from '@/components/home/HeroSection';
-import BrandSection from '@/components/home/BrandSection';
-import SubjectsSection from '@/components/home/SubjectsSection';
-import ExamGridSection from '@/components/home/ExamGridSection';
+import ExamStripSection from '@/components/home/ExamStripSection';
+import JourneySection from '@/components/home/JourneySection';
 import AboutSection from '@/components/home/AboutSection';
-import PricingSection from '@/components/home/PricingSection';
+import CategoriesSection from '@/components/home/CategoriesSection';
+import CoursesSection from '@/components/home/CoursesSection';
+import PartnersSection from '@/components/home/PartnersSection';
+import VideoSection from '@/components/home/VideoSection';
+import InstructorsSection from '@/components/home/InstructorsSection';
+import WhyChooseSection from '@/components/home/WhyChooseSection';
 import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogSection from '@/components/home/BlogSection';
 
 export default function HomePage() {
   return (
-    <div className="ms-landing-wrapper">
+    <>
       <HeroSection />
-      <BrandSection />
-      <SubjectsSection />
-      <ExamGridSection />
+      <ExamStripSection />
+      <JourneySection />
       <AboutSection />
-      <PricingSection />
+      <CategoriesSection />
+      <CoursesSection />
+      <PartnersSection />
+      <VideoSection />
+      <InstructorsSection />
+      <WhyChooseSection />
       <TestimonialsSection />
       <BlogSection />
-    </div>
+    </>
   );
 }

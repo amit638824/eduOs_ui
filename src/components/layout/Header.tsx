@@ -1,107 +1,245 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { getDefaultDashboardPath } from '@/utils/dashboardRole';
-import HamburgerIcon from '@/components/ui/HamburgerIcon';
+
+type NavChild = { label: string; href: string };
+type NavItem = {
+  label: string;
+  href?: string;
+  children?: NavChild[];
+};
+
+const navItems: NavItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'About', href: '/about' },
+  { label: 'Course', href: '/course' },
+  { label: 'Page', href: '/pricing' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'Contact', href: '/contact' },
+];
+
+const LOGO_SRC = '/img/logo/techwagger-logo.png';
 
 export default function Header() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const dashboardPath = user ? getDefaultDashboardPath(user.roles) : '/login';
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [openMobileSub, setOpenMobileSub] = useState<string | null>(null);
 
-  const navItems = [
-    { label: 'Home', href: '/' },
-    { label: 'Mock Tests', href: '/exams' },
-    { label: 'Courses', href: '/exams' },
-    { label: 'Study Resources', href: '/about' },
-    { label: 'Pricing', href: '/pricing' },
-    { label: 'About', href: '/about' },
-  ];
+  useEffect(() => {
+    const onScroll = () => {
+      const y =
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
+      const scrolled = y > 8;
+      setIsScrolled(scrolled);
+      document.body.classList.toggle('nav-scrolled', scrolled);
+      document.documentElement.classList.toggle('nav-scrolled', scrolled);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      document.removeEventListener('scroll', onScroll, true);
+      document.body.classList.remove('nav-scrolled');
+      document.documentElement.classList.remove('nav-scrolled');
+    };
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle('mmactive', mobileOpen);
+    return () => document.body.classList.remove('mmactive');
+  }, [mobileOpen]);
 
   const handleLogout = async () => {
+    setMobileOpen(false);
     await logout();
     navigate('/login');
   };
 
+  const closeMobile = () => {
+    setMobileOpen(false);
+    setOpenMobileSub(null);
+  };
+
   return (
-    <header className="ms-navbar">
-      <div className="container">
-        <div className="d-flex align-items-center justify-content-between">
-          {/* Logo */}
-          <Link to={user ? dashboardPath : '/'} className="ms-nav-brand">
-            <div className="ms-nav-brand-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-                <path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-                <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
-                <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
-              </svg>
+    <>
+      <div
+        id="navigation"
+        className={`navbar-light site-navigation eduleb-topbar${isScrolled ? ' is-scrolled' : ''}`}
+        style={
+          isScrolled
+            ? {
+                background: '#ffffff',
+                backgroundImage: 'none',
+                backdropFilter: 'none',
+                WebkitBackdropFilter: 'none',
+                boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+                borderBottom: '1px solid #e8edf5',
+              }
+            : undefined
+        }
+      >
+        <div className="container-fluid">
+          <div className="row align-items-center">
+            <div className="col-20 align-self-center">
+              <div className="site-logo eduleb-brand-logo">
+                <Link to="/">
+                  <img src={LOGO_SRC} alt="Techwagger" />
+                </Link>
+              </div>
             </div>
-            <span className="ms-nav-brand-text">
-              MindSprint
-            </span>
-          </Link>
 
-          {/* Navigation Links */}
-          <nav className="d-none d-lg-block">
-            <ul className="ms-nav-links-list">
-              {navItems.map((item) => (
-                <li key={`${item.href}-${item.label}`}>
-                  <NavLink to={item.href} end={item.href === '/'} className="ms-nav-item-link">
-                    {item.label}
-                  </NavLink>
-                </li>
-              ))}
-            </ul>
-          </nav>
+            <div className="col-60 d-flex justify-content-center">
+              <nav id="main-menu">
+                <ul>
+                  {navItems.map((item) => {
+                    const hasChildren = Boolean(item.children?.length);
+                    return (
+                      <li
+                        key={item.label}
+                        className={hasChildren ? 'menu-item-has-children' : undefined}
+                      >
+                        {item.href ? (
+                          <Link to={item.href}>{item.label}</Link>
+                        ) : (
+                          <a href="#">{item.label}</a>
+                        )}
+                        {hasChildren && (
+                          <ul>
+                            {item.children!.map((child) => (
+                              <li key={`${item.label}-${child.label}`}>
+                                <Link to={child.href}>{child.label}</Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </nav>
+            </div>
 
-          {/* Right Actions */}
-          <div className="d-flex align-items-center gap-3">
-            {/* Search icon */}
-            <Link to="/exams" className="d-none d-md-flex align-items-center justify-content-center text-decoration-none" style={{ color: 'var(--ms-gray)' }} aria-label="Search exams">
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </Link>
+            <div className="col-20 d-none d-xl-block text-end align-self-center eduleb-nav-actions">
+              {user ? (
+                <>
+                  <Link to={dashboardPath} className="header-btn">
+                    Dashboard
+                  </Link>
+                  <button type="button" className="btn_one" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="header-btn">
+                    Sign In
+                  </Link>
+                  <Link to="/register" className="btn_one eduleb-signup-btn">
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
 
-            {user ? (
-              <>
-                <Link to={dashboardPath} className="ms-nav-item-link" style={{ fontWeight: 700 }}>
-                  {user.firstName}
-                </Link>
-                <button
-                  type="button"
-                  className="ms-btn-nav-started"
-                  onClick={handleLogout}
-                  style={{ background: '#ef4444' }}
-                >
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="ms-nav-item-link d-none d-sm-block">
-                  Login
-                </Link>
-                <Link to="/register" className="ms-btn-nav-started">
-                  <span>Get Started</span>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                  </svg>
-                </Link>
-              </>
-            )}
-
-            {/* Mobile menu trigger */}
-            <div className="d-lg-none">
-              <a className="mobile-aside-button sca-hamburger-btn text-dark" href="#" aria-label="Open menu" onClick={(e) => e.preventDefault()}>
-                <HamburgerIcon />
-              </a>
+            <div
+              id="sm_menu_ham"
+              className={mobileOpen ? 'open' : ''}
+              onClick={() => setMobileOpen((v) => !v)}
+              role="button"
+              tabIndex={0}
+              aria-label="Toggle menu"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setMobileOpen((v) => !v);
+              }}
+            >
+              <span />
+              <span />
+              <span />
+              <span />
             </div>
           </div>
         </div>
       </div>
-    </header>
+
+      <div className={`sm_menu_outer slide${mobileOpen ? ' active' : ''}`}>
+        <ul className="mobile_menu">
+          {navItems.map((item) => {
+            const hasChildren = Boolean(item.children?.length);
+            const isOpen = openMobileSub === item.label;
+            return (
+              <li key={`m-${item.label}`} className={isOpen ? 'active' : undefined}>
+                {hasChildren ? (
+                  <>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setOpenMobileSub(isOpen ? null : item.label);
+                      }}
+                    >
+                      {item.label}
+                    </a>
+                    <ul className="sub-menu" style={{ display: isOpen ? 'block' : 'none' }}>
+                      {item.children!.map((child) => (
+                        <li key={`m-${item.label}-${child.label}`}>
+                          <Link to={child.href} onClick={closeMobile}>
+                            {child.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <Link to={item.href!} onClick={closeMobile}>
+                    {item.label}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+          {user ? (
+            <>
+              <li>
+                <Link to={dashboardPath} onClick={closeMobile}>
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="#logout"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void handleLogout();
+                  }}
+                >
+                  Logout
+                </a>
+              </li>
+            </>
+          ) : (
+            <>
+              <li>
+                <Link to="/login" onClick={closeMobile}>
+                  Sign In
+                </Link>
+              </li>
+              <li>
+                <Link to="/register" onClick={closeMobile}>
+                  Sign Up
+                </Link>
+              </li>
+            </>
+          )}
+        </ul>
+      </div>
+    </>
   );
 }
