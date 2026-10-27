@@ -16,7 +16,7 @@ import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validat
 import ExamAttemptPlayer from './ExamAttemptPlayer';
 import { PracticeInsights } from './AiBuildPanel';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
-import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
+import AdminExamGuide, { ExamStepper } from '@/components/dashboard/AdminExamGuide';
 import { FieldHint, SearchField } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpField, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmAction, confirmDelete, showError, showSuccess } from '@/lib/swal';
@@ -2217,6 +2217,7 @@ export function CreateTestPanel() {
   const [deptsLoading, setDeptsLoading] = useState(true);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [topicsLoading, setTopicsLoading] = useState(false);
+  const [formStep, setFormStep] = useState(1);
   const { branches } = useOrganization();
   const withLoader = useDashboardLoader();
   useDashboardLoadingEffect(deptsLoading);
@@ -2226,9 +2227,11 @@ export function CreateTestPanel() {
     watch,
     setValue,
     reset,
+    trigger,
     formState: { errors },
   } = useForm<CreateTestApiFormValues>({
     resolver: yupResolver(createTestApiSchema),
+    shouldUnregister: false,
     defaultValues: {
       title: '',
       duration: '60',
@@ -2479,18 +2482,27 @@ export function CreateTestPanel() {
     });
   };
 
+  const goNext = async () => {
+    const fields: (keyof CreateTestApiFormValues)[] =
+      formStep === 1
+        ? ['departmentId', 'subjectId', 'topicId', 'title']
+        : ['duration', 'passingMarks', 'maxAttempts'];
+    const ok = await trigger(fields);
+    if (ok) setFormStep((step) => Math.min(3, step + 1));
+  };
+
   return (
     <>
       <DashboardPageHeader
         badge="Create Test"
         title="Create Test"
-        subtitle="Pick department → subject → topic, then save a draft and add questions."
+        subtitle="Step through exam details, scoring, and rules. The draft is saved in this browser until you build the test."
       />
       <AdminExamGuide activeStep={2} compact />
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div>
-            <h4>New Exam Draft</h4>
+            <h4>{formStep === 1 ? 'Exam details' : formStep === 2 ? 'Time and scoring' : 'Rules and security'}</h4>
             {draftNote ? <p className="text-muted mb-0">{draftNote}</p> : null}
           </div>
           <Link to={getTestsListPath(user?.roles ?? [])} className="edtp-btn edtp-btn--secondary edtp-btn--md">
@@ -2499,8 +2511,19 @@ export function CreateTestPanel() {
         </div>
         {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
         {message && <p className="form-success sp_bottom_15">{message}</p>}
+        <ExamStepper
+          activeStep={formStep}
+          onStep={(step) => setFormStep(step)}
+          steps={[
+            { step: 1, title: 'Details', desc: 'Subject and title' },
+            { step: 2, title: 'Scoring', desc: 'Time and marks' },
+            { step: 3, title: 'Rules', desc: 'Security settings' },
+          ]}
+        />
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="edtp-form-card">
           <div className="row g-3">
+            {formStep === 1 && (
+            <>
             <div className="col-md-4">
               <label htmlFor="departmentId">Department</label>
               <EdtpSelect
@@ -2566,6 +2589,14 @@ export function CreateTestPanel() {
               <input id="examTitle" className={inputClassName('register__input', !!errors.title)} {...register('title')} />
               <FormError message={errors.title?.message} />
             </div>
+            <div className="col-12">
+              <label htmlFor="aboutExam">Description (optional)</label>
+              <textarea id="aboutExam" rows={2} className={inputClassName('register__input', !!errors.description)} {...register('description')} />
+            </div>
+            </>
+            )}
+            {formStep === 2 && (
+            <>
             <div className="col-md-6">
               <label htmlFor="duration">Duration (minutes)</label>
               <input
@@ -2625,10 +2656,6 @@ export function CreateTestPanel() {
               </small>
             </div>
             <div className="col-12">
-              <label htmlFor="aboutExam">Description (optional)</label>
-              <textarea id="aboutExam" rows={2} className={inputClassName('register__input', !!errors.description)} {...register('description')} />
-            </div>
-            <div className="col-12">
               <label htmlFor="instructions">Exam instructions</label>
               <textarea
                 id="instructions"
@@ -2638,6 +2665,9 @@ export function CreateTestPanel() {
               />
               <FormError message={errors.instructions?.message} />
             </div>
+            </>
+            )}
+            {formStep === 3 && (
             <div className="col-12">
               <h5 className="mb-2">Exam rules</h5>
               <div className="row g-2">
@@ -2727,8 +2757,20 @@ export function CreateTestPanel() {
                 </div>
               </div>
             </div>
-            <div className="col-12">
-              <button type="submit" className="default__button auth-submit-btn">Save &amp; Build Test</button>
+            )}
+            <div className="col-12 d-flex flex-wrap justify-content-between gap-2">
+              {formStep > 1 ? (
+                <button type="button" className="edtp-btn edtp-btn--secondary edtp-btn--md" onClick={() => setFormStep((step) => step - 1)}>
+                  Back
+                </button>
+              ) : <span />}
+              {formStep < 3 ? (
+                <button type="button" className="default__button auth-submit-btn" onClick={() => void goNext()}>
+                  Next
+                </button>
+              ) : (
+                <button type="submit" className="default__button auth-submit-btn">Save &amp; Build Test</button>
+              )}
             </div>
           </div>
         </form>
