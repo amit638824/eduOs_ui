@@ -157,7 +157,7 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
   width: 100%;
 }
 
@@ -179,6 +179,7 @@
   flex-direction: column;
   gap: 16px;
   min-width: 0;
+  min-height: 100%;
 }
 
 /* ── Welcome Hero Banner ── */
@@ -455,22 +456,31 @@
   color: var(--db-muted, #94a3b8);
 }
 
-/* Chart and recent tests sit on one row */
+/* Performance Overview + Recent Tests: one row, equal height, full content width */
 .mad-insight-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.9fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(320px, 0.9fr);
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  width: 100%;
 }
 
 .mad-insight-row .mad-chart-card,
 .mad-insight-row .mad-tests-card {
   min-width: 0;
-  height: auto;
+  height: 100%;
+  margin: 0;
 }
 
 .mad-insight-row .mad-chart-svg {
+  width: 100%;
   min-width: 0;
+  height: 220px;
+}
+
+.mad-insight-row .mad-test-name,
+.mad-insight-row .mad-test-meta {
+  white-space: normal;
 }
 
 @media (max-width: 1100px) {
@@ -856,12 +866,26 @@
   border-radius: 16px;
   padding: 22px 20px;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  align-self: stretch;
+}
+
+.mad-activity-card .mad-card-header {
+  flex-shrink: 0;
 }
 
 .mad-activity-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
 }
 
 .mad-act-row {

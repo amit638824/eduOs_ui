@@ -332,9 +332,88 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               <AdminExamGuide compact={false} />
             </div>
           </section>
+        </div>
 
-          <div className="mad-insight-row">
-          {/* Performance Overview Chart Card */}
+        {/* RIGHT COLUMN */}
+        <div className="mad-col-side">
+          {/* Quick Actions Card */}
+          <div className="mad-quick-actions-card">
+            <div className="mad-qa-header">
+              <i className="icofont-flash" />
+              <h3>Quick Actions</h3>
+            </div>
+
+            <Link to="/dashboard/create-test" className="mad-qa-primary-btn">
+              <span className="qa-btn-content">
+                <span className="qa-plus">+</span> Create New Test
+              </span>
+              <span className="qa-arrow">›</span>
+            </Link>
+
+            <div className="mad-qa-list">
+              <Link to="/dashboard/admin-question-bank" className="mad-qa-item">
+                <div className="qa-item-left">
+                  <span className="qa-item-icon">
+                    <i className="icofont-edit" />
+                  </span>
+                  <span className="qa-item-text">Add Question</span>
+                </div>
+                <span className="qa-item-chevron">›</span>
+              </Link>
+
+              <Link to="/dashboard/admin-question-bank" className="mad-qa-item">
+                <div className="qa-item-left">
+                  <span className="qa-item-icon">
+                    <i className="icofont-upload-alt" />
+                  </span>
+                  <span className="qa-item-text">Import Questions (CSV)</span>
+                </div>
+                <span className="qa-item-chevron">›</span>
+              </Link>
+
+              <Link to="/dashboard/admin-reviews" className="mad-qa-item">
+                <div className="qa-item-left">
+                  <span className="qa-item-icon">
+                    <i className="icofont-chart-pie" />
+                  </span>
+                  <span className="qa-item-text">View Reports</span>
+                </div>
+                <span className="qa-item-chevron">›</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Recent Activity Card */}
+          <div className="mad-activity-card">
+            <div className="mad-card-header">
+              <div className="mad-card-title">
+                <i className="icofont-history" />
+                <h3>Recent Activity</h3>
+              </div>
+              <Link to="/dashboard/admin-audit" className="mad-link-viewall">
+                View All
+              </Link>
+            </div>
+
+            <div className="mad-activity-list">
+              {recentActivities.map((act) => (
+                <div key={act.id} className="mad-act-row">
+                  <div className={`mad-act-icon-box ${act.iconClass}`}>
+                    <i className={act.icon} />
+                  </div>
+                  <div className="mad-act-info">
+                    <h5 className="mad-act-action">{act.title}</h5>
+                    <span className="mad-act-sub">{act.subtitle}</span>
+                    <span className="mad-act-time">{act.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="mad-insight-row">
           <div className="mad-chart-card">
             <div className="mad-chart-header">
               <div className="mad-chart-title-area">
@@ -488,86 +567,6 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               ))}
             </div>
           </div>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className="mad-col-side">
-          {/* Quick Actions Card */}
-          <div className="mad-quick-actions-card">
-            <div className="mad-qa-header">
-              <i className="icofont-flash" />
-              <h3>Quick Actions</h3>
-            </div>
-
-            <Link to="/dashboard/create-test" className="mad-qa-primary-btn">
-              <span className="qa-btn-content">
-                <span className="qa-plus">+</span> Create New Test
-              </span>
-              <span className="qa-arrow">›</span>
-            </Link>
-
-            <div className="mad-qa-list">
-              <Link to="/dashboard/admin-question-bank" className="mad-qa-item">
-                <div className="qa-item-left">
-                  <span className="qa-item-icon">
-                    <i className="icofont-edit" />
-                  </span>
-                  <span className="qa-item-text">Add Question</span>
-                </div>
-                <span className="qa-item-chevron">›</span>
-              </Link>
-
-              <Link to="/dashboard/admin-question-bank" className="mad-qa-item">
-                <div className="qa-item-left">
-                  <span className="qa-item-icon">
-                    <i className="icofont-upload-alt" />
-                  </span>
-                  <span className="qa-item-text">Import Questions (CSV)</span>
-                </div>
-                <span className="qa-item-chevron">›</span>
-              </Link>
-
-              <Link to="/dashboard/admin-reviews" className="mad-qa-item">
-                <div className="qa-item-left">
-                  <span className="qa-item-icon">
-                    <i className="icofont-chart-pie" />
-                  </span>
-                  <span className="qa-item-text">View Reports</span>
-                </div>
-                <span className="qa-item-chevron">›</span>
-              </Link>
-            </div>
-          </div>
-
-          {/* Recent Activity Card */}
-          <div className="mad-activity-card">
-            <div className="mad-card-header">
-              <div className="mad-card-title">
-                <i className="icofont-history" />
-                <h3>Recent Activity</h3>
-              </div>
-              <Link to="/dashboard/admin-audit" className="mad-link-viewall">
-                View All
-              </Link>
-            </div>
-
-            <div className="mad-activity-list">
-              {recentActivities.map((act) => (
-                <div key={act.id} className="mad-act-row">
-                  <div className={`mad-act-icon-box ${act.iconClass}`}>
-                    <i className={act.icon} />
-                  </div>
-                  <div className="mad-act-info">
-                    <h5 className="mad-act-action">{act.title}</h5>
-                    <span className="mad-act-sub">{act.subtitle}</span>
-                    <span className="mad-act-time">{act.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Bottom Promotional / Feature Banner */}
