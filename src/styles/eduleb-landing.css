@@ -1161,19 +1161,20 @@ body.eduleb-page #navigation .eduleb-signin-btn {
   margin: 0 !important;
 }
 
-/* —— MindSprint-style login (topnav stays) —— */
+/* —— MindSprint-style login (topnav untouched) —— */
 .ms-login-page {
   position: relative;
   isolation: isolate;
   min-height: 100vh !important;
-  padding: 0 !important;
+  padding: 100px 20px 40px !important;
   margin: 0 !important;
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
   display: flex !important;
   align-items: center !important;
-  background: #f4f7fb !important;
+  justify-content: center !important;
+  background: #f8fbff !important;
 }
 
 body.eduleb-login-route .eduleb-main,
@@ -1181,6 +1182,7 @@ body.eduleb-login-route .main_wrapper {
   min-height: 100vh !important;
   padding-bottom: 0 !important;
   margin-bottom: 0 !important;
+  background: #f8fbff !important;
 }
 
 .ms-login-blobs {
@@ -1191,114 +1193,135 @@ body.eduleb-login-route .main_wrapper {
   overflow: hidden;
 }
 
-.ms-login-blob {
+/* Left side organic ambient leaves matching reference */
+.ms-login-leaf-art {
   position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: min(280px, 26vw);
+  height: min(650px, 85vh);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Top-right dotted grid matrix matching reference */
+.ms-login-dots-grid {
+  position: absolute;
+  top: 84px;
+  right: 6%;
+  width: 150px;
+  height: 110px;
+  z-index: 0;
+  background-image: radial-gradient(#93c5fd 1.8px, transparent 1.8px);
+  background-size: 16px 16px;
+  opacity: 0.85;
+}
+
+/* Bottom-right soft circular ambient glow */
+.ms-login-ambient-glow {
+  position: absolute;
+  right: -120px;
+  bottom: -120px;
+  width: 440px;
+  height: 440px;
   border-radius: 50%;
-  filter: blur(2px);
-}
-
-.ms-login-blob--tl {
-  width: 360px;
-  height: 360px;
-  top: -140px;
-  left: -140px;
-  border-radius: 42% 58% 55% 45% / 48% 42% 58% 52%;
-  background: rgba(99, 140, 255, 0.18);
-  filter: blur(8px);
-}
-
-.ms-login-blob--br {
-  width: 420px;
-  height: 420px;
-  right: -160px;
-  bottom: -180px;
-  border-radius: 55% 45% 48% 52% / 42% 58% 42% 58%;
-  background: rgba(147, 112, 255, 0.12);
-  filter: blur(10px);
-}
-
-.ms-login-dots {
-  position: absolute;
-  top: 90px;
-  right: 8%;
-  width: 90px;
-  height: 90px;
-  opacity: 0.35;
-  background-image: radial-gradient(#3861fb 1.4px, transparent 1.5px);
-  background-size: 14px 14px;
+  background: radial-gradient(circle, rgba(191, 219, 254, 0.45) 0%, rgba(224, 231, 255, 0.2) 45%, transparent 70%);
+  filter: blur(36px);
+  pointer-events: none;
+  z-index: 0;
 }
 
 .ms-login-wrap {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 1180px;
-  padding-top: 88px;
-  padding-bottom: 36px;
+  max-width: 1140px;
+  padding: 0;
+  margin: 0 auto;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .ms-login-grid {
   display: grid;
-  grid-template-columns: 1.05fr 0.95fr;
-  gap: 40px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(0, 470px);
+  gap: 52px;
   align-items: center;
+  justify-content: center;
+  width: 100%;
 }
 
 .ms-login-promo {
-  padding: 12px 8px 12px 4px;
+  padding: 10px 0;
 }
 
 .ms-login-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 28px;
+  gap: 14px;
+  margin-bottom: 24px;
 }
 
-.ms-login-brand img {
+.ms-brand-logo-wrap {
   width: 48px;
   height: 48px;
-  object-fit: contain;
   border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  flex-shrink: 0;
+}
+
+.ms-brand-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .ms-login-brand strong {
   display: block;
-  font-size: 1.15rem;
+  font-size: 1.35rem;
   font-weight: 800;
   color: #0f172a;
   line-height: 1.2;
   font-family: 'Roboto', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .ms-login-brand span {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.84rem;
   color: #64748b;
   margin-top: 2px;
+  font-weight: 500;
 }
 
-.ms-login-promo h1 {
-  margin: 0 0 12px !important;
-  font-size: clamp(1.9rem, 3vw, 2.45rem) !important;
+.ms-login-main-title {
+  margin: 0 0 14px !important;
+  font-size: clamp(2.35rem, 3.8vw, 3.1rem) !important;
   font-weight: 800 !important;
   color: #0f172a !important;
-  line-height: 1.2 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.03em !important;
   font-family: 'Roboto', sans-serif !important;
 }
 
-.ms-login-promo h1 em {
-  font-style: normal !important;
-  color: #3861fb !important;
+.ms-highlight-blue {
+  color: #2563eb !important;
 }
 
 .ms-login-lead {
   margin: 0 0 28px !important;
-  max-width: 42ch;
-  font-size: 1.02rem !important;
-  line-height: 1.65 !important;
+  max-width: 44ch;
+  font-size: 0.98rem !important;
+  line-height: 1.6 !important;
   color: #64748b !important;
 }
 
@@ -1308,29 +1331,29 @@ body.eduleb-login-route .main_wrapper {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 .ms-login-features li {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 16px;
 }
 
 .ms-login-feat-icon {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .ms-login-feat-icon--purple {
-  background: #ede9fe;
-  color: #7c3aed !important;
+  background: #f3e8ff;
+  color: #9333ea !important;
 }
 
 .ms-login-feat-icon--green {
@@ -1348,7 +1371,8 @@ body.eduleb-login-route .main_wrapper {
   font-size: 0.98rem;
   font-weight: 700;
   color: #0f172a;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  font-family: 'Roboto', sans-serif;
 }
 
 .ms-login-features li span:last-child,
@@ -1356,237 +1380,90 @@ body.eduleb-login-route .main_wrapper {
   display: block;
   font-size: 0.86rem;
   color: #64748b;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-/* Mini desk illustration: plant + books + laptop + paper */
+/* Desk scene illustration */
 .ms-login-scene {
   position: relative;
-  height: 150px;
+  width: 100%;
+  max-width: 440px;
   margin-top: 10px;
-  max-width: 360px;
 }
 
-.ms-login-plant {
-  position: absolute;
-  left: 8px;
-  bottom: 8px;
-  width: 36px;
-  height: 56px;
-}
-
-.ms-login-plant-pot {
-  position: absolute;
-  left: 6px;
-  bottom: 0;
-  width: 24px;
-  height: 18px;
-  background: linear-gradient(180deg, #fdba74, #ea580c);
-  border-radius: 2px 2px 8px 8px;
-}
-
-.ms-login-plant-leaf {
-  position: absolute;
-  width: 16px;
-  height: 28px;
-  border-radius: 50% 0;
-  background: #22c55e;
-  bottom: 16px;
-}
-
-.ms-login-plant-leaf--l {
-  left: 4px;
-  transform: rotate(-28deg);
-}
-
-.ms-login-plant-leaf--r {
-  left: 14px;
-  background: #4ade80;
-  transform: rotate(28deg) scaleX(-1);
-}
-
-.ms-login-books {
-  position: absolute;
-  left: 52px;
-  bottom: 10px;
-  width: 54px;
-  height: 42px;
-}
-
-.ms-login-book {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 14px;
-  border-radius: 3px;
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.12);
-}
-
-.ms-login-book--1 {
-  bottom: 0;
-  background: linear-gradient(90deg, #2563eb, #60a5fa);
-}
-
-.ms-login-book--2 {
-  bottom: 16px;
-  background: linear-gradient(90deg, #1d4ed8, #3b82f6);
-  transform: rotate(-4deg);
-}
-
-.ms-login-laptop {
-  position: absolute;
-  left: 118px;
-  bottom: 8px;
-  width: 150px;
-}
-
-.ms-login-laptop-screen {
-  height: 88px;
-  border-radius: 10px 10px 4px 4px;
-  background: linear-gradient(160deg, #1e3a8a, #2563eb);
-  padding: 10px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
-}
-
-.ms-login-laptop-screen span {
+.ms-login-vector-art {
+  width: 100%;
+  height: auto;
   display: block;
-  border-radius: 5px;
-  background: rgba(255, 255, 255, 0.18);
+  overflow: visible;
 }
 
-.ms-login-laptop-screen span:first-child {
-  grid-column: 1 / -1;
-  height: 18px;
-  background: rgba(255, 255, 255, 0.28);
-}
-
-.ms-login-laptop-base {
-  height: 8px;
-  margin: 0 -8px;
-  border-radius: 0 0 8px 8px;
-  background: #cbd5e1;
-}
-
-.ms-login-paper {
-  position: absolute;
-  right: 0;
-  bottom: 58px;
-  width: 92px;
-  background: #fff;
-  border-radius: 10px;
-  padding: 12px 10px 10px;
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.12);
-  border: 1px solid #e2e8f0;
-  text-align: center;
-}
-
-.ms-login-paper i {
-  display: block;
-  color: #3861fb !important;
-  font-size: 16px;
-  margin-bottom: 4px;
-}
-
-.ms-login-paper strong {
-  display: block;
-  font-size: 0.72rem;
-  color: #0f172a;
-  margin-bottom: 8px;
-}
-
-.ms-login-paper em {
-  display: block;
-  height: 5px;
-  border-radius: 999px;
-  background: #e2e8f0;
-  margin: 0 auto 4px;
-  font-style: normal;
-  width: 78%;
-}
-
-.ms-login-paper em:nth-of-type(2) {
-  width: 62%;
-}
-
-.ms-login-paper em:nth-of-type(3) {
-  width: 70%;
-}
-
+/* Right Card with stable fixed minimum height */
 .ms-login-card {
-  background: #fff;
-  border-radius: 22px;
-  border: 1px solid #e8eef7;
-  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.08);
-  padding: 36px 34px 28px;
-  max-width: 460px;
+  background: #ffffff !important;
+  border-radius: 24px !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 24px 60px -12px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.5) !important;
+  padding: 38px 40px 32px !important;
+  max-width: 470px;
   width: 100%;
   margin-left: auto;
-}
-
-.ms-login-card-hello {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: #3861fb;
-  font-weight: 700;
-  font-size: 0.92rem;
-  margin-bottom: 10px;
-}
-
-.ms-login-card-hello i {
-  color: #3861fb !important;
+  box-sizing: border-box;
+  min-height: 480px;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
 }
 
 .ms-login-card h2 {
   margin: 0 0 8px !important;
-  font-size: 1.55rem !important;
+  font-size: 1.68rem !important;
   font-weight: 800 !important;
   color: #0f172a !important;
+  letter-spacing: -0.025em !important;
   font-family: 'Roboto', sans-serif !important;
 }
 
 .ms-login-card-sub {
   margin: 0 0 22px !important;
   color: #64748b !important;
-  font-size: 0.95rem !important;
+  font-size: 0.88rem !important;
   line-height: 1.55 !important;
 }
 
 .ms-login-form {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .ms-login-field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
   text-align: left;
 }
 
 .ms-login-field label {
-  font-size: 0.88rem;
+  font-size: 0.86rem;
   font-weight: 600;
-  color: #1e293b;
+  color: #0f172a;
   margin: 0;
+  font-family: 'Roboto', sans-serif;
 }
 
 .ms-login-input-wrap {
   position: relative;
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
-.ms-login-input-wrap > i {
+.ms-login-input-wrap > .ms-input-icon {
   position: absolute;
-  left: 14px;
-  z-index: 1;
+  left: 16px;
+  z-index: 2;
   color: #94a3b8 !important;
-  font-size: 15px;
   pointer-events: none;
 }
 
@@ -1594,36 +1471,81 @@ body.eduleb-login-route .main_wrapper {
 .ms-login-input-wrap .ms-login-input,
 .ms-login-input-wrap input.ms-login-input {
   width: 100% !important;
+  height: 48px !important;
   box-sizing: border-box !important;
   border: 1.5px solid #e2e8f0 !important;
   border-radius: 12px !important;
-  padding: 13px 14px 13px 42px !important;
-  font-size: 0.95rem !important;
+  padding: 0 16px 0 44px !important;
+  font-size: 0.92rem !important;
   font-family: 'Roboto', sans-serif !important;
   color: #0f172a !important;
-  background: #f8fafc !important;
+  background: #ffffff !important;
   box-shadow: none !important;
   outline: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .ms-login-input-wrap--pass .password-input-wrap {
   width: 100%;
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.ms-login-input-wrap--pass .ms-login-input {
-  padding-right: 46px !important;
+.ms-login-input-wrap--pass .password-input-wrap .ms-login-input {
+  padding-right: 44px !important;
+}
+
+.ms-login-input-wrap--pass .password-input-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  transition: color 0.15s ease;
+}
+
+.ms-login-input-wrap--pass .password-input-toggle:hover {
+  color: #2563eb;
 }
 
 .ms-login-input:focus,
 .ms-login-input-wrap input.ms-login-input:focus {
-  border-color: #3861fb !important;
+  border-color: #3b82f6 !important;
   background: #fff !important;
-  box-shadow: 0 0 0 4px rgba(56, 97, 251, 0.12) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12) !important;
 }
 
 .ms-login-input.input-error {
   border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+/* Reserved error slot: fixes card height so it NEVER expands or jumps */
+.ms-error-slot {
+  height: 18px;
+  min-height: 18px;
+  max-height: 18px;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.ms-error-text {
+  font-size: 0.8rem;
+  color: #ef4444;
+  line-height: 1.2;
+  font-weight: 500;
+  display: block;
 }
 
 .ms-login-meta {
@@ -1632,6 +1554,7 @@ body.eduleb-login-route .main_wrapper {
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
+  margin-top: 2px;
 }
 
 .ms-login-remember {
@@ -1639,55 +1562,56 @@ body.eduleb-login-route .main_wrapper {
   align-items: center;
   gap: 8px;
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 500;
-  color: #334155;
+  color: #475569;
   cursor: pointer;
 }
 
 .ms-login-remember input {
   width: 16px;
   height: 16px;
-  accent-color: #3861fb;
+  accent-color: #2563eb;
+  cursor: pointer;
+  border-radius: 4px;
 }
 
 .ms-login-forgot {
-  font-size: 0.9rem !important;
+  font-size: 0.86rem !important;
   font-weight: 600 !important;
-  color: #3861fb !important;
+  color: #2563eb !important;
   text-decoration: none !important;
 }
 
 .ms-login-forgot:hover {
-  color: #f26b65 !important;
+  color: #1d4ed8 !important;
+  text-decoration: underline !important;
 }
 
 .ms-login-btn {
   width: 100%;
-  min-height: 50px;
+  height: 48px;
   border: none;
   border-radius: 12px !important;
-  background: linear-gradient(90deg, #5b8cff 0%, #4f6ef7 45%, #7c5cff 100%) !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
   color: #fff !important;
-  font-size: 1rem !important;
+  font-size: 0.98rem !important;
   font-weight: 700 !important;
   font-family: 'Roboto', sans-serif !important;
   cursor: pointer;
-  box-shadow: 0 12px 26px rgba(79, 110, 247, 0.32);
-  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
-}
-
-.ms-login-copy {
-  margin: 28px 0 0 !important;
-  text-align: center;
-  font-size: 0.8rem !important;
-  color: #94a3b8 !important;
+  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.38) !important;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
 }
 
 .ms-login-btn:hover:not(:disabled) {
-  filter: brightness(1.04);
+  filter: brightness(1.03);
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(56, 97, 251, 0.34);
+  box-shadow: 0 14px 28px -4px rgba(37, 99, 235, 0.48) !important;
 }
 
 .ms-login-btn:disabled {
@@ -1700,37 +1624,37 @@ body.eduleb-login-route .main_wrapper {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 4px 0 0 !important;
+  margin: 16px 0 0 !important;
   font-size: 0.8rem !important;
-  color: #94a3b8 !important;
+  color: #64748b !important;
   text-align: center;
 }
 
-.ms-login-secure i {
-  color: #94a3b8 !important;
-  font-size: 13px;
+.ms-login-secure svg {
+  color: #64748b !important;
+  flex-shrink: 0;
 }
 
 .ms-login-error {
   margin: 0;
-  padding: 12px 14px;
+  padding: 10px 14px;
   border-radius: 10px;
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #991b1b;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
 }
 
 .ms-login-hint {
   margin: 0;
   color: #64748b;
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 991px) {
   .ms-login-grid {
     grid-template-columns: 1fr;
-    gap: 28px;
+    gap: 36px;
   }
 
   .ms-login-card {
@@ -1743,12 +1667,15 @@ body.eduleb-login-route .main_wrapper {
 }
 
 @media (max-width: 575px) {
-  .ms-login-wrap {
-    padding-top: 96px;
+  .ms-login-page {
+    padding-top: 90px !important;
+    padding-bottom: 30px !important;
   }
 
   .ms-login-card {
-    padding: 28px 20px 24px;
+    padding: 28px 20px 24px !important;
+    border-radius: 18px !important;
+    min-height: auto;
   }
 }
 
