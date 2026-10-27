@@ -622,8 +622,11 @@ export function QuestionBankPanel() {
       )}
       <AdminExamGuide activeStep={1} compact />
       <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title">
-          <h4>{editingId ? 'Edit Question' : 'Add Question'}</h4>
+        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <h4 className="mb-0">{editingId ? 'Edit Question' : '1. Add a question'}</h4>
+          <Link to="/dashboard/create-test" className="edtp-btn edtp-btn--primary edtp-btn--md">
+            Next: Create the exam
+          </Link>
           {editingId && (
             <button type="button" className="dashboard__small__btn__2" onClick={resetQuestionFields}>
               Cancel edit
@@ -1126,21 +1129,6 @@ export function TestsListPanel({ title }: { title: string }) {
 
   useDashboardLoadingEffect(loading);
 
-  const publish = async (id: string) => {
-    setError('');
-    await withLoader(async () => {
-      try {
-        await examinationService.publishTest(id, { mode: 'live_now' });
-        showSuccess('Published', 'Test is now live.');
-        load();
-      } catch (err) {
-        const msg = parseApiError(err);
-        setError(msg);
-        showError('Publish failed', msg);
-      }
-    });
-  };
-
   const startEdit = (t: ExamTest) => {
     setEditingId(t.id);
     setEditTitle(t.title);
@@ -1268,7 +1256,7 @@ export function TestsListPanel({ title }: { title: string }) {
       <DashboardPageHeader
         badge="Step 3–5"
         title={title}
-        subtitle="Build draft tests, publish when ready, then assign students so they can attempt."
+        subtitle="A draft is not live yet. Press Continue setup, add questions, publish, then assign students."
       />
       <AdminExamGuide activeStep={3} compact />
       <div className="dashboard__content__wraper">
@@ -1486,6 +1474,16 @@ export function TestsListPanel({ title }: { title: string }) {
                   <td>{t.total_marks ?? '—'}</td>
                   <td>
                     <EdtpRowActions>
+                      {t.status === 'draft' && (
+                        <Link to={`/dashboard/test-builder/${t.id}?step=build`} className="edtp-btn edtp-btn--primary edtp-btn--sm">
+                          Continue setup
+                        </Link>
+                      )}
+                      {(t.status === 'scheduled' || t.status === 'live') && (
+                        <Link to={`/dashboard/test-builder/${t.id}?step=assign`} className="edtp-btn edtp-btn--primary edtp-btn--sm">
+                          Assign students
+                        </Link>
+                      )}
                       <EdtpBtn
                         variant="secondary"
                         disabled={t.status === 'completed'}
@@ -1496,29 +1494,6 @@ export function TestsListPanel({ title }: { title: string }) {
                       >
                         Edit
                       </EdtpBtn>
-                      {(t.status === 'draft' || t.status === 'scheduled') && (
-                        <>
-                          <Link
-                            to={`/dashboard/test-builder/${t.id}`}
-                            className="edtp-btn edtp-btn--secondary edtp-btn--sm"
-                          >
-                            {t.status === 'draft' ? 'Build / Publish' : 'Manage'}
-                          </Link>
-                          {t.status === 'draft' && (
-                            <EdtpBtn variant="success" onClick={() => void publish(t.id)}>
-                              Publish Now
-                            </EdtpBtn>
-                          )}
-                        </>
-                      )}
-                      {t.status === 'live' && (
-                        <Link
-                          to={`/dashboard/test-builder/${t.id}`}
-                          className="edtp-btn edtp-btn--secondary edtp-btn--sm"
-                        >
-                          Manage & Assign
-                        </Link>
-                      )}
                       <EdtpBtn variant="danger" onClick={() => void remove(t.id, t.title)}>
                         Delete
                       </EdtpBtn>
@@ -2496,9 +2471,8 @@ export function CreateTestPanel() {
       <DashboardPageHeader
         badge="Create Test"
         title="Create Test"
-        subtitle="Step through exam details, scoring, and rules. The draft is saved in this browser until you build the test."
+        subtitle="This is step 2. Fill Details, then Scoring, then Rules. Your typing is kept in this browser until you save."
       />
-      <AdminExamGuide activeStep={2} compact />
       <div className="dashboard__content__wraper">
         <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
           <div>

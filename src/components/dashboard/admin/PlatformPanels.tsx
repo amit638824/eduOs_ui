@@ -8,7 +8,7 @@ import { FormError, PasswordInput } from '@/components/ui/FormField';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
-import AdminExamGuide, { ExamStepper } from '@/components/dashboard/AdminExamGuide';
+import { ExamStepper } from '@/components/dashboard/AdminExamGuide';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { getTestsListPath, isSuperAdmin } from '@/utils/dashboardRole';
 import { SearchField } from '@/components/ui/FieldHint';
@@ -1634,8 +1634,6 @@ export function TestBuilderPanel() {
     if (isPublished) setPhase('assign');
   }, [isPublished, test, params]);
 
-  const activeStep = phase === 'assign' ? 5 : phase === 'publish' ? 4 : 3;
-
   const qSearch = questionSearch.trim().toLowerCase();
   const sSearch = studentSearch.trim().toLowerCase();
   const aSearch = assignedSearch.trim().toLowerCase();
@@ -1912,7 +1910,6 @@ export function TestBuilderPanel() {
           <Link to={testsListPath} className="dashboard__small__btn__2">← Back to Tests</Link>
         </div>
       </div>
-      <AdminExamGuide activeStep={activeStep} testId={testId} compact />
       <ExamStepper
         activeStep={phase === 'assign' ? 3 : phase === 'publish' ? 2 : 1}
         canOpen={(step) => {
@@ -1932,6 +1929,11 @@ export function TestBuilderPanel() {
           { step: 3, title: 'Assign', desc: 'Choose students' },
         ]}
       />
+      <p className="exam-stepper__help">
+        {phase === 'build' && 'Tick the questions, press Submit Selected, then Continue to Publish.'}
+        {phase === 'publish' && 'Check the list. Publish now, or pick a start time. Students cannot see a draft.'}
+        {phase === 'assign' && 'Choose the students, then press Assign Selected. They will see this exam in My Tests.'}
+      </p>
       <div className="dashboard__content__wraper">
         {error && <p className="login__error sp_bottom_15">{error}</p>}
         {message && <p className="form-success sp_bottom_15">{message}</p>}

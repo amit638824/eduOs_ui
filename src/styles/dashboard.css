@@ -1616,6 +1616,15 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   color: var(--db-muted);
 }
 
+.exam-stepper__help {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--db-accent-soft);
+  color: var(--db-text);
+  font-size: 0.9rem;
+}
+
 .sca-exam-guide__steps {
   display: flex;
   list-style: none;
