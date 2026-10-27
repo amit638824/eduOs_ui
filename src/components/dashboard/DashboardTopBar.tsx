@@ -56,7 +56,15 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
         >
           <HamburgerIcon open={menuOpen} />
         </button>
-        <DashboardBreadcrumb />
+
+        <div className="sca-db-search">
+          <i className="icofont-search" />
+          <input
+            type="text"
+            placeholder="Search tests, students, or topics..."
+            aria-label="Search dashboard"
+          />
+        </div>
       </div>
 
       <div className="sca-db-header__center">
@@ -82,7 +90,12 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
         </button>
         <Link to={`/dashboard/${role}-profile`} className="sca-db-user">
           <img src={profile.image} alt="" className="sca-db-user__avatar" />
-          <span className="sca-db-user__name">{profile.name}</span>
+          <div className="sca-db-user__info">
+            <span className="sca-db-user__name">{profile.name}</span>
+            <span className="sca-db-user__role">
+              {role === 'admin' ? 'Administrator' : role === 'teacher' ? 'Faculty' : 'Student'}
+            </span>
+          </div>
         </Link>
       </div>
     </header>
