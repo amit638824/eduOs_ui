@@ -1,0 +1,33 @@
+{
+  "name": "Mindsprint",
+  "short_name": "Mindsprint",
+  "description": "Mindsprint is an EdTech online exam and e-assessment platform for testing, quiz, mock test, CBT, test prep, proctoring, certification, question bank, skill test, screening, aptitude, evaluation, grading, e-learning, and LMS. Run a school online exam, university assessment, student mock test, coaching mock test, recruitment skill test, training assessment, classroom quiz, or tutor online test.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#5F2DED",
+  "icons": [
+    {
+      "src": "/img/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any"
+    },
+    {
+      "src": "/img/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable"
+    }
+  ]
+}
