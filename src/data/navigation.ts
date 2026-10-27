@@ -45,10 +45,7 @@ export interface AccountLink {
 
 export function buildAccountLinks(user: ApiUser | null): AccountLink[] {
   if (!user) {
-    return [
-      { label: 'Login', href: '/login' },
-      { label: 'Create Account', href: '/register' },
-    ];
+    return [{ label: 'Login', href: '/login' }];
   }
 
   const dashboardRoot = getDefaultDashboardPath(user.roles);

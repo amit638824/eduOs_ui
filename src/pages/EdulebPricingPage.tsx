@@ -66,7 +66,7 @@ export default function EdulebPricingPage() {
                       </li>
                     ))}
                   </ul>
-                  <Link to="/register" className="btn_one">
+                  <Link to="/login" className="btn_one">
                     Get Started <i className="ti-arrow-top-right" />
                   </Link>
                 </div>

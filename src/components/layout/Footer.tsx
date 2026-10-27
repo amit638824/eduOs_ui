@@ -50,10 +50,10 @@ export default function Footer() {
                     <Link to="/about">About us</Link>
                   </li>
                   <li>
-                    <Link to="/register">Instructor Registration</Link>
+                    <Link to="/login">Instructor Login</Link>
                   </li>
                   <li>
-                    <Link to="/register">Become A Teacher</Link>
+                    <Link to="/login">Become A Teacher</Link>
                   </li>
                   <li>
                     <Link to="/about">All Instrustors</Link>

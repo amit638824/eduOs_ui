@@ -138,14 +138,9 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                <>
-                  <Link to="/login" className="header-btn">
-                    Sign In
-                  </Link>
-                  <Link to="/register" className="btn_one eduleb-signup-btn">
-                    Sign Up
-                  </Link>
-                </>
+                <Link to="/login" className="btn_one eduleb-signin-btn">
+                  Sign In
+                </Link>
               )}
             </div>
 
@@ -225,18 +220,11 @@ export default function Header() {
               </li>
             </>
           ) : (
-            <>
-              <li>
-                <Link to="/login" onClick={closeMobile}>
-                  Sign In
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" onClick={closeMobile}>
-                  Sign Up
-                </Link>
-              </li>
-            </>
+            <li>
+              <Link to="/login" onClick={closeMobile}>
+                Sign In
+              </Link>
+            </li>
           )}
         </ul>
       </div>

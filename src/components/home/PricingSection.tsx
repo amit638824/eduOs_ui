@@ -14,7 +14,7 @@ export default function PricingSection() {
       ],
       popular: false,
       cta: 'Get Started',
-      href: '/register',
+      href: '/login',
     },
     {
       name: 'Student',
@@ -28,7 +28,7 @@ export default function PricingSection() {
       ],
       popular: true,
       cta: 'Get Started',
-      href: '/register',
+      href: '/login',
     },
     {
       name: 'Institution',

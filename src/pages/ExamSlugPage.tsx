@@ -42,7 +42,7 @@ export default function ExamSlugPage() {
                     {exam.originalPrice && <del>{exam.originalPrice}</del>}
                   </div>
                   <div className="course__details__btn">
-                    <Link className="default__button" to="/register">
+                    <Link className="default__button" to="/login">
                       Enroll Now
                     </Link>
                     <Link className="default__button" to="/exams">

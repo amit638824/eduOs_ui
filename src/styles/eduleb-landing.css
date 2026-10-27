@@ -1177,6 +1177,62 @@ body.eduleb-login-route #navigation.eduleb-topbar::before {
   display: none !important;
 }
 
+/* —— Contact form —— */
+body.eduleb-page .eduleb-contact .contact_info h4 {
+  font-size: 1.5rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+  margin-bottom: 14px !important;
+}
+
+body.eduleb-page .eduleb-contact-form .form-group {
+  margin-bottom: 16px;
+}
+
+body.eduleb-page .eduleb-contact-input,
+body.eduleb-page .eduleb-contact-form .form-control {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  border: 1.5px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  padding: 14px 16px !important;
+  font-size: 0.98rem !important;
+  font-family: 'Roboto', sans-serif !important;
+  color: #0f172a !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+body.eduleb-page .eduleb-contact-input:focus,
+body.eduleb-page .eduleb-contact-form .form-control:focus {
+  border-color: #3861fb !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 4px rgba(56, 97, 251, 0.12) !important;
+}
+
+body.eduleb-page .eduleb-contact-textarea,
+body.eduleb-page .eduleb-contact-form textarea.form-control {
+  min-height: 160px !important;
+  max-height: 160px !important;
+  height: 160px !important;
+  resize: none !important;
+  overflow-y: auto !important;
+}
+
+body.eduleb-page .eduleb-contact-btn {
+  border-radius: 12px !important;
+  padding: 13px 26px !important;
+  display: inline-flex !important;
+  align-items: center;
+  gap: 8px;
+}
+
+body.eduleb-page #navigation .eduleb-signin-btn {
+  margin: 0 !important;
+}
+
 /* —— MindSprint-style login (topnav stays) —— */
 .ms-login-page {
   position: relative;
