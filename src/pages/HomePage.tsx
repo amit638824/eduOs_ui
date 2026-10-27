@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import AOS from 'aos';
 import HeroSection from '@/components/home/HeroSection';
 import ExamStripSection from '@/components/home/ExamStripSection';
 import JourneySection from '@/components/home/JourneySection';
@@ -12,6 +14,28 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 import BlogSection from '@/components/home/BlogSection';
 
 export default function HomePage() {
+  useEffect(() => {
+    const t1 = window.setTimeout(() => {
+      try {
+        AOS.refreshHard();
+      } catch {
+        AOS.refresh();
+      }
+    }, 80);
+    const t2 = window.setTimeout(() => {
+      try {
+        AOS.refresh();
+      } catch {
+        // noop
+      }
+    }, 400);
+
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, []);
+
   return (
     <>
       <HeroSection />

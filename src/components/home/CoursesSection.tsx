@@ -55,18 +55,18 @@ export default function CoursesSection() {
   return (
     <section className="home_course section-padding">
       <div className="container">
-        <div className="row">
+        <div className="row align-items-center mb-4">
           <div className="col-lg-8 col-sm-6 col-xs-12" data-aos="fade-right">
-            <div className="section-title">
-              <h2>
+            <div className="section-title mb-0">
+              <h2 data-aos="fade-up" data-aos-delay="100">
                 Join with more than <b>80,000+ </b> <br />
                 Courses &amp; Learning creators.
               </h2>
             </div>
           </div>
-          <div className="col-lg-4 col-sm-6 col-xs-12" data-aos="fade-left">
-            <div className="cour_btn">
-              <Link to="/course" className="btn_one">
+          <div className="col-lg-4 col-sm-6 col-xs-12" data-aos="fade-left" data-aos-delay="150">
+            <div className="cour_btn text-lg-end">
+              <Link to="/exams" className="btn_one">
                 View all Courses <i className="ti-arrow-top-right" />
               </Link>
             </div>
@@ -78,20 +78,22 @@ export default function CoursesSection() {
               key={course.title}
               className="col-lg-4 col-sm-6 col-xs-12"
               data-aos="fade-up"
-              data-aos-delay={(index % 3) * 100}
+              data-aos-delay={(index % 3) * 120}
             >
               <div className="single_course eduleb-hover-lift">
-                <div className="single_c_img">
+                <div className="single_c_img" data-aos="zoom-in" data-aos-delay={(index % 3) * 120 + 80}>
                   <img src={course.img} className="img-fluid" alt="course-image" />
                   <span>{course.tag}</span>
                 </div>
-                <i className="fa fa-star" />
-                <i className="fa fa-star" />
-                <i className="fa fa-star" />
-                <i className="fa fa-star" />
-                <i className="fa fa-star" />
+                <div className="my-2" style={{ color: '#f59e0b' }}>
+                  <i className="fa fa-star" />
+                  <i className="fa fa-star" />
+                  <i className="fa fa-star" />
+                  <i className="fa fa-star" />
+                  <i className="fa fa-star" />
+                </div>
                 <h4>
-                  <Link to="/course-details">{course.title}</Link>
+                  <Link to="/exams">{course.title}</Link>
                 </h4>
                 <p>
                   <span className="ti-book"> </span> {course.lessons}

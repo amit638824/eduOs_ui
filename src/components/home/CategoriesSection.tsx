@@ -27,19 +27,24 @@ export default function CategoriesSection() {
     >
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up">
-          <h2>Find out by popular Categories</h2>
-          <p>
+          <h2 data-aos="fade-up" data-aos-delay="100">Find out by popular Categories</h2>
+          <p data-aos="fade-up" data-aos-delay="150">
             We offer a brand new approach to the most basic learning paradigms. Choose from a wide
             range of learning options and gain new skills! Our school is know.
           </p>
         </div>
         <div className="row">
-          <div className="col-lg-12 col-sm-12 col-xs-12" data-aos="fade-up" data-aos-delay="100">
+          <div className="col-lg-12 col-sm-12 col-xs-12">
             <div className="cat_list">
               <ul>
                 {categories.map((cat, i) => (
-                  <li key={`${cat.label}-${i}`} className="eduleb-hover-lift">
-                    <Link to="/course">
+                  <li
+                    key={`${cat.label}-${i}`}
+                    className="eduleb-hover-lift"
+                    data-aos="zoom-in"
+                    data-aos-delay={(i % 6) * 70}
+                  >
+                    <Link to="/exams">
                       <img src={cat.img} alt="category-image" /> {cat.label}
                     </Link>
                   </li>

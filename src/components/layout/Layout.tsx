@@ -12,6 +12,7 @@ export default function Layout() {
   useEdurockScripts();
   const { pathname } = useLocation();
   const isDashboard = pathname.startsWith('/dashboard');
+  const isLoginPage = pathname === '/login';
   /* Marketing + auth pages share Eduleb chrome (header/footer + styles) */
   const isEdulebPage = !isDashboard;
 
@@ -19,12 +20,11 @@ export default function Layout() {
     document.body.classList.add('body__wrapper');
     if (isDashboard) {
       document.body.classList.add('dashboard-layout-active');
-      document.body.classList.remove('eduleb-page', 'aos-fallback');
+      document.body.classList.remove('eduleb-page');
     } else {
       document.body.classList.remove('dashboard-layout-active');
       document.body.classList.add('eduleb-page');
       document.documentElement.classList.remove('is_dark');
-      window.setTimeout(() => document.body.classList.add('aos-fallback'), 1400);
     }
     return () => {
       document.body.classList.remove('body__wrapper', 'dashboard-layout-active', 'eduleb-page');
@@ -42,7 +42,7 @@ export default function Layout() {
       >
         {isEdulebPage && <Header />}
         <Outlet />
-        {isEdulebPage && <Footer />}
+        {isEdulebPage && !isLoginPage && <Footer />}
       </main>
     </>
   );

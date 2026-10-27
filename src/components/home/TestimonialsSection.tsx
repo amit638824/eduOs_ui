@@ -48,28 +48,30 @@ export default function TestimonialsSection() {
   return (
     <section className="testi_area section-padding">
       <div className="container">
-        <div className="section-title">
-          <h2>
+        <div className="section-title" data-aos="fade-up">
+          <h2 data-aos="fade-up" data-aos-delay="100">
             What Student’s Say To Do <br />
             Their Online Course
           </h2>
         </div>
-        <div className="row">
-          <div className="col-lg-6 col-sm-12 col-xs-12">
-            <div className="ab_img">
+        <div className="row align-items-center">
+          <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-right" data-aos-delay="150">
+            <div className="ab_img" data-aos="zoom-in" data-aos-delay="200">
               <img src="/eduleb/img/review.png" className="img-fluid" alt="image" />
             </div>
           </div>
-          <div className="col-lg-6 col-sm-12 col-xs-12">
-            <div id="testimonial-slider" className="eduleb-testimonial-slider">
+          <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-left" data-aos-delay="200">
+            <div id="testimonial-slider" className="eduleb-testimonial-slider" data-aos="zoom-in" data-aos-delay="250">
               <div className="testimonial" key={`${item.name}-${index}`}>
                 <img src="/eduleb/img/quote.png" alt="" />
                 <div className="testimonial_content">
-                  <i className="ti-star" />
-                  <i className="ti-star" />
-                  <i className="ti-star" />
-                  <i className="ti-star" />
-                  <i className="ti-star" />
+                  <div className="mb-2" style={{ color: '#f59e0b' }}>
+                    <i className="ti-star" />
+                    <i className="ti-star" />
+                    <i className="ti-star" />
+                    <i className="ti-star" />
+                    <i className="ti-star" />
+                  </div>
                   <p>{item.text}</p>
                 </div>
                 <div className="testi_pic_title">

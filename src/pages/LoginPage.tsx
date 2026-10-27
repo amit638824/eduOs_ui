@@ -99,122 +99,198 @@ export default function LoginPage() {
   };
 
   return (
-    <section className="eduleb-login-page">
-        <div className="container">
-          <div className="eduleb-login-shell" data-aos="fade-up">
-            <div className="eduleb-login-aside">
-              <div className="eduleb-login-logo-wrap">
-                <img
-                  src="/img/logo/techwagger-logo.png"
-                  alt="Techwagger"
-                  className="eduleb-login-logo"
-                />
+    <section className="ms-login-page">
+      <div className="ms-login-blobs" aria-hidden>
+        <span className="ms-login-blob ms-login-blob--tl" />
+        <span className="ms-login-blob ms-login-blob--br" />
+        <span className="ms-login-dots" />
+      </div>
+
+      <div className="container ms-login-wrap">
+        <div className="ms-login-grid">
+          <div className="ms-login-promo">
+            <div className="ms-login-brand">
+              <img src="/img/logo/techwagger-logo.png" alt="Techwagger" />
+              <div>
+                <strong>Techwagger</strong>
+                <span>Learn. Assess. Achieve.</span>
               </div>
-              <h2>Welcome back</h2>
-              <p>
-                Sign in to continue your mock tests, track scores, and pick up where you left off.
-              </p>
-              <ul className="eduleb-login-perks">
-                <li>
-                  <i className="ti-check" aria-hidden /> Realistic exam experience
-                </li>
-                <li>
-                  <i className="ti-check" aria-hidden /> Detailed performance analysis
-                </li>
-                <li>
-                  <i className="ti-check" aria-hidden /> Personalized practice insights
-                </li>
-              </ul>
             </div>
 
-            <div className="eduleb-login-card">
-              <div className="eduleb-login-card-head">
-                <h3>Log in to Mindsprint</h3>
-                <p>Enter your credentials to access your dashboard</p>
-              </div>
+            <h1>
+              Welcome Back, <em>Learner!</em>
+            </h1>
+            <p className="ms-login-lead">
+              Manage your examinations, assessments, and student activities from one centralized
+              dashboard.
+            </p>
 
-              {mfaToken ? (
-                <form onSubmit={onMfaSubmit} noValidate className="eduleb-login-form">
-                  {apiError && <p className="eduleb-login-error">{apiError}</p>}
-                  <p className="eduleb-login-hint">Enter your MFA backup code to continue.</p>
-                  <div className="eduleb-login-field">
-                    <label htmlFor="mfaCode">MFA code</label>
+            <ul className="ms-login-features">
+              <li>
+                <span className="ms-login-feat-icon ms-login-feat-icon--purple">
+                  <i className="ti-clipboard" aria-hidden />
+                </span>
+                <div>
+                  <strong>Smart Exam Management</strong>
+                  <span>Create, schedule, and monitor exams with ease</span>
+                </div>
+              </li>
+              <li>
+                <span className="ms-login-feat-icon ms-login-feat-icon--green">
+                  <i className="ti-bar-chart" aria-hidden />
+                </span>
+                <div>
+                  <strong>Real-Time Performance</strong>
+                  <span>Track student progress and results instantly</span>
+                </div>
+              </li>
+              <li>
+                <span className="ms-login-feat-icon ms-login-feat-icon--blue">
+                  <i className="ti-lock" aria-hidden />
+                </span>
+                <div>
+                  <strong>Secure &amp; Reliable</strong>
+                  <span>Enterprise-grade security for your assessments</span>
+                </div>
+              </li>
+            </ul>
+
+            <div className="ms-login-scene" aria-hidden>
+              <div className="ms-login-plant">
+                <span className="ms-login-plant-pot" />
+                <span className="ms-login-plant-leaf ms-login-plant-leaf--l" />
+                <span className="ms-login-plant-leaf ms-login-plant-leaf--r" />
+              </div>
+              <div className="ms-login-books">
+                <span className="ms-login-book ms-login-book--1" />
+                <span className="ms-login-book ms-login-book--2" />
+              </div>
+              <div className="ms-login-laptop">
+                <div className="ms-login-laptop-screen">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className="ms-login-laptop-base" />
+              </div>
+              <div className="ms-login-paper">
+                <i className="ti-crown" />
+                <strong>Online Exam</strong>
+                <em />
+                <em />
+                <em />
+              </div>
+            </div>
+          </div>
+
+          <div className="ms-login-card">
+            <div className="ms-login-card-hello">
+              <i className="ti-user" aria-hidden />
+              Hello, Learner!
+            </div>
+            <h2>Login to Techwagger</h2>
+            <p className="ms-login-card-sub">
+              Access your dashboard to manage examinations and monitor performance.
+            </p>
+
+            {mfaToken ? (
+              <form onSubmit={onMfaSubmit} noValidate className="ms-login-form">
+                {apiError && <p className="ms-login-error">{apiError}</p>}
+                <p className="ms-login-hint">Enter your MFA backup code to continue.</p>
+                <div className="ms-login-field">
+                  <label htmlFor="mfaCode">MFA code</label>
+                  <div className="ms-login-input-wrap">
+                    <i className="ti-lock" aria-hidden />
                     <input
                       id="mfaCode"
-                      className="eduleb-login-input"
+                      className="ms-login-input"
                       placeholder="Enter MFA code"
                       value={mfaCode}
                       onChange={(e) => setMfaCode(e.target.value)}
                       required
                     />
                   </div>
-                  <button type="submit" className="eduleb-login-submit" disabled={submitting}>
-                    {submitting ? 'Verifying...' : 'Verify & Log In'}
-                  </button>
-                </form>
-              ) : (
-                <form
-                  onSubmit={handleLoginSubmit(onLogin)}
-                  noValidate
-                  autoComplete="off"
-                  className="eduleb-login-form"
-                >
-                  {apiError && <p className="eduleb-login-error">{apiError}</p>}
+                </div>
+                <button type="submit" className="ms-login-btn" disabled={submitting}>
+                  {submitting ? 'Verifying...' : 'Verify & Log In →'}
+                </button>
+              </form>
+            ) : (
+              <form
+                onSubmit={handleLoginSubmit(onLogin)}
+                noValidate
+                autoComplete="off"
+                className="ms-login-form"
+              >
+                {apiError && <p className="ms-login-error">{apiError}</p>}
 
-                  <div className="eduleb-login-field">
-                    <label htmlFor="loginId">Email or Enrollment No.</label>
+                <div className="ms-login-field">
+                  <label htmlFor="loginId">Email or Enrollment No.</label>
+                  <div className="ms-login-input-wrap">
+                    <i className="ti-email" aria-hidden />
                     <input
                       id="loginId"
-                      className={inputClassName('eduleb-login-input', !!loginErrors.loginId)}
+                      className={inputClassName('ms-login-input', !!loginErrors.loginId)}
                       type="text"
                       inputMode="text"
-                      placeholder="you@example.com or ENR-2026-0001"
+                      placeholder="Enter your email or enrollment number"
                       autoComplete="username"
                       {...registerLogin('loginId')}
                     />
-                    <FormError message={loginErrors.loginId?.message} />
                   </div>
+                  <FormError message={loginErrors.loginId?.message} />
+                </div>
 
-                  <div className="eduleb-login-field">
-                    <label htmlFor="loginPassword">Password</label>
+                <div className="ms-login-field">
+                  <label htmlFor="loginPassword">Password</label>
+                  <div className="ms-login-input-wrap ms-login-input-wrap--pass">
+                    <i className="ti-lock" aria-hidden />
                     <PasswordInput
                       id="loginPassword"
-                      inputClass="eduleb-login-input"
+                      inputClass="ms-login-input"
                       hasError={!!loginErrors.password}
                       placeholder="Enter your password"
                       autoComplete={rememberMe ? 'current-password' : 'off'}
                       {...registerLogin('password')}
                     />
-                    <FormError message={loginErrors.password?.message} />
                   </div>
+                  <FormError message={loginErrors.password?.message} />
+                </div>
 
-                  <div className="eduleb-login-meta">
-                    <label className="eduleb-login-remember" htmlFor="rememberMe">
-                      <input
-                        id="rememberMe"
-                        type="checkbox"
-                        checked={rememberMe}
-                        onChange={(e) => {
-                          const checked = e.target.checked;
-                          setRememberMe(checked);
-                          if (!checked) clearRememberedLogin();
-                        }}
-                      />
-                      <span>Remember me</span>
-                    </label>
-                    <Link to="/forgot-password" className="eduleb-login-forgot">
-                      Forgot password?
-                    </Link>
-                  </div>
+                <div className="ms-login-meta">
+                  <label className="ms-login-remember" htmlFor="rememberMe">
+                    <input
+                      id="rememberMe"
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => {
+                        const checked = e.target.checked;
+                        setRememberMe(checked);
+                        if (!checked) clearRememberedLogin();
+                      }}
+                    />
+                    <span>Remember me</span>
+                  </label>
+                  <Link to="/forgot-password" className="ms-login-forgot">
+                    Forgot password?
+                  </Link>
+                </div>
 
-                  <button type="submit" className="eduleb-login-submit" disabled={submitting}>
-                    {submitting ? 'Logging in...' : 'Log In'}
-                  </button>
-                </form>
-              )}
-            </div>
+                <button type="submit" className="ms-login-btn" disabled={submitting}>
+                  {submitting ? 'Logging in...' : 'Log In →'}
+                </button>
+
+                <p className="ms-login-secure">
+                  <i className="ti-lock" aria-hidden />
+                  Secure access to your examination management dashboard.
+                </p>
+              </form>
+            )}
           </div>
         </div>
+
+        <p className="ms-login-copy">© {new Date().getFullYear()} Techwagger. All rights reserved.</p>
+      </div>
     </section>
   );
 }

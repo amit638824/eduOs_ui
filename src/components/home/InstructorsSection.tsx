@@ -34,8 +34,8 @@ export default function InstructorsSection() {
     <section className="team_area section-padding">
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up">
-          <h2>Meet our Instructors</h2>
-          <p>
+          <h2 data-aos="fade-up" data-aos-delay="100">Meet our Instructors</h2>
+          <p data-aos="fade-up" data-aos-delay="150">
             We offer a brand new approach to the most basic learning paradigms. Choose from a wide
             range of learning options and gain new skills! Our school is know.
           </p>
@@ -46,10 +46,10 @@ export default function InstructorsSection() {
               key={ins.name}
               className="col-lg-3 col-sm-6 col-xs-12"
               data-aos="fade-up"
-              data-aos-delay={index * 100}
+              data-aos-delay={index * 120}
             >
               <div className="our-team eduleb-hover-lift">
-                <div className="team-content">
+                <div className="team-content" data-aos="zoom-in" data-aos-delay={index * 120 + 80}>
                   <a href="#">
                     <img src={ins.img} alt={ins.name} />
                   </a>

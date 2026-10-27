@@ -6,10 +6,12 @@ export default function HeroSection() {
     <section className="ms-hero-exact eduleb-ms-hero">
       <div className="container">
         <div className="row align-items-center g-4 g-xl-5">
-          <div className="col-xl-6 col-lg-6 col-12" data-aos="fade-up">
-            <div className="ms-mission-badge">PRACTICE TODAY, PERFORM TOMORROW</div>
+          <div className="col-xl-6 col-lg-6 col-12">
+            <div className="ms-mission-badge" data-aos="fade-down" data-aos-duration="900" data-aos-delay="100">
+              PRACTICE TODAY, PERFORM TOMORROW
+            </div>
 
-            <h1 className="ms-hero-heading-exact">
+            <h1 className="ms-hero-heading-exact" data-aos="fade-up" data-aos-duration="900" data-aos-delay="150">
               Online Mock Tests for{' '}
               <span className="eduleb-ms-typed">
                 <TypeAnimation
@@ -33,12 +35,12 @@ export default function HeroSection() {
               </span>
             </h1>
 
-            <p className="ms-hero-sub-exact">
+            <p className="ms-hero-sub-exact" data-aos="fade-up" data-aos-duration="900" data-aos-delay="220">
               Realistic test experience, detailed analysis and personalized insights to help you crack
               your dream exam.
             </p>
 
-            <div className="d-flex align-items-center flex-wrap gap-3 mb-4">
+            <div className="d-flex align-items-center flex-wrap gap-3 mb-4" data-aos="fade-up" data-aos-duration="900" data-aos-delay="300">
               <Link to="/exams" className="ms-btn-coral">
                 <span>Explore Mock Tests</span>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -54,7 +56,7 @@ export default function HeroSection() {
               </a>
             </div>
 
-            <div className="eduleb-ms-trust d-flex align-items-center flex-wrap gap-4 pt-3">
+            <div className="eduleb-ms-trust d-flex align-items-center flex-wrap gap-4 pt-3" data-aos="fade-up" data-aos-duration="900" data-aos-delay="380">
               <div className="d-flex align-items-center gap-2">
                 <span className="eduleb-ms-trust-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -88,7 +90,7 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <div className="col-xl-6 col-lg-6 col-12" data-aos="fade-left">
+          <div className="col-xl-6 col-lg-6 col-12">
             <div className="ms-hero-photo-wrap">
               <div className="ms-hero-pastel-blob" />
               <div className="eduleb-ms-blob-orange" />
@@ -96,9 +98,12 @@ export default function HeroSection() {
                 src="/eduleb/img/home-img2.png"
                 alt="Student preparing for online mock exams"
                 className="ms-hero-student-photo"
+                data-aos="fade-left"
+                data-aos-duration="900"
+                data-aos-delay="200"
               />
 
-              <div className="ms-float-score-box eduleb-hover-lift">
+              <div className="ms-float-score-box eduleb-hover-lift" data-aos="fade-up" data-aos-duration="900" data-aos-delay="350">
                 <div className="eduleb-ms-score-title">Your Last Test Score</div>
                 <div className="d-flex align-items-center gap-3 mb-3">
                   <div className="ms-score-ring-circle">82%</div>
@@ -124,7 +129,7 @@ export default function HeroSection() {
                 ))}
               </div>
 
-              <div className="eduleb-ms-tip-card eduleb-hover-lift">
+              <div className="eduleb-ms-tip-card eduleb-hover-lift" data-aos="fade-up" data-aos-duration="900" data-aos-delay="450">
                 <span className="eduleb-ms-tip-icon">📈</span>
                 <span>Improve your weak topics with personalized analysis</span>
               </div>

@@ -16,7 +16,7 @@ export default function JourneySection() {
       }}
     >
       <div className="container">
-        <div className="section-title text-center" data-aos="fade-up">
+        <div className="section-title text-center" data-aos="fade-up" data-aos-duration="1000">
           <h2>Start your journey With us</h2>
           <p>
             We offer a brand new approach to the most basic learning paradigms. Choose from a wide
@@ -29,7 +29,8 @@ export default function JourneySection() {
               key={s.num}
               className="col-lg-3 col-sm-6 col-xs-12"
               data-aos="fade-up"
-              data-aos-delay={index * 100}
+              data-aos-delay={index * 120}
+              data-aos-duration="1000"
             >
               <div className="single_tp eduleb-hover-lift">
                 <span className={s.cls}>{s.num}</span>

@@ -25,18 +25,25 @@ export default function BlogSection() {
   return (
     <section id="blog" className="blog_area section-padding">
       <div className="container">
-        <div className="section-title text-center">
-          <h2>Latest Blog &amp; news</h2>
-          <p>
+        <div className="section-title text-center" data-aos="fade-up">
+          <h2 data-aos="fade-up" data-aos-delay="100">Latest Blog &amp; news</h2>
+          <p data-aos="fade-up" data-aos-delay="150">
             We offer a brand new approach to the most basic learning paradigms. Choose from a wide
             range of learning options and gain new skills! Our school is know.
           </p>
         </div>
         <div className="row">
-          {posts.map((post) => (
-            <div key={post.title} className="col-lg-4 col-sm-4 col-xs-12">
-              <div className="single_blog">
-                <img src={post.img} className="img-fluid" alt="image" />
+          {posts.map((post, idx) => (
+            <div
+              key={post.title}
+              className="col-lg-4 col-sm-4 col-xs-12"
+              data-aos="fade-up"
+              data-aos-delay={idx * 120}
+            >
+              <div className="single_blog eduleb-hover-lift">
+                <div data-aos="zoom-in" data-aos-delay={idx * 120 + 80}>
+                  <img src={post.img} className="img-fluid" alt="image" />
+                </div>
                 <div className="content_box">
                   <span>
                     {post.date} | <Link to="/blog">{post.category}</Link>

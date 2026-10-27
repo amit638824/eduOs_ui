@@ -10,9 +10,11 @@ export function useAos() {
     AOS.init({
       duration: 900,
       once: true,
-      offset: 60,
+      offset: 30,
       easing: 'ease-out-cubic',
       mirror: false,
+      delay: 50,
+      anchorPlacement: 'top-bottom',
     });
 
     const refresh = () => {
@@ -23,31 +25,45 @@ export function useAos() {
       }
     };
 
-    const t1 = window.setTimeout(refresh, 80);
-    const t2 = window.setTimeout(refresh, 500);
-    // After animations have had time to fire, force-visible any leftovers
-    const fallback = window.setTimeout(() => {
+    // Staggered refreshes to catch DOM settling and image loads
+    const t1 = window.setTimeout(refresh, 60);
+    const t2 = window.setTimeout(refresh, 250);
+    const t3 = window.setTimeout(refresh, 600);
+
+    // Fail-safe: ensure nothing stays stuck invisible
+    const fallbackTimer = window.setTimeout(() => {
       document.body.classList.add('aos-fallback');
-    }, 1400);
+      document.querySelectorAll('[data-aos]:not(.aos-animate)').forEach((el) => {
+        el.classList.add('aos-animate');
+      });
+    }, 800);
 
     window.addEventListener('load', refresh);
+    window.addEventListener('resize', refresh);
+
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
-      window.clearTimeout(fallback);
+      window.clearTimeout(t3);
+      window.clearTimeout(fallbackTimer);
       window.removeEventListener('load', refresh);
+      window.removeEventListener('resize', refresh);
     };
   }, []);
 
   useEffect(() => {
-    document.body.classList.remove('aos-fallback');
-    const refreshId = window.setTimeout(() => AOS.refreshHard(), 60);
-    const fallbackId = window.setTimeout(() => {
-      document.body.classList.add('aos-fallback');
-    }, 1400);
+    const refresh = () => {
+      try {
+        AOS.refreshHard();
+      } catch {
+        AOS.refresh();
+      }
+    };
+    const t1 = window.setTimeout(refresh, 80);
+    const t2 = window.setTimeout(refresh, 350);
     return () => {
-      window.clearTimeout(refreshId);
-      window.clearTimeout(fallbackId);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
     };
   }, [pathname]);
 }

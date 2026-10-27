@@ -15,7 +15,7 @@ export default function ExamStripSection() {
   return (
     <section className="eduleb-exam-strip">
       <div className="container">
-        <div className="text-center mb-4" data-aos="fade-up">
+        <div className="text-center mb-4" data-aos="fade-up" data-aos-duration="1000">
           <p className="eduleb-exam-strip-eyebrow">PREPARE FOR TOP EXAMS</p>
         </div>
         <div className="row g-3 justify-content-center">
@@ -24,7 +24,8 @@ export default function ExamStripSection() {
               key={exam.title}
               className="col-6 col-sm-4 col-md-3 col-lg"
               data-aos="fade-up"
-              data-aos-delay={idx * 50}
+              data-aos-delay={idx * 80}
+              data-aos-duration="1000"
             >
               <Link to="/exams" className="eduleb-exam-card eduleb-hover-lift">
                 <span className="eduleb-exam-icon" style={{ background: exam.bg, color: exam.color }}>

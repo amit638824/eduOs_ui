@@ -1,11 +1,13 @@
 export default function VideoSection() {
   return (
-    <section id="video" className="vid_area section-padding">
+    <section id="video" className="vid_area section-padding" data-aos="fade-up">
       <div className="container">
         <div className="row">
           <div className="col-lg-12 vp_top">
             <div
               className="video-area"
+              data-aos="zoom-in"
+              data-aos-duration="800"
               style={{
                 backgroundImage: 'url(/eduleb/img/bg/video.jpg)',
                 backgroundSize: 'cover',
@@ -17,6 +19,8 @@ export default function VideoSection() {
                 className="magnific_popup video-button"
                 target="_blank"
                 rel="noreferrer"
+                data-aos="zoom-in"
+                data-aos-delay="200"
               >
                 <i className="fa fa-play" />
               </a>
