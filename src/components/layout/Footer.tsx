@@ -44,7 +44,7 @@ export default function Footer() {
 
             <div className="col-lg-2 col-sm-6 col-xs-12">
               <div className="single_footer">
-                <h4>About Techwagger</h4>
+                <h4>About Mindsprint</h4>
                 <ul>
                   <li>
                     <Link to="/about">About us</Link>

@@ -288,6 +288,14 @@ body.eduleb-page #navigation .eduleb-nav-actions {
   flex-wrap: nowrap;
 }
 
+/* Desktop only: hide mobile hamburger */
+@media (min-width: 992px) {
+  body.eduleb-page #sm_menu_ham,
+  body.eduleb-page .sm_menu_outer {
+    display: none !important;
+  }
+}
+
 /* Sign In & Sign Up — same height / weight */
 body.eduleb-page #navigation .header-btn,
 body.eduleb-page #navigation .btn_one {
@@ -463,19 +471,178 @@ body.eduleb-page .eduleb-pricing-card .btn_one {
   font-weight: 600 !important;
 }
 
-@media only screen and (max-width: 960px) {
+/* ===== Mobile topnav + hamburger (no black drawer, no scroll jump) ===== */
+@media only screen and (max-width: 991px) {
   body.eduleb-page #navigation.site-navigation,
   body.eduleb-page #navigation.eduleb-topbar {
-    padding: 10px 18px !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    padding: 10px 56px 10px 16px !important;
+    min-height: 64px !important;
+    height: 64px !important;
+    display: flex !important;
+    align-items: center !important;
+    z-index: 11000 !important;
+  }
+
+  body.eduleb-page #navigation.eduleb-topbar.is-scrolled,
+  body.eduleb-page.nav-scrolled #navigation.eduleb-topbar {
+    padding: 10px 56px 10px 16px !important;
+    min-height: 64px !important;
+    height: 64px !important;
+  }
+
+  body.eduleb-page #navigation .container-fluid {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body.eduleb-page #navigation .container-fluid > .row {
+    margin: 0 !important;
+    width: 100% !important;
+    align-items: center !important;
+  }
+
+  body.eduleb-page #navigation .col-60,
+  body.eduleb-page #main-menu {
+    display: none !important;
+  }
+
+  body.eduleb-page #navigation .eduleb-nav-actions--desktop {
+    display: none !important;
+  }
+
+  body.eduleb-page #navigation .col-20 {
+    width: auto !important;
+    max-width: none !important;
+    flex: 0 0 auto !important;
+    padding: 0 !important;
+  }
+
+  /* Hamburger: always inside fixed header, never viewport-fixed */
+  body.eduleb-page #sm_menu_ham {
     display: block !important;
+    position: absolute !important;
+    top: 50% !important;
+    right: 14px !important;
+    left: auto !important;
+    bottom: auto !important;
+    float: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 30px !important;
+    height: 22px !important;
+    transform: translateY(-50%) !important;
+    -webkit-transform: translateY(-50%) !important;
+    border: 0 !important;
+    background: transparent !important;
+    z-index: 11020 !important;
+    cursor: pointer;
   }
-  body.eduleb-page #navigation.eduleb-topbar.is-scrolled {
-    padding: 8px 18px !important;
+
+  body.eduleb-page #sm_menu_ham.open {
+    transform: translateY(-50%) !important;
+    -webkit-transform: translateY(-50%) !important;
   }
+
+  body.eduleb-page #sm_menu_ham span {
+    background-color: #3861fb !important;
+  }
+
+  /* White menu panel (NOT black) */
+  body.eduleb-page .sm_menu_outer,
+  body.eduleb-page .sm_menu_outer.slide {
+    display: block !important;
+    position: fixed !important;
+    top: 64px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    max-height: calc(100vh - 64px) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: 10990 !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+    -webkit-transition: opacity 0.2s ease;
+    transition: opacity 0.2s ease;
+  }
+
+  body.eduleb-page .sm_menu_outer.active,
+  body.eduleb-page .sm_menu_outer.slide.active {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    z-index: 10990 !important;
+  }
+
+  body.eduleb-page .sm_menu_outer .mobile_menu,
+  body.eduleb-page .sm_menu_outer.active .mobile_menu,
+  body.eduleb-page .sm_menu_outer.slide.active .mobile_menu {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: flex-start !important;
+    flex-wrap: nowrap !important;
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 12px 0 28px !important;
+    width: 100% !important;
+    float: none !important;
+  }
+
+  body.eduleb-page .sm_menu_outer .mobile_menu > li {
+    display: block !important;
+    float: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-bottom: 1px solid #eef2f7 !important;
+    border-image: none !important;
+  }
+
+  body.eduleb-page .sm_menu_outer .mobile_menu a {
+    display: block !important;
+    width: 100% !important;
+    padding: 16px 22px !important;
+    color: #0f172a !important;
+    font-size: 0.98rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    text-align: left !important;
+    white-space: normal !important;
+    background: transparent !important;
+  }
+
+  body.eduleb-page .sm_menu_outer .mobile_menu a:hover,
+  body.eduleb-page .sm_menu_outer .mobile_menu a:focus {
+    color: #3861fb !important;
+    background: #f8fafc !important;
+  }
+
+  body.eduleb-page .sm_menu_outer.slide .mobile_menu .sub-menu {
+    background: #f8fafc !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    right: auto !important;
+  }
+
   body.eduleb-page .eduleb-ms-hero,
   body.eduleb-page .home_bg {
     padding-top: 84px !important;
   }
+
   body.eduleb-page .section-top {
     padding-top: 120px !important;
     padding-bottom: 70px !important;
@@ -483,13 +650,12 @@ body.eduleb-page .eduleb-pricing-card .btn_one {
 }
 
 body.eduleb-page #sm_menu_ham {
-  z-index: 1000;
+  z-index: 11020;
   cursor: pointer;
-  top: 22px !important;
 }
 
 body.eduleb-page .sm_menu_outer.active {
-  z-index: 999;
+  z-index: 10990;
 }
 
 /* Counter icons must use themify + stay floated in circle */

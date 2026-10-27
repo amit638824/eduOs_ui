@@ -142,7 +142,7 @@ export default function LoginPage() {
                 <img src="/img/logo/techwagger-logo.png" alt="Techwagger" className="ms-brand-logo-img" />
               </div>
               <div>
-                <strong>Techwagger</strong>
+                <strong>Mindsprint</strong>
                 <span>Learn. Assess. Achieve.</span>
               </div>
             </div>
@@ -346,7 +346,7 @@ export default function LoginPage() {
 
           {/* RIGHT FLOATING LOGIN CARD */}
           <div className="ms-login-card">
-            <h2>Login to Techwagger</h2>
+            <h2>Login to Mindsprint</h2>
             <p className="ms-login-card-sub">
               Access your dashboard to manage examinations and monitor performance.
             </p>
@@ -457,10 +457,7 @@ export default function LoginPage() {
                 </button>
 
                 <p className="ms-login-secure">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                    <polyline points="9 12 11 14 15 10" />
-                  </svg>
+                
                   <span>Secure access to your examination management dashboard.</span>
                 </p>
               </form>

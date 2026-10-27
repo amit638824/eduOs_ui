@@ -127,7 +127,7 @@ export default function Header() {
               </nav>
             </div>
 
-            <div className="col-20 d-none d-xl-block text-end align-self-center eduleb-nav-actions">
+            <div className="col-20 text-end align-self-center eduleb-nav-actions eduleb-nav-actions--desktop">
               {user ? (
                 <>
                   <Link to={dashboardPath} className="header-btn">
@@ -143,25 +143,22 @@ export default function Header() {
                 </Link>
               )}
             </div>
-
-            <div
-              id="sm_menu_ham"
-              className={mobileOpen ? 'open' : ''}
-              onClick={() => setMobileOpen((v) => !v)}
-              role="button"
-              tabIndex={0}
-              aria-label="Toggle menu"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') setMobileOpen((v) => !v);
-              }}
-            >
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
           </div>
         </div>
+
+        <button
+          type="button"
+          id="sm_menu_ham"
+          className={mobileOpen ? 'open' : ''}
+          onClick={() => setMobileOpen((v) => !v)}
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={mobileOpen}
+        >
+          <span />
+          <span />
+          <span />
+          <span />
+        </button>
       </div>
 
       <div className={`sm_menu_outer slide${mobileOpen ? ' active' : ''}`}>
