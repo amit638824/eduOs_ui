@@ -3,7 +3,7 @@ import type { SiteContent } from '@/types/content';
 export const siteContent: SiteContent = {
   brand: {
     name: 'Mindsprint',
-    tagline: 'Enterprise Online Examination & Assessment Platform',
+    tagline: 'Online exam, examination, e-assessment, and mock test platform',
     logo: '/img/logo/techwagger-logo.png',
     logoFooter: '/img/logo/techwagger-logo.png',
   },
@@ -12,7 +12,7 @@ export const siteContent: SiteContent = {
     tagline: 'Techwagger Solutions Private Limited',
     website: 'https://techwagger.com/',
     description:
-      'TechWagger delivers cutting-edge software solutions, enterprise IT consulting, and robust cloud-based online examination platforms for institutions and businesses worldwide.',
+      'TechWagger builds EdTech and e-learning software, including the Mindsprint LMS for online exam, examination, testing, and assessment.',
   },
   contact: {
     phone: '+91 8840 622 729',
@@ -28,26 +28,26 @@ export const siteContent: SiteContent = {
     { platform: 'YouTube', icon: 'icofont-youtube-play', href: 'https://youtube.com/@techwagger' },
   ],
   hero: {
-    badge: 'Online Exam & Mock Test Portal',
-    title: 'Empower Your Future with Mindsprint — Practice & Appear for Online Exams',
+    badge: 'Online exam, quiz, and mock test portal',
+    title: 'Online Exam, Examination, and Assessment for Every Learner',
     description:
-      'Mindsprint offers timed online mock tests, certificate course exams, diploma assessments, and institute-level practice papers for Hardware, Networking, Software, and IT disciplines.',
+      'Mindsprint is an EdTech e-learning LMS for online exam, examination, e-assessment, testing, quiz, mock test, and CBT. Use the question bank for test prep, aptitude, skill test, and screening, with proctoring, evaluation, grading, and certification. Run a school online exam, university assessment, student mock test, coaching mock test, recruitment skill test, training assessment, classroom quiz, or tutor online test.',
     primaryCta: { label: 'Browse Online Tests', href: '/exams' },
     secondaryCta: { label: 'About Mindsprint', href: '/about' },
   },
   about: {
     badge: 'About Mindsprint',
-    title: 'Trusted Assessment & IT Solutions',
-    highlight: 'Innovative & Secure',
+    title: 'Online Exam, Assessment, and Certification',
+    highlight: 'Proctoring, Evaluation, and Grading',
     description:
-      'Mindsprint provides intelligent examination platforms, proctored assessments, and automated certificate generation for institutes, enterprises, and individual learners.',
+      'Mindsprint is the examination system for a school online exam, university assessment, coaching mock test, recruitment skill test, training assessment, classroom quiz, and tutor online test. The question bank supports quiz, CBT, aptitude, and skill test papers, with proctoring, evaluation, grading, and certification.',
     experienceYears: 5,
     experienceLabel: 'YEARS OF TECHNOLOGY EXCELLENCE',
     features: [
-      'Secure online exam & mock test facilities',
-      'Real-time proctoring & analytics',
-      'Automated instant grading & rankings',
-      'Professional Certificate & Diploma programs',
+      'School online exam, student mock test, and classroom quiz',
+      'Proctoring for examination and e-assessment',
+      'Evaluation, grading, and rankings',
+      'Certification, test prep, and question bank',
       'Multi-vendor & organization management',
       'Instant verified certificate downloads',
     ],
@@ -62,7 +62,7 @@ export const siteContent: SiteContent = {
     badge: 'Test Categories',
     title: 'Online Tests For Every\nIT Course & Certificate',
     description:
-      'Practice mock papers for PC Hardware & Networking, Computer Application, Diploma programs, CCC, O Level, and professional IT certifications — aligned with Mindsprint curriculum.',
+      'Student mock test, coaching mock test, and test prep for Hardware, Networking, Computer Application, Diploma, CCC, O Level, aptitude, and skill test certification.',
     secondaryDescription:
       'Students enrolled at partner institutes and learning centers can log in to attempt assigned tests, view results, rank, and download performance reports.',
     items: [
@@ -323,7 +323,7 @@ export const siteContent: SiteContent = {
       title: 'Stay Updated With',
       titleHighlight: 'MINDSPRINT',
       description:
-        'Get platform updates, new mock tests, exam schedules, and technology insights delivered to your inbox.',
+        'Get online exam, mock test, quiz, and certification updates in your inbox.',
       placeholder: 'Enter your email',
       buttonText: 'Subscribe',
     },
