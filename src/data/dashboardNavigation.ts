@@ -217,6 +217,12 @@ export function buildDashboardNavigation(
             },
 
             {
+              label: 'Build with AI',
+              href: `${base}/ai-questions`,
+              icon: 'quiz',
+            },
+
+            {
               label: 'All Tests',
               href: `${base}/admin-course`,
               icon: 'monitor',
@@ -321,6 +327,12 @@ export function buildDashboardNavigation(
               label: 'Create Test',
               href: `${base}/create-test`,
               icon: 'course',
+            },
+
+            {
+              label: 'Build with AI',
+              href: `${base}/ai-questions`,
+              icon: 'quiz',
             },
 
             {
@@ -448,6 +460,12 @@ export function buildDashboardNavigation(
           },
 
           {
+            label: 'Build with AI',
+            href: `${base}/ai-questions`,
+            icon: 'quiz',
+          },
+
+          {
             label: 'All Tests',
             href: `${base}/admin-course`,
             icon: 'monitor',
@@ -540,6 +558,12 @@ export function buildDashboardNavigation(
             label: 'Create Test',
             href: `${base}/create-test`,
             icon: 'course',
+          },
+
+          {
+            label: 'Build with AI',
+            href: `${base}/ai-questions`,
+            icon: 'quiz',
           },
 
           {

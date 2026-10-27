@@ -34,6 +34,7 @@ import {
   AttemptsListPanel,
   ResultsPanel,
   CreateTestPanel,
+  AiBuildPanel,
   ExamAttemptPage,
   ExamResultPage,
   StudentExamCalendar,
@@ -107,6 +108,7 @@ export const dashboardRouteElements = (
 
     {/* Shared authoring (admin + teacher) */}
     <Route path="/dashboard/create-test" element={<AuthorDash><CreateTestPanel /></AuthorDash>} />
+    <Route path="/dashboard/ai-questions" element={<AuthorDash><AiBuildPanel /></AuthorDash>} />
     <Route path="/dashboard/test-builder/:testId" element={<AuthorDash><TestBuilderPanel /></AuthorDash>} />
     <Route path="/dashboard/admin-question-bank" element={<AuthorDash><QuestionBankPanel /></AuthorDash>} />
 

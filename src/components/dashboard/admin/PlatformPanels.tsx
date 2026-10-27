@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { examinationService, platformService } from '@/services';
@@ -8,7 +8,7 @@ import { FormError, PasswordInput } from '@/components/ui/FormField';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
-import AdminExamGuide from '@/components/dashboard/AdminExamGuide';
+import { ExamStepper } from '@/components/dashboard/AdminExamGuide';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { getTestsListPath, isSuperAdmin } from '@/utils/dashboardRole';
 import { SearchField } from '@/components/ui/FieldHint';
@@ -27,6 +27,7 @@ import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
 import { getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
+import { ReportInsights } from '@/components/dashboard/examination/AiBuildPanel';
 import * as yup from 'yup';
 import {
   BarChart,
@@ -934,8 +935,9 @@ export function ReportsPanel() {
           <section className="edtp-form-card sca-report-panel sp_bottom_20">
             <h5 className="mb-2">Question analytics</h5>
             <p className="text-muted sp_bottom_15" style={{ fontSize: '0.8125rem' }}>
-              Correct %, average time, distractors, and hardest items for this test.
+              Correct rate, time spent, the most common wrong answer, and which items need more teaching.
             </p>
+            <ReportInsights testId={selected} />
             {questionAnalytics.hard_questions.length > 0 ? (
               <div className="sp_bottom_15">
                 <strong>Hard questions</strong>
@@ -1016,9 +1018,13 @@ export function ReportsPanel() {
                 <thead>
                   <tr>
                     <th>Question</th>
+                    <th>Type</th>
+                    <th>Answered</th>
+                    <th>Correct</th>
                     <th>Correct %</th>
                     <th>Avg time</th>
-                    <th>Top distractor</th>
+                    <th>Most common wrong answer</th>
+                    <th>Teaching note</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1026,22 +1032,36 @@ export function ReportsPanel() {
                     const wrong = [...q.distractors]
                       .filter((d) => !d.is_correct)
                       .sort((a, b) => b.selected_count - a.selected_count)[0];
+                    const wrongText =
+                      wrong && typeof wrong.content === 'object' && wrong.content && 'text' in wrong.content
+                        ? String((wrong.content as { text?: string }).text ?? '')
+                        : '';
                     return (
                       <tr key={q.question_id}>
                         <td>{q.text || q.question_id.slice(0, 8)}</td>
+                        <td>{q.type}</td>
+                        <td>{q.answered_count}</td>
+                        <td>{q.correct_count}</td>
                         <td>{q.correct_pct != null ? `${q.correct_pct}%` : '—'}</td>
                         <td>{q.avg_time_sec}s</td>
                         <td>
                           {wrong
-                            ? `${wrong.selected_pct}% (${wrong.selected_count})`
+                            ? `${wrongText || 'Option'} · ${wrong.selected_pct}% (${wrong.selected_count})`
                             : '—'}
+                        </td>
+                        <td>
+                          {q.correct_pct != null && q.correct_pct < 40
+                            ? 'Needs more teaching'
+                            : q.correct_pct != null && q.correct_pct >= 80
+                              ? 'Well understood'
+                              : '—'}
                         </td>
                       </tr>
                     );
                   })}
                   {questionAnalytics.questions.length === 0 ? (
                     <tr>
-                      <td colSpan={4}>No graded answers yet for this test.</td>
+                      <td colSpan={8}>No graded answers yet for this test.</td>
                     </tr>
                   ) : null}
                 </tbody>
@@ -1473,6 +1493,7 @@ export function OrgStructurePanel() {
 
 export function TestBuilderPanel() {
   const { testId } = useParams();
+  const [params] = useSearchParams();
   const { user } = useAuth();
   const testsListPath = getTestsListPath(user?.roles ?? []);
   const [test, setTest] = useState<{
@@ -1585,7 +1606,6 @@ export function TestBuilderPanel() {
   }, [assignDepartmentId, testId]);
 
   useEffect(() => {
-    setPhase('build');
     setMessage('');
     setError('');
     setSelectedQuestionIds([]);
@@ -1602,16 +1622,17 @@ export function TestBuilderPanel() {
 
   useEffect(() => {
     if (!test) return;
-    if (isPublished) {
+    const step = params.get('step');
+    if (!isPublished && step === 'publish' && (test.questions?.length ?? 0) > 0) {
+      setPhase('publish');
+      return;
+    }
+    if (isPublished && step === 'assign') {
       setPhase('assign');
       return;
     }
-    if (testQuestions.length === 0) {
-      setPhase('build');
-    }
-  }, [isPublished, test, testQuestions.length]);
-
-  const activeStep = phase === 'assign' ? 5 : phase === 'publish' ? 4 : 3;
+    if (isPublished) setPhase('assign');
+  }, [isPublished, test, params]);
 
   const qSearch = questionSearch.trim().toLowerCase();
   const sSearch = studentSearch.trim().toLowerCase();
@@ -1881,21 +1902,44 @@ export function TestBuilderPanel() {
               {test?.duration_minutes} min · {test?.total_marks ?? 0} marks · Status:{' '}
               <span className={`edtp-badge ${isLive ? 'edtp-badge--active' : 'edtp-badge--role'}`}>{test?.status}</span>
               {' · '}
-              {phase === 'build' && 'Step 3: attach questions'}
-              {phase === 'publish' && 'Step 4: publish when ready'}
-              {phase === 'assign' && 'Step 5: assign students'}
+              {phase === 'build' && 'Add questions, then continue.'}
+              {phase === 'publish' && 'Review the paper, then publish.'}
+              {phase === 'assign' && 'Choose who can attempt this exam.'}
             </p>
           </div>
           <Link to={testsListPath} className="dashboard__small__btn__2">← Back to Tests</Link>
         </div>
       </div>
-      <AdminExamGuide activeStep={activeStep} compact />
+      <ExamStepper
+        activeStep={phase === 'assign' ? 3 : phase === 'publish' ? 2 : 1}
+        canOpen={(step) => {
+          if (isPublished) return step === 3;
+          if (step === 1) return true;
+          if (step === 2) return testQuestions.length > 0;
+          return false;
+        }}
+        onStep={(step) => {
+          if (step === 1) setPhase('build');
+          if (step === 2) setPhase('publish');
+          if (step === 3) setPhase('assign');
+        }}
+        steps={[
+          { step: 1, title: 'Questions', desc: 'Add from the bank' },
+          { step: 2, title: 'Publish', desc: 'Review and release' },
+          { step: 3, title: 'Assign', desc: 'Choose students' },
+        ]}
+      />
+      <p className="exam-stepper__help">
+        {phase === 'build' && 'Tick the questions, press Submit Selected, then Continue to Publish.'}
+        {phase === 'publish' && 'Check the list. Publish now, or pick a start time. Students cannot see a draft.'}
+        {phase === 'assign' && 'Choose the students, then press Assign Selected. They will see this exam in My Tests.'}
+      </p>
       <div className="dashboard__content__wraper">
         {error && <p className="login__error sp_bottom_15">{error}</p>}
         {message && <p className="form-success sp_bottom_15">{message}</p>}
 
         <div className={`sca-exam-builder-grid${phase !== 'build' ? ' sca-exam-builder-grid--single' : ''}`}>
-          {/* Shared question summary — always visible */}
+          {phase !== 'assign' && (
           <section className="edtp-form-card">
             <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_10">
               <h5 className="mb-0">Questions in this test ({testQuestions.length})</h5>
@@ -1903,11 +1947,6 @@ export function TestBuilderPanel() {
                 <EdtpBtn variant="secondary" onClick={() => setPhase('build')}>
                   ← Edit questions
                 </EdtpBtn>
-              )}
-              {phase === 'assign' && isPublished && (
-                <span className={`edtp-badge ${isLive ? 'edtp-badge--active' : 'edtp-badge--role'}`}>
-                  {isLive ? 'Published' : 'Scheduled'}
-                </span>
               )}
             </div>
             {testQuestions.length === 0 ? (
@@ -2048,6 +2087,7 @@ export function TestBuilderPanel() {
               </div>
             )}
           </section>
+          )}
 
           {phase === 'build' && !isPublished && (
             <section className="edtp-form-card">

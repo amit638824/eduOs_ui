@@ -532,8 +532,8 @@ body.eduleb-page .partner a img {
   display: block;
 }
 
-/* Card hover translate */
-body.eduleb-page .eduleb-hover-lift {
+/* Card hover translate. Skip [data-aos] so this does not replace the scroll transition. */
+body.eduleb-page .eduleb-hover-lift:not([data-aos]) {
   transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
 
@@ -697,7 +697,6 @@ body.eduleb-page .eduleb-ms-hero .ms-hero-student-photo {
   z-index: 1;
   max-width: 420px;
   width: 100%;
-  transform: none !important;
 }
 
 body.eduleb-page .eduleb-ms-hero .ms-float-score-box {
@@ -1033,128 +1032,57 @@ body.dashboard-layout-active #sm_menu_ham {
 }
 
 /*
- * Smooth, elegant AOS animations on scroll (slower & silky)
+ * AOS stylesheet hides every [data-aos] node (opacity 0) until .aos-animate.
+ * Keep content visible until this page arms it, then fade only off-screen nodes.
  */
 body.eduleb-page [data-aos] {
-  pointer-events: auto !important;
-  transition-duration: 900ms !important;
-  transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1) !important;
+  pointer-events: auto;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  transition:
+    opacity 0.75s ease,
+    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-/* Fallback: if AOS is delayed or not ready, NEVER leave content blank */
-body.eduleb-page.aos-fallback [data-aos],
+body.eduleb-page [data-aos].aos-init:not(.aos-animate) {
+  opacity: 0 !important;
+}
+
+body.eduleb-page [data-aos='fade-up'].aos-init:not(.aos-animate) {
+  transform: translate3d(0, 28px, 0) !important;
+}
+
+body.eduleb-page [data-aos='fade-down'].aos-init:not(.aos-animate) {
+  transform: translate3d(0, -28px, 0) !important;
+}
+
+body.eduleb-page [data-aos='fade-left'].aos-init:not(.aos-animate) {
+  transform: translate3d(36px, 0, 0) !important;
+}
+
+body.eduleb-page [data-aos='fade-right'].aos-init:not(.aos-animate) {
+  transform: translate3d(-36px, 0, 0) !important;
+}
+
+body.eduleb-page [data-aos='zoom-in'].aos-init:not(.aos-animate) {
+  transform: scale(0.96) !important;
+}
+
 body.eduleb-page [data-aos].aos-animate {
   opacity: 1 !important;
-  transform: translate3d(0, 0, 0) scale(1) !important;
   visibility: visible !important;
+  transform: none !important;
 }
 
-/* Hero section is above the fold: must be 100% visible immediately, never blank */
-body.eduleb-page .eduleb-ms-hero,
-body.eduleb-page .eduleb-ms-hero *,
-body.eduleb-page .ms-hero-heading-exact,
-body.eduleb-page .ms-hero-sub-exact,
-body.eduleb-page .ms-mission-badge,
-body.eduleb-page .ms-hero-student-photo,
-body.eduleb-page .ms-float-score-box,
-body.eduleb-page .eduleb-ms-trust {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-[data-aos='fade-up']:not(.aos-animate) {
-  transform: translate3d(0, 32px, 0);
-  opacity: 0;
-}
-
-[data-aos='fade-up'].aos-animate {
-  transform: translate3d(0, 0, 0) !important;
-  opacity: 1 !important;
-}
-
-[data-aos='fade-down']:not(.aos-animate) {
-  transform: translate3d(0, -32px, 0);
-  opacity: 0;
-}
-
-[data-aos='fade-down'].aos-animate {
-  transform: translate3d(0, 0, 0) !important;
-  opacity: 1 !important;
-}
-
-[data-aos='fade-left']:not(.aos-animate) {
-  transform: translate3d(32px, 0, 0);
-  opacity: 0;
-}
-
-[data-aos='fade-left'].aos-animate {
-  transform: translate3d(0, 0, 0) !important;
-  opacity: 1 !important;
-}
-
-[data-aos='fade-right']:not(.aos-animate) {
-  transform: translate3d(-32px, 0, 0);
-  opacity: 0;
-}
-
-[data-aos='fade-right'].aos-animate {
-  transform: translate3d(0, 0, 0) !important;
-  opacity: 1 !important;
-}
-
-[data-aos='zoom-in']:not(.aos-animate) {
-  transform: scale(0.92);
-  opacity: 0;
-}
-
-[data-aos='zoom-in'].aos-animate {
-  transform: scale(1) !important;
-  opacity: 1 !important;
-}
-
-/* Nav / footer / root containers never animated away */
+/* Nav / footer / page shell stay visible. Do not include [data-aos] nodes. */
 body.eduleb-page #navigation,
 body.eduleb-page .footer,
 body.eduleb-page .foot_copy,
-body.eduleb-page .eduleb-hero-art,
-body.eduleb-page .count_area .single-counter.aos-animate,
 body.eduleb-page #root,
 body.eduleb-page .main_wrapper,
 body.eduleb-page .eduleb-main {
   visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* Soft CSS entrance for counters if AOS lags */
-@keyframes edulebFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(28px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-body.eduleb-page .count_area .single-counter,
-body.eduleb-page .single_tp,
-body.eduleb-page .single_course,
-body.eduleb-page .our-team {
-  animation: edulebFadeUp 0.7s ease both;
-}
-
-body.eduleb-page .count_area .col-lg-3:nth-child(1) .single-counter {
-  animation-delay: 0.05s;
-}
-body.eduleb-page .count_area .col-lg-3:nth-child(2) .single-counter {
-  animation-delay: 0.12s;
-}
-body.eduleb-page .count_area .col-lg-3:nth-child(3) .single-counter {
-  animation-delay: 0.19s;
-}
-body.eduleb-page .count_area .col-lg-3:nth-child(4) .single-counter {
-  animation-delay: 0.26s;
 }
 
 /* —— Login page (works even if body class lags) —— */
