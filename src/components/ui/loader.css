@@ -1,22 +1,29 @@
 /* ==========================================================================
-   Clean Standalone Full-Page Loader (Single Border + Bigger Logo)
+   Unified Techwagger Loader (Shared across Preloader, Full-Page, & Dashboard)
    ========================================================================== */
 
+/* Full page overlay */
 .sca-loader-full {
-  z-index: 9999;
+  z-index: 999999;
   position: fixed;
   inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(15, 23, 42, 0.42);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   transition: opacity 0.2s ease;
 }
 
-/* Pure Orb Wrap - Centered, Standalone */
-.sca-loader-full__orb-wrap {
+/* Dark mode for full page */
+.is_dark .sca-loader-full,
+.sca-dashboard.sca-dashboard--dark .sca-loader-full {
+  background: rgba(15, 23, 42, 0.85);
+}
+
+/* Standalone Orb Wrap */
+.sca-loader-orb-wrap {
   position: relative;
   width: 82px;
   height: 82px;
@@ -26,31 +33,38 @@
   flex-shrink: 0;
 }
 
-/* Soft ambient breathing halo */
-.sca-loader-full__glow-ambient {
+/* Ambient glow */
+.sca-loader-glow-ambient {
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(56, 97, 251, 0.26) 0%, rgba(56, 97, 251, 0.08) 50%, transparent 70%);
+  background: radial-gradient(circle, rgba(56, 97, 251, 0.22) 0%, rgba(56, 97, 251, 0.06) 50%, transparent 70%);
   filter: blur(8px);
-  animation: sca-full-ambient-glow 2.2s ease-in-out infinite;
+  animation: sca-ambient-glow 2.2s ease-in-out infinite;
   pointer-events: none;
 }
 
-/* Exactly ONE Single Spinning Border */
-.sca-loader-full__ring {
+/* Exactly ONE Single Spinning Ring */
+.sca-loader-ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 3.5px solid rgba(255, 255, 255, 0.25);
+  border: 3.5px solid rgba(56, 97, 251, 0.16);
   border-top-color: #3861fb;
   border-right-color: #3861fb;
-  animation: sca-full-spin-cw 0.85s linear infinite;
+  animation: sca-spin-cw 0.85s linear infinite;
   pointer-events: none;
 }
 
-/* Central Floating White Core with Bigger Techwagger Logo */
-.sca-loader-full__logo-core {
+.is_dark .sca-loader-ring,
+.sca-dashboard.sca-dashboard--dark .sca-loader-ring {
+  border-color: rgba(99, 102, 241, 0.2);
+  border-top-color: #6366f1;
+  border-right-color: #6366f1;
+}
+
+/* Central Floating White Core with Techwagger Logo */
+.sca-loader-logo-core {
   position: relative;
   z-index: 2;
   width: 62px;
@@ -60,19 +74,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.12);
   padding: 6px;
 }
 
-.sca-loader-full__logo-img {
+.is_dark .sca-loader-logo-core,
+.sca-dashboard.sca-dashboard--dark .sca-loader-logo-core {
+  background: #0f172a;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+}
+
+.sca-loader-logo-img {
   width: 44px;
   height: 44px;
   object-fit: contain;
   display: block;
 }
 
-/* Keyframe Animations */
-@keyframes sca-full-spin-cw {
+/* Keyframes */
+@keyframes sca-spin-cw {
   0% {
     transform: rotate(0deg);
   }
@@ -81,7 +101,7 @@
   }
 }
 
-@keyframes sca-full-ambient-glow {
+@keyframes sca-ambient-glow {
   0%, 100% {
     transform: scale(0.95);
     opacity: 0.6;
