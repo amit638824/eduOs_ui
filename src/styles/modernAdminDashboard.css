@@ -158,7 +158,7 @@
   grid-template-columns: minmax(0, 1fr) 320px;
   grid-template-areas:
     "welcome quick"
-    "stats quick"
+    "stats stats"
     "stepper activity";
   gap: 16px;
   align-items: stretch;
@@ -171,6 +171,7 @@
 
 .mad-layout-grid > .mad-stats-row {
   grid-area: stats;
+  width: 100%;
 }
 
 .mad-layout-grid > .mad-stepper-container {
