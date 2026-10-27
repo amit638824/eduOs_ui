@@ -1,61 +1,49 @@
-import { siteContent } from '@/data/siteContent';
+import { Link } from 'react-router-dom';
 
 export default function AboutSection() {
-  const { about, parentCompany } = siteContent;
-
   return (
-    <div className="aboutarea__2 sp_top_30">
+    <section className="ab_area section-padding">
       <div className="container">
-        <div className="row">
-          <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12" data-aos="fade-up">
-            <div className="about__right__wraper__2">
-              <div className="educationarea__img" data-tilt>
-                <img loading="lazy" className="aboutarea__2__img__1" src="/img/about/about_2.png" alt="education" />
-                <img loading="lazy" className="aboutarea__2__img__2" src="/img/about/about_3.png" alt="education" />
-                <img loading="lazy" className="aboutarea__2__img__3" src="/img/about/about_4.png" alt="education" />
-                <img loading="lazy" className="aboutarea__2__img__4" src="/img/about/about_11.png" alt="education" />
-              </div>
-              <div className="aboutarea__2__text">
-                <div className="aboutarea__counter">
-                  <span className="counter">{about.experienceYears}</span> +
-                </div>
-                <p>{about.experienceLabel}</p>
-              </div>
+        <div className="row align-items-center">
+          <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-right" data-aos-duration="900">
+            <div className="ab_img eduleb-hover-lift" data-aos="zoom-in" data-aos-delay="150">
+              <img src="/eduleb/img/about1.png" className="img-fluid" alt="image" />
             </div>
           </div>
-          <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12" data-aos="fade-up">
-            <div className="aboutarea__content__wraper">
-              <div className="aboutarea__button">
-                <div className="default__small__button">{about.badge}</div>
-              </div>
-              <div className="aboutarea__headding heading__underline">
-                <h2>
-                  {about.title} <span>{about.highlight}</span> Center
-                </h2>
-              </div>
-              <div className="aboutarea__para aboutarea__para__2">
-                <p>{about.description}</p>
-                <p className="sp_top_15">
-                  A product of{' '}
-                  <a href={parentCompany.website} target="_blank" rel="noreferrer">
-                    {parentCompany.name}
-                  </a>{' '}
-                  — {parentCompany.tagline}.
-                </p>
-              </div>
-              <div className="aboutarea__list__2">
-                <ul>
-                  {about.features.map((feature) => (
-                    <li key={feature}>
-                      <i className="icofont-check" /> {feature}
-                    </li>
-                  ))}
-                </ul>
+          <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-left" data-aos-duration="900">
+            <div className="ab_content">
+              <h2 data-aos="fade-up" data-aos-delay="100">
+                We Are Providing The Online Course In Global World
+              </h2>
+              <p data-aos="fade-up" data-aos-delay="150">
+                We offer a brand new approach to the most basic learning paradigms. Choose from a
+                wide range of learning options and gain new skills! Our school is know.
+              </p>
+              <p data-aos="fade-up" data-aos-delay="200">
+                We offer a brand new approach to the most basic learning paradigms. Choose from a
+                wide range of learning options and gain new skills! Our school is know.
+              </p>
+              <ul>
+                <li data-aos="fade-up" data-aos-delay="250">
+                  <span className="ti-check" /> Get access to <b>12,000+</b> of our top courses
+                </li>
+                <li data-aos="fade-up" data-aos-delay="300">
+                  <span className="ti-check" /> Popular topic to learn now in our online courses for
+                  student
+                </li>
+                <li data-aos="fade-up" data-aos-delay="350">
+                  <span className="ti-check" /> Find the right instructor for you
+                </li>
+              </ul>
+              <div data-aos="fade-up" data-aos-delay="400">
+                <Link className="btn_one" to="/exams">
+                  View All Courses <i className="ti-arrow-top-right" />
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

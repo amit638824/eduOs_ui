@@ -1,112 +1,135 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { siteContent } from '@/data/siteContent';
 import type { ExamCategorySlug } from '@/utils/routes';
 
-const categoryFilterMap: Record<ExamCategorySlug, string> = {
-  'hardware-networking': 'filter-hardware',
-  'computer-application': 'filter-software',
-  diploma: 'filter-diploma',
-  'govt-it': 'filter-govt',
-  programming: 'filter-cert',
-  certification: 'filter-cert',
-};
+interface ExamGridSectionProps {
+  activeCategory?: ExamCategorySlug;
+}
 
-export default function ExamGridSection({ activeCategory }: { activeCategory?: ExamCategorySlug }) {
-  const { exams } = siteContent;
-  const items = activeCategory
-    ? exams.items.filter((exam) => exam.filterClass === categoryFilterMap[activeCategory])
-    : exams.items;
+export default function ExamGridSection({ activeCategory: _activeCategory }: ExamGridSectionProps = {}) {
+  const [activeTab, setActiveTab] = useState('All');
+
+  const tabs = ['All', 'CAT', 'JEE', 'Banking', 'UPSC', 'SSC', 'Others'];
+
+  const testCards = [
+    {
+      id: 'cat-full-length',
+      category: 'CAT',
+      badgeBg: '#ea580c',
+      title: 'CAT Full Length Mock Test',
+      sub: 'Sectional + Overall | 120 Questions | 2 hrs',
+      rating: 4.8,
+      reviews: '12.4k',
+      price: '₹299',
+      img: '/img/grid/grid_1.png',
+    },
+    {
+      id: 'jee-main-practice',
+      category: 'JEE',
+      badgeBg: '#2563eb',
+      title: 'JEE Main Practice Test',
+      sub: 'Physics + Chemistry + Maths | 90 Questions | 3 hrs',
+      rating: 4.7,
+      reviews: '9.8k',
+      price: '₹249',
+      img: '/img/grid/grid_2.png',
+    },
+    {
+      id: 'ibps-po-mock',
+      category: 'Banking',
+      badgeBg: '#7c3aed',
+      title: 'IBPS PO Mock Test',
+      sub: 'Quant + Reasoning + English | 100 Questions | 2 hrs',
+      rating: 4.6,
+      reviews: '7.2k',
+      price: '₹199',
+      img: '/img/grid/grid_3.png',
+    },
+    {
+      id: 'upsc-prelims-mock',
+      category: 'UPSC',
+      badgeBg: '#0d9488',
+      title: 'UPSC Prelims Mock Test',
+      sub: 'GS + CSAT | 120 Questions | 2.5 hrs',
+      rating: 4.9,
+      reviews: '5.3k',
+      price: '₹349',
+      img: '/img/grid/grid_4.png',
+    },
+  ];
+
+  const filtered = activeTab === 'All'
+    ? testCards
+    : testCards.filter((t) => t.category === activeTab);
 
   return (
-    <div className="gridarea gridarea__2">
+    <section className="ms-popular-tests-exact">
       <div className="container">
-        <div className="row grid__row">
-          <div className="col-xl-5 col-lg-5 col-md-12 col-sm-12" data-aos="fade-up">
-            <div className="section__title__2">
-              <div className="section__title__button">
-                <div className="default__small__button">{exams.badge}</div>
-              </div>
-              <div className="section__title__heading__2 section__title__heading__3 heading__fontsize__2">
-                <h2>{exams.title}</h2>
-              </div>
-            </div>
+        {/* Header and Filter Tabs */}
+        <div className="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-4" data-aos="fade-up">
+          <div>
+            <h2 className="ms-sec-title">Popular Mock Tests</h2>
+            <p className="ms-sec-subtitle">
+              Attempt the most popular tests and boost your preparation level.
+            </p>
           </div>
-          <div className="col-xl-7 col-lg-7 col-md-12 col-sm-12" data-aos="fade-up">
-            <div className="gridfilter_nav grid__filter__2 gridFilter">
-              {exams.filters.map((filter, index) => (
-                <button
-                  key={filter.filter}
-                  type="button"
-                  className={index === 0 ? 'active' : ''}
-                  data-filter={filter.filter}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
+
+          <div className="d-flex align-items-center flex-wrap gap-2">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`ms-test-tab-pill ${activeTab === tab ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="row grid" data-aos="fade-up">
-          {items.map((exam) => (
-            <div
-              key={exam.id}
-              className={`col-xl-4 col-lg-4 col-md-6 col-sm-6 col-12 grid-item ${exam.filterClass}`}
-            >
-              <div className="gridarea__wraper">
-                <div className="gridarea__img">
-                  <Link to={`/exams/${exam.id}`}>
-                    <img loading="lazy" src={exam.image} alt={exam.title} />
+        {/* 4 Cards Grid */}
+        <div className="row g-4">
+          {(filtered.length > 0 ? filtered : testCards).map((test, idx) => (
+            <div key={test.id} className="col-xl-3 col-lg-6 col-md-6 col-12" data-aos="fade-up" data-aos-delay={idx * 70}>
+              <div className="ms-mock-card-exact">
+                <div className="ms-mock-thumb-box">
+                  <Link to={`/exams/${test.id}`}>
+                    <img loading="lazy" src={test.img} alt={test.title} />
                   </Link>
-                  <div className="gridarea__small__button">
-                    <div className={`grid__badge ${exam.badgeColor ?? ''}`.trim()}>{exam.badge}</div>
-                  </div>
-                  <div className="gridarea__small__icon">
-                    <a href="#">
-                      <i className="icofont-heart-alt" />
-                    </a>
-                  </div>
+                  <span className="ms-mock-pill-badge" style={{ background: test.badgeBg }}>
+                    {test.category}
+                  </span>
                 </div>
-                <div className="gridarea__content">
-                  <div className="gridarea__list">
-                    <ul>
-                      <li>
-                        <i className="icofont-book-alt" /> {exam.lessons} Sections
-                      </li>
-                      <li>
-                        <i className="icofont-clock-time" /> {exam.duration}
-                      </li>
-                    </ul>
+
+                <div className="p-3 d-flex flex-column flex-grow-1">
+                  <Link to={`/exams/${test.id}`} style={{ fontSize: '1.025rem', fontWeight: 700, color: 'var(--ms-dark)', lineHeight: 1.35, textDecoration: 'none', marginBottom: '6px' }}>
+                    {test.title}
+                  </Link>
+
+                  <div style={{ fontSize: '0.8rem', color: 'var(--ms-muted)', marginBottom: '12px' }}>
+                    {test.sub}
                   </div>
-                  <div className="gridarea__heading">
-                    <h3>
-                      <Link to={`/exams/${exam.id}`}>{exam.title}</Link>
-                    </h3>
+
+                  <div className="d-flex align-items-center gap-1 mb-3" style={{ fontSize: '0.8rem', color: 'var(--ms-muted)' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#f59e0b" stroke="#f59e0b">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    </svg>
+                    <span style={{ fontWeight: 700, color: 'var(--ms-dark)' }}>{test.rating}</span>
+                    <span>({test.reviews} reviews)</span>
                   </div>
-                  <div className="gridarea__price">
-                    {exam.price}
-                    {exam.originalPrice && (
-                      <>
-                        {' '}
-                        <del>/{exam.originalPrice}</del>
-                      </>
-                    )}
-                  </div>
-                  <div className="gridarea__bottom">
-                    <Link to="/exams">
-                      <div className="gridarea__small__img">
-                        <img loading="lazy" src={exam.instructorImg} alt={exam.instructor} />
-                        <div className="gridarea__small__content">
-                          <h6>{exam.instructor}</h6>
-                        </div>
-                      </div>
-                    </Link>
-                    <div className="gridarea__star">
-                      {Array.from({ length: exam.rating }).map((_, i) => (
-                        <i key={i} className="icofont-star" />
-                      ))}
-                      <span>({exam.reviews})</span>
+
+                  <div className="d-flex align-items-center justify-content-between pt-3 border-top mt-auto" style={{ borderColor: 'var(--ms-border-light)' }}>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: 'var(--ms-dark)' }}>
+                      {test.price}
                     </div>
+
+                    <Link to={`/exams/${test.id}`} className="ms-mock-circle-btn" aria-label={`Attempt ${test.title}`}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -114,6 +137,6 @@ export default function ExamGridSection({ activeCategory }: { activeCategory?: E
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -37,7 +38,12 @@ const SCRIPTS = [
 ];
 
 export function useEdurockScripts() {
+  const { pathname } = useLocation();
+  const isDashboard = pathname.startsWith('/dashboard');
+
   useEffect(() => {
+    if (!isDashboard) return;
+
     let cancelled = false;
 
     async function init() {
@@ -52,5 +58,5 @@ export function useEdurockScripts() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isDashboard]);
 }

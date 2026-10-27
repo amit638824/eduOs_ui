@@ -1,95 +1,245 @@
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { siteContent } from '@/data/siteContent';
-import { resolveHeaderNavigation } from '@/data/navigation';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { getDefaultDashboardPath } from '@/utils/dashboardRole';
-import HamburgerIcon from '@/components/ui/HamburgerIcon';
-import DarkModeSwitcher from './DarkModeSwitcher';
+
+type NavChild = { label: string; href: string };
+type NavItem = {
+  label: string;
+  href?: string;
+  children?: NavChild[];
+};
+
+const navItems: NavItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'About', href: '/about' },
+  { label: 'Course', href: '/course' },
+  { label: 'Page', href: '/pricing' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'Contact', href: '/contact' },
+];
+
+const LOGO_SRC = '/img/logo/techwagger-logo.png';
 
 export default function Header() {
-  const { brand } = siteContent;
-  const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const isDashboard = pathname.startsWith('/dashboard');
-  const headerVariant = isDashboard ? 'headerarea__3' : 'headerarea__2';
   const dashboardPath = user ? getDefaultDashboardPath(user.roles) : '/login';
-  const navItems = resolveHeaderNavigation(user, pathname);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [openMobileSub, setOpenMobileSub] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const y =
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
+      const scrolled = y > 8;
+      setIsScrolled(scrolled);
+      document.body.classList.toggle('nav-scrolled', scrolled);
+      document.documentElement.classList.toggle('nav-scrolled', scrolled);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll, true);
+      document.removeEventListener('scroll', onScroll, true);
+      document.body.classList.remove('nav-scrolled');
+      document.documentElement.classList.remove('nav-scrolled');
+    };
+  }, []);
+
+  useEffect(() => {
+    document.body.classList.toggle('mmactive', mobileOpen);
+    return () => document.body.classList.remove('mmactive');
+  }, [mobileOpen]);
 
   const handleLogout = async () => {
+    setMobileOpen(false);
     await logout();
     navigate('/login');
   };
 
+  const closeMobile = () => {
+    setMobileOpen(false);
+    setOpenMobileSub(null);
+  };
+
   return (
-    <header>
-      <div className={`headerarea ${headerVariant} header__sticky header__area`}>
-        <div className="container desktop__menu__wrapper">
-          <div className="row">
-            <div className="col-xl-2 col-lg-2 col-md-6">
-              <div className="headerarea__left">
-                <div className="headerarea__left__logo">
-                  <Link to={user ? dashboardPath : '/'}>
-                    <img loading="lazy" src={brand.logo} alt={brand.name} />
-                  </Link>
-                </div>
+    <>
+      <div
+        id="navigation"
+        className={`navbar-light site-navigation eduleb-topbar${isScrolled ? ' is-scrolled' : ''}`}
+        style={
+          isScrolled
+            ? {
+                background: '#ffffff',
+                backgroundImage: 'none',
+                backdropFilter: 'none',
+                WebkitBackdropFilter: 'none',
+                boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+                borderBottom: '1px solid #e8edf5',
+              }
+            : undefined
+        }
+      >
+        <div className="container-fluid">
+          <div className="row align-items-center">
+            <div className="col-20 align-self-center">
+              <div className="site-logo eduleb-brand-logo">
+                <Link to="/">
+                  <img src={LOGO_SRC} alt="Techwagger" />
+                </Link>
               </div>
             </div>
 
-            <div className="col-xl-7 col-lg-7 main_menu_wrap">
-              <div className="headerarea__main__menu">
-                <nav>
-                  <ul>
-                    {navItems.map((item) => (
-                      <li key={`${item.href}-${item.label}`}>
-                        <NavLink to={item.href} end={item.href === '/'}>
-                          {item.label}
-                        </NavLink>
+            <div className="col-60 d-flex justify-content-center">
+              <nav id="main-menu">
+                <ul>
+                  {navItems.map((item) => {
+                    const hasChildren = Boolean(item.children?.length);
+                    return (
+                      <li
+                        key={item.label}
+                        className={hasChildren ? 'menu-item-has-children' : undefined}
+                      >
+                        {item.href ? (
+                          <Link to={item.href}>{item.label}</Link>
+                        ) : (
+                          <a href="#">{item.label}</a>
+                        )}
+                        {hasChildren && (
+                          <ul>
+                            {item.children!.map((child) => (
+                              <li key={`${item.label}-${child.label}`}>
+                                <Link to={child.href}>{child.label}</Link>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                       </li>
-                    ))}
-                  </ul>
-                </nav>
-              </div>
+                    );
+                  })}
+                </ul>
+              </nav>
             </div>
 
-            <div className="col-xl-3 col-lg-3 col-md-6">
-              <div className="headerarea__right">
-                <DarkModeSwitcher variant="inline" />
-                {user ? (
-                  <>
-                    <div className="headerarea__login">
-                      <Link to={dashboardPath} title="Go to dashboard">
-                        {user.firstName}
-                      </Link>
-                    </div>
-                    <div className="headerarea__button">
-                      <button type="button" className="default__button header-logout-btn" onClick={handleLogout}>
-                        Logout
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="headerarea__login">
-                      <Link to="/login">Login</Link>
-                    </div>
-                    <div className="headerarea__button">
-                      <Link className="default__button" to="/register">
-                        Sign Up Free
-                      </Link>
-                    </div>
-                  </>
-                )}
-                <div className="mobile-off-canvas">
-                  <a className="mobile-aside-button sca-hamburger-btn" href="#" aria-label="Open menu" onClick={(e) => e.preventDefault()}>
-                    <HamburgerIcon />
-                  </a>
-                </div>
-              </div>
+            <div className="col-20 d-none d-xl-block text-end align-self-center eduleb-nav-actions">
+              {user ? (
+                <>
+                  <Link to={dashboardPath} className="header-btn">
+                    Dashboard
+                  </Link>
+                  <button type="button" className="btn_one" onClick={handleLogout}>
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="header-btn">
+                    Sign In
+                  </Link>
+                  <Link to="/register" className="btn_one eduleb-signup-btn">
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
+
+            <div
+              id="sm_menu_ham"
+              className={mobileOpen ? 'open' : ''}
+              onClick={() => setMobileOpen((v) => !v)}
+              role="button"
+              tabIndex={0}
+              aria-label="Toggle menu"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') setMobileOpen((v) => !v);
+              }}
+            >
+              <span />
+              <span />
+              <span />
+              <span />
             </div>
           </div>
         </div>
       </div>
-    </header>
+
+      <div className={`sm_menu_outer slide${mobileOpen ? ' active' : ''}`}>
+        <ul className="mobile_menu">
+          {navItems.map((item) => {
+            const hasChildren = Boolean(item.children?.length);
+            const isOpen = openMobileSub === item.label;
+            return (
+              <li key={`m-${item.label}`} className={isOpen ? 'active' : undefined}>
+                {hasChildren ? (
+                  <>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setOpenMobileSub(isOpen ? null : item.label);
+                      }}
+                    >
+                      {item.label}
+                    </a>
+                    <ul className="sub-menu" style={{ display: isOpen ? 'block' : 'none' }}>
+                      {item.children!.map((child) => (
+                        <li key={`m-${item.label}-${child.label}`}>
+                          <Link to={child.href} onClick={closeMobile}>
+                            {child.label}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <Link to={item.href!} onClick={closeMobile}>
+                    {item.label}
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+          {user ? (
+            <>
+              <li>
+                <Link to={dashboardPath} onClick={closeMobile}>
+                  Dashboard
+                </Link>
+              </li>
+              <li>
+                <a
+                  href="#logout"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    void handleLogout();
+                  }}
+                >
+                  Logout
+                </a>
+              </li>
+            </>
+          ) : (
+            <>
+              <li>
+                <Link to="/login" onClick={closeMobile}>
+                  Sign In
+                </Link>
+              </li>
+              <li>
+                <Link to="/register" onClick={closeMobile}>
+                  Sign Up
+                </Link>
+              </li>
+            </>
+          )}
+        </ul>
+      </div>
+    </>
   );
 }
