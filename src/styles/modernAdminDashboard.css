@@ -156,30 +156,60 @@
 .mad-layout-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-areas:
+    "welcome quick"
+    "stats quick"
+    "stepper activity";
   gap: 16px;
   align-items: stretch;
   width: 100%;
 }
 
+.mad-layout-grid > .mad-welcome-card {
+  grid-area: welcome;
+}
+
+.mad-layout-grid > .mad-stats-row {
+  grid-area: stats;
+}
+
+.mad-layout-grid > .mad-stepper-container {
+  grid-area: stepper;
+}
+
+.mad-layout-grid > .mad-quick-actions-card {
+  grid-area: quick;
+  align-self: start;
+  height: auto;
+}
+
+.mad-activity-slot {
+  grid-area: activity;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
 @media (max-width: 1200px) {
   .mad-layout-grid {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "welcome"
+      "stats"
+      "stepper"
+      "quick"
+      "activity";
   }
-}
 
-.mad-col-main {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
+  .mad-activity-slot {
+    position: static;
+  }
 
-.mad-col-side {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-  min-height: 100%;
+  .mad-activity-slot .mad-activity-card {
+    position: static;
+    inset: auto;
+    height: auto;
+  }
 }
 
 /* ── Welcome Hero Banner ── */
@@ -870,9 +900,10 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  flex: 1 1 auto;
+  position: absolute;
+  inset: 0;
+  height: auto;
   min-height: 0;
-  align-self: stretch;
 }
 
 .mad-activity-card .mad-card-header {

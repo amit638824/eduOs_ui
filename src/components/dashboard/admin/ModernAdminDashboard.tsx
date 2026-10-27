@@ -119,8 +119,6 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
 
       {/* Main Grid: Left Column (Welcome, Stats, Chart, Tests) + Right Column (Quick Actions, Activity) */}
       <div className="mad-layout-grid">
-        {/* LEFT COLUMN */}
-        <div className="mad-col-main">
           {/* Hero Welcome Banner */}
           <div className="mad-welcome-card">
             <div className="mad-welcome-content">
@@ -332,10 +330,7 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               <AdminExamGuide compact={false} />
             </div>
           </section>
-        </div>
 
-        {/* RIGHT COLUMN */}
-        <div className="mad-col-side">
           {/* Quick Actions Card */}
           <div className="mad-quick-actions-card">
             <div className="mad-qa-header">
@@ -383,7 +378,7 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
             </div>
           </div>
 
-          {/* Recent Activity Card */}
+          <div className="mad-activity-slot">
           <div className="mad-activity-card">
             <div className="mad-card-header">
               <div className="mad-card-title">
@@ -410,7 +405,7 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               ))}
             </div>
           </div>
-        </div>
+          </div>
       </div>
 
       <div className="mad-insight-row">
