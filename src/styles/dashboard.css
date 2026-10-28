@@ -100,20 +100,41 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   transition: padding var(--db-sidebar-duration) var(--db-sidebar-ease);
 }
 
-.sca-db-sidebar__brand-link {
+.sca-db-sidebar__brand-link,
+.sca-db-sidebar__brand-link:hover,
+.sca-db-sidebar__brand-link:focus,
+.sca-db-sidebar__brand-link:active {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  text-decoration: none;
+  gap: 12px;
+  text-decoration: none !important;
+  color: #ffffff !important;
   flex-shrink: 0;
+  cursor: pointer;
+  background: transparent !important;
 }
 
 .sca-db-sidebar__logo {
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   object-fit: contain;
   border-radius: 10px;
   flex-shrink: 0;
+}
+
+.sca-db-sidebar__brand-title,
+.sca-db-sidebar__brand-link:hover .sca-db-sidebar__brand-title,
+.sca-db-sidebar__brand-link:focus .sca-db-sidebar__brand-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff !important;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none !important;
+  transition: none !important;
 }
 
 .sca-dashboard--collapsed .sca-db-sidebar__brand {
@@ -392,36 +413,132 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   color: #fff !important;
 }
 
-.sca-db-user {
+/* ── Top Bar Search Input ── */
+.sca-db-search {
   display: flex;
   align-items: center;
-  gap: 8px;
-  text-decoration: none;
-  color: var(--db-text);
-  padding: 4px 12px 4px 4px;
+  gap: 10px;
+  background: var(--db-input-bg, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
   border-radius: 24px;
-  border: 1px solid var(--db-border);
-  background: var(--db-card);
-  max-width: 180px;
+  padding: 6px 14px 6px 16px;
+  width: 300px;
+  max-width: 100%;
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s ease;
 }
 
-.sca-db-user__avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
+.sca-db-search:focus-within {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.sca-db-search i {
+  color: #94a3b8;
+  font-size: 0.95rem;
   flex-shrink: 0;
 }
 
-.sca-db-user__name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.sca-db-search input {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  width: 100%;
+  font-size: 0.84rem;
+  font-weight: 400;
+  color: var(--db-text, #0f172a);
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  font-family: 'Roboto', sans-serif !important;
 }
 
-/* ── Content ── */
+.sca-db-search input::placeholder {
+  color: #94a3b8;
+  font-family: 'Roboto', sans-serif;
+}
+
+.sca-db-search-kbd {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.2;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* ── Top Bar User Pill ── */
+.sca-db-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--db-text);
+  padding: 4px 14px 4px 5px;
+  border-radius: 28px;
+  border: 1px solid var(--db-border);
+  background: var(--db-card);
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.15s ease;
+}
+
+.sca-db-user:hover {
+  background: var(--db-card-hover, #f8fafc);
+  border-color: #cbd5e1;
+}
+
+.sca-db-user__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid #e2e8f0;
+}
+
+.sca-db-user__info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1.25;
+  min-width: 0;
+}
+
+.sca-db-user__name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.sca-db-user__role {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--db-muted, #64748b);
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.sca-db-user__caret {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Content (Global Uniform Spacing for All Menus) ── */
 .sca-dashboard__content {
   position: relative;
   flex: 1;
@@ -430,7 +547,14 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   width: 100%;
   min-height: calc(100vh - var(--db-header-h));
   min-height: calc(100dvh - var(--db-header-h));
-  padding: 0;
+  padding: 20px 24px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .sca-dashboard__content {
+    padding: 16px;
+  }
 }
 
 .sca-dashboard__overlay {
