@@ -73,15 +73,14 @@ export function OrgScopeProvider({ children }: { children: ReactNode }) {
   }, [user, superAdmin]);
 
   useEffect(() => {
-    if (!user || !superAdmin) {
+    if (!user) return;
+    if (!superAdmin) {
       fetchedForUser.current = null;
-      if (!superAdmin) {
-        setOrganizations([]);
-        if (getSelectedOrganizationId()) {
-          setSelectedOrganizationId(null);
-        }
-        setSelectedOrgIdState(null);
+      setOrganizations([]);
+      if (getSelectedOrganizationId()) {
+        setSelectedOrganizationId(null);
       }
+      setSelectedOrgIdState(null);
       return;
     }
     // One fetch per logged-in superadmin session (manual refresh still works)
