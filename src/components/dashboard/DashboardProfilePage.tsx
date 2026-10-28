@@ -7,10 +7,24 @@ import { examinationService, platformService } from '@/services';
 import { resolveImageUrl } from '@/utils/image';
 import { resolveLayoutRole } from '@/utils/dashboardRole';
 import { siteContent } from '@/data/siteContent';
-import type { OrgAnalytics, StudentStats, TestAttempt } from '@/types/examination';
+import type { AdminDashboardData, OrgAnalytics, StudentStats, TestAttempt } from '@/types/examination';
 import type { Notification } from '@/services/platform.service';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import { formatDate, formatRelativeDate } from '@/utils/dateFormat';
+
+function sparkGeometry(values: number[]) {
+  const points = values.length ? values : [0, 0];
+  const max = Math.max(...points, 1);
+  const min = Math.min(...points, 0);
+  const span = max - min || 1;
+  const coords = points.map((value, index) => {
+    const x = points.length === 1 ? 50 : (index / (points.length - 1)) * 100;
+    const y = 40 - ((value - min) / span) * 32;
+    return { x, y };
+  });
+  const line = coords.map((point, index) => `${index ? 'L' : 'M'}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+  return { line, area: `${line} L100,45 L0,45 Z` };
+}
 
 function primaryRoleLabel(roles: string[]) {
   const order = [
@@ -63,6 +77,7 @@ export default function DashboardProfilePage() {
   const [activityFilter, setActivityFilter] = useState<'all' | 'exams' | 'logins' | 'security'>('all');
   const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
   const [orgStats, setOrgStats] = useState<OrgAnalytics | null>(null);
+  const [adminDash, setAdminDash] = useState<AdminDashboardData | null>(null);
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,6 +101,7 @@ export default function DashboardProfilePage() {
     } else {
       tasks.push(
         examinationService.getAnalyticsOverview().then(setOrgStats).catch(() => undefined),
+        examinationService.getAdminDashboard().then(setAdminDash).catch(() => undefined),
         examinationService.listAttempts(1, 8).then((r) => setAttempts(r.data)).catch(() => undefined),
       );
     }
@@ -119,9 +135,18 @@ export default function DashboardProfilePage() {
   const memberSince = user?.createdAt ? formatDate(user.createdAt) : '10 Sep 2026';
 
   // Counts for the header and metrics
-  const studentsCount = orgStats?.students ?? studentStats?.assigned_tests ?? 13;
-  const testsCount = orgStats?.tests ?? 37;
-  const attemptsCount = orgStats?.attempts ?? studentStats?.attempts ?? 67;
+  const studentsCount = adminDash?.totals.students ?? orgStats?.students ?? studentStats?.assigned_tests ?? 10;
+  const testsCount = adminDash?.totals.tests ?? orgStats?.tests ?? 68;
+  const attemptsCount = adminDash?.totals.attempts ?? orgStats?.attempts ?? studentStats?.attempts ?? 59;
+  const trends = adminDash?.trends ?? { tests: 1500, students: 800, attempts: 2750 };
+
+  const sparks = useMemo(() => {
+    return {
+      tests: sparkGeometry(adminDash?.sparklines?.tests ?? [4, 8, 14, 22, 35, 52, 68]),
+      students: sparkGeometry(adminDash?.sparklines?.students ?? [1, 2, 3, 5, 7, 9, 10]),
+      attempts: sparkGeometry(adminDash?.sparklines?.attempts ?? [3, 9, 18, 28, 42, 51, 59]),
+    };
+  }, [adminDash]);
 
   // Build rich activity timeline events
   const allActivities = useMemo(() => {
@@ -455,36 +480,145 @@ export default function DashboardProfilePage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Examination Scope & Audit Activity */}
+        {/* RIGHT COLUMN: Dashboard Sparkline Stat Cards & Audit Activity */}
         <div className="edtp-profile-col-right">
-          {/* Card 1: Examination Scope & Academic Performance */}
-          <div className="edtp-profile-card edtp-oper-card">
-            <div className="edtp-card-header">
-              <div>
-                <h3 className="edtp-card-title">Examination Scope & Academic Performance</h3>
-                <p className="edtp-card-subtitle">
-                  Live overview of tests, assigned cohorts, and evaluation metrics for {organizationName}
-                </p>
+          {/* 3 Dashboard Metric Cards with Sparkline Wave Graphs */}
+          <div className="edtp-profile-stats-row">
+            {/* Card 1: Total Tests */}
+            <div className="mad-v3-stat-card">
+              <div className="mad-v3-stat-top">
+                <div className="mad-v3-stat-icon mad-v3-stat-icon--blue">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <path d="M13 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7l-5-5z" />
+                    <path d="M13 2v5h5" />
+                  </svg>
+                </div>
+                <button type="button" className="mad-v3-kebab" aria-label="Options">
+                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <circle cx="10" cy="4" r="1.5" />
+                    <circle cx="10" cy="10" r="1.5" />
+                    <circle cx="10" cy="16" r="1.5" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mad-v3-stat-mid">
+                <div className="mad-v3-stat-value-group">
+                  <span className="mad-v3-stat-num">{testsCount}</span>
+                  <span className="mad-v3-stat-title">Total Tests</span>
+                </div>
+                {/* Blue Sparkline SVG */}
+                <div className="mad-v3-sparkline-box">
+                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="spBlueProfile" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={sparks.tests.area} fill="url(#spBlueProfile)" />
+                    <path d={sparks.tests.line} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className={`mad-v3-stat-trend${trends.tests < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+                </svg>
+                <span>{trends.tests}%</span> <span className="trend-lbl">from last month</span>
               </div>
             </div>
 
-            <div className="edtp-oper-tiles-grid">
-              <div className="edtp-oper-tile edtp-oper-tile--tests">
-                <span className="edtp-oper-num">{testsCount}</span>
-                <span className="edtp-oper-label">Total Examinations Created</span>
-                <span className="edtp-oper-meta">28 Published • 6 Drafts • 3 Live</span>
+            {/* Card 2: Total Students */}
+            <div className="mad-v3-stat-card">
+              <div className="mad-v3-stat-top">
+                <div className="mad-v3-stat-icon mad-v3-stat-icon--green">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <path d="M17 17v-1.5a3.5 3.5 0 00-3.5-3.5h-7A3.5 3.5 0 003 15.5V17" />
+                    <circle cx="10" cy="6" r="3.5" />
+                  </svg>
+                </div>
+                <button type="button" className="mad-v3-kebab" aria-label="Options">
+                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <circle cx="10" cy="4" r="1.5" />
+                    <circle cx="10" cy="10" r="1.5" />
+                    <circle cx="10" cy="16" r="1.5" />
+                  </svg>
+                </button>
               </div>
 
-              <div className="edtp-oper-tile edtp-oper-tile--students">
-                <span className="edtp-oper-num">{studentsCount}</span>
-                <span className="edtp-oper-label">Enrolled Students</span>
-                <span className="edtp-oper-meta">100% Onboarded • ↑ +12% Growth</span>
+              <div className="mad-v3-stat-mid">
+                <div className="mad-v3-stat-value-group">
+                  <span className="mad-v3-stat-num">{studentsCount}</span>
+                  <span className="mad-v3-stat-title">Total Students</span>
+                </div>
+                {/* Green Sparkline SVG */}
+                <div className="mad-v3-sparkline-box">
+                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="spGreenProfile" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={sparks.students.area} fill="url(#spGreenProfile)" />
+                    <path d={sparks.students.line} fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
               </div>
 
-              <div className="edtp-oper-tile edtp-oper-tile--attempts">
-                <span className="edtp-oper-num">{attemptsCount}</span>
-                <span className="edtp-oper-label">Candidate Attempts Evaluated</span>
-                <span className="edtp-oper-meta">86.4% Avg Score • 91.2% Pass Rate</span>
+              <div className={`mad-v3-stat-trend${trends.students < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+                </svg>
+                <span>{trends.students}%</span> <span className="trend-lbl">from last month</span>
+              </div>
+            </div>
+
+            {/* Card 3: Total Attempts */}
+            <div className="mad-v3-stat-card">
+              <div className="mad-v3-stat-top">
+                <div className="mad-v3-stat-icon mad-v3-stat-icon--purple">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <path d="M7 10l2 2 4-4" />
+                    <rect x="3" y="3" width="14" height="14" rx="3" />
+                  </svg>
+                </div>
+                <button type="button" className="mad-v3-kebab" aria-label="Options">
+                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <circle cx="10" cy="4" r="1.5" />
+                    <circle cx="10" cy="10" r="1.5" />
+                    <circle cx="10" cy="16" r="1.5" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mad-v3-stat-mid">
+                <div className="mad-v3-stat-value-group">
+                  <span className="mad-v3-stat-num">{attemptsCount}</span>
+                  <span className="mad-v3-stat-title">Total Attempts</span>
+                </div>
+                {/* Purple Sparkline SVG */}
+                <div className="mad-v3-sparkline-box">
+                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="spPurpleProfile" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={sparks.attempts.area} fill="url(#spPurpleProfile)" />
+                    <path d={sparks.attempts.line} fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className={`mad-v3-stat-trend${trends.attempts < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+                </svg>
+                <span>{trends.attempts}%</span> <span className="trend-lbl">from last month</span>
               </div>
             </div>
           </div>

@@ -3797,7 +3797,8 @@ body.sca-dashboard-body .sca-dashboard .row>[class*='col-'] {
 
 .edtp-profile-banner {
   height: 90px;
-  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%);
+  background: linear-gradient(135deg, #161a39 0%, #1e2554 100%);
+  border-bottom: 1px solid #384275;
   position: relative;
 }
 
@@ -3805,7 +3806,7 @@ body.sca-dashboard-body .sca-dashboard .row>[class*='col-'] {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.2), transparent 45%);
+  background: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08), transparent 50%);
 }
 
 .edtp-profile-hero-body {
@@ -4201,6 +4202,20 @@ body.sca-dashboard-body .sca-dashboard .row>[class*='col-'] {
 
 .edtp-alert-btn:hover {
   background: #b45309;
+}
+
+/* ── Right Column: Dashboard Sparkline Stat Cards Row ── */
+.edtp-profile-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .edtp-profile-stats-row {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ── Right Column: Operational Card ── */
