@@ -5,12 +5,18 @@ export interface DashboardNavItem {
   href: string;
   icon: string;
   badge?: string;
+  badgeVariant?: 'primary' | 'danger' | 'purple' | 'info' | 'default';
   action?: 'logout';
+  subItems?: DashboardNavItem[];
 }
 
 export interface DashboardNavSection {
+  id?: string;
   title?: string;
   className?: string;
+  collapsible?: boolean;
+  defaultOpen?: boolean;
+  countBadge?: string;
   items: DashboardNavItem[];
 }
 

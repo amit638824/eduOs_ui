@@ -99,7 +99,7 @@ const logoutItem = {
 /**
  * Role-based sidebar:
  *
- * - Super Admin → full platform access
+ * - Super Admin → 4-domain hierarchy (Core, Academic Suite, User Management, Platform Governance, Pinned Bottom)
  * - Org Admin → departments, faculty, students + oversight
  * - Teacher → create tests, question bank
  * - Student → take tests, assignments, calendar + results
@@ -129,153 +129,171 @@ export function buildDashboardNavigation(
     if (superAdmin) {
       return [
         {
-          title: 'Platform',
-
+          id: 'core',
+          title: 'CORE',
+          collapsible: false,
           items: [
             {
               label: 'Dashboard',
               href: `${base}/admin-dashboard`,
               icon: 'home',
             },
-
-            {
-              label: 'Organizations',
-              href: `${base}/admin-organizations`,
-              icon: 'course',
-            },
-
-            {
-              label: 'Users',
-              href: `${base}/admin-users`,
-              icon: 'user',
-            },
-
-            {
-              label: 'Departments',
-              href: `${base}/admin-org`,
-              icon: 'bookmark',
-            },
-
-            {
-              label: 'Faculty',
-              href: `${base}/admin-faculty`,
-              icon: 'user',
-            },
-
-            {
-              label: 'Staff',
-              href: `${base}/admin-staff`,
-              icon: 'user',
-            },
-
-            {
-              label: 'Students',
-              href: `${base}/admin-students`,
-              icon: 'bookmark',
-            },
-
-            {
-              label: 'Audit Logs',
-              href: `${base}/admin-audit`,
-              icon: 'assignment',
-            },
-
-            {
-              label: 'Payments',
-              href: `${base}/admin-wishlist`,
-              icon: 'cart',
-            },
-
-            {
-              label: 'Sessions',
-              href: `${base}/admin-sessions`,
-              icon: 'monitor',
-            },
-
-            {
-              label: 'Settings',
-              href: `${base}/admin-settings`,
-              icon: 'settings',
-            },
           ],
         },
 
         {
-          title: 'Examinations (selected org)',
-
+          id: 'academic',
+          title: 'ACADEMIC SUITE',
+          collapsible: true,
+          defaultOpen: true,
           items: [
-            {
-              label: 'Question Bank',
-              href: `${base}/admin-question-bank`,
-              icon: 'quiz',
-            },
-
-            {
-              label: 'Create Test',
-              href: `${base}/create-test`,
-              icon: 'course',
-            },
-
-            {
-              label: 'Build with AI',
-              href: `${base}/ai-questions`,
-              icon: 'quiz',
-            },
-
             {
               label: 'All Tests',
               href: `${base}/admin-course`,
               icon: 'monitor',
             },
-
+            {
+              label: 'Create Test',
+              href: `${base}/create-test`,
+              icon: 'plus',
+            },
+            {
+              label: 'Build with AI',
+              href: `${base}/ai-questions`,
+              icon: 'spark',
+              badge: 'AI',
+              badgeVariant: 'purple',
+            },
+            {
+              label: 'Question Bank',
+              href: `${base}/admin-question-bank`,
+              icon: 'quiz',
+            },
             {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
               icon: 'assignment',
+              subItems: [
+                {
+                  label: 'All Attempts',
+                  href: `${base}/admin-quiz-attempts`,
+                  icon: 'assignment',
+                },
+                {
+                  label: 'Flagged Attempts',
+                  href: `${base}/admin-flagged-attempts`,
+                  icon: 'assignment',
+                  badge: 'Review',
+                  badgeVariant: 'danger',
+                },
+              ],
             },
-
-            {
-              label: 'Flagged Attempts',
-              href: `${base}/admin-flagged-attempts`,
-              icon: 'assignment',
-            },
-
             {
               label: 'Assignments',
               href: `${base}/admin-assignments`,
               icon: 'bookmark',
             },
-
             {
               label: 'Reports',
               href: `${base}/admin-reviews`,
               icon: 'star',
             },
-
             {
               label: 'Certificates',
               href: `${base}/admin-certificates`,
-              icon: 'quiz',
+              icon: 'certificate',
             },
           ],
         },
 
         {
-          title: 'Account',
-
+          id: 'user_mgmt',
+          title: 'USER MANAGEMENT',
+          collapsible: true,
+          defaultOpen: false,
+          countBadge: '5 tabs',
           items: [
+            {
+              label: 'Users',
+              href: `${base}/admin-users`,
+              icon: 'user',
+            },
+            {
+              label: 'Faculty',
+              href: `${base}/admin-faculty`,
+              icon: 'user',
+            },
+            {
+              label: 'Staff',
+              href: `${base}/admin-staff`,
+              icon: 'user',
+            },
+            {
+              label: 'Students',
+              href: `${base}/admin-students`,
+              icon: 'bookmark',
+            },
+            {
+              label: 'Departments',
+              href: `${base}/admin-org`,
+              icon: 'course',
+            },
+          ],
+        },
+
+        {
+          id: 'platform_gov',
+          title: 'PLATFORM GOVERNANCE',
+          collapsible: true,
+          defaultOpen: false,
+          countBadge: '4 tabs',
+          items: [
+            {
+              label: 'Organizations',
+              href: `${base}/admin-organizations`,
+              icon: 'shield',
+            },
+            {
+              label: 'Payments',
+              href: `${base}/admin-wishlist`,
+              icon: 'cart',
+            },
+            {
+              label: 'Audit Logs',
+              href: `${base}/admin-audit`,
+              icon: 'assignment',
+            },
+            {
+              label: 'Sessions',
+              href: `${base}/admin-sessions`,
+              icon: 'clock',
+            },
+          ],
+        },
+
+        {
+          id: 'pinned_bottom',
+          title: 'PINNED BOTTOM',
+          collapsible: false,
+          className: 'sca-db-sidebar__group--pinned',
+          items: [
+            {
+              label: 'Settings',
+              href: `${base}/admin-settings`,
+              icon: 'settings',
+            },
             {
               label: 'My Profile',
               href: `${base}/admin-profile`,
               icon: 'user',
             },
-
             {
               label: 'Notifications',
               href: `${base}/admin-message`,
               icon: 'message',
+              badge: '3',
+              badgeVariant: 'danger',
             },
-
             logoutItem,
           ],
         },
@@ -290,111 +308,126 @@ export function buildDashboardNavigation(
     if (staffOnly) {
       return [
         {
-          title: 'Operations',
-
+          id: 'core',
+          title: 'CORE',
+          collapsible: false,
           items: [
             {
               label: 'Dashboard',
               href: `${base}/admin-dashboard`,
               icon: 'home',
             },
-
-            {
-              label: 'Departments',
-              href: `${base}/admin-org`,
-              icon: 'course',
-            },
-
-            {
-              label: 'Students',
-              href: `${base}/admin-students`,
-              icon: 'bookmark',
-            },
           ],
         },
 
         {
-          title: 'Examinations',
-
+          id: 'academic',
+          title: 'ACADEMIC SUITE',
+          collapsible: true,
+          defaultOpen: true,
           items: [
-            {
-              label: 'Question Bank',
-              href: `${base}/admin-question-bank`,
-              icon: 'quiz',
-            },
-
-            {
-              label: 'Create Test',
-              href: `${base}/create-test`,
-              icon: 'course',
-            },
-
-            {
-              label: 'Build with AI',
-              href: `${base}/ai-questions`,
-              icon: 'quiz',
-            },
-
             {
               label: 'All Tests',
               href: `${base}/admin-course`,
               icon: 'monitor',
             },
-
+            {
+              label: 'Create Test',
+              href: `${base}/create-test`,
+              icon: 'plus',
+            },
+            {
+              label: 'Build with AI',
+              href: `${base}/ai-questions`,
+              icon: 'spark',
+              badge: 'AI',
+              badgeVariant: 'purple',
+            },
+            {
+              label: 'Question Bank',
+              href: `${base}/admin-question-bank`,
+              icon: 'quiz',
+            },
             {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
               icon: 'assignment',
+              subItems: [
+                {
+                  label: 'All Attempts',
+                  href: `${base}/admin-quiz-attempts`,
+                  icon: 'assignment',
+                },
+                {
+                  label: 'Flagged Attempts',
+                  href: `${base}/admin-flagged-attempts`,
+                  icon: 'assignment',
+                  badge: 'Review',
+                  badgeVariant: 'danger',
+                },
+              ],
             },
-
-            {
-              label: 'Flagged Attempts',
-              href: `${base}/admin-flagged-attempts`,
-              icon: 'assignment',
-            },
-
             {
               label: 'Assignments',
               href: `${base}/admin-assignments`,
               icon: 'bookmark',
             },
-
             {
               label: 'Reports',
               href: `${base}/admin-reviews`,
               icon: 'star',
             },
-
             {
               label: 'Certificates',
               href: `${base}/admin-certificates`,
-              icon: 'quiz',
+              icon: 'certificate',
             },
           ],
         },
 
         {
-          title: 'Account',
-
+          id: 'user_mgmt',
+          title: 'USER MANAGEMENT',
+          collapsible: true,
+          defaultOpen: false,
+          countBadge: '2 tabs',
           items: [
             {
-              label: 'My Profile',
-              href: `${base}/admin-profile`,
-              icon: 'user',
+              label: 'Students',
+              href: `${base}/admin-students`,
+              icon: 'bookmark',
             },
-
             {
-              label: 'Notifications',
-              href: `${base}/admin-message`,
-              icon: 'message',
+              label: 'Departments',
+              href: `${base}/admin-org`,
+              icon: 'course',
             },
+          ],
+        },
 
+        {
+          id: 'pinned_bottom',
+          title: 'PINNED BOTTOM',
+          collapsible: false,
+          className: 'sca-db-sidebar__group--pinned',
+          items: [
             {
               label: 'Settings',
               href: `${base}/admin-settings`,
               icon: 'settings',
             },
-
+            {
+              label: 'My Profile',
+              href: `${base}/admin-profile`,
+              icon: 'user',
+            },
+            {
+              label: 'Notifications',
+              href: `${base}/admin-message`,
+              icon: 'message',
+              badge: '3',
+              badgeVariant: 'danger',
+            },
             logoutItem,
           ],
         },
@@ -408,123 +441,136 @@ export function buildDashboardNavigation(
      */
     return [
       {
-        title: 'Organization',
-
+        id: 'core',
+        title: 'CORE',
+        collapsible: false,
         items: [
           {
             label: 'Dashboard',
             href: `${base}/admin-dashboard`,
             icon: 'home',
           },
-
-          {
-            label: 'Departments',
-            href: `${base}/admin-org`,
-            icon: 'course',
-          },
-
-          {
-            label: 'Faculty',
-            href: `${base}/admin-faculty`,
-            icon: 'user',
-          },
-
-          {
-            label: 'Staff',
-            href: `${base}/admin-staff`,
-            icon: 'user',
-          },
-
-          {
-            label: 'Students',
-            href: `${base}/admin-students`,
-            icon: 'bookmark',
-          },
         ],
       },
 
       {
-        title: 'Examinations',
-
+        id: 'academic',
+        title: 'ACADEMIC SUITE',
+        collapsible: true,
+        defaultOpen: true,
         items: [
-          {
-            label: 'Question Bank',
-            href: `${base}/admin-question-bank`,
-            icon: 'quiz',
-          },
-
-          {
-            label: 'Create Test',
-            href: `${base}/create-test`,
-            icon: 'course',
-          },
-
-          {
-            label: 'Build with AI',
-            href: `${base}/ai-questions`,
-            icon: 'quiz',
-          },
-
           {
             label: 'All Tests',
             href: `${base}/admin-course`,
             icon: 'monitor',
           },
-
+          {
+            label: 'Create Test',
+            href: `${base}/create-test`,
+            icon: 'plus',
+          },
+          {
+            label: 'Build with AI',
+            href: `${base}/ai-questions`,
+            icon: 'spark',
+            badge: 'AI',
+            badgeVariant: 'purple',
+          },
+          {
+            label: 'Question Bank',
+            href: `${base}/admin-question-bank`,
+            icon: 'quiz',
+          },
           {
             label: 'Attempts',
             href: `${base}/admin-quiz-attempts`,
             icon: 'assignment',
+            subItems: [
+              {
+                label: 'All Attempts',
+                href: `${base}/admin-quiz-attempts`,
+                icon: 'assignment',
+              },
+              {
+                label: 'Flagged Attempts',
+                href: `${base}/admin-flagged-attempts`,
+                icon: 'assignment',
+                badge: 'Review',
+                badgeVariant: 'danger',
+              },
+            ],
           },
-
-          {
-            label: 'Flagged Attempts',
-            href: `${base}/admin-flagged-attempts`,
-            icon: 'assignment',
-          },
-
           {
             label: 'Assignments',
             href: `${base}/admin-assignments`,
             icon: 'bookmark',
           },
-
           {
             label: 'Reports',
             href: `${base}/admin-reviews`,
             icon: 'star',
           },
-
           {
             label: 'Certificates',
             href: `${base}/admin-certificates`,
-            icon: 'quiz',
+            icon: 'certificate',
           },
         ],
       },
 
       {
-        title: 'Account',
-
+        id: 'user_mgmt',
+        title: 'USER MANAGEMENT',
+        collapsible: true,
+        defaultOpen: false,
+        countBadge: '4 tabs',
         items: [
           {
-            label: 'My Profile',
-            href: `${base}/admin-profile`,
+            label: 'Faculty',
+            href: `${base}/admin-faculty`,
             icon: 'user',
           },
-
           {
-            label: 'Notifications',
-            href: `${base}/admin-message`,
-            icon: 'message',
+            label: 'Staff',
+            href: `${base}/admin-staff`,
+            icon: 'user',
           },
+          {
+            label: 'Students',
+            href: `${base}/admin-students`,
+            icon: 'bookmark',
+          },
+          {
+            label: 'Departments',
+            href: `${base}/admin-org`,
+            icon: 'course',
+          },
+        ],
+      },
 
+      {
+        id: 'pinned_bottom',
+        title: 'PINNED BOTTOM',
+        collapsible: false,
+        className: 'sca-db-sidebar__group--pinned',
+        items: [
           {
             label: 'Settings',
             href: `${base}/admin-settings`,
             icon: 'settings',
           },
-
+          {
+            label: 'My Profile',
+            href: `${base}/admin-profile`,
+            icon: 'user',
+          },
+          {
+            label: 'Notifications',
+            href: `${base}/admin-message`,
+            icon: 'message',
+            badge: '3',
+            badgeVariant: 'danger',
+          },
           logoutItem,
         ],
       },
@@ -539,87 +585,92 @@ export function buildDashboardNavigation(
   if (role === 'teacher') {
     return [
       {
-        title: 'Teaching',
-
+        id: 'core',
+        title: 'CORE',
+        collapsible: false,
         items: [
           {
             label: 'Dashboard',
             href: `${base}/teacher-dashboard`,
             icon: 'home',
           },
+        ],
+      },
 
-          {
-            label: 'Question Bank',
-            href: `${base}/admin-question-bank`,
-            icon: 'quiz',
-          },
-
-          {
-            label: 'Create Test',
-            href: `${base}/create-test`,
-            icon: 'course',
-          },
-
-          {
-            label: 'Build with AI',
-            href: `${base}/ai-questions`,
-            icon: 'quiz',
-          },
-
+      {
+        id: 'academic',
+        title: 'ACADEMIC SUITE',
+        collapsible: true,
+        defaultOpen: true,
+        items: [
           {
             label: 'My Tests',
             href: `${base}/teacher-course`,
             icon: 'monitor',
           },
-
           {
-            label: 'Assignments',
-            href: `${base}/teacher-assignments`,
-            icon: 'assignment',
+            label: 'Create Test',
+            href: `${base}/create-test`,
+            icon: 'plus',
           },
-
+          {
+            label: 'Build with AI',
+            href: `${base}/ai-questions`,
+            icon: 'spark',
+            badge: 'AI',
+            badgeVariant: 'purple',
+          },
+          {
+            label: 'Question Bank',
+            href: `${base}/admin-question-bank`,
+            icon: 'quiz',
+          },
           {
             label: 'Flagged Attempts',
             href: `${base}/teacher-flagged-attempts`,
             icon: 'assignment',
+            badge: 'Review',
+            badgeVariant: 'danger',
           },
-
+          {
+            label: 'Assignments',
+            href: `${base}/teacher-assignments`,
+            icon: 'bookmark',
+          },
           {
             label: 'Reports',
             href: `${base}/teacher-reviews`,
             icon: 'star',
           },
-
           {
             label: 'Certificates',
             href: `${base}/teacher-certificates`,
-            icon: 'quiz',
+            icon: 'certificate',
           },
         ],
       },
 
       {
-        title: 'Account',
-
+        id: 'pinned_bottom',
+        title: 'PINNED BOTTOM',
+        collapsible: false,
+        className: 'sca-db-sidebar__group--pinned',
         items: [
-          {
-            label: 'My Profile',
-            href: `${base}/teacher-profile`,
-            icon: 'user',
-          },
-
-          {
-            label: 'Notifications',
-            href: `${base}/teacher-message`,
-            icon: 'message',
-          },
-
           {
             label: 'Settings',
             href: `${base}/teacher-settings`,
             icon: 'settings',
           },
-
+          {
+            label: 'My Profile',
+            href: `${base}/teacher-profile`,
+            icon: 'user',
+          },
+          {
+            label: 'Notifications',
+            href: `${base}/teacher-message`,
+            icon: 'message',
+          },
           logoutItem,
         ],
       },
@@ -634,7 +685,6 @@ export function buildDashboardNavigation(
   return [
     {
       title: '',
-
       items: [
         {
           label: 'Dashboard',
@@ -666,12 +716,6 @@ export function buildDashboardNavigation(
           icon: 'quiz',
         },
 
-        /*
-         * Student Exam Calendar
-         *
-         * Scheduled tests assigned to this student
-         * are displayed on this calendar.
-         */
         {
           label: 'Calendar',
           href: `${base}/student-calendar`,
