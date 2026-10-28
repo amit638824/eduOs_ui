@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { showFlashedToast } from '@/lib/toast';
 
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
@@ -35,8 +37,13 @@ import CertificatePage from '@/pages/CertificatePage';
 import { dashboardRouteElements } from '@/pages/dashboard/dashboardRoutes';
 
 import 'react-toastify/dist/ReactToastify.css';
+import '@/styles/toast.css';
 
 export default function App() {
+  useEffect(() => {
+    showFlashedToast();
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -146,8 +153,9 @@ export default function App() {
               closeOnClick
               pauseOnHover
               draggable
+              limit={4}
               theme="light"
-              toastClassName="sca-toast"
+              toastClassName="ms-toast-wrap"
             />
           </BrowserRouter>
         </OrgScopeProvider>

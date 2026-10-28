@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
+import type { HomepageContent } from '@/types/homepage';
 
-const exams = [
+const fallbackExams = [
   { title: 'CAT', sub: 'MBA Entrance', color: '#ea580c', bg: '#fff7ed' },
   { title: 'JEE', sub: 'Main & Advanced', color: '#2563eb', bg: '#eff6ff' },
   { title: 'UPSC', sub: 'Civil Services', color: '#7c3aed', bg: '#f5f3ff' },
@@ -11,12 +12,13 @@ const exams = [
   { title: '& More', sub: 'View all exams', color: '#3861fb', bg: '#eff4ff' },
 ];
 
-export default function ExamStripSection() {
+export default function ExamStripSection({ content }: { content?: HomepageContent['exams'] }) {
+  const exams = content?.items?.length ? content.items : fallbackExams;
   return (
     <section className="eduleb-exam-strip">
       <div className="container">
         <div className="text-center mb-4" data-aos="fade-up" data-aos-duration="1000">
-          <p className="eduleb-exam-strip-eyebrow">PREPARE FOR TOP EXAMS</p>
+          <p className="eduleb-exam-strip-eyebrow">{content?.eyebrow || 'PREPARE FOR TOP EXAMS'}</p>
         </div>
         <div className="row g-3 justify-content-center">
           {exams.map((exam, idx) => (

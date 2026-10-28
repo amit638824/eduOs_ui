@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2';
-import { toast } from 'react-toastify';
+import { notify } from '@/lib/toast';
 
 const base = Swal.mixin({
   buttonsStyling: true,
@@ -51,23 +51,19 @@ export async function confirmAction(options: {
   return result.isConfirmed;
 }
 
-function toastMessage(title: string, text?: string) {
-  return text ? `${title} — ${text}` : title;
-}
-
-/** Success feedback — react-toastify (not a blocking modal) */
+/** Success feedback. Same global toast as API responses. */
 export function showSuccess(title: string, text?: string): void {
-  toast.success(toastMessage(title, text));
+  notify.success(text || title, text ? { title } : undefined);
 }
 
-/** Error feedback — react-toastify */
+/** Error feedback. Same global toast as API responses. */
 export function showError(title: string, text?: string): void {
-  toast.error(toastMessage(title, text));
+  notify.error(text || title, text ? { title } : undefined);
 }
 
-/** Info feedback — react-toastify */
+/** Info feedback. Same global toast as API responses. */
 export function showInfo(title: string, text?: string): void {
-  toast.info(toastMessage(title, text));
+  notify.info(text || title, text ? { title } : undefined);
 }
 
-export { Swal, toast };
+export { Swal, notify };

@@ -151,21 +151,7 @@ export function TeacherDashboardHome() {
 
 export function AdminDashboardHome() {
   const { error } = useOrganization();
-  const [examStats, setExamStats] = useState<OrgAnalytics | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-
-  useEffect(() => {
-    setStatsLoading(true);
-    examinationService
-      .getAnalyticsOverview()
-      .then(setExamStats)
-      .catch(() => setExamStats(null))
-      .finally(() => setStatsLoading(false));
-  }, []);
-
-  useDashboardLoadingEffect(statsLoading);
-
-  return <ModernAdminDashboard examStats={examStats} error={error} />;
+  return <ModernAdminDashboard error={error} />;
 }
 
 export {

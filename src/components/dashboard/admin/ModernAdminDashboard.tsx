@@ -1,35 +1,110 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { useOrganization } from '@/hooks/useOrganization';
-import type { OrgAnalytics } from '@/types/examination';
-import { platformService } from '@/services';
-import type { AuditLog } from '@/services/platform.service';
+import { parseApiError } from '@/lib/errors';
+import { examinationService } from '@/services';
+import type { AdminDashboardData } from '@/types/examination';
 
 interface ModernAdminDashboardProps {
-  examStats: OrgAnalytics | null;
   error?: string | null;
 }
 
-export default function ModernAdminDashboard({ examStats, error }: ModernAdminDashboardProps) {
+const STEP_LINKS = [
+  '/dashboard/admin-question-bank',
+  '/dashboard/create-test',
+  '/dashboard/admin-course',
+  '/dashboard/admin-course',
+  '/dashboard/admin-course',
+];
+
+const SUBJECT_COLORS = ['blue', 'purple', 'teal', 'amber'];
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  if (!Number.isFinite(diff) || diff < 0) return 'Just now';
+  const min = Math.round(diff / 60000);
+  if (min < 1) return 'Just now';
+  if (min < 60) return `${min} min ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr} hour${hr === 1 ? '' : 's'} ago`;
+  const day = Math.round(hr / 24);
+  return `${day} day${day === 1 ? '' : 's'} ago`;
+}
+
+function sparkGeometry(values: number[]) {
+  const points = values.length ? values : [0, 0];
+  const max = Math.max(...points, 1);
+  const min = Math.min(...points, 0);
+  const span = max - min || 1;
+  const coords = points.map((value, index) => {
+    const x = points.length === 1 ? 50 : (index / (points.length - 1)) * 100;
+    const y = 40 - ((value - min) / span) * 32;
+    return { x, y };
+  });
+  const line = coords.map((point, index) => `${index ? 'L' : 'M'}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+  return { line, area: `${line} L100,45 L0,45 Z` };
+}
+
+function chartGeometry(values: number[]) {
+  const width = 365;
+  const height = 90;
+  const left = 10;
+  const top = 28;
+  const points = values.length ? values : [0];
+  const max = Math.max(...points, 1);
+  const min = Math.min(...points, 0);
+  const span = max - min || 1;
+  const coords = points.map((value, index) => {
+    const x = points.length === 1 ? left + width / 2 : left + (index / (points.length - 1)) * width;
+    const y = top + height - ((value - min) / span) * height;
+    return { x, y };
+  });
+  const line = coords.map((point, index) => `${index ? 'L' : 'M'}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+  const last = coords[coords.length - 1];
+  const mid = coords[Math.floor(coords.length / 2)];
+  return {
+    line,
+    area: `${line} L${last.x.toFixed(1)},140 L${coords[0].x.toFixed(1)},140 Z`,
+    last,
+    mid,
+  };
+}
+
+function tagColor(tag: string): string {
+  if (tag === 'Created') return 'purple';
+  if (tag === 'New') return 'blue';
+  if (tag === 'Deleted') return 'amber';
+  if (tag === 'Completed') return 'green';
+  return 'amber';
+}
+
+export default function ModernAdminDashboard({ error }: ModernAdminDashboardProps) {
   const { user } = useAuth();
   const { organization } = useOrganization();
   const [timeFilter, setTimeFilter] = useState<'Last 7 days' | 'Last 30 days' | 'This Month'>('Last 7 days');
-  const [subjectMonth, setSubjectMonth] = useState('This Month');
-  const [activeStep, setActiveStep] = useState(2);
-  const [dynamicActivities, setDynamicActivities] = useState<AuditLog[]>([]);
+  const [subjectMonth, setSubjectMonth] = useState<'This Month' | 'Last Month' | 'All Time'>('This Month');
+  const [dash, setDash] = useState<AdminDashboardData | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useDashboardLoadingEffect(loading);
 
   useEffect(() => {
     let mounted = true;
-    platformService
-      .listAuditLogs(1, 4)
-      .then((res) => {
-        if (mounted && res?.data && res.data.length > 0) {
-          setDynamicActivities(res.data);
-        }
+    setLoading(true);
+    examinationService
+      .getAdminDashboard()
+      .then((data) => {
+        if (mounted) setDash(data);
       })
-      .catch(() => {});
-
+      .catch((err) => {
+        if (mounted) setLoadError(parseApiError(err));
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
     return () => {
       mounted = false;
     };
@@ -37,119 +112,69 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
 
   const displayName = user?.firstName
     ? `${user.firstName} ${user.lastName || ''}`.trim()
-    : 'Rahul Sharma';
+    : 'there';
 
-  // Dynamic statistics matching new screenshot with smart fallbacks
-  const totalTests = examStats?.tests != null ? String(examStats.tests) : '68';
-  const totalStudents = examStats?.students != null ? String(examStats.students) : '10';
-  const totalAttempts = examStats?.attempts != null ? String(examStats.attempts) : '59';
-  const avgScore =
-    examStats?.pass_rate && examStats.pass_rate > 0
-      ? `${Math.round(examStats.pass_rate)}%`
-      : '86%';
+  const totalTests = dash ? String(dash.totals.tests) : '—';
+  const totalStudents = dash ? String(dash.totals.students) : '—';
+  const totalAttempts = dash ? String(dash.totals.attempts) : '—';
+  const avgScore = dash ? `${Math.round(dash.totals.averageScore)}%` : '—';
+  const trends = dash?.trends ?? { tests: 0, students: 0, attempts: 0, averageScore: 0 };
+  const sparks = {
+    tests: sparkGeometry(dash?.sparklines.tests ?? []),
+    students: sparkGeometry(dash?.sparklines.students ?? []),
+    attempts: sparkGeometry(dash?.sparklines.attempts ?? []),
+    averageScore: sparkGeometry(dash?.sparklines.averageScore ?? []),
+  };
 
-  // Top Performing Students data
-  const topStudents = [
-    {
-      id: 's1',
-      name: 'Priya Singh',
-      score: '98%',
-      scoreVal: 98,
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80',
-    },
-    {
-      id: 's2',
-      name: 'Aman Sharma',
-      score: '95%',
-      scoreVal: 95,
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80',
-    },
-    {
-      id: 's3',
-      name: 'Neha Gupta',
-      score: '92%',
-      scoreVal: 92,
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=80&q=80',
-    },
-  ];
-
-  // Dynamic Recent Activity list
-  const displayActivities = useMemo(() => {
-    if (dynamicActivities && dynamicActivities.length > 0) {
-      const styles = [
-        { color: 'purple', type: 'chart', tag: 'Completed', tagColor: 'green' },
-        { color: 'green', type: 'users', tag: 'New', tagColor: 'blue' },
-        { color: 'purple', type: 'doc', tag: 'Created', tagColor: 'purple' },
-        { color: 'amber', type: 'database', tag: 'Updated', tagColor: 'amber' },
-      ];
-      return dynamicActivities.slice(0, 4).map((act, idx) => {
-        const s = styles[idx % styles.length];
-        return {
-          id: act.id,
-          color: s.color,
-          type: s.type,
-          title: act.action || 'Activity Recorded',
-          subtitle: act.resource || act.user_email || 'System Operation',
-          time: 'Recently',
-          tag: s.tag,
-          tagColor: s.tagColor,
-        };
-      });
-    }
-
-    // Default matching new screenshot exactly
-    return [
-      {
-        id: 'a1',
-        color: 'purple',
-        type: 'chart',
-        title: 'Report generated',
-        subtitle: 'Monthly Performance Report',
-        time: '6 hours ago',
-        tag: 'Completed',
-        tagColor: 'green',
-      },
-      {
-        id: 'a2',
-        color: 'green',
-        type: 'users',
-        title: 'New student registered',
-        subtitle: 'Priya Singh',
-        time: '8 hours ago',
-        tag: 'New',
-        tagColor: 'blue',
-      },
-      {
-        id: 'a3',
-        color: 'purple',
-        type: 'doc',
-        title: 'Test created',
-        subtitle: 'Mathematics - Chapter 4',
-        time: '10 hours ago',
-        tag: 'Created',
-        tagColor: 'purple',
-      },
-      {
-        id: 'a4',
-        color: 'amber',
-        type: 'database',
-        title: 'Question bank updated',
-        subtitle: 'Added 25 new questions',
-        time: '12 hours ago',
-        tag: 'Updated',
-        tagColor: 'amber',
-      },
+  const activeStep = useMemo(() => {
+    if (!dash) return 1;
+    const done = [
+      dash.workflow.questions > 0,
+      dash.workflow.tests > 0,
+      dash.workflow.withQuestions > 0,
+      dash.workflow.published > 0,
+      dash.workflow.assigned > 0,
     ];
-  }, [dynamicActivities]);
+    const open = done.findIndex((item) => !item);
+    return open === -1 ? 5 : open + 1;
+  }, [dash]);
+
+  const performanceKey = timeFilter === 'Last 30 days' ? 'last30' : timeFilter === 'This Month' ? 'month' : 'last7';
+  const performance = dash?.performance[performanceKey] ?? [];
+  const chart = chartGeometry(performance.map((point) => point.value));
+  const chartBadge = performance.length
+    ? Math.round(performance.reduce((sum, point) => sum + point.value, 0) / performance.length)
+    : 0;
+
+  const subjectKey = subjectMonth === 'Last Month' ? 'lastMonth' : subjectMonth === 'All Time' ? 'all' : 'month';
+  const subjectRows = dash?.subjects[subjectKey] ?? [];
+  const overall = dash?.subjects.overall[subjectKey] ?? 0;
+  const gauge = 2 * Math.PI * 46;
+  const gaugeOffset = gauge * (1 - Math.max(0, Math.min(100, overall)) / 100);
+
+  const topStudents = dash?.topStudents ?? [];
+
+  const displayActivities = (dash?.activity ?? []).map((act) => ({
+    id: act.id,
+    color: act.kind === 'users' ? 'green' : act.kind === 'database' ? 'amber' : act.kind === 'chart' ? 'purple' : 'purple',
+    type: act.kind === 'users' || act.kind === 'database' || act.kind === 'chart' || act.kind === 'doc' ? act.kind : 'doc',
+    title: act.title,
+    subtitle: act.subtitle,
+    time: timeAgo(act.createdAt),
+    tag: act.tag,
+    tagColor: tagColor(act.tag),
+  }));
+
+  const pageError = error || loadError;
 
   return (
     <div className="mad-v3-root">
-      {error && (
+      {pageError && (
         <div className="mad-alert-error" role="alert">
           <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
             <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
           </svg>
-          <span>{error}</span>
+          <span>{pageError}</span>
         </div>
       )}
 
@@ -165,9 +190,7 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                 {displayName} <span className="mad-v3-wave">👏</span>
               </h2>
               <p className="mad-v3-welcome-desc">
-                {organization?.name
-                  ? `Manage exams, track student performance, and administer ${organization.name} — all in one place.`
-                  : 'Manage exams, track student performance, and administer softtix solution — all in one place.'}
+                {`Manage exams, track student performance, and administer ${organization?.name || 'your organization'} — all in one place.`}
               </p>
 
               {/* 4 Feature Pills / Cards inside the Banner */}
@@ -338,17 +361,17 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                         <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
-                    <path d="M0,35 C25,38 40,24 65,28 C80,30 90,8 100,5 L100,45 L0,45 Z" fill="url(#spBlue)" />
-                    <path d="M0,35 C25,38 40,24 65,28 C80,30 90,8 100,5" fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d={sparks.tests.area} fill="url(#spBlue)" />
+                    <path d={sparks.tests.line} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 </div>
               </div>
 
-              <div className="mad-v3-stat-trend">
+              <div className={`mad-v3-stat-trend${trends.tests < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
                 <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
                   <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
                 </svg>
-                <span>20%</span> <span className="trend-lbl">from last month</span>
+                <span>{trends.tests}%</span> <span className="trend-lbl">from last month</span>
               </div>
             </div>
 
@@ -384,17 +407,17 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                         <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
-                    <path d="M0,38 C20,38 40,30 60,22 C75,16 85,14 100,6 L100,45 L0,45 Z" fill="url(#spGreen)" />
-                    <path d="M0,38 C20,38 40,30 60,22 C75,16 85,14 100,6" fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d={sparks.students.area} fill="url(#spGreen)" />
+                    <path d={sparks.students.line} fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 </div>
               </div>
 
-              <div className="mad-v3-stat-trend">
+              <div className={`mad-v3-stat-trend${trends.students < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
                 <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
                   <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
                 </svg>
-                <span>12%</span> <span className="trend-lbl">from last month</span>
+                <span>{trends.students}%</span> <span className="trend-lbl">from last month</span>
               </div>
             </div>
 
@@ -430,17 +453,17 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                         <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
-                    <path d="M0,38 C25,38 35,26 55,30 C75,34 85,12 100,6 L100,45 L0,45 Z" fill="url(#spPurple)" />
-                    <path d="M0,38 C25,38 35,26 55,30 C75,34 85,12 100,6" fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d={sparks.attempts.area} fill="url(#spPurple)" />
+                    <path d={sparks.attempts.line} fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 </div>
               </div>
 
-              <div className="mad-v3-stat-trend">
+              <div className={`mad-v3-stat-trend${trends.attempts < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
                 <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
                   <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
                 </svg>
-                <span>18%</span> <span className="trend-lbl">from last month</span>
+                <span>{trends.attempts}%</span> <span className="trend-lbl">from last month</span>
               </div>
             </div>
 
@@ -477,17 +500,17 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                         <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.0" />
                       </linearGradient>
                     </defs>
-                    <path d="M0,38 C20,38 35,28 50,32 C65,36 80,18 100,6 L100,45 L0,45 Z" fill="url(#spAmber)" />
-                    <path d="M0,38 C20,38 35,28 50,32 C65,36 80,18 100,6" fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
+                    <path d={sparks.averageScore.area} fill="url(#spAmber)" />
+                    <path d={sparks.averageScore.line} fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
                   </svg>
                 </div>
               </div>
 
-              <div className="mad-v3-stat-trend">
+              <div className={`mad-v3-stat-trend${trends.averageScore < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
                 <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
                   <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
                 </svg>
-                <span>6%</span> <span className="trend-lbl">from last month</span>
+                <span>{trends.averageScore}%</span> <span className="trend-lbl">from last month</span>
               </div>
             </div>
           </div>
@@ -513,7 +536,6 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               {/* Step 1 */}
               <div
                 className={`mad-v3-step-node ${activeStep >= 1 ? 'mad-v3-step-node--done' : ''}`}
-                onClick={() => setActiveStep(1)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={`mad-v3-step-circle ${activeStep > 1 ? 'mad-v3-step-circle--done' : activeStep === 1 ? 'mad-v3-step-circle--active' : ''}`}>
@@ -541,7 +563,6 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               {/* Step 2 */}
               <div
                 className={`mad-v3-step-node ${activeStep === 2 ? 'mad-v3-step-node--active' : activeStep > 2 ? 'mad-v3-step-node--done' : ''}`}
-                onClick={() => setActiveStep(2)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={`mad-v3-step-circle ${activeStep > 2 ? 'mad-v3-step-circle--done' : activeStep === 2 ? 'mad-v3-step-circle--active' : ''}`}>
@@ -568,7 +589,6 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               {/* Step 3 */}
               <div
                 className={`mad-v3-step-node ${activeStep === 3 ? 'mad-v3-step-node--active' : activeStep > 3 ? 'mad-v3-step-node--done' : ''}`}
-                onClick={() => setActiveStep(3)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={`mad-v3-step-circle ${activeStep > 3 ? 'mad-v3-step-circle--done' : activeStep === 3 ? 'mad-v3-step-circle--active' : 'mad-v3-step-circle--purple'}`}>
@@ -596,7 +616,6 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               {/* Step 4 */}
               <div
                 className={`mad-v3-step-node ${activeStep === 4 ? 'mad-v3-step-node--active' : activeStep > 4 ? 'mad-v3-step-node--done' : ''}`}
-                onClick={() => setActiveStep(4)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={`mad-v3-step-circle ${activeStep > 4 ? 'mad-v3-step-circle--done' : activeStep === 4 ? 'mad-v3-step-circle--active' : 'mad-v3-step-circle--amber'}`}>
@@ -623,7 +642,6 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               {/* Step 5 */}
               <div
                 className={`mad-v3-step-node ${activeStep === 5 ? 'mad-v3-step-node--active' : ''}`}
-                onClick={() => setActiveStep(5)}
                 style={{ cursor: 'pointer' }}
               >
                 <div className={`mad-v3-step-circle ${activeStep === 5 ? 'mad-v3-step-circle--active' : 'mad-v3-step-circle--gray'}`}>
@@ -652,7 +670,7 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                 </div>
                 <span className="mad-v3-footer-msg">Follow the five steps from left to right.</span>
               </div>
-              <Link to="/dashboard/create-test" className="mad-v3-start-btn">
+              <Link to={STEP_LINKS[activeStep - 1] ?? '/dashboard/create-test'} className="mad-v3-start-btn">
                 <span>Start Now</span>
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: 6 }}>
                   <path d="M3 8h10M9 4l4 4-4 4" />
@@ -752,6 +770,9 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
             </div>
 
             <div className="mad-v3-activity-items">
+              {!loading && displayActivities.length === 0 ? (
+                <p className="mad-v3-empty">No activity yet.</p>
+              ) : null}
               {displayActivities.map((act) => (
                 <div key={act.id} className="mad-v3-act-row">
                   <div className={`mad-v3-act-iconbox mad-v3-act-iconbox--${act.color}`}>
@@ -826,7 +847,6 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
             </div>
           </div>
 
-          {/* Smooth Curved Wave Area Chart with Highlighted 68% Marker */}
           <div className="mad-v3-perf-chart-box">
             <svg viewBox="0 0 380 140" className="mad-v3-perf-svg" preserveAspectRatio="none">
               <defs>
@@ -836,34 +856,16 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                   <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
                 </linearGradient>
               </defs>
-
-              {/* Shaded Area */}
-              <path
-                d="M10,105 C60,115 100,80 150,92 C190,100 230,60 270,55 C310,50 340,85 375,80 L375,140 L10,140 Z"
-                fill="url(#v3PerfGrad)"
-              />
-
-              {/* Curve Line */}
-              <path
-                d="M10,105 C60,115 100,80 150,92 C190,100 230,60 270,55 C310,50 340,85 375,80"
-                fill="none"
-                stroke="#8B5CF6"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-
-              {/* Data Points */}
-              <circle cx="150" cy="92" r="4.5" fill="#FFFFFF" stroke="#8B5CF6" strokeWidth="2.5" />
-              <circle cx="270" cy="55" r="5" fill="#FFFFFF" stroke="#8B5CF6" strokeWidth="3" />
-
-              {/* Highlight Marker 68% pill badge */}
-              <g transform="translate(250, 20)">
-                <rect x="0" y="0" width="40" height="22" rx="11" fill="#0F172A" />
-                <text x="20" y="15" fill="#FFFFFF" fontSize="10.5" fontWeight="700" textAnchor="middle">
-                  68%
+              <path d={chart.area} fill="url(#v3PerfGrad)" />
+              <path d={chart.line} fill="none" stroke="#8B5CF6" strokeWidth="3" strokeLinecap="round" />
+              <circle cx={chart.mid.x} cy={chart.mid.y} r="4.5" fill="#FFFFFF" stroke="#8B5CF6" strokeWidth="2.5" />
+              <circle cx={chart.last.x} cy={chart.last.y} r="5" fill="#FFFFFF" stroke="#8B5CF6" strokeWidth="3" />
+              <g transform={`translate(${Math.min(330, Math.max(8, chart.last.x - 20))}, ${Math.max(4, chart.last.y - 32)})`}>
+                <rect x="0" y="0" width="46" height="22" rx="11" fill="#0F172A" />
+                <text x="23" y="15" fill="#FFFFFF" fontSize="10.5" fontWeight="700" textAnchor="middle">
+                  {chartBadge}%
                 </text>
-                {/* Pointer down triangle */}
-                <polygon points="17,22 23,22 20,26" fill="#0F172A" />
+                <polygon points="20,22 26,22 23,26" fill="#0F172A" />
               </g>
             </svg>
           </div>
@@ -887,17 +889,17 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
           </div>
 
           <div className="mad-v3-students-list">
+            {!loading && topStudents.length === 0 ? <p className="mad-v3-empty">No results yet.</p> : null}
             {topStudents.map((st, idx) => (
               <div key={st.id} className="mad-v3-student-row">
                 <span className="mad-v3-student-rank">{idx + 1}</span>
-                <img src={st.avatar} alt={st.name} className="mad-v3-student-avatar" />
+                <span className="mad-v3-student-avatar mad-v3-student-avatar--letter" aria-hidden="true">
+                  {st.name.slice(0, 1).toUpperCase()}
+                </span>
                 <span className="mad-v3-student-name">{st.name}</span>
-                <span className="mad-v3-student-score">{st.score}</span>
+                <span className="mad-v3-student-score">{Math.round(st.score)}%</span>
                 <div className="mad-v3-progress-track">
-                  <div
-                    className="mad-v3-progress-fill"
-                    style={{ width: `${st.scoreVal}%` }}
-                  />
+                  <div className="mad-v3-progress-fill" style={{ width: `${Math.max(0, Math.min(100, st.score))}%` }} />
                 </div>
               </div>
             ))}
@@ -917,7 +919,7 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
             <div className="mad-v3-select-box">
               <select
                 value={subjectMonth}
-                onChange={(e) => setSubjectMonth(e.target.value)}
+                onChange={(e) => setSubjectMonth(e.target.value as typeof subjectMonth)}
                 className="mad-v3-select"
                 aria-label="Filter month"
               >
@@ -932,12 +934,9 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
           </div>
 
           <div className="mad-v3-subject-layout">
-            {/* Donut Gauge Ring */}
             <div className="mad-v3-gauge-box">
               <svg viewBox="0 0 120 120" className="mad-v3-gauge-svg">
-                {/* Background Ring */}
                 <circle cx="60" cy="60" r="46" fill="none" stroke="#F1F5F9" strokeWidth="12" />
-                {/* Colored Ring (86% fill) */}
                 <circle
                   cx="60"
                   cy="60"
@@ -945,8 +944,8 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                   fill="none"
                   stroke="url(#gaugeGrad)"
                   strokeWidth="12"
-                  strokeDasharray="289"
-                  strokeDashoffset="40"
+                  strokeDasharray={gauge}
+                  strokeDashoffset={gaugeOffset}
                   strokeLinecap="round"
                   transform="rotate(-90 60 60)"
                 />
@@ -958,7 +957,7 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
                   </linearGradient>
                 </defs>
                 <text x="60" y="58" className="mad-v3-gauge-num" textAnchor="middle">
-                  86%
+                  {Math.round(overall)}%
                 </text>
                 <text x="60" y="73" className="mad-v3-gauge-lbl" textAnchor="middle">
                   Overall
@@ -966,28 +965,15 @@ export default function ModernAdminDashboard({ examStats, error }: ModernAdminDa
               </svg>
             </div>
 
-            {/* Subject Percentage List */}
             <div className="mad-v3-subject-list">
-              <div className="mad-v3-subj-item">
-                <span className="mad-v3-subj-dot mad-v3-subj-dot--blue" />
-                <span className="mad-v3-subj-name">Mathematics</span>
-                <span className="mad-v3-subj-score">92%</span>
-              </div>
-              <div className="mad-v3-subj-item">
-                <span className="mad-v3-subj-dot mad-v3-subj-dot--purple" />
-                <span className="mad-v3-subj-name">Science</span>
-                <span className="mad-v3-subj-score">88%</span>
-              </div>
-              <div className="mad-v3-subj-item">
-                <span className="mad-v3-subj-dot mad-v3-subj-dot--teal" />
-                <span className="mad-v3-subj-name">English</span>
-                <span className="mad-v3-subj-score">84%</span>
-              </div>
-              <div className="mad-v3-subj-item">
-                <span className="mad-v3-subj-dot mad-v3-subj-dot--amber" />
-                <span className="mad-v3-subj-name">Computer</span>
-                <span className="mad-v3-subj-score">76%</span>
-              </div>
+              {!loading && subjectRows.length === 0 ? <p className="mad-v3-empty">No subject scores yet.</p> : null}
+              {subjectRows.map((subject, index) => (
+                <div key={subject.name} className="mad-v3-subj-item">
+                  <span className={`mad-v3-subj-dot mad-v3-subj-dot--${SUBJECT_COLORS[index % SUBJECT_COLORS.length]}`} />
+                  <span className="mad-v3-subj-name">{subject.name}</span>
+                  <span className="mad-v3-subj-score">{Math.round(subject.score)}%</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>

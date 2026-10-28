@@ -1,4 +1,6 @@
-const instructors = [
+import type { HomepageContent } from '@/types/homepage';
+
+const fallbackInstructors = [
   {
     img: '/eduleb/img/team/team1.jpg',
     name: 'Bilkis Vabi',
@@ -29,15 +31,16 @@ const instructors = [
   },
 ];
 
-export default function InstructorsSection() {
+export default function InstructorsSection({ content }: { content?: HomepageContent['instructors'] }) {
+  const instructors = content?.items?.length ? content.items : fallbackInstructors;
   return (
     <section className="team_area section-padding">
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up">
-          <h2 data-aos="fade-up" data-aos-delay="100">Meet our Instructors</h2>
+          <h2 data-aos="fade-up" data-aos-delay="100">{content?.title || 'Meet our Instructors'}</h2>
           <p data-aos="fade-up" data-aos-delay="150">
-            We offer a brand new approach to the most basic learning paradigms. Choose from a wide
-            range of learning options and gain new skills! Our school is know.
+            {content?.description ||
+              'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.'}
           </p>
         </div>
         <div className="row">
