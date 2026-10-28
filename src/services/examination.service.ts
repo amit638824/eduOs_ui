@@ -6,6 +6,7 @@ import type {
   CreateTestInput,
   ExamResult,
   ExamTest,
+  AdminDashboardData,
   OrgAnalytics,
   Question,
   Subject,
@@ -13,6 +14,13 @@ import type {
 } from '@/types/examination';
 
 const base = '/examination';
+
+export async function getAdminDashboard(): Promise<AdminDashboardData> {
+  const { data } = await api.get<ApiResponse<AdminDashboardData>>(`${base}/analytics/dashboard`, {
+    skipToast: true,
+  });
+  return data.data;
+}
 
 export async function getAnalyticsOverview(): Promise<OrgAnalytics> {
   const { data } = await api.get<ApiResponse<OrgAnalytics>>(

@@ -3,6 +3,7 @@ import { env } from '@/config/env';
 import { tokenStorage } from '@/lib/storage';
 import { getSelectedOrganizationId } from '@/lib/orgScope';
 import { forceSessionExpiredLogout } from '@/lib/session';
+import { notify } from '@/lib/toast';
 import type { ApiResponse } from '@/types/api';
 
 const api = axios.create({
@@ -21,6 +22,7 @@ function isPublicAuthRequest(url?: string): boolean {
     '/auth/forgot-password',
     '/auth/reset-password',
     '/auth/mfa/verify-login',
+    '/public/home',
   ].some((p) => path === p || path.endsWith(p));
 }
 
@@ -50,37 +52,51 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+type TokenPair = { accessToken: string; refreshToken: string };
+
+let refreshTask: Promise<TokenPair> | null = null;
+
+function refreshSession(): Promise<TokenPair> {
+  const refreshToken = tokenStorage.getRefreshToken();
+  if (!refreshToken) return Promise.reject(new Error('Missing refresh token'));
+  if (!refreshTask) {
+    refreshTask = axios
+      .post<ApiResponse<{ tokens: TokenPair }>>(`${env.apiBaseUrl}/auth/refresh`, { refreshToken })
+      .then(({ data }) => {
+        const tokens = data.data.tokens;
+        tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
+        return tokens;
+      })
+      .finally(() => {
+        refreshTask = null;
+      });
+  }
+  return refreshTask;
+}
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    notify.apiSuccess(response);
+    return response;
+  },
   async (error) => {
     const original = error.config as
       | (typeof error.config & { _retry?: boolean })
       | undefined;
-    if (
-      error.response?.status === 401 &&
-      original &&
-      !original._retry &&
-      !isPublicAuthRequest(original.url)
-    ) {
+    const status = error.response?.status;
+    if (status === 401 && original && !original._retry && !isPublicAuthRequest(original.url)) {
       original._retry = true;
-      const refreshToken = tokenStorage.getRefreshToken();
-      if (refreshToken) {
-        try {
-          const { data } = await axios.post<
-            ApiResponse<{ user: unknown; tokens: { accessToken: string; refreshToken: string } }>
-          >(`${env.apiBaseUrl}/auth/refresh`, { refreshToken });
-          tokenStorage.setTokens(data.data.tokens.accessToken, data.data.tokens.refreshToken);
-          original.headers = original.headers ?? {};
-          original.headers.Authorization = `Bearer ${data.data.tokens.accessToken}`;
-          return api(original);
-        } catch {
-          forceSessionExpiredLogout('expired');
-          return Promise.reject(error);
-        }
+      try {
+        const tokens = await refreshSession();
+        original.headers = original.headers ?? {};
+        original.headers.Authorization = `Bearer ${tokens.accessToken}`;
+        return api(original);
+      } catch {
+        forceSessionExpiredLogout('expired');
+        return Promise.reject(error);
       }
-      forceSessionExpiredLogout('expired');
-      return Promise.reject(error);
     }
+    notify.apiError(error);
     return Promise.reject(error);
   },
 );

@@ -1,11 +1,15 @@
-const steps = [
-  { cls: 'sc_one', num: '01', title: 'Expert', line2: 'Teacher' },
-  { cls: 'sc_two', num: '02', title: 'Quality', line2: 'Education' },
-  { cls: 'sc_three', num: '03', title: 'Remote', line2: 'Learning' },
-  { cls: 'sc_four', num: '04', title: 'Life Time', line2: 'Support' },
+import type { HomepageContent } from '@/types/homepage';
+
+const stepText = 'Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.';
+const fallbackSteps = [
+  { cls: 'sc_one', num: '01', title: 'Expert', line2: 'Teacher', text: stepText },
+  { cls: 'sc_two', num: '02', title: 'Quality', line2: 'Education', text: stepText },
+  { cls: 'sc_three', num: '03', title: 'Remote', line2: 'Learning', text: stepText },
+  { cls: 'sc_four', num: '04', title: 'Life Time', line2: 'Support', text: stepText },
 ];
 
-export default function JourneySection() {
+export default function JourneySection({ content }: { content?: HomepageContent['journey'] }) {
+  const steps = content?.steps?.length ? content.steps : fallbackSteps;
   return (
     <section
       className="top_cat__area section-padding"
@@ -17,10 +21,10 @@ export default function JourneySection() {
     >
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up" data-aos-duration="1000">
-          <h2>Start your journey With us</h2>
+          <h2>{content?.title || 'Start your journey With us'}</h2>
           <p>
-            We offer a brand new approach to the most basic learning paradigms. Choose from a wide
-            range of learning options and gain new skills! Our school is know.
+            {content?.description ||
+              'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.'}
           </p>
         </div>
         <div className="row">
@@ -38,7 +42,7 @@ export default function JourneySection() {
                   {s.title} <br />
                   {s.line2}
                 </h3>
-                <p>Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.</p>
+                <p>{s.text || 'Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.'}</p>
               </div>
             </div>
           ))}

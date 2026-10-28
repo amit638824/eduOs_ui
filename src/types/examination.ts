@@ -302,6 +302,27 @@ export interface ExamResult {
   questions?: ExamResultQuestion[];
 }
 
+export interface DashboardPoint {
+  label: string;
+  value: number;
+}
+
+export interface AdminDashboardData {
+  totals: { tests: number; students: number; attempts: number; averageScore: number };
+  trends: { tests: number; students: number; attempts: number; averageScore: number };
+  sparklines: { tests: number[]; students: number[]; attempts: number[]; averageScore: number[] };
+  performance: { last7: DashboardPoint[]; last30: DashboardPoint[]; month: DashboardPoint[] };
+  topStudents: { id: string; name: string; score: number }[];
+  subjects: {
+    month: { name: string; score: number }[];
+    lastMonth: { name: string; score: number }[];
+    all: { name: string; score: number }[];
+    overall: { month: number; lastMonth: number; all: number };
+  };
+  activity: { id: string; title: string; subtitle: string; createdAt: string; tag: string; kind: string }[];
+  workflow: { questions: number; tests: number; withQuestions: number; published: number; assigned: number };
+}
+
 export interface OrgAnalytics {
   students: number;
 

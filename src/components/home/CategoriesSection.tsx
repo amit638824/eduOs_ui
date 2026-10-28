@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
+import type { HomepageContent } from '@/types/homepage';
 
-const categories = [
+const fallbackCategories = [
   { img: '/eduleb/img/e1.png', label: 'Digital Marketing' },
   { img: '/eduleb/img/e2.png', label: 'UI/UX Design' },
   { img: '/eduleb/img/e3.png', label: '3D Visual Design' },
@@ -15,7 +16,8 @@ const categories = [
   { img: '/eduleb/img/e7.png', label: 'Art & Design' },
 ];
 
-export default function CategoriesSection() {
+export default function CategoriesSection({ content }: { content?: HomepageContent['categories'] }) {
+  const categories = content?.items?.length ? content.items : fallbackCategories;
   return (
     <section
       className="top_cat__area section-padding"
@@ -27,10 +29,10 @@ export default function CategoriesSection() {
     >
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up">
-          <h2 data-aos="fade-up" data-aos-delay="100">Find out by popular Categories</h2>
+          <h2 data-aos="fade-up" data-aos-delay="100">{content?.title || 'Find out by popular Categories'}</h2>
           <p data-aos="fade-up" data-aos-delay="150">
-            We offer a brand new approach to the most basic learning paradigms. Choose from a wide
-            range of learning options and gain new skills! Our school is know.
+            {content?.description ||
+              'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.'}
           </p>
         </div>
         <div className="row">
