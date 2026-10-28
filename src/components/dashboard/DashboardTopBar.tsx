@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
+import { useOrgScope } from '@/context/OrgScopeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
 import { platformService } from '@/services';
 import HamburgerIcon from '@/components/ui/HamburgerIcon';
@@ -21,9 +22,11 @@ function notificationsHref(role: DashboardRole) {
 
 export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen = false }: DashboardTopBarProps) {
   const { isDark, toggleTheme } = useTheme();
+  const { isSuperAdmin, scopeReady, selectedOrgId } = useOrgScope();
   const [unread, setUnread] = useState(0);
 
   useEffect(() => {
+    if (isSuperAdmin && !scopeReady) return;
     let cancelled = false;
     const load = () => {
       platformService
@@ -41,7 +44,7 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [isSuperAdmin, scopeReady, selectedOrgId]);
 
   return (
     <header className="sca-db-header">
