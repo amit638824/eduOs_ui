@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { PasswordInput, inputClassName } from '@/components/ui/FormField';
@@ -15,7 +15,6 @@ import { loginSchema, type LoginFormValues } from '@/validators/schemas';
 export default function LoginPage() {
   const { login, completeMfaLogin } = useAuth();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const remembered = loadRememberedLogin();
   const [apiError, setApiError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -42,12 +41,6 @@ export default function LoginPage() {
     document.body.classList.add('eduleb-login-route');
     return () => document.body.classList.remove('eduleb-login-route');
   }, []);
-
-  useEffect(() => {
-    if (searchParams.get('session') === 'expired') {
-      setApiError('Your session expired. Please log in again.');
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     const saved = loadRememberedLogin();

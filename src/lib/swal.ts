@@ -51,19 +51,19 @@ export async function confirmAction(options: {
   return result.isConfirmed;
 }
 
-/** Success feedback. Same global toast as API responses. */
+/** Shows the API message. A title is used only when no API message was passed. */
 export function showSuccess(title: string, text?: string): void {
-  notify.success(text || title, text ? { title } : undefined);
+  notify.success(text || title);
 }
 
-/** Error feedback. Same global toast as API responses. */
+/** Shows the API message. A title is used only when no API message was passed. */
 export function showError(title: string, text?: string): void {
-  notify.error(text || title, text ? { title } : undefined);
+  notify.error(text || title);
 }
 
-/** Info feedback. Same global toast as API responses. */
+/** Shows the API message. A title is used only when no API message was passed. */
 export function showInfo(title: string, text?: string): void {
-  notify.info(text || title, text ? { title } : undefined);
+  notify.info(text || title);
 }
 
 export { Swal, notify };

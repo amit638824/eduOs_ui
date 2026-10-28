@@ -1,8 +1,9 @@
 import axios from 'axios';
 import { env } from '@/config/env';
 import { tokenStorage } from '@/lib/storage';
-import { getSelectedOrganizationId } from '@/lib/orgScope';
+import { getSelectedOrganizationId, ORG_SCOPE_CHANGED_EVENT } from '@/lib/orgScope';
 import { forceSessionExpiredLogout } from '@/lib/session';
+import { readApiMessage } from '@/lib/errors';
 import { notify } from '@/lib/toast';
 import type { ApiResponse } from '@/types/api';
 
@@ -11,10 +12,70 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+function requestPath(url?: string): string {
+  if (!url) return '';
+  return url.replace(env.apiBaseUrl, '').split('?')[0];
+}
+
+function tokenRoles(token: string): string[] {
+  try {
+    const part = token.split('.')[1];
+    if (!part) return [];
+    const json = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/'))) as { roles?: unknown };
+    return Array.isArray(json.roles) ? json.roles.filter((role): role is string => typeof role === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** These calls belong to the logged-in user or the platform, not the selected organization. */
+function orgHeaderOptional(path: string): boolean {
+  if (!path) return true;
+  return (
+    path.startsWith('/auth/') ||
+    path.startsWith('/public/') ||
+    path.startsWith('/health') ||
+    path.startsWith('/certificates/verify') ||
+    path === '/organizations' ||
+    path.startsWith('/organizations/') ||
+    path.startsWith('/platform/notifications')
+  );
+}
+
+let orgWait: Promise<string | null> | null = null;
+
+function waitForOrganizationId(): Promise<string | null> {
+  const existing = getSelectedOrganizationId();
+  if (existing) return Promise.resolve(existing);
+  if (!orgWait) {
+    orgWait = new Promise((resolve) => {
+      const finish = (id: string | null) => {
+        window.removeEventListener(ORG_SCOPE_CHANGED_EVENT, onChange);
+        window.clearTimeout(timer);
+        orgWait = null;
+        resolve(id);
+      };
+      const onChange = () => {
+        const id = getSelectedOrganizationId();
+        if (id) finish(id);
+      };
+      const timer = window.setTimeout(() => finish(getSelectedOrganizationId()), 8000);
+      window.addEventListener(ORG_SCOPE_CHANGED_EVENT, onChange);
+    });
+  }
+  return orgWait;
+}
+
+function missingOrganizationHeader(error: unknown): boolean {
+  if (!axios.isAxiosError<{ message?: string }>(error)) return false;
+  const message = error.response?.data?.message;
+  return error.response?.status === 403 && typeof message === 'string' && message.includes('X-Organization-Id');
+}
+
 /** Public auth routes must not carry old JWT / org context */
 function isPublicAuthRequest(url?: string): boolean {
   if (!url) return false;
-  const path = url.replace(env.apiBaseUrl, '').split('?')[0];
+  const path = requestPath(url);
   return [
     '/auth/login',
     '/auth/register',
@@ -26,7 +87,7 @@ function isPublicAuthRequest(url?: string): boolean {
   ].some((p) => path === p || path.endsWith(p));
 }
 
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
   const publicAuth = isPublicAuthRequest(config.url);
 
   if (publicAuth) {
@@ -40,8 +101,17 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
+  const path = requestPath(config.url);
+  if (
+    token &&
+    !getSelectedOrganizationId() &&
+    !orgHeaderOptional(path) &&
+    tokenRoles(token).includes('super_admin')
+  ) {
+    await waitForOrganizationId();
+  }
+
   // Super Admin scopes tenant APIs via X-Organization-Id (OrgSwitcher / auto-select).
-  // Send whenever an org is stored — only super_admin writes this key.
   const orgId = getSelectedOrganizationId();
   if (token && orgId) {
     config.headers['X-Organization-Id'] = orgId;
@@ -91,12 +161,16 @@ api.interceptors.response.use(
         original.headers = original.headers ?? {};
         original.headers.Authorization = `Bearer ${tokens.accessToken}`;
         return api(original);
-      } catch {
-        forceSessionExpiredLogout('expired');
+      } catch (refreshError) {
+        const fromRefresh = axios.isAxiosError(refreshError)
+          ? readApiMessage(refreshError.response?.data)
+          : '';
+        const fromRequest = axios.isAxiosError(error) ? readApiMessage(error.response?.data) : '';
+        forceSessionExpiredLogout('expired', fromRefresh || fromRequest);
         return Promise.reject(error);
       }
     }
-    notify.apiError(error);
+    if (!missingOrganizationHeader(error)) notify.apiError(error);
     return Promise.reject(error);
   },
 );

@@ -1,6 +1,6 @@
 import { toast, type ToastOptions } from 'react-toastify';
 import axios, { type AxiosResponse } from 'axios';
-import { parseApiError, toApiError } from '@/lib/errors';
+import { parseApiError, readApiMessage } from '@/lib/errors';
 import type { ApiErrorResponse } from '@/types/api';
 
 type ToastTone = 'success' | 'error' | 'info' | 'warning';
@@ -36,41 +36,15 @@ function claim(message: string): boolean {
 
 let lastSuccessAt = 0;
 
-function ToastCard({
-  title,
-  message,
-  status,
-  code,
-}: {
-  title?: string;
-  message: string;
-  status?: number;
-  code?: string;
-}) {
-  const failed = typeof status === 'number' && status >= 400;
+function ToastCard({ title, message }: { title?: string; message: string }) {
   return (
     <div className="ms-toast">
-      {typeof status === 'number' ? (
-        <span className={`ms-toast__status${failed ? ' ms-toast__status--bad' : ' ms-toast__status--ok'}`}>
-          {status}
-        </span>
-      ) : null}
       <div className="ms-toast__copy">
         {title ? <p className="ms-toast__title">{title}</p> : null}
         <p className="ms-toast__message">{message}</p>
-        {code ? <p className="ms-toast__code">{code}</p> : null}
       </div>
     </div>
   );
-}
-
-function successText(method: string, status: number): string {
-  if (method === 'delete') return 'Deleted successfully';
-  if (method === 'put' || method === 'patch') return 'Updated successfully';
-  if (status === 201) return 'Created successfully';
-  if (status === 202) return 'Request accepted';
-  if (status === 204) return 'Completed';
-  return 'Success';
 }
 
 function push(tone: ToastTone, message: string, extra?: ToastExtra): void {
@@ -83,9 +57,7 @@ function push(tone: ToastTone, message: string, extra?: ToastExtra): void {
     autoClose: tone === 'error' ? 6500 : 3200,
     toastId: `${tone}:${text.slice(0, 180)}`,
   };
-  const node = (
-    <ToastCard title={extra?.title} message={text} status={extra?.status} code={extra?.code} />
-  );
+  const node = <ToastCard title={extra?.title} message={text} />;
   if (tone === 'success') toast.success(node, options);
   else if (tone === 'info') toast.info(node, options);
   else if (tone === 'warning') toast.warning(node, options);
@@ -134,29 +106,16 @@ export const notify = {
   },
   apiError(error: unknown) {
     if (axios.isCancel(error)) return;
-    if (axios.isAxiosError<ApiErrorResponse>(error)) {
-      if (skipToast(error.config)) return;
-      const status = error.response?.status;
-      const parsed = toApiError(error);
-      push('error', parseApiError(error), {
-        status,
-        code: error.response ? parsed.code : 'NETWORK',
-      });
-      return;
-    }
-    push('error', parseApiError(error));
+    if (axios.isAxiosError<ApiErrorResponse>(error) && skipToast(error.config)) return;
+    const message = parseApiError(error);
+    if (message) push('error', message);
   },
   apiSuccess(response: AxiosResponse) {
     if (skipToast(response.config)) return;
     const method = (response.config.method ?? 'get').toLowerCase();
     if (method === 'get' || method === 'head' || method === 'options') return;
-    const status = response.status;
-    if (status < 200 || status >= 300) return;
-    const body =
-      response.data && typeof response.data === 'object'
-        ? (response.data as { message?: unknown })
-        : undefined;
-    const serverMessage = typeof body?.message === 'string' ? body.message.trim() : '';
-    push('success', serverMessage || successText(method, status), { status });
+    if (response.status < 200 || response.status >= 300) return;
+    const message = readApiMessage(response.data);
+    if (message) push('success', message);
   },
 };
