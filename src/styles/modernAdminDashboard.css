@@ -1,0 +1,1423 @@
+/* ══════════════════════════════════════════════════════════════════
+   Mindsprint Modern Admin Dashboard Styles (Latest Target Design)
+   Matches screenshot layout: Hero + 4 Cards + Stepper + Quick Actions
+   + Recent Activity + Bottom 3 Cards (Perf Overview, Students, Subjects)
+   ══════════════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700;800&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;0,900;1,400;1,700&display=swap');
+
+/* ── Universal Font Roboto (Safe without breaking icon fonts) ── */
+html,
+body,
+body.sca-dashboard-body,
+.sca-dashboard,
+.sca-db-header,
+.sca-db-sidebar,
+.sca-dashboard__main,
+.sca-dashboard__content,
+.mad-v3-root {
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* Strictly protect icon fonts so they NEVER render as empty box ▯ */
+[class^="icofont-"], 
+[class*=" icofont-"],
+.icofont,
+i[class*="icofont"],
+i[class*="icon"],
+.dashboard-nav-icon {
+  font-family: 'IcoFont' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.mad-v3-root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ── Alert Error ── */
+.mad-alert-error {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* ── Top 2-Column Grid (Left 72%, Right 28%) ── */
+.mad-v3-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: stretch; /* Aligns left & right columns so bottoms match perfectly */
+  width: 100%;
+}
+
+.mad-v3-left-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.mad-v3-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+  height: 100%; /* Stretch full height of top grid */
+}
+
+@media (max-width: 1180px) {
+  .mad-v3-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   1. Hero Welcome Banner (with 4 internal action cards)
+   ══════════════════════════════════════════════════════════════════ */
+.mad-v3-welcome-banner {
+  background: linear-gradient(135deg, #eef4ff 0%, #fcf3f8 40%, #edf5ff 100%);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 18px;
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.mad-v3-welcome-content {
+  flex: 1;
+  min-width: 0;
+  z-index: 1;
+}
+
+.mad-v3-welcome-sub {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--db-muted, #64748b);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.mad-v3-welcome-title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  color: var(--db-text, #0f172a);
+  margin: 0 0 6px;
+  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mad-v3-wave {
+  display: inline-block;
+  animation: madV3Waving 2.5s infinite;
+  transform-origin: 70% 70%;
+}
+
+@keyframes madV3Waving {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(14deg); }
+  20% { transform: rotate(-8deg); }
+  30% { transform: rotate(14deg); }
+  40% { transform: rotate(-4deg); }
+  50% { transform: rotate(10deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.mad-v3-welcome-desc {
+  font-size: 0.875rem;
+  color: var(--db-muted, #64748b);
+  margin: 0 0 20px;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+/* 4 Feature Pills / Action Cards inside Hero */
+.mad-v3-banner-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .mad-v3-banner-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .mad-v3-banner-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mad-v3-action-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: #ffffff;
+  text-decoration: none !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mad-v3-action-card:hover {
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.12);
+}
+
+.mad-v3-action-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.mad-v3-action-icon--blue {
+  background: #2563eb;
+}
+
+.mad-v3-action-icon--green {
+  background: #10b981;
+}
+
+.mad-v3-action-icon--purple {
+  background: #8b5cf6;
+}
+
+.mad-v3-action-icon--amber {
+  background: #f59e0b;
+}
+
+.mad-v3-action-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.mad-v3-action-info strong {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mad-v3-action-info small {
+  font-size: 0.6875rem;
+  color: var(--db-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mad-v3-action-arrow {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: transform 0.15s, color 0.15s;
+}
+
+.mad-v3-action-card:hover .mad-v3-action-arrow {
+  color: #2563eb;
+  transform: translateX(2px);
+}
+
+/* Welcome Right Graphic + Slogan (Side-by-Side Flex Layout, Zero Overlap) */
+.mad-v3-welcome-graphic {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  flex-shrink: 0;
+  min-width: 290px;
+}
+
+@media (max-width: 960px) {
+  .mad-v3-welcome-graphic {
+    display: none;
+  }
+}
+
+.mad-v3-illu-box {
+  width: 170px;
+  height: 140px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mad-v3-illu-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.mad-v3-slogan-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  user-select: none;
+  margin-left: 2px;
+}
+
+.mad-v3-slogan-lines {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Caveat', 'Segoe Script', 'Comic Sans MS', cursive, sans-serif !important;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #2563eb;
+  line-height: 1.15;
+  text-align: center;
+  letter-spacing: -0.01em;
+  transform: rotate(-6deg);
+}
+
+.mad-v3-slogan-lines span {
+  display: block;
+}
+
+.mad-v3-slogan-underline {
+  width: 65px;
+  height: 14px;
+  margin-top: 2px;
+  transform: rotate(-6deg);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   2. 4 Stat Metric Cards (with Sparklines & Kebab Options)
+   ══════════════════════════════════════════════════════════════════ */
+.mad-v3-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 860px) {
+  .mad-v3-stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .mad-v3-stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mad-v3-stat-card {
+  background: var(--db-card, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mad-v3-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
+}
+
+.mad-v3-stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mad-v3-stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: #ffffff;
+}
+
+.mad-v3-stat-icon--blue {
+  background: #2563eb;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+.mad-v3-stat-icon--green {
+  background: #10b981;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+
+.mad-v3-stat-icon--purple {
+  background: #8b5cf6;
+  box-shadow: 0 4px 10px rgba(139, 92, 246, 0.25);
+}
+
+.mad-v3-stat-icon--amber {
+  background: #f59e0b;
+  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.25);
+}
+
+.mad-v3-kebab {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: color 0.15s;
+}
+
+.mad-v3-kebab:hover {
+  color: #0f172a;
+}
+
+.mad-v3-stat-mid {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.mad-v3-stat-value-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.mad-v3-stat-num {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--db-text, #0f172a);
+  line-height: 1.1;
+}
+
+.mad-v3-stat-title {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--db-muted, #64748b);
+  margin-top: 4px;
+}
+
+.mad-v3-sparkline-box {
+  width: 90px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.mad-v3-sparkline-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.mad-v3-stat-trend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #10b981;
+  margin-top: 2px;
+}
+
+.trend-arrow {
+  font-size: 0.875rem;
+  font-weight: 800;
+}
+
+.trend-lbl {
+  font-weight: 400;
+  color: var(--db-muted, #94a3b8);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   3. Workflow Guide: Exam Creation & Delivery Stepper
+   ══════════════════════════════════════════════════════════════════ */
+.mad-v3-stepper-card {
+  background: var(--db-card, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.mad-v3-stepper-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.mad-v3-stepper-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mad-v3-stepper-badge-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.mad-v3-stepper-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.mad-v3-stepper-heading {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+}
+
+.mad-v3-stepper-hint {
+  font-size: 0.8125rem;
+  color: var(--db-muted, #64748b);
+}
+
+/* Stepper 5 Nodes Progression */
+.mad-v3-stepper-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  margin-bottom: 22px;
+  padding: 0 8px;
+}
+
+@media (max-width: 768px) {
+  .mad-v3-stepper-body {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+}
+
+.mad-v3-step-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+.mad-v3-step-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.mad-v3-step-circle--done {
+  background: #10b981;
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+}
+
+.mad-v3-step-circle--active {
+  background: #2563eb;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+.mad-v3-step-circle--purple {
+  background: #8b5cf6;
+}
+
+.mad-v3-step-circle--amber {
+  background: #f59e0b;
+}
+
+.mad-v3-step-circle--gray {
+  background: #94a3b8;
+}
+
+.mad-v3-step-labels {
+  display: flex;
+  flex-direction: column;
+}
+
+.mad-v3-step-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+}
+
+.mad-v3-step-desc {
+  font-size: 0.725rem;
+  color: var(--db-muted, #64748b);
+}
+
+.mad-v3-step-subicon {
+  font-size: 1.1rem;
+  margin-top: 4px;
+}
+
+.mad-v3-step-subicon--green {
+  color: #10b981;
+}
+
+.mad-v3-step-subicon--blue {
+  color: #2563eb;
+}
+
+.mad-v3-step-subicon--purple {
+  color: #8b5cf6;
+}
+
+.mad-v3-step-subicon--amber {
+  color: #f59e0b;
+}
+
+.mad-v3-step-subicon--gray {
+  color: #94a3b8;
+}
+
+.mad-v3-step-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 10px 48px;
+}
+
+.mad-v3-step-line--done {
+  background: #10b981;
+}
+
+@media (max-width: 768px) {
+  .mad-v3-step-line {
+    display: none;
+  }
+}
+
+/* Stepper Bottom Notice Bar */
+.mad-v3-stepper-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mad-v3-stepper-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mad-v3-bulb-circle {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.mad-v3-footer-msg {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #1e40af;
+}
+
+.mad-v3-start-btn {
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffffff !important;
+  font-size: 0.825rem;
+  font-weight: 700;
+  text-decoration: none !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+  transition: transform 0.15s, background 0.15s;
+}
+
+.mad-v3-start-btn:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   4. Right Column: Quick Actions + Recent Activity (STRETCHED & ALIGNED)
+   ══════════════════════════════════════════════════════════════════ */
+.mad-v3-qa-card {
+  background: var(--db-card, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 20px 18px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  flex-shrink: 0;
+}
+
+.mad-v3-activity-card {
+  background: var(--db-card, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 20px 18px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  flex: 1; /* Fills all remaining height to align with Workflow Guide bottom */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.mad-v3-qa-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.mad-v3-activity-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+.mad-v3-qa-bolt {
+  color: #2563eb;
+  font-size: 1.15rem;
+  margin-right: 6px;
+}
+
+.mad-v3-qa-heading,
+.mad-v3-act-heading {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+}
+
+.mad-v3-qa-primary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: #ffffff !important;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  margin-bottom: 12px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.mad-v3-qa-primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.mad-v3-qa-btn-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mad-v3-plus {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.mad-v3-qa-arrow {
+  font-size: 1.25rem;
+  line-height: 1;
+  font-weight: 300;
+}
+
+.mad-v3-qa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mad-v3-qa-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--db-border, #f1f5f9);
+  background: var(--db-bg, #f8fafc);
+  text-decoration: none !important;
+  transition: all 0.15s ease;
+}
+
+.mad-v3-qa-item:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+.mad-v3-qa-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mad-v3-qa-icon {
+  font-size: 0.95rem;
+}
+
+.mad-v3-qa-icon--blue {
+  color: #2563eb;
+}
+
+.mad-v3-qa-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--db-text, #1e293b);
+}
+
+.mad-v3-qa-item-arrow {
+  font-size: 1.15rem;
+  color: #94a3b8;
+  font-weight: 300;
+}
+
+/* Recent Activity Card Styles (Vertically Stretched & Spaced Evenly) */
+.mad-v3-act-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mad-v3-clock-icon {
+  font-size: 1.1rem;
+}
+
+.mad-v3-viewall-link {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #2563eb;
+  text-decoration: none !important;
+}
+
+.mad-v3-viewall-link:hover {
+  text-decoration: underline !important;
+}
+
+.mad-v3-activity-items {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around; /* Distributes 4 items evenly down to bottom of workflow guide */
+  min-height: 0;
+  gap: 14px;
+}
+
+.mad-v3-act-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mad-v3-act-iconbox {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+.mad-v3-act-iconbox--purple {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.mad-v3-act-iconbox--green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.mad-v3-act-iconbox--amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.mad-v3-act-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.mad-v3-act-title {
+  margin: 0;
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+}
+
+.mad-v3-act-sub {
+  font-size: 0.75rem;
+  color: var(--db-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mad-v3-act-time {
+  font-size: 0.6875rem;
+  color: #94a3b8;
+}
+
+.mad-v3-act-tag-wrap {
+  flex-shrink: 0;
+}
+
+.mad-v3-tag {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.mad-v3-tag--green {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.mad-v3-tag--blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.mad-v3-tag--purple {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+.mad-v3-tag--amber {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   5. Bottom Row (3 Equal Cards: Perf Overview, Students, Subjects)
+   ══════════════════════════════════════════════════════════════════ */
+.mad-v3-bottom-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .mad-v3-bottom-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mad-v3-bottom-card {
+  background: var(--db-card, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.mad-v3-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.mad-v3-card-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mad-v3-hdr-icon--blue {
+  color: #2563eb;
+  font-size: 1.15rem;
+}
+
+.mad-v3-trophy-icon {
+  font-size: 1.15rem;
+}
+
+.mad-v3-card-header h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+}
+
+.mad-v3-select-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.mad-v3-select {
+  appearance: none;
+  padding: 5px 26px 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--db-border, #cbd5e1);
+  background: var(--db-input-bg, #ffffff);
+  color: var(--db-text, #0f172a);
+  font-size: 0.775rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.mad-v3-select-chevron {
+  position: absolute;
+  right: 8px;
+  color: #94a3b8;
+  pointer-events: none;
+  font-size: 0.7rem;
+}
+
+/* Bottom Card 1: Performance Overview Chart Box */
+.mad-v3-perf-chart-box {
+  width: 100%;
+  height: 140px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.mad-v3-perf-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Bottom Card 2: Top Performing Students List */
+.mad-v3-students-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.mad-v3-student-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mad-v3-student-rank {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--db-muted, #64748b);
+  width: 14px;
+}
+
+.mad-v3-student-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+}
+
+.mad-v3-student-avatar--letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mad-v3-empty {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.mad-v3-stat-trend--down {
+  color: #dc2626;
+}
+
+.mad-v3-stat-trend--down .trend-arrow {
+  transform: rotate(180deg);
+}
+
+.mad-v3-student-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--db-text, #0f172a);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mad-v3-student-score {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #10b981;
+  width: 38px;
+  text-align: right;
+}
+
+.mad-v3-progress-track {
+  width: 80px;
+  height: 6px;
+  border-radius: 3px;
+  background: #f1f5f9;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mad-v3-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: #10b981;
+}
+
+/* Bottom Card 3: Subject-wise Performance Layout */
+.mad-v3-subject-layout {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+.mad-v3-gauge-box {
+  width: 110px;
+  height: 110px;
+  flex-shrink: 0;
+}
+
+.mad-v3-gauge-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.mad-v3-gauge-num {
+  font-size: 22px;
+  font-weight: 800;
+  fill: var(--db-text, #0f172a);
+  font-family: inherit;
+}
+
+.mad-v3-gauge-lbl {
+  font-size: 10.5px;
+  font-weight: 600;
+  fill: var(--db-muted, #64748b);
+  font-family: inherit;
+}
+
+.mad-v3-subject-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.mad-v3-subj-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+
+.mad-v3-subj-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.mad-v3-subj-dot--blue {
+  background: #2563eb;
+}
+
+.mad-v3-subj-dot--purple {
+  background: #8b5cf6;
+}
+
+.mad-v3-subj-dot--teal {
+  background: #0284c7;
+}
+
+.mad-v3-subj-dot--amber {
+  background: #f59e0b;
+}
+
+.mad-v3-subj-name {
+  color: var(--db-muted, #475569);
+  font-weight: 500;
+  flex: 1;
+}
+
+.mad-v3-subj-score {
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Top Bar Fixed Styles (Search & Rahul Sharma User Profile)
+   ══════════════════════════════════════════════════════════════════ */
+.sca-db-search {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 24px !important;
+  padding: 6px 14px 6px 16px !important;
+  width: 320px !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.2s ease !important;
+}
+
+.sca-db-search:focus-within {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+}
+
+.sca-db-search i {
+  color: #94a3b8 !important;
+  font-size: 1rem !important;
+  flex-shrink: 0 !important;
+}
+
+.sca-db-search input {
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  width: 100% !important;
+  font-size: 0.84rem !important;
+  font-weight: 400 !important;
+  color: #0f172a !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+  font-family: 'Roboto', sans-serif !important;
+}
+
+.sca-db-search input::placeholder {
+  color: #94a3b8 !important;
+  font-family: 'Roboto', sans-serif !important;
+}
+
+.sca-db-search-kbd {
+  font-size: 0.6875rem !important;
+  color: #94a3b8 !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  padding: 2px 7px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1.2 !important;
+  font-family: 'Roboto', sans-serif !important;
+}
+
+/* User Profile in Top Bar */
+.sca-db-user {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  padding: 4px 14px 4px 6px !important;
+  border-radius: 28px !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #ffffff !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.15s ease !important;
+}
+
+.sca-db-user:hover {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+.sca-db-user__avatar {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 1.5px solid #e2e8f0 !important;
+  flex-shrink: 0 !important;
+}
+
+.sca-db-user__info {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  line-height: 1.25 !important;
+  min-width: 0 !important;
+}
+
+.sca-db-user__name {
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+.sca-db-user__role {
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  color: #64748b !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+.sca-db-user__caret {
+  font-size: 0.75rem !important;
+  color: #94a3b8 !important;
+  margin-left: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Dark Theme Support
+   ══════════════════════════════════════════════════════════════════ */
+.sca-dashboard--dark .mad-v3-welcome-banner,
+.sca-dashboard--dark .mad-v3-stat-card,
+.sca-dashboard--dark .mad-v3-stepper-card,
+.sca-dashboard--dark .mad-v3-qa-card,
+.sca-dashboard--dark .mad-v3-activity-card,
+.sca-dashboard--dark .mad-v3-bottom-card {
+  background: var(--db-card, #1e293b);
+  border-color: var(--db-border, rgba(255, 255, 255, 0.08));
+}
+
+.sca-dashboard--dark .mad-v3-action-card,
+.sca-dashboard--dark .mad-v3-qa-item {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.sca-dashboard--dark .mad-v3-action-card:hover,
+.sca-dashboard--dark .mad-v3-qa-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sca-dashboard--dark .mad-v3-select {
+  background: #0f172a;
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f8fafc;
+}
+
+.sca-dashboard--dark .sca-db-search {
+  background: #0f172a !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.sca-dashboard--dark .sca-db-search input {
+  color: #f8fafc !important;
+}
+
+.sca-dashboard--dark .sca-db-search-kbd {
+  background: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #94a3b8 !important;
+}
+
+.sca-dashboard--dark .sca-db-user {
+  background: #1e293b !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.sca-dashboard--dark .sca-db-user__name {
+  color: #f8fafc !important;
+}

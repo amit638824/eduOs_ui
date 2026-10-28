@@ -38,7 +38,7 @@ export default function SchoolsPage() {
                   </ul>
                 </div>
                 <div className="populerarea__button__2 sp_top_30">
-                  <Link className="default__button" to="/register">
+                  <Link className="default__button" to="/login">
                     Request a Demo
                     <i className="icofont-long-arrow-right" />
                   </Link>

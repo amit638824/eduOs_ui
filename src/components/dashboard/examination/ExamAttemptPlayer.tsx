@@ -498,7 +498,9 @@ export default function ExamAttemptPlayer() {
   return (
     <div
       className="exam-player-overlay"
-      onClick={() => {
+      onClick={(event) => {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('button, a, input, textarea, select, label')) return;
         if (!config.fullScreen || document.fullscreenElement || submitting) return;
         void restoreFullscreen();
       }}
@@ -535,6 +537,7 @@ export default function ExamAttemptPlayer() {
 
       <div className="exam-player-body">
         <main className="exam-main">
+          <div className="exam-main__scroll">
           <div className="exam-main__head">
             <h5>
               Question No. {currentIdx + 1}{' '}
@@ -604,8 +607,9 @@ export default function ExamAttemptPlayer() {
           {saveMsg && (
             <p style={{ marginTop: 12, fontSize: '0.875rem', color: '#16a34a' }}>{saveMsg}</p>
           )}
+          </div>
 
-          <div className="exam-nav-actions">
+          <div className="exam-nav-actions" onClick={(event) => event.stopPropagation()}>
             <div className="exam-nav-actions__start">
               <button
                 type="button"

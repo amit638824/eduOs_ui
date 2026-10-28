@@ -18,6 +18,7 @@ import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { useOrgScope } from '@/context/OrgScopeContext';
+import '@/styles/organizations.css';
 import {
   becomeTeacherSchema,
   createTestSchema,
@@ -777,45 +778,54 @@ function OrganizationSettingsForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-xl-6 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="orgName">Organization Name</label>
-              <input
-                id="orgName"
-                type="text"
-                className={inputClassName('', !!errors.name)}
-                {...register('name')}
-              />
-              <FormError message={errors.name?.message} />
-            </div>
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
         </div>
-        <div className="col-xl-6 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="orgSlug">Slug</label>
-              <input
-                id="orgSlug"
-                type="text"
-                className={inputClassName('', !!errors.slug)}
-                {...register('slug')}
-              />
-              <FormError message={errors.slug?.message} />
-            </div>
-          </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
         </div>
-        <div className="col-xl-12">
-          <div className="dashboard__form__button">
-            <button type="submit" className="default__button" disabled={!organization}>
-              Save Organization
-            </button>
-          </div>
+      )}
+      <div className="org-grid-2" style={{ gap: '16px' }}>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="orgName">
+            Organization Name <span className="org-required-star">*</span>
+          </label>
+          <input
+            id="orgName"
+            type="text"
+            className="org-form-input"
+            placeholder="e.g. Acme Academy"
+            {...register('name')}
+          />
+          <FormError message={errors.name?.message} />
         </div>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="orgSlug">
+            Organization Slug <span className="org-required-star">*</span>
+          </label>
+          <input
+            id="orgSlug"
+            type="text"
+            className="org-form-input"
+            placeholder="e.g. acme-academy"
+            {...register('slug')}
+          />
+          <FormError message={errors.slug?.message} />
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', width: '100%' }}>
+        <button
+          type="submit"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          disabled={!organization}
+        >
+          Save Organization
+        </button>
       </div>
     </form>
   );
@@ -858,22 +868,38 @@ function AutoIssueCertificatesForm() {
   };
 
   return (
-    <div className="sp_top_30">
-      <h5 className="sp_bottom_15">Certificates</h5>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <label className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-        <input
-          type="checkbox"
-          checked={enabled}
+    <div style={{ borderTop: '1px solid var(--db-border, #e2e8f0)', paddingTop: '24px' }}>
+      <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 12px', color: '#0f172a' }}>
+        Certificates Automation
+      </h4>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
+        </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
+        </div>
+      )}
+      <div className="org-toggle-card">
+        <div className="org-toggle-info">
+          <span className="org-toggle-title">Auto-issue certificates when a student passes</span>
+          <span className="org-toggle-desc">
+            When enabled, submitting a passing attempt issues an official certificate automatically.
+          </span>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          className={`org-ios-switch${enabled ? ' is-active' : ''}`}
           disabled={loading}
-          onChange={(e) => void save(e.target.checked)}
-        />
-        <span>Auto-issue certificates when a student passes</span>
-      </label>
-      <p className="text-muted mb-0 sp_top_10" style={{ fontSize: '0.8125rem' }}>
-        When enabled, submitting a passing attempt issues a certificate automatically.
-      </p>
+          onClick={() => void save(!enabled)}
+        >
+          <span className="org-ios-thumb" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -933,40 +959,97 @@ function CertificateBrandingForm() {
   };
 
   return (
-    <div className="sp_top_30">
-      <h5 className="sp_bottom_15">Certificate branding</h5>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-md-6 sp_bottom_15">
-          <label>Logo URL</label>
-          <input className="register__input" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://…" />
+    <div style={{ borderTop: '1px solid var(--db-border, #e2e8f0)', paddingTop: '24px' }}>
+      <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 16px', color: '#0f172a' }}>
+        Certificate Branding
+      </h4>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
         </div>
-        <div className="col-md-3 sp_bottom_15">
-          <label>Primary color</label>
-          <input className="register__input" type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
         </div>
-        <div className="col-md-3 sp_bottom_15">
-          <label>Accent color</label>
-          <input className="register__input" type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
+      )}
+      <div className="org-grid-2" style={{ gap: '16px' }}>
+        <div className="org-form-field" style={{ gridColumn: 'span 2' }}>
+          <label className="org-form-label" htmlFor="logoUrl">Logo URL</label>
+          <input
+            id="logoUrl"
+            className="org-form-input"
+            value={logoUrl}
+            onChange={(e) => setLogoUrl(e.target.value)}
+            placeholder="https://example.com/logo.png"
+          />
         </div>
-        <div className="col-md-6 sp_bottom_15">
-          <label>Seal text</label>
-          <input className="register__input" value={sealText} onChange={(e) => setSealText(e.target.value)} />
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="primaryColor">Primary Color</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              id="primaryColor"
+              type="color"
+              style={{ width: '42px', height: '36px', padding: '2px', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer' }}
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+            />
+            <input
+              className="org-form-input"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="col-md-6 sp_bottom_15">
-          <label>Template</label>
-          <EdtpSelect value={templateId} onChange={(e) => setTemplateId(e.target.value as typeof templateId)}>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="accentColor">Accent Color</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              id="accentColor"
+              type="color"
+              style={{ width: '42px', height: '36px', padding: '2px', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer' }}
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+            />
+            <input
+              className="org-form-input"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="sealText">Seal Text</label>
+          <input
+            id="sealText"
+            className="org-form-input"
+            value={sealText}
+            onChange={(e) => setSealText(e.target.value)}
+          />
+        </div>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="templateId">Template Style</label>
+          <EdtpSelect
+            id="templateId"
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value as typeof templateId)}
+          >
             <option value="classic">Classic</option>
             <option value="modern">Modern</option>
             <option value="minimal">Minimal</option>
           </EdtpSelect>
         </div>
-        <div className="col-12">
-          <button type="button" className="default__button" onClick={() => void save()} disabled={loading}>
-            Save branding
-          </button>
-        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', width: '100%' }}>
+        <button
+          type="button"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          onClick={() => void save()}
+          disabled={loading}
+        >
+          Save Branding
+        </button>
       </div>
     </div>
   );
@@ -1001,62 +1084,69 @@ function PasswordChangeForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-xl-12 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="currentPass">Current Password</label>
-              <PasswordInput
-                id="currentPass"
-                hasError={!!errors.currentPassword}
-                autoComplete="current-password"
-                className="register__input"
-                {...register('currentPassword')}
-              />
-              <FormError message={errors.currentPassword?.message} />
-            </div>
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
         </div>
-        <div className="col-xl-12 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="newPass">New Password</label>
-              <PasswordInput
-                id="newPass"
-                hasError={!!errors.newPassword}
-                autoComplete="new-password"
-                className="register__input"
-                {...register('newPassword')}
-              />
-              <FormError message={errors.newPassword?.message} />
-            </div>
-          </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
         </div>
-        <div className="col-xl-12 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="confirmPass">Confirm Password</label>
-              <PasswordInput
-                id="confirmPass"
-                hasError={!!errors.confirmPassword}
-                autoComplete="new-password"
-                className="register__input"
-                {...register('confirmPassword')}
-              />
-              <FormError message={errors.confirmPassword?.message} />
-            </div>
-          </div>
+      )}
+      <div className="org-grid-2" style={{ gap: '16px', width: '100%' }}>
+        <div className="org-form-field" style={{ gridColumn: '1 / -1' }}>
+          <label className="org-form-label" htmlFor="currentPass">
+            Current Password <span className="org-required-star">*</span>
+          </label>
+          <PasswordInput
+            id="currentPass"
+            hasError={!!errors.currentPassword}
+            autoComplete="current-password"
+            className="org-form-input"
+            {...register('currentPassword')}
+          />
+          <FormError message={errors.currentPassword?.message} />
         </div>
-        <div className="col-xl-12">
-          <div className="dashboard__form__button">
-            <button type="submit" className="default__button">
-              Update Password
-            </button>
-          </div>
+
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="newPass">
+            New Password <span className="org-required-star">*</span>
+          </label>
+          <PasswordInput
+            id="newPass"
+            hasError={!!errors.newPassword}
+            autoComplete="new-password"
+            className="org-form-input"
+            {...register('newPassword')}
+          />
+          <FormError message={errors.newPassword?.message} />
         </div>
+
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="confirmPass">
+            Confirm Password <span className="org-required-star">*</span>
+          </label>
+          <PasswordInput
+            id="confirmPass"
+            hasError={!!errors.confirmPassword}
+            autoComplete="new-password"
+            className="org-form-input"
+            {...register('confirmPassword')}
+          />
+          <FormError message={errors.confirmPassword?.message} />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', width: '100%' }}>
+        <button
+          type="submit"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+        >
+          Update Password
+        </button>
       </div>
     </form>
   );
@@ -1143,40 +1233,76 @@ function SocialLinksForm() {
   ] as const;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
+        </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
+        </div>
+      )}
+      <div className="org-grid-2" style={{ gap: '16px', width: '100%' }}>
         {fields.map((field) => (
-          <div key={field.id} className="col-xl-6 sp_bottom_20">
-            <div className="dashboard__form__wraper">
-              <div className="dashboard__form__input">
-                <label htmlFor={field.id}>{field.label} URL</label>
-                <input
-                  id={field.id}
-                  type="url"
-                  placeholder={`https://${field.id}.com/...`}
-                  className={inputClassName('', !!errors[field.id])}
-                  {...register(field.id)}
-                />
-                <FormError message={errors[field.id]?.message} />
-              </div>
-            </div>
+          <div key={field.id} className="org-form-field">
+            <label className="org-form-label" htmlFor={field.id}>
+              {field.label} URL
+            </label>
+            <input
+              id={field.id}
+              type="url"
+              placeholder={`https://${field.id}.com/...`}
+              className="org-form-input"
+              {...register(field.id)}
+            />
+            <FormError message={errors[field.id]?.message} />
           </div>
         ))}
-        <div className="col-xl-12">
-          <div className="dashboard__form__button d-flex flex-wrap gap-2">
-            <button type="submit" className="default__button">
-              Save Branding Links
-            </button>
-            <button type="button" className="dashboard__small__btn__2" onClick={resetForm}>
-              Clear Form
-            </button>
-            <button type="button" className="dashboard__small__btn__2" onClick={() => void clearSaved()}>
-              Delete Saved Links
-            </button>
-          </div>
-        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '12px',
+          marginTop: '24px',
+          flexWrap: 'wrap',
+          width: '100%',
+        }}
+      >
+        <button
+          type="submit"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+        >
+          Save Branding Links
+        </button>
+        <button
+          type="button"
+          onClick={resetForm}
+          className="org-drawer-cancel"
+          style={{ width: 'auto', padding: '9px 20px', borderRadius: '10px' }}
+        >
+          Clear Form
+        </button>
+        <button
+          type="button"
+          onClick={() => void clearSaved()}
+          className="org-icon-btn org-icon-btn--delete"
+          style={{
+            width: 'auto',
+            padding: '9px 18px',
+            borderRadius: '10px',
+            height: 'auto',
+            fontSize: '0.8rem',
+            fontWeight: 600,
+          }}
+        >
+          Delete Saved Links
+        </button>
       </div>
     </form>
   );
@@ -1487,32 +1613,66 @@ export function DashboardSettingsContent() {
   if (!user) return null;
 
   return (
-    <>
-      <DashboardPageHeader
-        badge="Account"
-        title="Settings"
-        subtitle={
-          isStudent
-            ? 'Manage your profile and password.'
-            : 'Manage organization profile, branding, password and preferences for the selected tenant.'
-        }
-      />
-      <div className="dashboard__content__wraper">
-        <DashboardTabButtons tabs={tabs} active={activeTab} onChange={setActiveTab} />
+    <div className="org-panel-root">
+      {/* ── Top Bar: Page Title + Subtitle matching all other panels ── */}
+      <div className="org-top-bar">
+        <div className="org-top-text">
+          <h1 className="org-page-title">Settings</h1>
+          <p className="org-page-desc">
+            {isStudent
+              ? 'Manage your personal profile and account security settings.'
+              : 'Manage organization profile, branding, password and preferences for the selected tenant.'}
+          </p>
+        </div>
+      </div>
+
+      {/* ── Settings Table Card with Modern Navigation Tabs ── */}
+      <div className="org-table-card" style={{ padding: '24px 28px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            borderBottom: '1px solid var(--db-border, #e2e8f0)',
+            paddingBottom: '16px',
+            marginBottom: '24px',
+          }}
+        >
+          <div className="org-filter-pills" style={{ padding: '4px', gap: '6px' }}>
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`org-pill ${activeTab === tab ? 'is-active' : ''}`}
+                style={{
+                  padding: '7px 18px',
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div>
           {activeTab === 'Profile' && <ProfileSettingsApiForm />}
           {activeTab === 'Organization' && isAdmin && (
-            <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
               <OrganizationSettingsForm organization={organization} onSaved={refresh} />
               <AutoIssueCertificatesForm />
               <CertificateBrandingForm />
-            </>
+            </div>
           )}
           {activeTab === 'Password' && <PasswordChangeForm />}
           {activeTab === 'Branding' && !isStudent && <SocialLinksForm />}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

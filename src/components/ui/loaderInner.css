@@ -1,18 +1,24 @@
-/* Overlay fixed to visible main area — does not sink down on tall/scroll pages */
+/* ==========================================================================
+   Dashboard Main Content Loader Positioning (Shares All Styles from loader.css)
+   ========================================================================== */
+@import './loader.css';
+
+/* Overlay on dashboard main area only */
 .sca-loader-inner {
   position: fixed;
   top: var(--db-header-h, 72px);
-  left: var(--db-sidebar-w, 240px);
+  left: var(--db-sidebar-w, 260px);
   right: 0;
   bottom: 0;
   z-index: 2000;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.35);
-  -webkit-backdrop-filter: blur(6px);
-  backdrop-filter: blur(6px);
+  background: rgba(255, 255, 255, 0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   pointer-events: all;
+  transition: opacity 0.2s ease;
 }
 
 .sca-dashboard--collapsed .sca-loader-inner {
@@ -26,40 +32,7 @@
   }
 }
 
-.sca-dashboard.sca-dashboard--light .sca-loader-inner {
-  background: rgba(241, 245, 249, 0.72);
-}
-
+/* Dark mode overlay */
 .sca-dashboard.sca-dashboard--dark .sca-loader-inner {
-  background: rgba(15, 23, 42, 0.72);
-}
-
-.sca-loader-inner__wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.sca-loader-inner__spinner {
-  width: 140px;
-  height: 140px;
-  border: 0.25em solid #029aa7;
-  border-inline-end-color: transparent;
-  border-radius: 50%;
-  animation: sca-loader-inner-spin 0.75s linear infinite;
-}
-
-.sca-loader-inner__logo {
-  position: absolute;
-  width: 100px;
-  height: auto;
-  object-fit: contain;
-}
-
-@keyframes sca-loader-inner-spin {
-  to {
-    transform: rotate(360deg);
-  }
+  background: rgba(15, 23, 42, 0.85);
 }

@@ -1,70 +1,90 @@
-import { Link } from 'react-router-dom';
-import { siteContent } from '@/data/siteContent';
+import { useEffect, useState } from 'react';
+import type { HomepageContent } from '@/types/homepage';
 
-export default function TestimonialsSection() {
-  const { testimonials } = siteContent;
+const fallbackTestimonials = [
+  {
+    avatar: '/eduleb/img/testimonial/1.png',
+    name: 'Ajmain Adil',
+    company: 'Groton Inc',
+    text: 'Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.',
+  },
+  {
+    avatar: '/eduleb/img/testimonial/2.png',
+    name: 'Sharukh Khan',
+    company: 'Red Chili Inc',
+    text: 'Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.',
+  },
+  {
+    avatar: '/eduleb/img/testimonial/3.png',
+    name: 'Anushka sharma',
+    company: 'Naika Company',
+    text: 'Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.',
+  },
+  {
+    avatar: '/eduleb/img/testimonial/4.png',
+    name: 'Ajmain Adil',
+    company: 'Groton Inc',
+    text: 'Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.',
+  },
+  {
+    avatar: '/eduleb/img/testimonial/5.png',
+    name: 'Ajmain Adil',
+    company: 'Groton Inc',
+    text: 'Aqestic optio amet a ququam saepe aliquid voluate dicta fuga dolor saerror sed earum a magni soluta quam minus dolor dolor sed earum a magni soluta autem dolor error error sit quam minus sint rem a rerum dolobus veritatis delectus.',
+  },
+];
+
+export default function TestimonialsSection({ content }: { content?: HomepageContent['testimonials'] }) {
+  const testimonials = content?.items?.length ? content.items : fallbackTestimonials;
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setIndex((i) => (i + 1) % testimonials.length);
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, [testimonials.length]);
+
+  const item = testimonials[index % testimonials.length];
 
   return (
-    <div className="aboutarea__3 testimonial__area__2 sp_bottom_90 sp_top_120">
+    <section className="testi_area section-padding">
       <div className="container">
-        <div className="row">
-          <div className="col-xl-4 col-lg-4 col-md-12 col-sm-12 col-12 custom__review__grid" data-aos="fade-up">
-            <div className="section__title aboutarea__3__section__title">
-              <div className="section__title__button">
-                <div className="default__small__button">{testimonials.badge}</div>
-              </div>
-              <div className="section__title__heading">
-                <h2>
-                  {testimonials.title.split('\n').map((line, i) => (
-                    <span key={i}>
-                      {line}
-                      {i === 0 && <br />}
-                    </span>
-                  ))}
-                </h2>
-              </div>
-            </div>
-            <div className="aboutarea__3__content">
-              <p>{testimonials.description}</p>
-            </div>
-            <div className="aboutarea__3__button">
-              <Link className="default__button" to="/about">
-                Read More Stories
-                <i className="icofont-long-arrow-right" />
-              </Link>
+        <div className="section-title" data-aos="fade-up">
+          <h2 data-aos="fade-up" data-aos-delay="100">
+            {content?.title || 'What Student’s Say To Do Their Online Course'}
+          </h2>
+        </div>
+        <div className="row align-items-center">
+          <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-right" data-aos-delay="150">
+            <div className="ab_img" data-aos="zoom-in" data-aos-delay="200">
+              <img src={content?.image || '/eduleb/img/review.png'} className="img-fluid" alt="image" />
             </div>
           </div>
-
-          {testimonials.items.map((item) => (
-            <div
-              key={item.name}
-              className="col-xl-4 col-lg-4 col-md-6 col-sm-12 col-12 custom__review__grid"
-              data-aos="fade-up"
-            >
-              <div className="aboutarea__content__wraper__3">
-                <div className="aboutarea__para__3">
-                  <p>{item.quote}</p>
-                  <div className="aboutarea__icon__3">
-                    <i className="icofont-quote-left" />
+          <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-left" data-aos-delay="200">
+            <div id="testimonial-slider" className="eduleb-testimonial-slider" data-aos="zoom-in" data-aos-delay="250">
+              <div className="testimonial" key={`${item.name}-${index}`}>
+                <img src="/eduleb/img/quote.png" alt="" />
+                <div className="testimonial_content">
+                  <div className="mb-2" style={{ color: '#f59e0b' }}>
+                    <i className="ti-star" />
+                    <i className="ti-star" />
+                    <i className="ti-star" />
+                    <i className="ti-star" />
+                    <i className="ti-star" />
                   </div>
+                  <p>{item.text}</p>
                 </div>
-                <div className="aboutarea__img__3">
-                  <img loading="lazy" src={item.image} alt={item.name} />
-                  <div className="aboutarea__img__name">
-                    <h6>{item.name}</h6>
-                    <p>{item.role}</p>
-                  </div>
+                <div className="testi_pic_title">
+                  <img src={item.avatar} alt={item.name} />
+                  <h4>{item.name}</h4>
+                  <p>{item.company}</p>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
-      <div className="aboutarea__img__3">
-        <img loading="lazy" className="aboutarea__3__img__1" src="/img/about/about_6.png" alt="" />
-        <img loading="lazy" className="aboutarea__3__img__2" src="/img/about/about_7.png" alt="" />
-        <img loading="lazy" className="aboutarea__3__img__3" src="/img/about/about_9.png" alt="" />
-      </div>
-    </div>
+    </section>
   );
 }

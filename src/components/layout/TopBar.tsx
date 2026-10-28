@@ -1,7 +1,14 @@
+import { useLocation } from 'react-router-dom';
 import { siteContent } from '@/data/siteContent';
 
 export default function TopBar() {
+  const { pathname } = useLocation();
   const { contact, social } = siteContent;
+
+  // Reference design has a clean standalone header without topbar on homepage
+  if (pathname === '/') {
+    return null;
+  }
 
   return (
     <div className="topbararea topbararea--2">

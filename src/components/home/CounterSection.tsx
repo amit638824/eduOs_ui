@@ -1,30 +1,35 @@
-import { siteContent } from '@/data/siteContent';
+import CountUp from 'react-countup';
+
+const counters = [
+  { icon: 'ti-folder', tone: 'sc_one', end: 134, label: 'Our Online Course' },
+  { icon: 'ti-medall-alt', tone: 'sc_two', end: 299, label: 'Academic Programs' },
+  { icon: 'ti-id-badge', tone: 'sc_three', end: 684, label: 'Certified Students' },
+  { icon: 'ti-user', tone: 'sc_four', end: 941, label: 'Enrolled Students' },
+];
 
 export default function CounterSection() {
-  const { counters } = siteContent;
-
   return (
-    <div className="counterarea sp_bottom_100 sp_top_50">
+    <section className="count_area counter_feature">
       <div className="container">
         <div className="row">
-          {counters.map((stat) => (
-            <div key={stat.label} className="col-xl-3 col-lg-3 col-md-6 col-sm-6 col-12" data-aos="fade-up">
-              <div className="counterarea__text__wraper">
-                <div className="counter__img">
-                  <img loading="lazy" src={stat.icon} alt="" />
-                </div>
-                <div className="counter__content__wraper">
-                  <div className="counter__number">
-                    <span className="counter">{stat.value}</span>
-                    {stat.suffix}
-                  </div>
-                  <p>{stat.label}</p>
-                </div>
+          {counters.map((item, index) => (
+            <div
+              key={item.label}
+              className="col-lg-3 col-sm-6 col-xs-12"
+              data-aos="fade-up"
+              data-aos-delay={index * 100}
+            >
+              <div className="single-counter eduleb-hover-lift">
+                <span className={`${item.icon} ${item.tone}`} aria-hidden="true" />
+                <h2 className="counter-num">
+                  <CountUp end={item.end} duration={2} enableScrollSpy scrollSpyOnce />
+                </h2>
+                <p>{item.label}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

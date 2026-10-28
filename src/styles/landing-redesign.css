@@ -1,0 +1,764 @@
+/* ==========================================================================
+   MindSprint - Exact Reference Layout & Theme (Font: Roboto)
+   Clean White Background, Royal Blue Accents (#3861fb), Crisp Modern Cards
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
+
+:root {
+  --ms-primary: #3861fb;
+  --ms-primary-hover: #264ce5;
+  --ms-primary-light: #eff4ff;
+  --ms-primary-border: #d3e2fe;
+
+  --ms-coral: #f97316;
+  --ms-coral-hover: #ea580c;
+
+  --ms-dark: #0f172a;
+  --ms-gray: #475569;
+  --ms-muted: #64748b;
+  --ms-light-gray: #94a3b8;
+
+  --ms-border: #e2e8f0;
+  --ms-border-light: #f1f5f9;
+  --ms-bg-subtle: #f8fafc;
+
+  --ms-font-roboto: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+}
+
+/* Global Font Override to Roboto — do not use * so icon fonts keep working */
+html:not(:has(body.eduleb-page)),
+body:not(.eduleb-page),
+body:not(.eduleb-page) #root,
+.ms-landing-wrapper,
+.ms-landing-wrapper *:not([class^='ti-']):not([class*=' ti-']):not(.fa):not([class^='fa-']):not([class*=' fa-']),
+.ms-navbar,
+.ms-navbar *:not([class^='ti-']):not([class*=' ti-']):not(.fa):not([class^='fa-']):not([class*=' fa-']),
+.ms-footer-clean,
+.ms-footer-clean *:not([class^='ti-']):not([class*=' ti-']):not(.fa):not([class^='fa-']):not([class*=' fa-']),
+.ms-footer-exact,
+.ms-footer-exact *:not([class^='ti-']):not([class*=' ti-']):not(.fa):not([class^='fa-']):not([class*=' fa-']),
+body:not(.eduleb-page) button,
+body:not(.eduleb-page) input,
+body:not(.eduleb-page) select,
+body:not(.eduleb-page) textarea {
+  font-family: var(--ms-font-roboto) !important;
+}
+
+.ms-landing-wrapper {
+  background-color: #f8fbff;
+  color: var(--ms-dark);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Common Section Titles */
+.ms-sec-title {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: var(--ms-dark);
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  line-height: 1.25;
+}
+
+.ms-sec-subtitle {
+  font-size: 0.95rem;
+  color: var(--ms-muted);
+  line-height: 1.5;
+  margin-bottom: 0;
+}
+
+.ms-view-link {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ms-primary);
+  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.2s ease, color 0.2s ease;
+}
+
+.ms-view-link:hover {
+  color: var(--ms-primary-hover);
+  gap: 9px;
+}
+
+/* Common Buttons */
+.ms-btn-royal {
+  background: var(--ms-primary) !important;
+  color: #ffffff !important;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 12px 28px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(56, 97, 251, 0.25);
+  border: none;
+}
+
+.ms-btn-royal:hover {
+  background: var(--ms-primary-hover) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(56, 97, 251, 0.35);
+}
+
+.ms-btn-outline-clean {
+  background: #ffffff;
+  color: var(--ms-dark) !important;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 12px 26px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1.5px solid var(--ms-border);
+  text-decoration: none !important;
+  transition: all 0.2s ease;
+}
+
+.ms-btn-outline-clean:hover {
+  border-color: var(--ms-primary);
+  color: var(--ms-primary) !important;
+  background: var(--ms-primary-light);
+}
+
+/* ==========================================================================
+   1. NAVBAR
+   ========================================================================== */
+.ms-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--ms-border);
+  padding: 14px 0;
+}
+
+.ms-nav-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none !important;
+}
+
+.ms-nav-brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--ms-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.ms-nav-brand-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--ms-dark);
+}
+
+.ms-nav-links-list {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ms-nav-item-link {
+  font-size: 0.925rem;
+  font-weight: 500;
+  color: var(--ms-gray);
+  text-decoration: none !important;
+  transition: color 0.2s ease;
+}
+
+.ms-nav-item-link:hover,
+.ms-nav-item-link.active {
+  color: var(--ms-primary);
+}
+
+.ms-btn-nav-started {
+  background: var(--ms-primary);
+  color: #ffffff !important;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 9px 20px;
+  border-radius: 9999px;
+  text-decoration: none !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.ms-btn-nav-started:hover {
+  background: var(--ms-primary-hover);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   2. HERO SECTION
+   ========================================================================== */
+.ms-hero-exact {
+  padding: 60px 0 70px;
+  background: radial-gradient(circle at 10% 18%, rgba(56, 97, 251, 0.08) 0%, transparent 40%),
+              radial-gradient(circle at 90% 25%, rgba(147, 51, 234, 0.06) 0%, transparent 45%),
+              linear-gradient(180deg, #f1f6ff 0%, #f8faff 60%, #ffffff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.ms-mission-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: #fffbeb;
+  border: 1px solid #fef3c7;
+  color: #b45309;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.ms-hero-heading-exact {
+  font-size: 3.4rem;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  color: var(--ms-dark);
+  margin-bottom: 18px;
+}
+
+@media (max-width: 991px) {
+  .ms-hero-heading-exact {
+    font-size: 2.6rem;
+  }
+}
+
+.ms-hero-sub-exact {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: var(--ms-gray);
+  margin-bottom: 32px;
+  max-width: 520px;
+}
+
+/* Hero Right Side Visual */
+.ms-hero-photo-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ms-hero-pastel-blob {
+  position: absolute;
+  width: 460px;
+  height: 460px;
+  border-radius: 38% 62% 65% 35% / 40% 45% 55% 60%;
+  background: #eaf1fb;
+  z-index: 0;
+}
+
+.ms-hero-student-photo {
+  position: relative;
+  z-index: 1;
+  max-width: 400px;
+  width: 100%;
+  height: auto;
+  border-radius: 28px;
+  object-fit: cover;
+}
+
+/* Floating Test Score Card */
+.ms-float-score-box {
+  position: absolute;
+  top: 10px;
+  right: -20px;
+  background: #ffffff;
+  border: 1px solid var(--ms-border);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.12);
+  z-index: 3;
+  width: 250px;
+}
+
+@media (max-width: 991px) {
+  .ms-float-score-box {
+    position: static;
+    margin-top: 20px;
+    width: 100%;
+  }
+}
+
+.ms-score-ring-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #eff6ff;
+  border: 3.5px solid var(--ms-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--ms-primary);
+  flex-shrink: 0;
+}
+
+.ms-doodle-better {
+  position: absolute;
+  bottom: 12px;
+  right: -10px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--ms-dark);
+  font-style: italic;
+  z-index: 3;
+}
+
+/* ==========================================================================
+   3. TRUSTED BY LOGOS (ATTRACTIVE BRAND SECTION)
+   ========================================================================== */
+.ms-trusted-strip-exact {
+  padding: 46px 0 52px;
+  background: linear-gradient(180deg, #ffffff 0%, #f4f8fe 50%, #ffffff 100%);
+  border-top: 1px solid #eef4fc;
+  border-bottom: 1px solid #eef4fc;
+  position: relative;
+}
+
+.ms-brand-card-item {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 16px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
+  transition: all 0.25s ease;
+  text-decoration: none !important;
+}
+
+.ms-brand-card-item:hover {
+  transform: translateY(-4px);
+  border-color: #93c5fd;
+  box-shadow: 0 12px 28px -4px rgba(56, 97, 251, 0.15);
+}
+
+.ms-brand-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  transition: transform 0.2s ease;
+}
+
+.ms-brand-card-item:hover .ms-brand-icon-box {
+  transform: scale(1.1);
+}
+
+/* ==========================================================================
+   4. EXPLORE OUR EXAMS (IMAGE 5 STYLE + 7 CARDS + 4 METRICS)
+   ========================================================================== */
+.ms-explore-section-exact {
+  padding: 70px 0 85px;
+  background: radial-gradient(circle at 6% 12%, rgba(56, 97, 251, 0.08) 0%, transparent 35%),
+              radial-gradient(circle at 94% 45%, rgba(99, 102, 241, 0.07) 0%, transparent 40%),
+              linear-gradient(180deg, #f7faff 0%, #edf5fe 50%, #f8faff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.ms-badge-pill-exact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  background: #e0effe;
+  border: 1px solid #bae6fd;
+  color: #1d4ed8;
+  font-size: 0.785rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 14px;
+}
+
+.ms-exam-card-color {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 24px 18px 20px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none !important;
+  color: inherit !important;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 16px -2px rgba(56, 97, 251, 0.05);
+  position: relative;
+}
+
+.ms-exam-card-color:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 18px 36px -6px rgba(56, 97, 251, 0.16);
+}
+
+.ms-exam-circle-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  transition: transform 0.25s ease;
+}
+
+.ms-exam-card-color:hover .ms-exam-circle-icon {
+  transform: scale(1.1);
+}
+
+.ms-exam-circle-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: var(--ms-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.ms-exam-card-color:hover .ms-exam-circle-btn {
+  background: var(--ms-primary);
+  color: #ffffff !important;
+}
+
+/* 4 Metrics Strip matching Image 5 */
+.ms-metrics-card-exact {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid #dbeafe;
+  border-radius: 24px;
+  padding: 26px 36px;
+  box-shadow: 0 8px 30px -4px rgba(56, 97, 251, 0.08);
+  margin-top: 48px;
+}
+
+.ms-metric-icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: #eff6ff;
+  color: var(--ms-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ms-metric-icon-circle.star {
+  background: #fffbeb;
+  color: #f59e0b;
+}
+
+/* ==========================================================================
+   5. POPULAR MOCK TESTS
+   ========================================================================== */
+.ms-popular-tests-exact {
+  padding: 70px 0;
+  background: #ffffff;
+}
+
+.ms-test-tab-pill {
+  padding: 6px 18px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid var(--ms-border);
+  background: #ffffff;
+  color: var(--ms-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ms-test-tab-pill.active,
+.ms-test-tab-pill:hover {
+  background: #1e293b;
+  color: #ffffff;
+  border-color: #1e293b;
+}
+
+.ms-mock-card-exact {
+  background: #ffffff;
+  border: 1px solid var(--ms-border);
+  border-radius: 16px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.ms-mock-card-exact:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -6px rgba(56, 97, 251, 0.12);
+  border-color: var(--ms-primary-border);
+}
+
+.ms-mock-thumb-box {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #1e293b;
+}
+
+.ms-mock-thumb-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.ms-mock-card-exact:hover .ms-mock-thumb-box img {
+  transform: scale(1.05);
+}
+
+.ms-mock-pill-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: #ffffff;
+  font-size: 0.725rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.ms-mock-circle-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--ms-primary-light);
+  color: var(--ms-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ms-mock-card-exact:hover .ms-mock-circle-btn {
+  background: var(--ms-primary);
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   6. TRACK YOUR PROGRESS BANNER
+   ========================================================================== */
+.ms-progress-card-exact {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e0effe 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 24px;
+  padding: 44px;
+  margin: 30px 0 70px;
+}
+
+.ms-progress-floating-box {
+  background: #ffffff;
+  border: 1px solid var(--ms-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+}
+
+/* ==========================================================================
+   7. AFFORDABLE PLANS (PRICING)
+   ========================================================================== */
+.ms-pricing-exact {
+  padding: 70px 0;
+  background: #ffffff;
+}
+
+.ms-pricing-box-clean {
+  background: #ffffff;
+  border: 1.5px solid var(--ms-border);
+  border-radius: 20px;
+  padding: 32px 28px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.ms-pricing-box-clean.featured {
+  border-color: var(--ms-primary);
+  box-shadow: 0 14px 32px -6px rgba(56, 97, 251, 0.16);
+}
+
+.ms-popular-tag-clean {
+  position: absolute;
+  top: -12px;
+  right: 24px;
+  background: #ea580c;
+  color: #ffffff;
+  font-size: 0.725rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.04em;
+}
+
+/* ==========================================================================
+   8. TESTIMONIALS (3 CARDS)
+   ========================================================================== */
+.ms-testimonials-exact {
+  padding: 70px 0;
+  background: #ffffff;
+}
+
+.ms-testimonial-card-exact {
+  background: #ffffff;
+  border: 1px solid var(--ms-border);
+  border-radius: 16px;
+  padding: 24px 22px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.ms-testimonial-card-exact:hover {
+  transform: translateY(-3px);
+  border-color: var(--ms-primary-border);
+  box-shadow: 0 10px 24px -4px rgba(56, 97, 251, 0.1);
+}
+
+.ms-quote-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #eff4ff;
+}
+
+/* ==========================================================================
+   9. BLOG (4 CARDS)
+   ========================================================================== */
+.ms-blog-exact {
+  padding: 70px 0 90px;
+  background: #ffffff;
+}
+
+.ms-article-card-exact {
+  background: #ffffff;
+  border: 1px solid var(--ms-border);
+  border-radius: 16px;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.ms-article-card-exact:hover {
+  transform: translateY(-4px);
+  border-color: var(--ms-primary-border);
+  box-shadow: 0 12px 28px -6px rgba(56, 97, 251, 0.12);
+}
+
+.ms-blog-title-link:hover {
+  color: var(--ms-primary) !important;
+}
+
+/* ==========================================================================
+   10. FOOTER (DARK NAVY)
+   ========================================================================== */
+.ms-footer-clean,
+.ms-footer-exact {
+  background: #0f172a;
+  color: #94a3b8;
+  padding: 70px 0 28px;
+}
+
+.ms-social-clean {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: #1e293b;
+  color: #cbd5e1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.ms-social-clean:hover {
+  background: var(--ms-primary);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.ms-footer-heading-clean {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 18px;
+}
+
+.ms-footer-links-clean {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ms-footer-links-clean li a {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.ms-footer-links-clean li a:hover {
+  color: #ffffff;
+}
+

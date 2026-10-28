@@ -1,0 +1,2 @@
+# Generated TypeScript build info in any folder: do not merge, keep it out of diffs.
+**/*.tsbuildinfo linguist-generated -diff -merge

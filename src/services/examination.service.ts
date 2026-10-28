@@ -6,6 +6,7 @@ import type {
   CreateTestInput,
   ExamResult,
   ExamTest,
+  AdminDashboardData,
   OrgAnalytics,
   Question,
   Subject,
@@ -13,6 +14,13 @@ import type {
 } from '@/types/examination';
 
 const base = '/examination';
+
+export async function getAdminDashboard(): Promise<AdminDashboardData> {
+  const { data } = await api.get<ApiResponse<AdminDashboardData>>(`${base}/analytics/dashboard`, {
+    skipToast: true,
+  });
+  return data.data;
+}
 
 export async function getAnalyticsOverview(): Promise<OrgAnalytics> {
   const { data } = await api.get<ApiResponse<OrgAnalytics>>(
@@ -811,6 +819,149 @@ export async function getResult(attemptId: string) {
     `${base}/results/${attemptId}`,
   );
 
+  return data.data;
+}
+
+/* =========================================================
+   AI GENERATION
+   ========================================================= */
+
+export interface AiGenerateInput {
+  examName: string;
+  department: string;
+  subject: string;
+  chapter?: string;
+  topic: string;
+  difficulty: 'easy' | 'medium' | 'hard' | 'mixed';
+  language: string;
+  questionTypes: { type: string; count: number }[];
+  syllabusText?: string;
+}
+
+export interface AiJob {
+  id: string;
+  status: string;
+  progress_current: number;
+  progress_total: number;
+  created_count: number;
+  skipped_count: number;
+  error_message?: string | null;
+  errors_json?: { question?: string; reason: string }[] | string | null;
+  topic_test_id?: string | null;
+  mock_test_id?: string | null;
+  prompt_tokens?: number;
+  completion_tokens?: number;
+  estimated_cost_usd?: number;
+  duration_ms?: number;
+  created_at?: string;
+  request_json?: { examName?: string; topic?: string };
+  openai_configured?: boolean;
+}
+
+export async function generateAiQuestions(input: AiGenerateInput) {
+  const { data } = await api.post<ApiResponse<AiJob>>(`${base}/ai/generate`, input);
+  return data.data;
+}
+
+export async function getAiJob(id: string) {
+  const { data } = await api.get<ApiResponse<AiJob>>(`${base}/ai/jobs/${id}`);
+  return data.data;
+}
+
+export async function listAiJobs() {
+  const { data } = await api.get<ApiResponse<AiJob[]>>(`${base}/ai/jobs`);
+  return data.data;
+}
+
+export async function retryAiJob(id: string) {
+  const { data } = await api.post<ApiResponse<AiJob>>(`${base}/ai/jobs/${id}/retry`);
+  return data.data;
+}
+
+export async function getAiUsage() {
+  const { data } = await api.get<ApiResponse<{
+    requests: number;
+    completed: number;
+    failed: number;
+    running: number;
+    prompt_tokens: number;
+    completion_tokens: number;
+    estimated_cost_usd: number;
+    avg_duration_ms: number;
+    openai_configured: boolean;
+    model: string;
+  }>>(`${base}/ai/usage`);
+  return data.data;
+}
+
+export async function previewAiBlueprint(input: AiGenerateInput) {
+  const { data } = await api.post<ApiResponse<{
+    totalQuestions: number;
+    totalMarks: number;
+    difficultySplit: { easy: number; medium: number; hard: number };
+    sections: { type: string; count: number; marksEach?: number; difficulty?: string }[];
+    notes?: string;
+    source?: string;
+  }>>(`${base}/ai/blueprint`, input);
+  return data.data;
+}
+
+export async function mapAiSyllabus(input: AiGenerateInput) {
+  const { data } = await api.post<ApiResponse<{
+    topics: { chapter: string; topic: string; topicId: string }[];
+  }>>(`${base}/ai/syllabus-map`, input);
+  return data.data;
+}
+
+export async function recommendBankQuestions(topicId: string | undefined, difficulty: number, marks: number) {
+  const { data } = await api.get<ApiResponse<{
+    total_marks: number;
+    questions: { id: string; type: string; content: string; marks: number; difficulty: number; topic_name?: string; reason: string }[];
+  }>>(`${base}/ai/recommendations`, { params: { topicId, difficulty, marks } });
+  return data.data;
+}
+
+export async function findAiDuplicates() {
+  const { data } = await api.get<ApiResponse<{ pairs: { left: string; right: string; text: string }[] }>>(
+    `${base}/ai/duplicates`,
+  );
+  return data.data;
+}
+
+export async function improveQuestion(id: string) {
+  const { data } = await api.post<ApiResponse<{ id: string; text: string; difficulty: string }>>(
+    `${base}/ai/questions/${id}/improve`,
+  );
+  return data.data;
+}
+
+export async function generateDistractors(
+  id: string,
+  save: boolean,
+  options?: { text: string; isCorrect: boolean; whyWrong?: string }[],
+) {
+  const { data } = await api.post<ApiResponse<{
+    saved: boolean;
+    options: { text: string; isCorrect: boolean; whyWrong: string }[];
+  }>>(`${base}/ai/questions/${id}/distractors`, { save, options });
+  return data.data;
+}
+
+export async function getPracticeInsights() {
+  const { data } = await api.get<ApiResponse<{
+    summary: string;
+    topics: { topic_name: string; chapter_name?: string; correct_pct: number }[];
+    recommendations: { topic: { topic_name: string }; questions: { id: string; text: string; type: string }[] }[];
+  }>>(`${base}/ai/practice-insights`);
+  return data.data;
+}
+
+export async function getReportInsights(testId: string) {
+  const { data } = await api.get<ApiResponse<{
+    summary: string;
+    hard_questions: { text: string; correct_pct: number | null }[];
+    common_wrong: { question: string; option: string; selected_pct: number }[];
+  }>>(`${base}/ai/reports/${testId}/insights`);
   return data.data;
 }
 

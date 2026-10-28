@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
+import { showFlashedToast } from '@/lib/toast';
 
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
@@ -9,11 +11,17 @@ import Layout from '@/components/layout/Layout';
 
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
-import RegisterPage from '@/pages/RegisterPage';
 import AboutPage from '@/pages/AboutPage';
+import CoursePage from '@/pages/CoursePage';
+import CourseDetailsPage from '@/pages/CourseDetailsPage';
+import ContactPage from '@/pages/ContactPage';
+import FaqPage from '@/pages/FaqPage';
+import InstructorPage from '@/pages/InstructorPage';
+import InstructorDetailsPage from '@/pages/InstructorDetailsPage';
+import EdulebPricingPage from '@/pages/EdulebPricingPage';
+import EdulebNotFoundPage from '@/pages/EdulebNotFoundPage';
 import ExamsPage from '@/pages/ExamsPage';
 import ExamSlugPage from '@/pages/ExamSlugPage';
-import PricingPage from '@/pages/PricingPage';
 import SchoolsPage from '@/pages/SchoolsPage';
 import HelpPage from '@/pages/HelpPage';
 import PrivacyPage from '@/pages/PrivacyPage';
@@ -29,8 +37,13 @@ import CertificatePage from '@/pages/CertificatePage';
 import { dashboardRouteElements } from '@/pages/dashboard/dashboardRoutes';
 
 import 'react-toastify/dist/ReactToastify.css';
+import '@/styles/toast.css';
 
 export default function App() {
+  useEffect(() => {
+    showFlashedToast();
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -59,9 +72,20 @@ export default function App() {
                   element={<ResetPasswordPage />}
                 />
 
-                <Route path="/register" element={<RegisterPage />} />
+                <Route path="/register" element={<Navigate to="/login" replace />} />
 
                 <Route path="/about" element={<AboutPage />} />
+                <Route path="/course" element={<CoursePage />} />
+                <Route path="/course-details" element={<CourseDetailsPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/faq" element={<FaqPage />} />
+                <Route path="/instructor-page" element={<InstructorPage />} />
+                <Route
+                  path="/instructor-details-page"
+                  element={<InstructorDetailsPage />}
+                />
+                <Route path="/pricing" element={<EdulebPricingPage />} />
+                <Route path="/not-found-demo" element={<EdulebNotFoundPage />} />
 
                 <Route path="/exams" element={<ExamsPage />} />
 
@@ -69,8 +93,6 @@ export default function App() {
                   path="/exams/:slug"
                   element={<ExamSlugPage />}
                 />
-
-                <Route path="/pricing" element={<PricingPage />} />
 
                 <Route path="/schools" element={<SchoolsPage />} />
 
@@ -91,7 +113,7 @@ export default function App() {
                   element={<VerifyCertificatePage />}
                 />
 
-                {/* Instructor */}
+                {/* Instructor (dashboard redirects) */}
                 <Route
                   path="/instructor"
                   element={
@@ -131,8 +153,9 @@ export default function App() {
               closeOnClick
               pauseOnHover
               draggable
+              limit={4}
               theme="light"
-              toastClassName="sca-toast"
+              toastClassName="ms-toast-wrap"
             />
           </BrowserRouter>
         </OrgScopeProvider>
@@ -140,3 +163,5 @@ export default function App() {
     </ThemeProvider>
   );
 }
+
+//.
