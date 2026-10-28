@@ -45,6 +45,9 @@ import {
   FiCheckCircle,
   FiList,
   FiPlay,
+  FiAward,
+  FiArrowLeft,
+  FiUser,
 } from 'react-icons/fi';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
@@ -793,8 +796,7 @@ export function QuestionBankPanel() {
             {selectedDeleteIds.length > 0 && (
               <button
                 type="button"
-                className="org-icon-btn org-icon-btn--delete"
-                style={{ width: 'auto', padding: '6px 14px', height: 'auto', gap: '6px', fontWeight: 600, fontSize: '0.8rem' }}
+                className="org-action-btn org-action-btn--danger"
                 onClick={() => void handleBulkDelete()}
               >
                 <FiTrash2 />
@@ -1519,19 +1521,38 @@ export function TestsListPanel({ title }: { title: string }) {
 
       <div className="org-table-card">
         <div className="org-card-header">
-          <div className="org-search-box">
-            <FiSearch className="org-search-icon" />
-            <input
-              type="text"
-              className="org-search-input"
-              placeholder="Search tests by title or status…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">All Tests</h3>
+              <span className="org-count-badge">
+                {filteredTests.length} {filteredTests.length === 1 ? 'Test' : 'Tests'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">Manage, schedule, and assign assessment tests</p>
           </div>
-          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
-            Total Tests: {tests.length}
-          </span>
+
+          <div className="org-controls-row">
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search tests by title or status…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="org-table-wrap">
@@ -1542,7 +1563,7 @@ export function TestsListPanel({ title }: { title: string }) {
                 <th>STATUS</th>
                 <th>DURATION</th>
                 <th>MARKS</th>
-                <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 220 }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -1554,14 +1575,13 @@ export function TestsListPanel({ title }: { title: string }) {
                   <td>{statusBadge(t.status)}</td>
                   <td style={{ color: '#475569' }}>{t.duration_minutes} min</td>
                   <td style={{ color: '#475569', fontWeight: 500 }}>{t.total_marks ?? '—'}</td>
-                  <td>
-                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap' }}>
                       {t.status === 'draft' && (
                         <Link
                           to={`/dashboard/test-builder/${t.id}?step=build`}
-                          className="org-icon-btn--switch"
+                          className="org-action-btn org-action-btn--switch"
                           title="Continue setup"
-                          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                         >
                           <FiPlay style={{ fontSize: 13 }} /> Setup
                         </Link>
@@ -1569,31 +1589,28 @@ export function TestsListPanel({ title }: { title: string }) {
                       {(t.status === 'scheduled' || t.status === 'live') && (
                         <Link
                           to={`/dashboard/test-builder/${t.id}?step=assign`}
-                          className="org-icon-btn--switch"
+                          className="org-action-btn org-action-btn--switch"
                           title="Assign students"
-                          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
                         >
                           <FiZap style={{ fontSize: 13 }} /> Assign
                         </Link>
                       )}
                       <button
                         type="button"
-                        className="org-icon-btn--edit"
+                        className="org-action-btn org-action-btn--edit"
                         disabled={t.status === 'completed'}
                         title={t.status === 'completed' ? 'Completed tests cannot be edited' : 'Edit test details'}
                         onClick={() => {
                           if (t.status !== 'completed') startEdit(t);
                         }}
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                       >
                         <FiEdit3 style={{ fontSize: 13 }} /> Edit
                       </button>
                       <button
                         type="button"
-                        className="org-icon-btn--danger"
+                        className="org-action-btn org-action-btn--danger"
                         onClick={() => void remove(t.id, t.title)}
                         title="Delete test"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                       >
                         <FiTrash2 style={{ fontSize: 13 }} /> Delete
                       </button>
@@ -2354,8 +2371,8 @@ export function AttemptsListPanel({
 
   return (
     <div className="org-panel-root">
-      <div className="org-top-bar">
-        <div>
+      <div className="org-page-header">
+        <div className="org-page-header-left">
           <h2 className="org-page-title">{title}</h2>
           <p className="org-page-desc">
             Track and review student examination sessions, results, and proctoring status.
@@ -2367,19 +2384,38 @@ export function AttemptsListPanel({
 
       <div className="org-table-card">
         <div className="org-card-header">
-          <div className="org-search-box">
-            <FiSearch className="org-search-icon" />
-            <input
-              type="text"
-              className="org-search-input"
-              placeholder="Search attempts by test title or status…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">All Attempts</h3>
+              <span className="org-count-badge">
+                {filteredAttempts.length} {filteredAttempts.length === 1 ? 'Attempt' : 'Attempts'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">Real-time records of student tests, scores, and proctoring logs</p>
           </div>
-          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
-            Total Attempts: {attempts.length}
-          </span>
+
+          <div className="org-controls-row">
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search attempts by test title or status…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="org-table-wrap">
@@ -2390,7 +2426,7 @@ export function AttemptsListPanel({
                 <th>STATUS</th>
                 <th>SCORE</th>
                 <th>STARTED</th>
-                {!readOnly && <th style={{ textAlign: 'right' }}>ACTIONS</th>}
+                {!readOnly && <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 150 }}>ACTIONS</th>}
               </tr>
             </thead>
             <tbody>
@@ -2449,14 +2485,13 @@ export function AttemptsListPanel({
                   </td>
                   <td style={{ color: '#475569' }}>{formatDateTime(a.started_at)}</td>
                   {!readOnly && (
-                    <td>
-                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap' }}>
                         {a.status === 'in_progress' && (
                           <button
                             type="button"
-                            className="org-icon-btn--switch"
+                            className="org-action-btn org-action-btn--switch"
                             onClick={() => navigate(`/dashboard/exam/${a.test_id}/attempt/${a.id}`)}
-                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                           >
                             <FiPlay style={{ fontSize: 13 }} /> Resume
                           </button>
@@ -2464,8 +2499,7 @@ export function AttemptsListPanel({
                         {(a.status === 'submitted' || a.status === 'auto_submitted') && (
                           <Link
                             to={`/dashboard/exam-result/${a.id}`}
-                            className="org-icon-btn--edit"
-                            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                            className="org-action-btn org-action-btn--edit"
                           >
                             <FiEye style={{ fontSize: 13 }} /> Result
                           </Link>
@@ -2527,19 +2561,38 @@ export function ResultsPanel() {
 
       <div className="org-table-card">
         <div className="org-card-header">
-          <div className="org-search-box">
-            <FiSearch className="org-search-icon" />
-            <input
-              type="text"
-              className="org-search-input"
-              placeholder="Search results by test name…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">My Results</h3>
+              <span className="org-count-badge">
+                {filteredResults.length} {filteredResults.length === 1 ? 'Result' : 'Results'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">Review your past test scores, ranks, and percentiles</p>
           </div>
-          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
-            Total Results: {results.length}
-          </span>
+
+          <div className="org-controls-row">
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search results by test name…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="org-table-wrap">
@@ -2552,7 +2605,7 @@ export function ResultsPanel() {
                 <th>RANK</th>
                 <th>PERCENTILE</th>
                 <th>DATE</th>
-                <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 100 }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -2582,12 +2635,11 @@ export function ResultsPanel() {
                   <td style={{ color: '#475569' }}>{r.rank != null ? `#${r.rank}` : '—'}</td>
                   <td style={{ color: '#475569' }}>{r.percentile != null ? `${Number(r.percentile).toFixed(1)}%` : '—'}</td>
                   <td style={{ color: '#475569' }}>{formatDateTime(r.created_at)}</td>
-                  <td>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
                       <Link
                         to={`/dashboard/exam-result/${r.attempt_id}`}
-                        className="org-icon-btn--edit"
-                        style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        className="org-action-btn org-action-btn--edit"
                       >
                         <FiEye style={{ fontSize: 13 }} /> View
                       </Link>
@@ -2931,7 +2983,7 @@ export function CreateTestPanel() {
           </div>
         )}
 
-        <div style={{ maxWidth: 860, margin: '0 auto', width: '100%' }}>
+        <div style={{ width: '100%' }}>
           <ExamStepper
             activeStep={formStep}
             onStep={(step) => setFormStep(step)}
@@ -3561,9 +3613,11 @@ export function ExamResultPage() {
           <Link
             key="issued"
             to="/dashboard/student-certificates"
-            className="edtp-btn edtp-btn--secondary edtp-btn--sm"
+            className="org-action-btn org-action-btn--switch"
+            style={{ height: 36, padding: '0 14px' }}
           >
-            Certificate issued · {existingCert.certificate_no}
+            <FiAward />
+            <span>Certificate issued · {existingCert.certificate_no}</span>
           </Link>,
         );
       } else if (passing && certBusy) {
@@ -3577,272 +3631,465 @@ export function ExamResultPage() {
     }
     if (passing && !existingCert) {
       buttons.push(
-        <EdtpBtn key="preview" variant="ghost" disabled={certBusy} onClick={() => void handlePreviewCertificate()}>
-          Preview certificate
-        </EdtpBtn>,
+        <button
+          key="preview"
+          type="button"
+          className="org-action-btn org-action-btn--switch"
+          style={{ height: 36, padding: '0 14px' }}
+          disabled={certBusy}
+          onClick={() => void handlePreviewCertificate()}
+        >
+          <FiEye />
+          <span>Preview certificate</span>
+        </button>,
       );
     }
     if (existingCert) {
       buttons.push(
-        <EdtpBtn
+        <button
           key="dl"
-          variant="primary"
+          type="button"
+          className="org-add-btn"
+          style={{ height: 36, padding: '0 16px' }}
           disabled={certBusy}
           onClick={handlePreviewExistingCertificate}
         >
-          Choose template & download
-        </EdtpBtn>,
+          <FiAward />
+          <span>Choose template & download</span>
+        </button>,
       );
     } else if (passing && canIssueAsStaff) {
       buttons.push(
-        <EdtpBtn key="issue" variant="primary" disabled={certBusy} onClick={handlePreviewCertificate}>
-          {certBusy ? 'Issuing…' : 'Issue certificate'}
-        </EdtpBtn>,
+        <button
+          key="issue"
+          type="button"
+          className="org-add-btn"
+          style={{ height: 36, padding: '0 16px' }}
+          disabled={certBusy}
+          onClick={handlePreviewCertificate}
+        >
+          <FiAward />
+          <span>{certBusy ? 'Issuing…' : 'Issue certificate'}</span>
+        </button>,
       );
     }
     return buttons;
   };
 
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>
-          Result — {result.test_title}{' '}
-          {flagged ? <span className="edtp-badge edtp-badge--danger">Flagged</span> : null}
-        </h4>
-        {studentName ? <p className="text-muted mb-0">Student: {studentName}</p> : null}
+    <div className="org-panel-page">
+      <div className="org-page-header">
+        <div className="org-page-header-left">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <h2 className="org-page-title">Result — {result.test_title}</h2>
+            {flagged ? (
+              <span className="org-status-badge org-status-badge--inactive">
+                Flagged
+              </span>
+            ) : (
+              <span className="org-status-badge org-status-badge--active">
+                Completed
+              </span>
+            )}
+          </div>
+          {studentName && (
+            <p className="org-page-desc" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <FiUser style={{ fontSize: 14 }} /> Student: <strong style={{ color: '#0f172a' }}>{studentName}</strong>
+            </p>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <Link
+            to={backHref}
+            className="org-btn-secondary"
+            style={{ height: 36, padding: '0 16px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}
+          >
+            <FiArrowLeft /> Back to Results
+          </Link>
+          {renderCertCta()}
+        </div>
       </div>
+
       {isStudent ? <PracticeInsights /> : null}
 
-      {history ? (
-        <div className="sp_bottom_15 d-flex flex-wrap align-items-center gap-2">
-          {history.attempts.length > 1 ? (
-            <>
-              <label className="mb-0" htmlFor="attemptHistory">
-                Attempt history
+      {/* Attempts / Policy info bar */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 12,
+          padding: '12px 18px',
+          background: '#ffffff',
+          borderRadius: 12,
+          border: '1px solid #e2e8f0',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          {history && history.attempts.length > 1 ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <label style={{ fontSize: '0.825rem', fontWeight: 600, color: '#475569', margin: 0 }} htmlFor="attemptHistory">
+                Attempt:
               </label>
               <select
                 id="attemptHistory"
-                className="register__input"
-                style={{ maxWidth: 360 }}
+                className="org-form-select"
+                style={{ width: 'auto', minWidth: 200, height: 34, padding: '4px 10px', fontSize: '0.825rem' }}
                 value={attemptId}
-                onChange={(e) =>
-                  navigate(`/dashboard/exam-result/${e.target.value}`)
-                }
+                onChange={(e) => navigate(`/dashboard/exam-result/${e.target.value}`)}
               >
                 {history.attempts.map((a) => (
                   <option key={a.attempt_id} value={a.attempt_id}>
                     #{a.attempt_number}
                     {a.is_official ? ' (official)' : ''}
                     {' · '}
-                    {a.percentage != null
-                      ? `${Number(a.percentage).toFixed(1)}%`
-                      : a.status}
+                    {a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : a.status}
                   </option>
                 ))}
               </select>
-            </>
+            </div>
           ) : null}
 
-          <span className="text-muted" style={{ fontSize: '0.8125rem' }}>
-            Attempt progress: {history.completed_attempts} completed
-            {' · '}
-            {history.attempts_remaining} remaining
-          </span>
-
-          <span className="text-muted" style={{ fontSize: '0.8125rem' }}>
-            Policy: {history.scoring_policy} · max {history.max_attempts}
-          </span>
-        </div>
-      ) : null}
-
-      <div className="d-flex flex-wrap gap-2 sp_bottom_20">
-        <Link
-          to={backHref}
-          className="edtp-btn edtp-btn--secondary edtp-btn--sm"
-        >
-          Back
-        </Link>
-
-        {(() => {
-          const isPractice = result.exam_type === 'practice';
-          const attemptsLeft = Math.max(0, Number(history?.attempts_remaining ?? 0));
-          const maxAttempts = Number(history?.max_attempts ?? 0);
-
-          if (!isPractice || !history) {
-            return null;
-          }
-
-          return (
-            <>
-              <span className="edtp-btn edtp-btn--secondary edtp-btn--sm">
-                Attempts left: {attemptsLeft} of {maxAttempts}
-              </span>
-
-              {attemptsLeft > 0 && (
-                <button
-                  type="button"
-                  className="edtp-btn edtp-btn--primary edtp-btn--sm"
-                  onClick={() => void handleReattempt()}
-                >
-                  Retest
-                </button>
-              )}
-            </>
-          );
-        })()}
-
-        {renderCertCta()}
-
-        <Link
-          to="/verify-certificate"
-          className="edtp-btn edtp-btn--ghost edtp-btn--sm"
-        >
-          Verify certificate
-        </Link>
-      </div>
-
-
-      <div className="row">
-        <div className="col-xl-3 col-lg-6 sp_bottom_20">
-          <div className="dashboard__single__counter">
-            <div className="counter__content__wraper">
-              <div className="counter__number">{result.total_score}/{result.max_score}</div>
-              <p>Score</p>
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-3 col-lg-6 sp_bottom_20">
-          <div className="dashboard__single__counter">
-            <div className="counter__content__wraper">
-              <div className="counter__number">{Number(result.percentage).toFixed(1)}%</div>
-              <p>Percentage</p>
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-3 col-lg-6 sp_bottom_20">
-          <div className="dashboard__single__counter">
-            <div className="counter__content__wraper">
-              <div className="counter__number">
-                {result.rank != null ? `#${result.rank}` : '—'}
-              </div>
-              <p>Rank</p>
-            </div>
-          </div>
-        </div>
-        <div className="col-xl-3 col-lg-6 sp_bottom_20">
-          <div className="dashboard__single__counter">
-            <div className="counter__content__wraper">
-              <div className="counter__number">
-                {result.percentile != null ? `${Number(result.percentile).toFixed(1)}%` : '—'}
-              </div>
-              <p>Percentile</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {canIssueAsStaff && result.proctoring_timeline ? (
-        <div className="edtp-form-card sp_bottom_20">
-          <h5 className="sp_bottom_15">
-            Proctoring timeline{' '}
-            {flagged ? <span className="edtp-badge edtp-badge--danger">Flagged</span> : null}
-          </h5>
-          {result.proctoring_summary?.flag_reasons?.length ? (
-            <ul className="sp_bottom_10">
-              {result.proctoring_summary.flag_reasons.map((r) => (
-                <li key={r}>{r}</li>
-              ))}
-            </ul>
-          ) : null}
-          {result.proctoring_timeline.length === 0 ? (
-            <p className="text-muted mb-0">No proctoring events recorded.</p>
-          ) : (
-            <ul className="sca-proctor-timeline">
-              {result.proctoring_timeline.map((ev, i) => (
-                <li key={`${ev.at}-${i}`}>
-                  <code>{ev.event}</code> · {formatDateTime(ev.at)}
-                </li>
-              ))}
-            </ul>
+          {history && (
+            <span style={{ fontSize: '0.825rem', color: '#64748b' }}>
+              Attempt progress: <strong>{history.completed_attempts} completed</strong> · {history.attempts_remaining} remaining · Policy: {history.scoring_policy} · max {history.max_attempts}
+            </span>
           )}
         </div>
-      ) : null}
 
-      <div className="edtp-form-card sp_bottom_20">
-        <h5 className="sp_bottom_15">Question-wise analysis</h5>
-        {!showAnswerKey && isStudent ? (
-          <p className="text-muted sp_bottom_15 mb-0">
-            Answer key is hidden until the instructor releases it.
-          </p>
-        ) : null}
-        {questions.length === 0 ? (
-          <p className="text-muted mb-0">No per-question details available for this attempt.</p>
-        ) : (
-          questions.map((q, index) => {
-            const selectedIds = new Set(q.answer?.selectedOptionIds ?? []);
-            const opts = q.options ?? [];
-            const hasOptions = opts.length > 0;
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          {(() => {
+            const isPractice = result.exam_type === 'practice';
+            const attemptsLeft = Math.max(0, Number(history?.attempts_remaining ?? 0));
+            const maxAttempts = Number(history?.max_attempts ?? 0);
+
+            if (!isPractice || !history) {
+              return null;
+            }
+
             return (
-              <div key={q.question_id} className="sca-exam-result-q">
-                <div className="sca-exam-result-q__head">
-                  <strong>Q{index + 1}.</strong>
-                  <span>{questionText(q.content)}</span>
-                  {showAnswerKey && q.is_correct != null ? (
-                    <span className={`edtp-badge ${q.is_correct ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
-                      {q.is_correct ? 'Correct' : 'Incorrect'}
-                    </span>
-                  ) : null}
-                  <span className="sca-exam-result-q__meta">
-                    Marks: {Number(q.marks_awarded ?? 0)} / {Number(q.marks)}
-                  </span>
-                </div>
-                {showAnswerKey && hasOptions ? (
-                  <ul className="sca-exam-result-q__options">
-                    {opts.map((o) => {
-                      const selected = selectedIds.has(o.id);
-                      const correct = Boolean(o.is_correct);
-                      let cls = 'sca-exam-result-opt';
-                      if (correct) cls += ' sca-exam-result-opt--correct';
-                      else if (selected) cls += ' sca-exam-result-opt--wrong';
-                      return (
-                        <li key={o.id} className={cls}>
-                          {getOptionText(o.content)}
-                          {correct ? ' ✓' : ''}
-                          {selected && !correct ? ' (your answer)' : ''}
-                          {selected && correct ? ' (your answer)' : ''}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                ) : (
-                  <div className="sca-exam-result-q__answers">
-                    {showAnswerKey ? (
-                      <div>
-                        <strong>Correct answer:</strong> {formatCorrectAnswer(q)}
-                      </div>
-                    ) : null}
-                    <div>
-                      <strong>Student answered:</strong> {formatStudentAnswer(q)}
-                    </div>
-                  </div>
+              <>
+                <span className="org-count-badge" style={{ padding: '6px 12px', fontSize: '0.78rem' }}>
+                  Attempts left: {attemptsLeft} of {maxAttempts}
+                </span>
+
+                {attemptsLeft > 0 && (
+                  <button
+                    type="button"
+                    className="org-add-btn"
+                    style={{ height: 34, padding: '0 14px' }}
+                    onClick={() => void handleReattempt()}
+                  >
+                    <FiPlay />
+                    <span>Retest</span>
+                  </button>
                 )}
-              </div>
+              </>
             );
-          })
-        )}
+          })()}
+
+          <Link
+            to="/verify-certificate"
+            className="org-btn-outline-primary"
+            style={{ height: 34, padding: '0 12px', fontSize: '0.8rem' }}
+          >
+            <FiCheckCircle />
+            <span>Verify certificate</span>
+          </Link>
+        </div>
       </div>
 
-      <Link className="edtp-btn edtp-btn--primary edtp-btn--md" to={backHref}>
-        Back to Results
-      </Link>
+      {/* 4 Stat Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+        <div className="org-stat-card">
+          <span className="org-stat-label">Total Score</span>
+          <strong className="org-stat-value" style={{ color: '#2563eb' }}>
+            {result.total_score} <span style={{ fontSize: '1rem', color: '#64748b', fontWeight: 600 }}>/ {result.max_score}</span>
+          </strong>
+          <span className="org-stat-hint">Marks scored in this attempt</span>
+        </div>
+
+        <div className="org-stat-card">
+          <span className="org-stat-label">Percentage</span>
+          <strong className="org-stat-value" style={{ color: passing ? '#16a34a' : '#dc2626' }}>
+            {Number(result.percentage).toFixed(1)}%
+          </strong>
+          <span className="org-stat-hint">{passing ? 'Passing criteria met' : 'Below passing score'}</span>
+        </div>
+
+        <div className="org-stat-card">
+          <span className="org-stat-label">Rank</span>
+          <strong className="org-stat-value" style={{ color: '#0f172a' }}>
+            {result.rank != null ? `#${result.rank}` : '—'}
+          </strong>
+          <span className="org-stat-hint">Position in overall exam cohort</span>
+        </div>
+
+        <div className="org-stat-card">
+          <span className="org-stat-label">Percentile</span>
+          <strong className="org-stat-value" style={{ color: '#7c3aed' }}>
+            {result.percentile != null ? `${Number(result.percentile).toFixed(1)}%` : '—'}
+          </strong>
+          <span className="org-stat-hint">Percentile score ranking</span>
+        </div>
+      </div>
+
+      {/* Proctoring Timeline Card */}
+      {canIssueAsStaff && result.proctoring_timeline ? (
+        <div className="org-table-card">
+          <div className="org-card-header">
+            <div className="org-title-group">
+              <div className="org-title-row">
+                <h3 className="org-card-title">Proctoring Timeline</h3>
+                {flagged ? (
+                  <span className="org-status-badge org-status-badge--inactive">
+                    Flagged
+                  </span>
+                ) : (
+                  <span className="org-count-badge">
+                    {result.proctoring_timeline.length} Events
+                  </span>
+                )}
+              </div>
+              <p className="org-card-subtitle">
+                Monitored activity, integrity events, and tab switches during the test session
+              </p>
+            </div>
+          </div>
+
+          <div style={{ padding: '20px 24px' }}>
+            {result.proctoring_summary?.flag_reasons?.length ? (
+              <div
+                style={{
+                  padding: '12px 16px',
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 10,
+                  marginBottom: 16,
+                }}
+              >
+                <strong style={{ color: '#dc2626', fontSize: '0.85rem' }}>Flag Reasons:</strong>
+                <ul style={{ margin: '6px 0 0 16px', color: '#991b1b', fontSize: '0.825rem' }}>
+                  {result.proctoring_summary.flag_reasons.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {result.proctoring_timeline.length === 0 ? (
+              <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
+                No proctoring events recorded. Session completed cleanly.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {result.proctoring_timeline.map((ev, i) => {
+                  const isFlaggedEvent =
+                    ev.event.includes('exit') || ev.event.includes('switch') || ev.event.includes('blur');
+                  return (
+                    <div
+                      key={`${ev.at}-${i}`}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '10px 14px',
+                        borderRadius: 8,
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '0.825rem',
+                      }}
+                    >
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                          style={{
+                            fontFamily: 'monospace',
+                            fontWeight: 600,
+                            color: isFlaggedEvent ? '#dc2626' : '#2563eb',
+                            background: isFlaggedEvent ? '#fee2e2' : '#dbeafe',
+                            padding: '3px 8px',
+                            borderRadius: 6,
+                          }}
+                        >
+                          {ev.event}
+                        </span>
+                      </span>
+                      <span style={{ color: '#64748b', fontSize: '0.78rem' }}>
+                        {formatDateTime(ev.at)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Question-wise Analysis Card */}
+      <div className="org-table-card">
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">Question-wise Analysis</h3>
+              <span className="org-count-badge">
+                {questions.length} {questions.length === 1 ? 'Question' : 'Questions'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">
+              Detailed breakdown of student answers, marks awarded, and correct solutions
+            </p>
+          </div>
+        </div>
+
+        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {!showAnswerKey && isStudent ? (
+            <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
+              Answer key is hidden until the instructor releases it.
+            </p>
+          ) : null}
+
+          {questions.length === 0 ? (
+            <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
+              No per-question details available for this attempt.
+            </p>
+          ) : (
+            questions.map((q, index) => {
+              const selectedIds = new Set(q.answer?.selectedOptionIds ?? []);
+              const opts = q.options ?? [];
+              const hasOptions = opts.length > 0;
+              return (
+                <div
+                  key={q.question_id}
+                  style={{
+                    padding: '16px 20px',
+                    borderRadius: 12,
+                    border: '1px solid #e2e8f0',
+                    background: '#f8fafc',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span
+                        style={{
+                          padding: '2px 8px',
+                          borderRadius: 6,
+                          background: '#152559',
+                          color: '#ffffff',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                        }}
+                      >
+                        Q{index + 1}
+                      </span>
+                      <strong style={{ fontSize: '0.925rem', color: '#0f172a' }}>
+                        {questionText(q.content)}
+                      </strong>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {showAnswerKey && q.is_correct != null ? (
+                        <span
+                          className={`org-status-badge ${
+                            q.is_correct ? 'org-status-badge--active' : 'org-status-badge--inactive'
+                          }`}
+                          style={{ fontSize: '0.72rem' }}
+                        >
+                          {q.is_correct ? 'Correct' : 'Incorrect'}
+                        </span>
+                      ) : null}
+                      <span className="org-count-badge" style={{ fontSize: '0.72rem' }}>
+                        Marks: {Number(q.marks_awarded ?? 0)} / {Number(q.marks)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {showAnswerKey && hasOptions ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {opts.map((o) => {
+                        const selected = selectedIds.has(o.id);
+                        const correct = Boolean(o.is_correct);
+                        let bg = '#ffffff';
+                        let borderColor = '#e2e8f0';
+                        let color = '#334155';
+
+                        if (correct) {
+                          bg = '#ecfdf5';
+                          borderColor = '#a7f3d0';
+                          color = '#065f46';
+                        } else if (selected) {
+                          bg = '#fef2f2';
+                          borderColor = '#fecaca';
+                          color = '#991b1b';
+                        }
+
+                        return (
+                          <div
+                            key={o.id}
+                            style={{
+                              padding: '8px 14px',
+                              borderRadius: 8,
+                              border: `1px solid ${borderColor}`,
+                              background: bg,
+                              color: color,
+                              fontSize: '0.85rem',
+                              fontWeight: correct || selected ? 600 : 400,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                            }}
+                          >
+                            <span>{getOptionText(o.content)}</span>
+                            <span>
+                              {correct ? ' ✓ Correct' : ''}
+                              {selected && !correct ? ' (your answer)' : ''}
+                              {selected && correct ? ' (your answer)' : ''}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div style={{ fontSize: '0.85rem', color: '#475569', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {showAnswerKey ? (
+                        <div>
+                          <strong style={{ color: '#059669' }}>Correct answer:</strong> {formatCorrectAnswer(q)}
+                        </div>
+                      ) : null}
+                      <div>
+                        <strong>Student answered:</strong> {formatStudentAnswer(q)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      <div>
+        <Link
+          to={backHref}
+          className="org-btn-secondary"
+          style={{ height: 40, padding: '0 20px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+        >
+          <FiArrowLeft />
+          <span>Back to Results</span>
+        </Link>
+      </div>
+
       <CertificatePreviewModal
         open={showCertificatePreview}
         studentName={studentName || 'Student'}
         examTitle={result.test_title || 'Examination'}
         percentage={Number(result.percentage ?? 0)}
         onClose={() => setShowCertificatePreview(false)}
-
         onConfirm={(template) => {
           if (existingCert) {
             setCertBusy(true);
@@ -3866,7 +4113,6 @@ export function ExamResultPage() {
     </div>
   );
 }
-
 
 export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }) {
   const { user, refreshUser } = useAuth();

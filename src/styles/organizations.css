@@ -3,31 +3,35 @@
    Gradient: #12193B (Dark Navy) to #225CE5 (Vibrant Blue)
    ══════════════════════════════════════════════════════════════════ */
 
-.org-panel-root {
+.org-panel-root,
+.org-panel-page {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
   width: 100%;
 }
 
 /* ── Top Bar with Page Title and "+ Add Organization" Gradient Button ── */
-.org-top-bar {
+.org-top-bar,
+.org-page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
+  margin-bottom: 12px;
 }
 
-.org-top-text {
+.org-top-text,
+.org-page-header-left {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
 .org-page-title {
   font-size: 2rem;
-  font-weight: 600;
+  font-weight: 700;
   color: #152559;
   margin: 0;
   letter-spacing: -0.02em;
@@ -35,10 +39,10 @@
 
 .org-page-desc {
   font-size: 0.94rem;
-  color: #3a3f4b;
+  color: #475569;
   margin: 0;
-  max-width: 680px;
-  line-height: 1.45;
+  max-width: 720px;
+  line-height: 1.5;
 }
 
 .org-add-btn {
@@ -227,17 +231,57 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  margin-top: 4px;
 }
 
 /* Card Header with Search & Status Filters */
 .org-card-header {
-  padding: 12px 20px;
+  padding: 18px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 16px;
   border-bottom: 1px solid var(--db-border, #f1f5f9);
+}
+
+/* ── Stat Metric Cards ── */
+.org-stat-card {
+  background: var(--db-card, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 14px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.org-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.org-stat-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--db-muted, #64748b);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.org-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--db-text, #0f172a);
+  margin: 2px 0;
+  letter-spacing: -0.01em;
+}
+
+.org-stat-hint {
+  font-size: 0.76rem;
+  color: var(--db-muted, #94a3b8);
 }
 
 .org-title-group {
@@ -561,6 +605,12 @@
   border: 1px solid #fecaca;
 }
 
+.org-status-badge--pending {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
 /* ── COLORFUL ACTION ICONS (react-icons) ── */
 .org-actions-cell {
   display: flex;
@@ -569,17 +619,28 @@
 }
 
 .org-icon-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  border-radius: 8px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  padding: 0;
-  font-size: 0.85rem;
+  padding: 0 !important;
+  font-size: 1rem;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+}
+
+.org-icon-btn svg {
+  width: 15px !important;
+  height: 15px !important;
+  font-size: 15px !important;
+  flex-shrink: 0;
 }
 
 /* 1. Switch to Account (Vibrant Blue) */
@@ -613,18 +674,111 @@
 }
 
 /* 3. Delete Organization (Vibrant Rose Red) */
-.org-icon-btn--delete {
+.org-icon-btn--delete,
+.org-icon-btn--danger {
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #dc2626;
 }
 
-.org-icon-btn--delete:hover {
+.org-icon-btn--delete:hover,
+.org-icon-btn--danger:hover {
   background: #ef4444;
   border-color: #dc2626;
   color: #ffffff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+/* ── Modern Table Action Buttons (Icon + Text Pills) ── */
+.org-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  line-height: 1;
+  box-sizing: border-box;
+}
+
+.org-action-btn--primary,
+.org-action-btn--switch {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #225ce5;
+}
+
+.org-action-btn--primary:hover,
+.org-action-btn--switch:hover {
+  background: #225ce5;
+  border-color: #1a4bc4;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(34, 92, 229, 0.25);
+}
+
+.org-action-btn--edit,
+.org-action-btn--success {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #059669;
+}
+
+.org-action-btn--edit:hover,
+.org-action-btn--success:hover {
+  background: #10b981;
+  border-color: #059669;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);
+}
+
+.org-action-btn--danger,
+.org-action-btn--delete {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+.org-action-btn--danger:hover,
+.org-action-btn--delete:hover {
+  background: #ef4444;
+  border-color: #dc2626;
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.25);
+}
+
+.org-action-btn--secondary,
+.org-action-btn--ghost {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  color: #475569;
+}
+
+.org-action-btn--secondary:hover,
+.org-action-btn--ghost:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+}
+
+.org-action-btn svg {
+  width: 14px;
+  height: 14px;
+  font-size: 14px;
+  flex-shrink: 0;
 }
 
 /* Role Badges */
@@ -1023,4 +1177,48 @@ textarea.org-form-input {
   background: #0f172a;
   border-color: #334155;
   color: #f8fafc;
+}
+
+/* ── Enhanced Score Distribution Gradient Bars ── */
+.sca-score-bars__track {
+  height: 12px !important;
+  border-radius: 999px !important;
+  background: #f1f5f9 !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow: hidden !important;
+}
+
+.sca-score-bars__fill {
+  height: 100% !important;
+  border-radius: 999px !important;
+  background: linear-gradient(90deg, #12193b 0%, #225ce5 100%) !important;
+  transition: width 0.4s ease-in-out;
+}
+
+.sca-score-bars__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.sca-score-bars__label {
+  width: 70px;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #334155;
+  flex-shrink: 0;
+}
+
+.sca-score-bars__track {
+  flex: 1;
+}
+
+.sca-score-bars__value {
+  width: 80px;
+  text-align: right;
+  font-size: 0.825rem;
+  font-weight: 600;
+  color: #0f172a;
+  flex-shrink: 0;
 }

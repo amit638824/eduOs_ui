@@ -436,12 +436,15 @@ export function AiBuildPanel() {
 
       <div className="org-table-card">
         <div className="org-card-header">
-          <h4 style={{ fontSize: '1rem', fontWeight: 600, color: '#0f172a', margin: 0 }}>
-            Generation History
-          </h4>
-          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
-            Total Jobs: {jobs.length}
-          </span>
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">Generation History</h3>
+              <span className="org-count-badge">
+                {jobs.length} {jobs.length === 1 ? 'Job' : 'Jobs'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">AI test generation requests, token consumption, and status log</p>
+          </div>
         </div>
 
         <div className="org-table-wrap">
@@ -454,7 +457,7 @@ export function AiBuildPanel() {
                 <th>SAVED</th>
                 <th>SKIPPED</th>
                 <th>COST</th>
-                <th style={{ textAlign: 'right' }}>ACTIONS</th>
+                <th style={{ textAlign: 'right', minWidth: 120 }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -482,13 +485,12 @@ export function AiBuildPanel() {
                   <td style={{ color: '#475569' }}>{item.created_count}</td>
                   <td style={{ color: '#475569' }}>{item.skipped_count}</td>
                   <td style={{ color: '#475569' }}>${Number(item.estimated_cost_usd ?? 0).toFixed(4)}</td>
-                  <td>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
                       {item.status === 'failed' ? (
                         <button
                           type="button"
-                          className="org-icon-btn--edit"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                          className="org-action-btn org-action-btn--edit"
                           onClick={() =>
                             void run(async () => {
                               const next = await examinationService.retryAiJob(item.id);

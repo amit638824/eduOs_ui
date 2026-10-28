@@ -12,12 +12,12 @@ import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
-import { EdtpSelect, EdtpBtn } from '@/components/ui/CrudUI';
+import { EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete, showError } from '@/lib/swal';
 import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
-import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { useOrgScope } from '@/context/OrgScopeContext';
+import { FiSearch, FiX, FiZap, FiPlay, FiEye } from 'react-icons/fi';
 import '@/styles/organizations.css';
 import {
   becomeTeacherSchema,
@@ -387,6 +387,7 @@ export function DashboardAssignmentsContent() {
   >([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [startingId, setStartingId] = useState<string | null>(null);
   const [nowTick, setNowTick] = useState(() => Date.now());
 
@@ -458,124 +459,194 @@ export function DashboardAssignmentsContent() {
     }
   };
 
+  const filteredRows = rows.filter((row) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase();
+    return row.title.toLowerCase().includes(q) || (row.status && row.status.toLowerCase().includes(q));
+  });
+
   const renderStudentAction = (row: (typeof rows)[number]) => {
     const st = row.attempt_status;
     if (st === 'submitted' || st === 'auto_submitted') {
       const resultId = row.result_attempt_id ?? row.attempt_id;
       return resultId ? (
-        <Link to={`/dashboard/exam-result/${resultId}`} className="dashboard__small__btn__2">
-          View Result
+        <Link to={`/dashboard/exam-result/${resultId}`} className="org-action-btn org-action-btn--edit">
+          <FiEye style={{ fontSize: 13 }} /> Result
         </Link>
       ) : (
-        <span className="text-muted">Completed</span>
+        <span className="org-status-badge org-status-badge--active">Completed</span>
       );
     }
     if (st === 'in_progress' && row.attempt_id) {
       return (
-        <EdtpBtn
-          variant="primary"
-          size="sm"
+        <button
+          type="button"
+          className="org-action-btn org-action-btn--switch"
           onClick={() => navigate(`/dashboard/exam/${row.id}/attempt/${row.attempt_id}`)}
         >
-          Resume
-        </EdtpBtn>
+          <FiPlay style={{ fontSize: 13 }} /> Resume
+        </button>
       );
     }
     void nowTick;
     const startAt = row.scheduled_start ?? row.scheduled_at;
     const wait = startAt ? msUntil(startAt) : null;
     if (wait != null && wait > 0) {
-      return <span className="text-muted">Starts in {formatCountdown(wait)}</span>;
+      return <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>Starts in {formatCountdown(wait)}</span>;
     }
     return (
-      <EdtpBtn
-        variant="primary"
-        size="sm"
+      <button
+        type="button"
+        className="org-action-btn org-action-btn--primary"
         disabled={startingId === row.id}
         onClick={() => void start(row.id)}
       >
-        {startingId === row.id ? 'Starting…' : 'Start'}
-      </EdtpBtn>
+        <FiPlay style={{ fontSize: 13 }} /> {startingId === row.id ? 'Starting…' : 'Start'}
+      </button>
     );
   };
 
   return (
-    <>
-      <DashboardPageHeader
-        badge="Exams"
-        title="Assignments"
-        subtitle={
-          isStudent
-            ? 'Tests assigned to you. Start, resume, or view results here.'
-            : 'Assignment coverage across tests — who is assigned and how many have submitted.'
-        }
-      />
-      <div className="dashboard__content__wraper">
-        {error && <p className="login__error sp_bottom_15">{error}</p>}
-        <div className="dashboard__table table-responsive">
-          <table>
+    <div className="org-panel-page">
+      <div className="org-page-header">
+        <div className="org-page-header-left">
+          <h2 className="org-page-title">Assignments</h2>
+          <p className="org-page-desc" style={{ margin: 0 }}>
+            {isStudent
+              ? 'Tests assigned to you. Start, resume, or view results here.'
+              : 'Assignment coverage across tests — who is assigned and how many have submitted.'}
+          </p>
+        </div>
+      </div>
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card">
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">All Assignments</h3>
+              <span className="org-count-badge">
+                {filteredRows.length} {filteredRows.length === 1 ? 'Test' : 'Tests'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">
+              {isStudent
+                ? 'Your assigned tests and assessment progress'
+                : 'Manage student assignment links and examine submission volume'}
+            </p>
+          </div>
+
+          <div className="org-controls-row">
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search assignments…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="org-table-wrap">
+          <table className="org-table">
             <thead>
               <tr>
-                <th>Assignment / Test</th>
-                <th>Marks</th>
+                <th>ASSIGNMENT / TEST</th>
+                <th>MARKS</th>
                 {isStudent ? (
                   <>
-                    <th>Status</th>
-                    <th>Progress</th>
+                    <th>STATUS</th>
+                    <th>PROGRESS</th>
                   </>
                 ) : (
                   <>
-                    <th>Assigned</th>
-                    <th>Submitted</th>
-                    <th>Attempts</th>
+                    <th>ASSIGNED</th>
+                    <th>SUBMITTED</th>
+                    <th>ATTEMPTS</th>
                   </>
                 )}
-                <th />
+                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 120 }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {filteredRows.map((row) => (
                 <tr key={row.id}>
                   <td>
-                    <strong>{row.title}</strong>
+                    <strong style={{ color: '#0f172a', fontWeight: 600 }}>{row.title}</strong>
                     {row.status && (
-                      <p className="mb-0 text-muted" style={{ fontSize: '0.8125rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', marginTop: 2 }}>
                         {row.status}
                         {row.duration_minutes ? ` · ${row.duration_minutes} min` : ''}
-                      </p>
+                      </span>
                     )}
                   </td>
-                  <td>{row.total_marks ?? '—'}</td>
+                  <td style={{ color: '#475569', fontWeight: 500 }}>{row.total_marks ?? '—'}</td>
                   {isStudent ? (
                     <>
-                      <td>{row.attempt_status?.replace('_', ' ') ?? 'Not started'}</td>
                       <td>
-                        {row.result_percentage != null
-                          ? `${Number(row.result_percentage).toFixed(1)}%`
-                          : '—'}
+                        <span
+                          className={`org-status-badge ${
+                            row.attempt_status === 'submitted' || row.attempt_status === 'auto_submitted'
+                              ? 'org-status-badge--active'
+                              : row.attempt_status === 'in_progress'
+                                ? 'org-status-badge--pending'
+                                : 'org-status-badge--inactive'
+                          }`}
+                        >
+                          {row.attempt_status?.replace('_', ' ') ?? 'Not started'}
+                        </span>
                       </td>
-                      <td>{renderStudentAction(row)}</td>
+                      <td>
+                        {row.result_percentage != null ? (
+                          <span style={{ fontWeight: 600, color: '#059669' }}>
+                            {Number(row.result_percentage).toFixed(1)}%
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                          {renderStudentAction(row)}
+                        </div>
+                      </td>
                     </>
                   ) : (
                     <>
-                      <td>{row.assigned_count ?? 0}</td>
-                      <td>{row.submitted_count ?? 0}</td>
-                      <td>{row.attempt_count ?? 0}</td>
-                      <td>
-                        <Link
-                          to={`/dashboard/test-builder/${row.id}`}
-                          className="dashboard__small__btn__2"
-                        >
-                          Manage
-                        </Link>
+                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.assigned_count ?? 0}</td>
+                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.submitted_count ?? 0}</td>
+                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.attempt_count ?? 0}</td>
+                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                          <Link
+                            to={`/dashboard/test-builder/${row.id}`}
+                            className="org-action-btn org-action-btn--switch"
+                          >
+                            <FiZap style={{ fontSize: 13 }} /> Manage
+                          </Link>
+                        </div>
                       </td>
                     </>
                   )}
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={isStudent ? 5 : 6}>
+                  <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
                     {isStudent
                       ? 'No tests assigned yet.'
                       : 'No tests found. Create and assign a test from Test Builder.'}
@@ -586,7 +657,7 @@ export function DashboardAssignmentsContent() {
           </table>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -1291,14 +1362,12 @@ function SocialLinksForm() {
         <button
           type="button"
           onClick={() => void clearSaved()}
-          className="org-icon-btn org-icon-btn--delete"
+          className="org-action-btn org-action-btn--danger"
           style={{
-            width: 'auto',
-            padding: '9px 18px',
+            height: '38px',
+            padding: '0 18px',
             borderRadius: '10px',
-            height: 'auto',
-            fontSize: '0.8rem',
-            fontWeight: 600,
+            fontSize: '0.825rem',
           }}
         >
           Delete Saved Links

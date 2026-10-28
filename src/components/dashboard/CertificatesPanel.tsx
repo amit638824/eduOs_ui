@@ -3,8 +3,6 @@ import { Link } from 'react-router-dom';
 import { examinationService } from '@/services';
 import type { Certificate } from '@/services/examination.service';
 import { parseApiError } from '@/lib/errors';
-import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
-import { EdtpBtn, EdtpAlert } from '@/components/ui/CrudUI';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { useAuth } from '@/context/AuthContext';
 import { formatDateTime } from '@/utils/dateFormat';
@@ -14,12 +12,15 @@ import {
   CertificatePreviewModal,
   type CertificateTemplate,
 } from '@/components/dashboard/CertificatePreviewModal';
+import { FiSearch, FiX, FiDownload, FiTrash2, FiExternalLink } from 'react-icons/fi';
+import '@/styles/organizations.css';
 
 export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) {
   const { user } = useAuth();
   const [items, setItems] = useState<Certificate[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
   const [certBusy, setCertBusy] = useState(false);
   const withLoader = useDashboardLoader();
@@ -48,6 +49,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
   }, [mode]);
 
   useDashboardLoadingEffect(loading);
+
   const download = (cert: Certificate) => {
     setSelectedCert(cert);
   };
@@ -73,6 +75,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
       }
     });
   };
+
   const revoke = async (cert: Certificate) => {
     const ok = await confirmAction({
       title: 'Revoke certificate?',
@@ -92,93 +95,174 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
     });
   };
 
+  const filteredItems = items.filter((c) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase();
+    return (
+      (c.certificate_no && c.certificate_no.toLowerCase().includes(q)) ||
+      (c.student_name && c.student_name.toLowerCase().includes(q)) ||
+      (c.test_title && c.test_title.toLowerCase().includes(q)) ||
+      (c.verification_code && c.verification_code.toLowerCase().includes(q))
+    );
+  });
+
   return (
-    <>
-      <DashboardPageHeader
-        badge="Credentials"
-        title={mode === 'org' ? 'Certificates' : 'My Certificates'}
-        subtitle={
-          mode === 'org'
-            ? 'Issued exam certificates for this organization. Students can verify publicly with the verification code.'
-            : 'Certificates issued for your exams. Share the verification code to confirm authenticity.'
-        }
-      />
-      <div className="dashboard__content__wraper">
-        {error && <EdtpAlert type="error">{error}</EdtpAlert>}
-        <p className="text-muted sp_bottom_15" style={{ fontSize: '0.875rem' }}>
-          Public verify:{' '}
-          <Link to="/verify-certificate">/verify-certificate</Link>
-        </p>
-        <div className="dashboard__table table-responsive">
-          <table>
+    <div className="org-panel-page">
+      <div className="org-page-header">
+        <div className="org-page-header-left">
+          <h2 className="org-page-title">{mode === 'org' ? 'Certificates' : 'My Certificates'}</h2>
+          <p className="org-page-desc">
+            {mode === 'org'
+              ? 'Issued exam certificates for this organization. Students can verify publicly with the verification code.'
+              : 'Certificates issued for your exams. Share the verification code to confirm authenticity.'}
+          </p>
+        </div>
+      </div>
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card">
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">All Certificates</h3>
+              <span className="org-count-badge">
+                {filteredItems.length} {filteredItems.length === 1 ? 'Certificate' : 'Certificates'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">
+              Public verification endpoint:{' '}
+              <Link to="/verify-certificate" style={{ color: '#2563eb', fontWeight: 600, textDecoration: 'none' }}>
+                /verify-certificate <FiExternalLink style={{ fontSize: 12, verticalAlign: 'middle' }} />
+              </Link>
+            </p>
+          </div>
+
+          <div className="org-controls-row">
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search certificate, student, test…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="org-table-wrap">
+          <table className="org-table">
             <thead>
               <tr>
-                <th>Certificate No</th>
-                {mode === 'org' && <th>Student</th>}
-                <th>Test</th>
-                <th>Score</th>
-                <th>Code</th>
-                <th>Status</th>
-                <th>Issued</th>
-                <th />
+                <th>CERTIFICATE NO</th>
+                {mode === 'org' && <th>STUDENT</th>}
+                <th>TEST</th>
+                <th>SCORE</th>
+                <th>VERIFY CODE</th>
+                <th>STATUS</th>
+                <th>ISSUED</th>
+                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 160 }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((c) => (
+              {filteredItems.map((c) => (
                 <tr key={c.id}>
                   <td>
-                    <code className="edtp-code">{c.certificate_no}</code>
+                    <code style={{ background: '#f1f5f9', padding: '3px 8px', borderRadius: 6, fontSize: '0.8rem', color: '#1e293b', fontWeight: 600 }}>
+                      {c.certificate_no}
+                    </code>
                   </td>
-                  {mode === 'org' && <td>{c.student_name}</td>}
-                  <td>{c.test_title ?? '—'}</td>
+                  {mode === 'org' && (
+                    <td>
+                      <strong style={{ color: '#0f172a', fontWeight: 600 }}>{c.student_name}</strong>
+                    </td>
+                  )}
                   <td>
-                    {c.total_score != null
-                      ? `${c.total_score}/${c.max_score} (${Number(c.percentage).toFixed(1)}%)`
-                      : '—'}
+                    <span style={{ color: '#334155', fontWeight: 500 }}>{c.test_title ?? '—'}</span>
                   </td>
                   <td>
-                    <code className="edtp-code">{c.verification_code}</code>
+                    <span style={{ fontWeight: 600, color: '#059669' }}>
+                      {c.total_score != null
+                        ? `${c.total_score}/${c.max_score} (${Number(c.percentage).toFixed(1)}%)`
+                        : '—'}
+                    </span>
                   </td>
-                  <td>{c.status}</td>
-                  <td>{formatDateTime(c.issued_at)}</td>
                   <td>
-                    <div className="edtp-row-actions">
+                    <code style={{ background: '#eff6ff', color: '#2563eb', padding: '2px 8px', borderRadius: 6, fontSize: '0.8rem', fontWeight: 600 }}>
+                      {c.verification_code}
+                    </code>
+                  </td>
+                  <td>
+                    <span
+                      className={`org-status-badge ${
+                        c.status === 'issued' ? 'org-status-badge--active' : 'org-status-badge--inactive'
+                      }`}
+                    >
+                      {c.status}
+                    </span>
+                  </td>
+                  <td style={{ color: '#475569', fontSize: '0.825rem' }}>{formatDateTime(c.issued_at)}</td>
+                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
                       {mode === 'org' && c.status === 'issued' && (
-                        <EdtpBtn variant="secondary" onClick={() => void download(c)}>
-                          PDF
-                        </EdtpBtn>
+                        <button
+                          type="button"
+                          className="org-action-btn org-action-btn--secondary"
+                          onClick={() => void download(c)}
+                        >
+                          <FiDownload style={{ fontSize: 13 }} /> PDF
+                        </button>
                       )}
                       {canRevoke && c.status === 'issued' && (
-                        <EdtpBtn variant="danger" onClick={() => void revoke(c)}>
-                          Revoke
-                        </EdtpBtn>
+                        <button
+                          type="button"
+                          className="org-action-btn org-action-btn--danger"
+                          onClick={() => void revoke(c)}
+                        >
+                          <FiTrash2 style={{ fontSize: 13 }} /> Revoke
+                        </button>
                       )}
                     </div>
                   </td>
                 </tr>
               ))}
-              {items.length === 0 && (
+              {filteredItems.length === 0 && (
                 <tr>
-                  <td colSpan={mode === 'org' ? 8 : 7}>No certificates yet.</td>
+                  <td colSpan={mode === 'org' ? 8 : 7} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                    {items.length === 0 ? 'No certificates yet.' : 'No certificates match your search query.'}
+                  </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-      {mode === 'org' ? (
-      <CertificatePreviewModal
-        open={selectedCert !== null}
-        studentName={selectedCert?.student_name || 'Student'}
-        examTitle={selectedCert?.test_title || 'Examination'}
-        percentage={Number(selectedCert?.percentage ?? 0)}
-        onClose={() => setSelectedCert(null)}
-        onConfirm={(template) => {
-          void confirmDownload(template);
-        }}
-        busy={certBusy}
-      />
-      ) : null}
-    </>
+
+      {mode === 'org' && (
+        <CertificatePreviewModal
+          open={selectedCert !== null}
+          studentName={selectedCert?.student_name || 'Student'}
+          examTitle={selectedCert?.test_title || 'Examination'}
+          percentage={Number(selectedCert?.percentage ?? 0)}
+          onClose={() => setSelectedCert(null)}
+          onConfirm={(template) => {
+            void confirmDownload(template);
+          }}
+          busy={certBusy}
+        />
+      )}
+    </div>
   );
 }

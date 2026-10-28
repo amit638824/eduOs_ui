@@ -1,196 +1,222 @@
-
 import { useState } from 'react';
+import { FiAward, FiCheck, FiX } from 'react-icons/fi';
+import '@/styles/organizations.css';
 
 export type CertificateTemplate = 'classic' | 'modern' | 'minimal';
 
 interface CertificatePreviewModalProps {
-    open: boolean;
-    studentName: string;
-    examTitle: string;
-    percentage: number;
-    onClose: () => void;
-    onConfirm: (template: CertificateTemplate) => void;
-    busy?: boolean;
+  open: boolean;
+  studentName: string;
+  examTitle: string;
+  percentage: number;
+  onClose: () => void;
+  onConfirm: (template: CertificateTemplate) => void;
+  busy?: boolean;
 }
 
 const templates: { id: CertificateTemplate; label: string; description: string }[] = [
-    {
-        id: 'classic',
-        label: 'Classic',
-        description: 'Traditional certificate with formal borders.',
-    },
-    {
-        id: 'modern',
-        label: 'Modern',
-        description: 'Your existing modern certificate style.',
-    },
-    {
-        id: 'minimal',
-        label: 'Minimal',
-        description: 'A clean, simple certificate design.',
-    },
+  {
+    id: 'classic',
+    label: 'Classic',
+    description: 'Traditional formal borders.',
+  },
+  {
+    id: 'modern',
+    label: 'Modern',
+    description: 'Contemporary sleek design.',
+  },
+  {
+    id: 'minimal',
+    label: 'Minimal',
+    description: 'Clean & minimalist aesthetic.',
+  },
 ];
 
 export function CertificatePreviewModal({
-    open,
-    studentName,
-    examTitle,
-    percentage,
-    onClose,
-    onConfirm,
-    busy = false,
+  open,
+  studentName,
+  examTitle,
+  percentage,
+  onClose,
+  onConfirm,
+  busy = false,
 }: CertificatePreviewModalProps) {
-    const [selectedTemplate, setSelectedTemplate] =
-        useState<CertificateTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<CertificateTemplate>('modern');
 
-    if (!open) return null;
+  return (
+    <>
+      {/* Backdrop Overlay */}
+      <div
+        className={`org-drawer-overlay ${open ? 'is-open' : ''}`}
+        onClick={onClose}
+        aria-hidden={!open}
+      />
 
-    return (
-        <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="certificate-preview-title"
-            style={{
-                position: 'fixed',
-                inset: 0,
-                zIndex: 1000,
-                background: 'rgba(0, 0, 0, 0.6)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 20,
-                overflowY: 'auto',
-            }}
-        >
-            <div
-                style={{
-                    background: '#fff',
-                    color: '#1f2937',
-                    width: 'min(900px, 100%)',
-                    maxHeight: '90vh',
-                    overflowY: 'auto',
-                    borderRadius: 12,
-                    padding: 24,
-                }}
-            >
-                <h2 id="certificate-preview-title">Certificate preview</h2>
-                <p>Select a template to preview the certificate before issuing it.</p>
-
-                <div
-                    style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: 10,
-                        margin: '20px 0',
-                    }}
-                >
-                    {templates.map((template) => (
-                        <button
-                            key={template.id}
-                            type="button"
-                            onClick={() => setSelectedTemplate(template.id)}
-                            aria-pressed={selectedTemplate === template.id}
-                            style={{
-                                flex: '1 1 180px',
-                                padding: 12,
-                                borderRadius: 8,
-                                border:
-                                    selectedTemplate === template.id
-                                        ? '2px solid #1d4ed8'
-                                        : '1px solid #d1d5db',
-                                background:
-                                    selectedTemplate === template.id ? '#eff6ff' : '#fff',
-                                color: '#1f2937',
-                                cursor: 'pointer',
-                                textAlign: 'left',
-                            }}
-                        >
-                            <strong>{template.label}</strong>
-                            <div style={{ fontSize: 13, marginTop: 5 }}>
-                                {template.description}
-                            </div>
-                        </button>
-                    ))}
-                </div>
-
-                {selectedTemplate ? (
-                    <div
-                        style={{
-                            border:
-                                selectedTemplate === 'minimal'
-                                    ? '1px solid #9ca3af'
-                                    : selectedTemplate === 'modern'
-                                        ? '5px solid #172554'
-                                        : '8px double #b08d46',
-                            padding: 24,
-                            minHeight: 280,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            textAlign: 'center',
-                            gap: 12,
-                            background: '#fff',
-                            color: '#1f2937',
-                        }}
-                    >
-                        <div style={{ fontSize: 13, letterSpacing: 2 }}>
-                            CERTIFICATE OF ACHIEVEMENT
-                        </div>
-                        <h2 style={{ margin: 0 }}>
-                            {selectedTemplate === 'classic'
-                                ? 'Certificate of Excellence'
-                                : selectedTemplate === 'modern'
-                                    ? 'Congratulations!'
-                                    : 'Certificate'}
-                        </h2>
-                        <div>This certificate is presented to</div>
-                        <h1 style={{ margin: 0, color: '#172554' }}>
-                            {studentName || 'Student Name'}
-                        </h1>
-                        <div>for successfully completing</div>
-                        <h3 style={{ margin: 0 }}>{examTitle || 'Examination'}</h3>
-                        <div>Score: {percentage}%</div>
-                        <div style={{ fontSize: 12, marginTop: 10 }}>
-                            Preview only — not yet issued
-                        </div>
-                    </div>
-                ) : (
-                    <div
-                        style={{
-                            border: '1px dashed #9ca3af',
-                            borderRadius: 8,
-                            padding: 36,
-                            textAlign: 'center',
-                            color: '#6b7280',
-                        }}
-                    >
-                        Select Classic, Modern, or Minimal to see the preview.
-                    </div>
-                )}
-
-                <div
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'flex-end',
-                        gap: 10,
-                        marginTop: 20,
-                    }}
-                >
-                    <button type="button" onClick={onClose} disabled={busy}>
-                        Cancel
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => {
-                            if (selectedTemplate) onConfirm(selectedTemplate);
-                        }}
-                        disabled={!selectedTemplate || busy}
-                    >
-                        {busy ? 'Issuing…' : 'Confirm and issue'}
-                    </button>
-                </div>
+      {/* Side Drawer Container */}
+      <aside
+        className={`org-drawer ${open ? 'is-open' : ''}`}
+        aria-label="Certificate preview drawer"
+        aria-hidden={!open}
+        style={{ width: '560px', maxWidth: '95vw' }}
+      >
+        {/* Drawer Header */}
+        <div className="org-drawer-header">
+          <div className="org-drawer-title-wrap">
+            <div className="org-drawer-badge-icon">
+              <FiAward />
             </div>
+            <div>
+              <h3 className="org-drawer-title">Certificate Preview</h3>
+              <p className="org-drawer-desc">
+                Select a template style before downloading or issuing
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="org-drawer-close-btn"
+            onClick={onClose}
+            aria-label="Close drawer"
+          >
+            <FiX />
+          </button>
         </div>
-    );
+
+        {/* Drawer Body */}
+        <div className="org-drawer-body">
+          {/* Template Selection Pills */}
+          <div className="org-form-field">
+            <label className="org-form-label">
+              Select Design Template <span className="org-required-star">*</span>
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              {templates.map((template) => {
+                const isSelected = selectedTemplate === template.id;
+                return (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => setSelectedTemplate(template.id)}
+                    aria-pressed={isSelected}
+                    style={{
+                      padding: '12px 10px',
+                      borderRadius: 10,
+                      border: isSelected ? '2px solid #225ce5' : '1px solid #cbd5e1',
+                      background: isSelected ? '#eff6ff' : '#ffffff',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4,
+                      transition: 'all 0.15s ease',
+                      boxShadow: isSelected ? '0 2px 8px rgba(34, 92, 229, 0.15)' : 'none',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <strong style={{ fontSize: '0.85rem', color: isSelected ? '#1e40af' : '#0f172a' }}>
+                        {template.label}
+                      </strong>
+                      {isSelected && (
+                        <FiCheck style={{ color: '#225ce5', fontSize: 14 }} />
+                      )}
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: '#64748b', lineHeight: 1.3 }}>
+                      {template.description}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Live Preview Card */}
+          <div className="org-form-field" style={{ marginTop: 8 }}>
+            <label className="org-form-label">Live Certificate Preview</label>
+            <div
+              style={{
+                borderRadius: 12,
+                border:
+                  selectedTemplate === 'minimal'
+                    ? '1px solid #94a3b8'
+                    : selectedTemplate === 'modern'
+                    ? '4px solid #172554'
+                    : '6px double #b08d46',
+                padding: '24px 20px',
+                minHeight: 280,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                textAlign: 'center',
+                gap: 10,
+                background: '#ffffff',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)',
+                position: 'relative',
+              }}
+            >
+              <div style={{ fontSize: '0.72rem', letterSpacing: '0.15em', fontWeight: 700, color: '#64748b' }}>
+                CERTIFICATE OF ACHIEVEMENT
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>
+                {selectedTemplate === 'classic'
+                  ? 'Certificate of Excellence'
+                  : selectedTemplate === 'modern'
+                  ? 'Congratulations!'
+                  : 'Certificate'}
+              </h3>
+              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>This certificate is proudly presented to</div>
+              <h2 style={{ margin: 0, fontSize: '1.4rem', color: '#172554', fontWeight: 800 }}>
+                {studentName || 'Student Name'}
+              </h2>
+              <div style={{ fontSize: '0.8rem', color: '#64748b' }}>for successfully completing</div>
+              <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1e293b' }}>
+                {examTitle || 'Examination'}
+              </h4>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 14px',
+                  borderRadius: 20,
+                  background: '#eff6ff',
+                  color: '#225ce5',
+                  fontSize: '0.825rem',
+                  fontWeight: 700,
+                  border: '1px solid #dbeafe',
+                }}
+              >
+                Score: {percentage}%
+              </div>
+              <div style={{ fontSize: '0.72rem', color: '#94a3b8', marginTop: 4 }}>
+                Preview only — verified credential will be generated
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Drawer Footer */}
+        <div className="org-drawer-footer">
+          <button
+            type="button"
+            className="org-drawer-cancel"
+            onClick={onClose}
+            disabled={busy}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="org-drawer-submit"
+            onClick={() => {
+              if (selectedTemplate) onConfirm(selectedTemplate);
+            }}
+            disabled={!selectedTemplate || busy}
+          >
+            {busy ? 'Processing…' : 'Confirm and issue'}
+          </button>
+        </div>
+      </aside>
+    </>
+  );
 }
