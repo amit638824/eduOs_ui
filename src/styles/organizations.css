@@ -69,8 +69,100 @@
   transform: translateY(0);
 }
 
-.org-add-btn-icon {
+/* ── Stat Header Cards (Matching Image 2 Reference) ── */
+.org-stats-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .org-stats-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.org-info-card {
+  background: var(--db-card, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.org-info-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #eff6ff;
+  color: #225ce5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+  flex-shrink: 0;
+  border: 1px solid #dbeafe;
+}
+
+.org-info-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.org-info-card-title {
+  margin: 0;
   font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--db-text, #0f172a);
+}
+
+.org-info-card-desc {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--db-muted, #64748b);
+  line-height: 1.35;
+}
+
+.org-stat-card {
+  background: var(--db-card, #ffffff);
+  border: 1px solid var(--db-border, #e2e8f0);
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.org-stat-card-val {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #152559;
+  line-height: 1.2;
+}
+
+.org-stat-card-val--success {
+  color: #059669;
+}
+
+.org-stat-card-val--warning {
+  color: #d97706;
+}
+
+.org-stat-card-lbl {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--db-muted, #64748b);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 /* ── Main Full-Width Table Card ── */

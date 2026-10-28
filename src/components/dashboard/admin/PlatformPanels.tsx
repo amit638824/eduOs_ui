@@ -11,6 +11,14 @@ import {
   FiLayers,
   FiActivity,
   FiRefreshCw,
+  FiCreditCard,
+  FiShield,
+  FiSmartphone,
+  FiGlobe,
+  FiCheckCircle,
+  FiAlertTriangle,
+  FiCopy,
+  FiCheck,
 } from 'react-icons/fi';
 import { HiOfficeBuilding } from 'react-icons/hi';
 import '@/styles/organizations.css';
@@ -243,87 +251,277 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
     }
   };
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
+
+  const filteredPayments = useMemo(() => {
+    return payments.filter((p) => {
+      const st = (p.status || '').toLowerCase();
+      if (statusFilter === 'paid' && !st.includes('paid') && !st.includes('complete') && !st.includes('success')) return false;
+      if (statusFilter === 'pending' && !st.includes('pend')) return false;
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const nameMatch = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase().includes(q);
+        const emailMatch = (p.email || '').toLowerCase().includes(q);
+        const amountMatch = String(p.amount || '').includes(q);
+        return nameMatch || emailMatch || amountMatch;
+      }
+      return true;
+    });
+  }, [payments, statusFilter, searchQuery]);
+
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title"><h4>{allowTopUp ? 'My Wallet' : 'Payments & Wallet'}</h4></div>
-      {!allowTopUp && (
-        <p className="text-muted sp_bottom_15" style={{ fontSize: '0.875rem' }}>
-          View-only for Super Admin. Payment mutations are blocked for this role.
-        </p>
-      )}
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      {wallet && (
-        <div className="row sp_bottom_30">
-          <div className="col-md-4">
-            <div className="dashboard__single__counter">
-              <div className="counter__content__wraper">
-                <div className="counter__number">₹{wallet.total_paid as string}</div>
-                <p>Total Paid</p>
-              </div>
-            </div>
+    <div className="org-panel-root">
+      {/* ── Top Stat Cards (Matching Image 2 Reference) ── */}
+      <div className="org-stats-row">
+        {/* Left Info Card */}
+        <div className="org-info-card">
+          <div className="org-info-card-icon">
+            <FiCreditCard />
           </div>
-          <div className="col-md-4">
-            <div className="dashboard__single__counter">
-              <div className="counter__content__wraper">
-                <div className="counter__number">₹{wallet.pending as string}</div>
-                <p>Pending</p>
-              </div>
-            </div>
+          <div className="org-info-card-text">
+            <h3 className="org-info-card-title">{allowTopUp ? 'My Wallet' : 'Payments & Wallet'}</h3>
+            <p className="org-info-card-desc">
+              {!allowTopUp
+                ? 'Monitor platform transactions, payment settlements, and wallet balances.'
+                : 'Manage wallet funds, view fee payments, and add account balance.'}
+            </p>
           </div>
         </div>
+
+        {/* Stat Card 1: Total Paid */}
+        <div className="org-stat-card">
+          <span className="org-stat-card-val org-stat-card-val--success">
+            ₹{wallet?.total_paid != null ? String(wallet.total_paid) : '0'}
+          </span>
+          <span className="org-stat-card-lbl">Total Paid</span>
+        </div>
+
+        {/* Stat Card 2: Pending */}
+        <div className="org-stat-card">
+          <span className="org-stat-card-val org-stat-card-val--warning">
+            ₹{wallet?.pending != null ? String(wallet.pending) : '0'}
+          </span>
+          <span className="org-stat-card-lbl">Pending</span>
+        </div>
+      </div>
+
+      {error && (
+        <div className="mad-alert-error" role="alert">
+          <span>{error}</span>
+        </div>
       )}
+
+      {message && (
+        <div className="mad-alert-success" role="alert">
+          <span>{message}</span>
+        </div>
+      )}
+
+      {/* Top-up form for students/wallet */}
       {allowTopUp && paymentConfig?.gateway === 'razorpay' && (
-        <div className="sp_bottom_30">
-          <h5 className="sp_bottom_15">Add money to wallet</h5>
-          <div className="d-flex flex-wrap gap-2 align-items-center">
+        <div
+          style={{
+            background: 'var(--db-card, #ffffff)',
+            border: '1px solid var(--db-border, #e2e8f0)',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '16px',
+          }}
+        >
+          <div>
+            <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#0f172a' }}>
+              Add money to wallet
+            </h4>
+            <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: '#64748b' }}>
+              Instant secure deposit via Razorpay gateway.
+            </p>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <input
-              className="register__input"
               type="number"
               min={1}
               step={1}
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Amount in INR"
-              style={{ maxWidth: 180 }}
+              className="org-form-input"
+              style={{ width: '140px', padding: '7px 12px' }}
             />
             <button
               type="button"
-              className="default__button"
+              className="org-add-btn"
               onClick={handleTopUp}
               disabled={paying}
             >
               {paying ? 'Processing…' : 'Pay with Razorpay'}
             </button>
           </div>
-          <p className="mt-2"><small>Secure payment via Razorpay (test mode).</small></p>
         </div>
       )}
-      {allowTopUp && paymentConfig?.gateway === 'demo' && (
-        <p className="sp_bottom_20">Payment gateway is not configured on the server.</p>
-      )}
-      <div className="dashboard__table table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Amount</th>
-              <th>Status</th>
-              <th>Date</th>
-            </tr>
-          </thead>
-          <tbody>
-            {payments.map((p) => (
-              <tr key={p.id}>
-                <td>{p.first_name} {p.last_name}<br /><small>{p.email}</small></td>
-                <td>₹{p.amount} {p.currency}</td>
-                <td>{p.status}</td>
-                <td>{formatDate(p.created_at)}</td>
-              </tr>
-            ))}
-            {payments.length === 0 && <tr><td colSpan={4}>No payments found.</td></tr>}
-          </tbody>
-        </table>
+
+      {/* ── Main Full-Width Table Card ── */}
+      <div className="org-table-card">
+        {/* Card Header with Search & Status Filter Pills */}
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">All Transactions</h3>
+              <span className="org-count-badge">
+                {filteredPayments.length} {filteredPayments.length === 1 ? 'Record' : 'Records'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">
+              Comprehensive ledger of student fee payments, wallet top-ups, and gateway orders
+            </p>
+          </div>
+
+          <div className="org-controls-row">
+            {/* Search Box */}
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search user, email, amount..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search payments"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Pills */}
+            <div className="org-filter-pills" role="tablist" aria-label="Status filters">
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'all' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
+                All ({payments.length})
+              </button>
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'paid' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('paid')}
+              >
+                Paid
+              </button>
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'pending' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('pending')}
+              >
+                Pending
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Content */}
+        {filteredPayments.length === 0 && !loading ? (
+          <div className="org-empty-state">
+            <FiCreditCard className="org-empty-icon" />
+            <p className="org-empty-text">
+              {searchQuery || statusFilter !== 'all'
+                ? 'No transactions match the current filter.'
+                : 'No payments recorded in this period.'}
+            </p>
+          </div>
+        ) : (
+          <div className="org-table-wrap">
+            <table className="org-table">
+              <thead>
+                <tr>
+                  <th>User / Account</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th style={{ textAlign: 'right', paddingRight: '24px' }}>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredPayments.map((p) => {
+                  const isPaid = (p.status || '').toLowerCase().includes('paid') || (p.status || '').toLowerCase().includes('success');
+                  const initials = getUserInitials(p.first_name, p.last_name, p.email);
+
+                  return (
+                    <tr key={p.id}>
+                      {/* User Cell */}
+                      <td>
+                        <div className="org-cell-flex">
+                          <div className="org-avatar-badge">{initials}</div>
+                          <div className="org-name-meta">
+                            <span className="org-name-text">
+                              {p.first_name} {p.last_name}
+                            </span>
+                            <span className="org-sub-meta">{p.email}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Amount Cell */}
+                      <td>
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            fontSize: '0.9rem',
+                            color: '#0f172a',
+                          }}
+                        >
+                          ₹{p.amount}{' '}
+                          <small style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                            {p.currency}
+                          </small>
+                        </span>
+                      </td>
+
+                      {/* Status Cell */}
+                      <td>
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            padding: '3px 10px',
+                            borderRadius: '8px',
+                            background: isPaid ? '#ecfdf5' : '#fef3c7',
+                            color: isPaid ? '#059669' : '#d97706',
+                            border: `1px solid ${isPaid ? '#a7f3d0' : '#fde68a'}`,
+                            textTransform: 'capitalize',
+                            display: 'inline-block',
+                          }}
+                        >
+                          {p.status}
+                        </span>
+                      </td>
+
+                      {/* Date Cell */}
+                      <td style={{ textAlign: 'right', paddingRight: '24px' }}>
+                        <span style={{ fontSize: '0.825rem', color: '#64748b' }}>
+                          {formatDate(p.created_at)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1719,12 +1917,39 @@ export function AuditLogPanel() {
   );
 }
 
+function formatDeviceInfo(info: unknown) {
+  if (!info) return { platform: 'Desktop Device', browser: 'Web Browser' };
+  let parsed = info;
+  if (typeof info === 'string') {
+    try {
+      parsed = JSON.parse(info);
+    } catch {
+      return { platform: info, browser: 'Browser' };
+    }
+  }
+  if (typeof parsed === 'object' && parsed !== null) {
+    const obj = parsed as Record<string, string>;
+    const platform = obj.platform || 'Windows';
+    let browser = 'Chrome';
+    const ua = obj.userAgent || '';
+    if (ua.includes('Edg/')) browser = 'Edge';
+    else if (ua.includes('Chrome/')) browser = 'Chrome';
+    else if (ua.includes('Firefox/')) browser = 'Firefox';
+    else if (ua.includes('Safari/') && !ua.includes('Chrome')) browser = 'Safari';
+    return { platform, browser };
+  }
+  return { platform: 'Desktop Device', browser: 'Web Browser' };
+}
+
 export function SessionsSecurityPanel() {
   const { refreshUser } = useAuth();
   const [sessions, setSessions] = useState<Record<string, unknown>[]>([]);
   const [mfaInfo, setMfaInfo] = useState('');
+  const [copiedMfaCode, setCopiedMfaCode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'revoked'>('all');
   const withLoader = useDashboardLoader();
 
   const load = async () => {
@@ -1739,14 +1964,28 @@ export function SessionsSecurityPanel() {
     }
   };
 
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    void load();
+  }, []);
 
   useDashboardLoadingEffect(loading);
 
   const revoke = async (id: string) => {
+    const ok = await confirmDelete({
+      title: 'Revoke this session?',
+      text: 'The device will be logged out immediately and required to sign in again.',
+      confirmText: 'Yes, revoke session',
+    });
+    if (!ok) return;
+
     await withLoader(async () => {
-      await platformService.revokeSession(id);
-      await load();
+      try {
+        await platformService.revokeSession(id);
+        showSuccess('Revoked', 'Session terminated successfully.');
+        await load();
+      } catch (err) {
+        setError(parseApiError(err));
+      }
     });
   };
 
@@ -1771,38 +2010,448 @@ export function SessionsSecurityPanel() {
     });
   };
 
+  const activeCount = useMemo(() => sessions.filter((s) => s.is_active).length, [sessions]);
+  const revokedCount = useMemo(() => sessions.filter((s) => !s.is_active).length, [sessions]);
+
+  const filteredSessions = useMemo(() => {
+    return sessions.filter((s) => {
+      if (statusFilter === 'active' && !s.is_active) return false;
+      if (statusFilter === 'revoked' && s.is_active) return false;
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const ip = String(s.ip_address ?? '').toLowerCase();
+        const dev = JSON.stringify(s.device_info ?? '').toLowerCase();
+        return ip.includes(q) || dev.includes(q);
+      }
+      return true;
+    });
+  }, [sessions, statusFilter, searchQuery]);
+
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title"><h4>Sessions & Security</h4></div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      {mfaInfo && <p className="form-success sp_bottom_15">{mfaInfo}</p>}
-      <div className="sp_bottom_30">
-        <button type="button" className="default__button me-2" onClick={() => toggleMfa(true)}>Enable MFA</button>
-        <button type="button" className="default__button" onClick={() => toggleMfa(false)}>Disable MFA</button>
+    <div className="org-panel-root">
+      {/* ── Top Stat Cards (Matching Image 2 Reference) ── */}
+      <div className="org-stats-row">
+        {/* Left Info Card */}
+        <div className="org-info-card">
+          <div className="org-info-card-icon">
+            <FiShield />
+          </div>
+          <div className="org-info-card-text">
+            <h3 className="org-info-card-title">Sessions & Security</h3>
+            <p className="org-info-card-desc">
+              Manage authorized devices, active browser sessions, and Multi-Factor Authentication.
+            </p>
+          </div>
+        </div>
+
+        {/* Stat Card 1: Active Sessions */}
+        <div className="org-stat-card">
+          <span className="org-stat-card-val org-stat-card-val--success">{activeCount}</span>
+          <span className="org-stat-card-lbl">Active Sessions</span>
+        </div>
+
+        {/* Stat Card 2: Total Sessions */}
+        <div className="org-stat-card">
+          <span className="org-stat-card-val">{sessions.length}</span>
+          <span className="org-stat-card-lbl">Total Recorded</span>
+        </div>
       </div>
-      <div className="dashboard__table table-responsive">
-        <table>
-          <thead>
-            <tr><th>Device</th><th>IP</th><th>Created</th><th>Active</th><th /></tr>
-          </thead>
-          <tbody>
-            {sessions.map((s) => (
-              <tr key={s.id as string}>
-                <td>{JSON.stringify(s.device_info)}</td>
-                <td>{String(s.ip_address ?? '')}</td>
-                <td>{formatDateTime(s.created_at as string)}</td>
-                <td>{s.is_active ? 'Yes' : 'No'}</td>
-                <td>
-                  {s.is_active ? (
-                    <button type="button" className="default__button small-btn" onClick={() => revoke(s.id as string)}>
-                      Revoke
+
+      {error && (
+        <div className="mad-alert-error" role="alert">
+          <span>{error}</span>
+        </div>
+      )}
+
+      {mfaInfo && (
+        <div
+          style={{
+            background: mfaInfo.toLowerCase().includes('disabled')
+              ? 'linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)'
+              : 'linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%)',
+            border: `1.5px solid ${
+              mfaInfo.toLowerCase().includes('disabled') ? '#fcd34d' : '#6ee7b7'
+            }`,
+            borderRadius: '14px',
+            padding: '14px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+            boxShadow: '0 4px 14px rgba(16, 185, 129, 0.15)',
+          }}
+          role="alert"
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                background: mfaInfo.toLowerCase().includes('disabled') ? '#fef3c7' : '#d1fae5',
+                color: mfaInfo.toLowerCase().includes('disabled') ? '#d97706' : '#059669',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '1.35rem',
+                flexShrink: 0,
+              }}
+            >
+              {mfaInfo.toLowerCase().includes('disabled') ? <FiAlertTriangle /> : <FiCheckCircle />}
+            </div>
+            <div>
+              <span
+                style={{
+                  display: 'block',
+                  fontWeight: 800,
+                  fontSize: '0.94rem',
+                  color: mfaInfo.toLowerCase().includes('disabled') ? '#92400e' : '#065f46',
+                }}
+              >
+                {mfaInfo.toLowerCase().includes('disabled')
+                  ? 'Two-Factor Authentication Disabled'
+                  : 'Two-Factor Authentication (2FA) Activated!'}
+              </span>
+              <div
+                style={{
+                  fontSize: '0.84rem',
+                  color: mfaInfo.toLowerCase().includes('disabled') ? '#b45309' : '#047857',
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                  marginTop: '4px',
+                }}
+              >
+                {mfaInfo.includes('Backup code') ? (
+                  <>
+                    <span style={{ fontWeight: 600 }}>Emergency Recovery Backup Code (Dev):</span>
+                    <strong
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: '1.05rem',
+                        letterSpacing: '0.08em',
+                        background: '#ffffff',
+                        padding: '4px 12px',
+                        borderRadius: '6px',
+                        border: '2px dashed #059669',
+                        color: '#065f46',
+                        boxShadow: '0 2px 6px rgba(5, 150, 105, 0.15)',
+                      }}
+                    >
+                      {mfaInfo.replace(/.*Backup code \(dev\):\s*/, '')}
+                    </strong>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const code = mfaInfo.replace(/.*Backup code \(dev\):\s*/, '').trim();
+                        void navigator.clipboard.writeText(code);
+                        setCopiedMfaCode(true);
+                        setTimeout(() => setCopiedMfaCode(false), 2000);
+                      }}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 10px',
+                        borderRadius: '6px',
+                        background: copiedMfaCode ? '#059669' : '#ffffff',
+                        border: '1px solid #059669',
+                        color: copiedMfaCode ? '#ffffff' : '#059669',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                      title="Copy backup code"
+                    >
+                      {copiedMfaCode ? <FiCheck /> : <FiCopy />}
+                      <span>{copiedMfaCode ? 'Copied!' : 'Copy Code'}</span>
                     </button>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  </>
+                ) : (
+                  <span style={{ fontWeight: 600 }}>{mfaInfo}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setMfaInfo('')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              color: mfaInfo.toLowerCase().includes('disabled') ? '#92400e' : '#065f46',
+              fontSize: '1.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '6px',
+            }}
+            aria-label="Dismiss message"
+          >
+            <FiX />
+          </button>
+        </div>
+      )}
+
+      {/* MFA Quick Controls Card */}
+      <div
+        style={{
+          background: 'var(--db-card, #ffffff)',
+          border: '1px solid var(--db-border, #e2e8f0)',
+          borderRadius: '16px',
+          padding: '14px 20px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '14px',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: '#eff6ff',
+              color: '#225ce5',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '1.15rem',
+            }}
+          >
+            <FiShield />
+          </div>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
+              Two-Factor Authentication (2FA / MFA)
+            </h4>
+            <p style={{ margin: '2px 0 0', fontSize: '0.78rem', color: '#64748b' }}>
+              Strengthen administrator login security with multi-factor verification tokens.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <button
+            type="button"
+            className="org-add-btn"
+            style={{ padding: '6px 14px', fontSize: '0.8rem' }}
+            onClick={() => void toggleMfa(true)}
+          >
+            Enable MFA
+          </button>
+          <button
+            type="button"
+            className="org-drawer-cancel"
+            style={{ width: 'auto', padding: '6px 14px', fontSize: '0.8rem' }}
+            onClick={() => void toggleMfa(false)}
+          >
+            Disable MFA
+          </button>
+        </div>
+      </div>
+
+      {/* ── Main Full-Width Table Card ── */}
+      <div className="org-table-card">
+        {/* Card Header with Search & Status Filter Pills */}
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">Authorized Device Sessions</h3>
+              <span className="org-count-badge">
+                {filteredSessions.length} {filteredSessions.length === 1 ? 'Device' : 'Devices'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">
+              Review authorized IP addresses, client browser applications, and sign-in activities
+            </p>
+          </div>
+
+          <div className="org-controls-row">
+            {/* Search Box */}
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search IP, device, browser..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label="Search sessions"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchQuery('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+
+            {/* Filter Pills */}
+            <div className="org-filter-pills" role="tablist" aria-label="Status filters">
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'all' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
+                All ({sessions.length})
+              </button>
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'active' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('active')}
+              >
+                Active ({activeCount})
+              </button>
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'revoked' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('revoked')}
+              >
+                Revoked ({revokedCount})
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Content */}
+        {filteredSessions.length === 0 && !loading ? (
+          <div className="org-empty-state">
+            <FiSmartphone className="org-empty-icon" />
+            <p className="org-empty-text">
+              {searchQuery || statusFilter !== 'all'
+                ? 'No device sessions match the current filter.'
+                : 'No login sessions found.'}
+            </p>
+          </div>
+        ) : (
+          <div className="org-table-wrap">
+            <table className="org-table">
+              <thead>
+                <tr>
+                  <th>Device / Browser</th>
+                  <th>IP Address</th>
+                  <th>Signed In</th>
+                  <th>Status</th>
+                  <th className="org-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSessions.map((s) => {
+                  const dev = formatDeviceInfo(s.device_info);
+                  const isActive = Boolean(s.is_active);
+
+                  return (
+                    <tr key={s.id as string}>
+                      {/* Device Cell */}
+                      <td>
+                        <div className="org-cell-flex">
+                          <div
+                            className="org-avatar-badge"
+                            style={{
+                              background: isActive ? '#eff6ff' : '#f1f5f9',
+                              color: isActive ? '#2563eb' : '#64748b',
+                            }}
+                          >
+                            <FiGlobe />
+                          </div>
+                          <div className="org-name-meta">
+                            <span className="org-name-text">
+                              {dev.platform} · {dev.browser}
+                            </span>
+                            <span className="org-sub-meta">Desktop Browser Session</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* IP Address Cell */}
+                      <td>
+                        <span
+                          style={{
+                            fontFamily: 'monospace',
+                            fontSize: '0.8rem',
+                            fontWeight: 600,
+                            color: '#334155',
+                            background: '#f8fafc',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #e2e8f0',
+                          }}
+                        >
+                          {String(s.ip_address ?? '—')}
+                        </span>
+                      </td>
+
+                      {/* Created Date Cell */}
+                      <td>
+                        <span style={{ fontSize: '0.825rem', color: '#64748b' }}>
+                          {formatDateTime(s.created_at as string)}
+                        </span>
+                      </td>
+
+                      {/* Status Cell */}
+                      <td>
+                        <span
+                          style={{
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            padding: '3px 10px',
+                            borderRadius: '8px',
+                            background: isActive ? '#ecfdf5' : '#f1f5f9',
+                            color: isActive ? '#059669' : '#64748b',
+                            border: `1px solid ${isActive ? '#a7f3d0' : '#e2e8f0'}`,
+                            display: 'inline-block',
+                          }}
+                        >
+                          {isActive ? 'Active' : 'Revoked'}
+                        </span>
+                      </td>
+
+                      {/* Actions Cell */}
+                      <td>
+                        <div
+                          className="org-actions-cell"
+                          style={{ justifyContent: 'flex-end', paddingRight: '8px' }}
+                        >
+                          {isActive ? (
+                            <button
+                              type="button"
+                              className="org-drawer-cancel"
+                              style={{
+                                width: 'auto',
+                                padding: '4px 10px',
+                                fontSize: '0.76rem',
+                                color: '#dc2626',
+                                borderColor: '#fecaca',
+                                background: '#fef2f2',
+                              }}
+                              onClick={() => void revoke(s.id as string)}
+                            >
+                              Revoke
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>Expired</span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

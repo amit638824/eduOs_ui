@@ -28,6 +28,7 @@ import {
   CertificatePreviewModal,
   type CertificateTemplate,
 } from '@/components/dashboard/CertificatePreviewModal';
+import '@/styles/organizations.css';
 import type { ExamResultQuestion } from '@/types/examination';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
@@ -3352,32 +3353,81 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
   if (!user) return null;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-xl-6 sp_bottom_20">
-          <label htmlFor="firstName">First Name</label>
-          <input id="firstName" className={inputClassName('register__input', !!errors.firstName)} {...register('firstName')} />
+    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
+        </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
+        </div>
+      )}
+      <div className="org-grid-2" style={{ gap: '16px' }}>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="firstName">
+            First Name <span className="org-required-star">*</span>
+          </label>
+          <input
+            id="firstName"
+            className="org-form-input"
+            placeholder="First name"
+            {...register('firstName')}
+          />
           <FormError message={errors.firstName?.message} />
         </div>
-        <div className="col-xl-6 sp_bottom_20">
-          <label htmlFor="lastName">Last Name</label>
-          <input id="lastName" className={inputClassName('register__input', !!errors.lastName)} {...register('lastName')} />
+
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="lastName">
+            Last Name <span className="org-required-star">*</span>
+          </label>
+          <input
+            id="lastName"
+            className="org-form-input"
+            placeholder="Last name"
+            {...register('lastName')}
+          />
           <FormError message={errors.lastName?.message} />
         </div>
-        <div className="col-xl-6 sp_bottom_20">
-          <label htmlFor="email">Email</label>
-          <input id="email" type="email" disabled className="register__input" {...register('email')} />
+
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="email">
+            Email Address
+          </label>
+          <input
+            id="email"
+            type="email"
+            disabled
+            className="org-form-input"
+            style={{ background: 'var(--db-bg, #f1f5f9)', color: '#64748b' }}
+            {...register('email')}
+          />
+          <span className="org-form-hint">Email address is managed by platform administrator.</span>
         </div>
-        <div className="col-xl-6 sp_bottom_20">
-          <label htmlFor="phone">Phone</label>
-          <input id="phone" className={inputClassName('register__input', !!errors.phone)} {...register('phone')} />
+
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="phone">
+            Phone Number
+          </label>
+          <input
+            id="phone"
+            className="org-form-input"
+            placeholder="e.g. +91 9876543210"
+            {...register('phone')}
+          />
           <FormError message={errors.phone?.message} />
         </div>
-        <div className="col-xl-12">
-          <button type="submit" className="default__button">Update Profile</button>
-        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', width: '100%' }}>
+        <button
+          type="submit"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+        >
+          Update Profile
+        </button>
       </div>
     </form>
   );
