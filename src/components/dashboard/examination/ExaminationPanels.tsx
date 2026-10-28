@@ -17,8 +17,8 @@ import ExamAttemptPlayer from './ExamAttemptPlayer';
 import { PracticeInsights } from './AiBuildPanel';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide, { ExamStepper } from '@/components/dashboard/AdminExamGuide';
-import { FieldHint, SearchField } from '@/components/ui/FieldHint';
-import { EdtpBtn, EdtpField, EdtpFormActions, EdtpRowActions, EdtpSelect } from '@/components/ui/CrudUI';
+import { FieldHint } from '@/components/ui/FieldHint';
+import { EdtpBtn, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmAction, confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDateTime } from '@/utils/dateFormat';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
@@ -30,6 +30,22 @@ import {
 } from '@/components/dashboard/CertificatePreviewModal';
 import '@/styles/organizations.css';
 import type { ExamResultQuestion } from '@/types/examination';
+import {
+  FiPlus,
+  FiSearch,
+  FiX,
+  FiDownload,
+  FiUpload,
+  FiEye,
+  FiEdit3,
+  FiZap,
+  FiTrash2,
+  FiHelpCircle,
+  FiArrowRight,
+  FiCheckCircle,
+  FiList,
+  FiPlay,
+} from 'react-icons/fi';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
 
@@ -130,8 +146,31 @@ export function QuestionBankPanel() {
   const [importingCsv, setImportingCsv] = useState(false);
   const [importSummary, setImportSummary] = useState<QuestionImportSummary | null>(null);
   const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const csvFileRef = useRef<HTMLInputElement>(null);
   const withLoader = useDashboardLoader();
+
+  const openAddDrawer = () => {
+    resetQuestionFields();
+    setError('');
+    setMessage('');
+    setIsDrawerOpen(true);
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
+    if (editingId) resetQuestionFields();
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isDrawerOpen) {
+        closeDrawer();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDrawerOpen]);
 
   const loadQuestions = async () => {
     setLoading(true);
@@ -394,7 +433,7 @@ export function QuestionBankPanel() {
           setMarksInput(String(q.marks));
         }
         setMessage('Editing question — update and save, or cancel.');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setIsDrawerOpen(true);
       } catch (err) {
         setError(parseApiError(err));
       }
@@ -540,16 +579,18 @@ export function QuestionBankPanel() {
           await examinationService.updateQuestion(editingId, payload);
           setMessage('Question updated.');
           resetQuestionFields();
+          setIsDrawerOpen(false);
         } else {
           const created = await examinationService.createQuestion(payload);
           try {
             await examinationService.approveQuestion(created.id);
-            setMessage(`${QUESTION_TYPE_LABELS[questionType]} question added. Department / subject / topic kept for next question.`);
+            setMessage(`${QUESTION_TYPE_LABELS[questionType]} question added successfully.`);
           } catch {
-            setMessage('Question created (pending approval). Hierarchy kept for next question.');
+            setMessage('Question created (pending approval).');
           }
           setNewQ('');
           clearOptionInputs();
+          setIsDrawerOpen(false);
         }
         await loadQuestions();
       } catch (err) {
@@ -558,42 +599,98 @@ export function QuestionBankPanel() {
     });
   };
 
+  const improveQuestion = async (id: string) => {
+    setError('');
+    try {
+      const improved = await withLoader(() => examinationService.improveQuestion(id));
+      setMessage(`Improved wording. Difficulty is now ${improved.difficulty}. You can edit it again.`);
+      showSuccess('Question improved', 'Grammar, wording, and distractors were updated.');
+      await loadQuestions();
+    } catch (err) {
+      setError(parseApiError(err));
+      showError('Improve failed', parseApiError(err));
+    }
+  };
+
+  const handleDistractors = async (id: string) => {
+    setError('');
+    try {
+      const preview = await withLoader(() => examinationService.generateDistractors(id, false));
+      const lines = preview.options
+        .map((opt) => `${opt.isCorrect ? 'Correct' : 'Wrong'}: ${opt.text}${opt.whyWrong ? ` — ${opt.whyWrong}` : ''}`)
+        .join('\n');
+      const ok = await confirmAction({
+        title: 'Replace distractors?',
+        text: lines || 'No options returned.',
+        confirmText: 'Save options',
+      });
+      if (!ok) return;
+      await examinationService.generateDistractors(id, true, preview.options);
+      showSuccess('Distractors saved', 'Incorrect options were replaced.');
+      await loadQuestions();
+    } catch (err) {
+      setError(parseApiError(err));
+      showError('Distractors failed', parseApiError(err));
+    }
+  };
+
+  const filteredQuestions = questions.filter((q) => {
+    const qSearch = questionSearch.trim().toLowerCase();
+    if (!qSearch) return true;
+    return (
+      getQuestionText(q.content, '').toLowerCase().includes(qSearch) ||
+      (q.department_name ?? '').toLowerCase().includes(qSearch) ||
+      (q.subject_name ?? '').toLowerCase().includes(qSearch) ||
+      (q.topic_name ?? '').toLowerCase().includes(qSearch) ||
+      (q.type ?? '').toLowerCase().includes(qSearch)
+    );
+  });
+
+  const allFilteredSelected =
+    filteredQuestions.length > 0 &&
+    filteredQuestions.every((q) => selectedDeleteIds.includes(q.id));
+
   return (
-    <>
-      <DashboardPageHeader
-        badge="Step 1"
-        title="Question Bank"
-        subtitle="Department → subject → topic stay selected after each add. Edit or delete anytime from the list."
-      />
-      <div className="qb-csv-bar">
-        <input
-          ref={csvFileRef}
-          type="file"
-          accept=".csv,text/csv"
-          hidden
-          onChange={(e) => void handleCsvImport(e.target.files?.[0])}
-        />
-        <a
-          className="edtp-btn edtp-btn--secondary edtp-btn--sm"
-          href="/templates/question-bank-import.csv"
-          download="question-bank-import-example.csv"
-        >
-          Download example CSV
-        </a>
-        <EdtpBtn
-          variant="primary"
-          disabled={importingCsv}
-          onClick={() => csvFileRef.current?.click()}
-        >
-          {importingCsv ? 'Importing…' : 'Bulk import CSV'}
-        </EdtpBtn>
-        <p className="qb-csv-bar__hint">
-          Matching department, subject, chapter and topic names are reused. Duplicate questions
-          (same topic + type + text) are skipped. Max 500 rows.
-        </p>
+    <div className="org-panel-root">
+      {/* ── Top Bar: Page Title + Progress + Next Action ── */}
+      <div className="org-top-bar">
+        <div className="org-top-text">
+          <h1 className="org-page-title">Question Bank</h1>
+          <p className="org-page-desc">
+            Department → subject → topic stay selected after each add. Edit or delete anytime from the list.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <Link
+            to="/dashboard/create-test"
+            className="org-add-btn"
+            style={{ textDecoration: 'none' }}
+          >
+            <span>Next: Create the exam</span>
+            <FiArrowRight />
+          </Link>
+        </div>
       </div>
+
+      {/* Progress Stepper - preserved */}
+      <div style={{ margin: '14px 0 20px' }}>
+        <AdminExamGuide activeStep={1} compact />
+      </div>
+
+      {error && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{error}</span>
+        </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
+        </div>
+      )}
+
       {importSummary && (
-        <div className="qb-import-summary">
+        <div className="qb-import-summary" style={{ marginBottom: '16px', borderRadius: '12px' }}>
           <strong>Last import:</strong> {importSummary.created} created, {importSummary.skipped} skipped,{' '}
           {importSummary.errors} errors
           {(importSummary.createdDepartments > 0 ||
@@ -621,30 +718,298 @@ export function QuestionBankPanel() {
           )}
         </div>
       )}
-      <AdminExamGuide activeStep={1} compact />
-      <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <h4 className="mb-0">{editingId ? 'Edit Question' : '1. Add a question'}</h4>
-          <Link to="/dashboard/create-test" className="edtp-btn edtp-btn--primary edtp-btn--md">
-            Next: Create the exam
-          </Link>
-          {editingId && (
-            <button type="button" className="dashboard__small__btn__2" onClick={resetQuestionFields}>
-              Cancel edit
+
+      {/* ── Main Full-Width Table Card ── */}
+      <div className="org-table-card">
+        {/* Card Header with Search, CSV buttons & Add Question Button */}
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">Questions Library</h3>
+              <span className="org-count-badge">
+                {filteredQuestions.length} {filteredQuestions.length === 1 ? 'Question' : 'Questions'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">Manage, curate and organize verified examination questions bank</p>
+          </div>
+
+          <div className="org-controls-row">
+            {/* Search Box */}
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search questions by text, department, topic…"
+                value={questionSearch}
+                onChange={(e) => setQuestionSearch(e.target.value)}
+              />
+              {questionSearch && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setQuestionSearch('')}
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+
+            {/* Hidden CSV Input */}
+            <input
+              ref={csvFileRef}
+              type="file"
+              accept=".csv,text/csv"
+              hidden
+              onChange={(e) => void handleCsvImport(e.target.files?.[0])}
+            />
+
+            {/* Download Example CSV */}
+            <a
+              className="org-drawer-cancel"
+              style={{ width: 'auto', padding: '6px 14px', fontSize: '0.8rem', gap: '6px', textDecoration: 'none' }}
+              href="/templates/question-bank-import.csv"
+              download="question-bank-import-example.csv"
+              title="Download question bank import CSV template"
+            >
+              <FiDownload />
+              <span>Example CSV</span>
+            </a>
+
+            {/* Bulk Import CSV */}
+            <button
+              type="button"
+              className="org-drawer-cancel"
+              style={{ width: 'auto', padding: '6px 14px', fontSize: '0.8rem', gap: '6px' }}
+              disabled={importingCsv}
+              onClick={() => csvFileRef.current?.click()}
+              title="Bulk import questions from CSV"
+            >
+              <FiUpload />
+              <span>{importingCsv ? 'Importing…' : 'Bulk Import CSV'}</span>
             </button>
-          )}
+
+            {/* Bulk Delete button if selected */}
+            {selectedDeleteIds.length > 0 && (
+              <button
+                type="button"
+                className="org-icon-btn org-icon-btn--delete"
+                style={{ width: 'auto', padding: '6px 14px', height: 'auto', gap: '6px', fontWeight: 600, fontSize: '0.8rem' }}
+                onClick={() => void handleBulkDelete()}
+              >
+                <FiTrash2 />
+                <span>Delete Selected ({selectedDeleteIds.length})</span>
+              </button>
+            )}
+
+            {/* + Add Question Button */}
+            <button
+              type="button"
+              className="org-add-btn"
+              onClick={openAddDrawer}
+              id="btnAddQuestion"
+            >
+              <FiPlus className="org-add-btn-icon" />
+              <span>Add Question</span>
+            </button>
+          </div>
         </div>
-        {error && <p className="login__error sp_bottom_15">{error}</p>}
-        {message && <p className="form-success sp_bottom_15">{message}</p>}
-        <form onSubmit={handleSubmit} className="edtp-form-card sp_bottom_30">
-          <div className="row g-3">
-            <div className="col-md-4">
-              <label className="form-label">Department</label>
+
+        {/* Continuous Gradient Table */}
+        <div className="table-responsive" style={{ overflowX: 'auto' }}>
+          <table className="org-table">
+            <thead>
+              <tr>
+                <th style={{ width: 44, textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    checked={allFilteredSelected}
+                    onChange={() => {
+                      if (allFilteredSelected) {
+                        setSelectedDeleteIds((prev) =>
+                          prev.filter((id) => !filteredQuestions.some((q) => q.id === id)),
+                        );
+                      } else {
+                        setSelectedDeleteIds((prev) => {
+                          const next = new Set(prev);
+                          filteredQuestions.forEach((q) => next.add(q.id));
+                          return [...next];
+                        });
+                      }
+                    }}
+                    aria-label="Select all questions"
+                  />
+                </th>
+                <th>Question</th>
+                <th>Department</th>
+                <th>Subject</th>
+                <th>Topic</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th style={{ textAlign: 'right', paddingRight: '20px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredQuestions.map((q) => {
+                const label = getQuestionText(q.content);
+                return (
+                  <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
+                    <td style={{ textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
+                        checked={selectedDeleteIds.includes(q.id)}
+                        onChange={() =>
+                          setSelectedDeleteIds((prev) =>
+                            prev.includes(q.id) ? prev.filter((x) => x !== q.id) : [...prev, q.id],
+                          )
+                        }
+                        aria-label={`Select ${label}`}
+                      />
+                    </td>
+                    <td style={{ fontWeight: 600, color: '#0f172a', maxWidth: '340px' }}>
+                      <div style={{ wordBreak: 'break-word', lineHeight: 1.4 }}>{label}</div>
+                    </td>
+                    <td>{q.department_name ?? '—'}</td>
+                    <td>{q.subject_name ?? '—'}</td>
+                    <td>{q.topic_name ?? '—'}</td>
+                    <td>
+                      <span className="org-role-badge org-role-badge--student" style={{ fontSize: '0.72rem' }}>
+                        {QUESTION_TYPE_LABELS[q.type as QuestionType] ?? q.type}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`org-status-badge ${
+                          q.status === 'approved' ? 'org-status-badge--active' : 'org-status-badge--inactive'
+                        }`}
+                      >
+                        {q.status}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right', paddingRight: '16px' }}>
+                      <div className="org-actions-cell" style={{ justifyContent: 'flex-end' }}>
+                        <button
+                          type="button"
+                          className="org-icon-btn org-icon-btn--switch"
+                          onClick={() => setPreviewQuestionId(q.id)}
+                          title="Preview question"
+                        >
+                          <FiEye />
+                        </button>
+                        <button
+                          type="button"
+                          className="org-icon-btn org-icon-btn--edit"
+                          onClick={() => void handleEdit(q.id)}
+                          title="Edit question"
+                        >
+                          <FiEdit3 />
+                        </button>
+                        <button
+                          type="button"
+                          className="org-icon-btn"
+                          style={{ background: '#f5f3ff', border: '1px solid #ddd6fe', color: '#7c3aed' }}
+                          onClick={() => void improveQuestion(q.id)}
+                          title="Improve wording with AI"
+                        >
+                          <FiZap />
+                        </button>
+                        {(q.type === 'mcq' || q.type === 'msq') && (
+                          <button
+                            type="button"
+                            className="org-icon-btn"
+                            style={{ background: '#fffbeb', border: '1px solid #fde68a', color: '#d97706' }}
+                            onClick={() => void handleDistractors(q.id)}
+                            title="Generate AI distractors"
+                          >
+                            <FiList />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="org-icon-btn org-icon-btn--delete"
+                          onClick={() => void handleDelete(q.id)}
+                          title="Delete question"
+                        >
+                          <FiTrash2 />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {filteredQuestions.length === 0 && (
+                <tr>
+                  <td colSpan={8} style={{ textAlign: 'center', padding: '36px 20px', color: '#64748b' }}>
+                    No questions found. Click <strong>+ Add Question</strong> above or import questions from CSV.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Side Drawer for Adding/Editing Questions ── */}
+      <div
+        className={`org-drawer-overlay ${isDrawerOpen ? 'is-open' : ''}`}
+        onClick={closeDrawer}
+        aria-hidden="true"
+      />
+
+      <div
+        className={`org-drawer ${isDrawerOpen ? 'is-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drawerQuestionTitle"
+      >
+        <div className="org-drawer-header">
+          <div className="org-drawer-title-wrap">
+            <div className="org-drawer-badge-icon">
+              <FiHelpCircle />
+            </div>
+            <div>
+              <h3 className="org-drawer-title" id="drawerQuestionTitle">
+                {editingId ? 'Edit Question' : 'Add New Question'}
+              </h3>
+              <p className="org-drawer-desc">
+                Configure question details, options and scoring attributes
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="org-drawer-close-btn"
+            onClick={closeDrawer}
+            aria-label="Close drawer"
+          >
+            <FiX />
+          </button>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}
+        >
+          <div className="org-drawer-body">
+            {error && (
+              <div className="mad-alert-error" role="alert" style={{ marginBottom: '12px' }}>
+                <span>{error}</span>
+              </div>
+            )}
+
+            {/* Department */}
+            <div className="org-form-field">
+              <label className="org-form-label">
+                Department <span className="org-required-star">*</span>
+              </label>
               <EdtpSelect
                 loading={deptsLoading}
                 value={departmentId}
                 onChange={(e) => handleDepartmentChange(e.target.value)}
                 required
+                className="org-form-input"
               >
                 <option value="">{deptsLoading ? 'Loading departments…' : 'Select department'}</option>
                 {departments.map((d) => (
@@ -653,20 +1018,24 @@ export function QuestionBankPanel() {
               </EdtpSelect>
               <FieldHint loading={deptsLoading} loadingText="Fetching departments…" />
               {!deptsLoading && (
-                <p className="text-muted mb-0 mt-1" style={{ fontSize: '0.75rem' }}>
+                <span className="org-form-hint">
                   Stays selected until you change it. Org Admin adds departments.
-                </p>
+                </span>
               )}
             </div>
 
-            <div className="col-md-4">
-              <label className="form-label">Subject</label>
+            {/* Subject */}
+            <div className="org-form-field">
+              <label className="org-form-label">
+                Subject <span className="org-required-star">*</span>
+              </label>
               <EdtpSelect
                 loading={subjectsLoading}
                 value={subjectId}
                 onChange={(e) => handleSubjectChange(e.target.value)}
                 disabled={!departmentId || subjectsLoading}
                 required
+                className="org-form-input"
               >
                 <option value="">
                   {subjectsLoading ? 'Loading subjects…' : 'Select subject'}
@@ -682,37 +1051,49 @@ export function QuestionBankPanel() {
                 loadingText="Fetching subjects…"
               />
               {departmentId && !subjectsLoading && (
-                <button
-                  type="button"
-                  className="dashboard__small__btn__2 mt-2"
-                  onClick={() => setShowAddSubject((v) => !v)}
-                >
-                  {showAddSubject ? 'Cancel' : '+ Add Subject'}
-                </button>
+                <div style={{ marginTop: '4px' }}>
+                  <button
+                    type="button"
+                    className="org-pill"
+                    style={{ cursor: 'pointer', background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}
+                    onClick={() => setShowAddSubject((v) => !v)}
+                  >
+                    {showAddSubject ? 'Cancel' : '+ Add Subject'}
+                  </button>
+                </div>
               )}
               {showAddSubject && departmentId && (
-                <div className="edtp-inline-field mt-2">
+                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                   <input
-                    className="register__input"
+                    className="org-form-input"
                     placeholder="Subject name"
                     value={newSubjectName}
                     onChange={(e) => setNewSubjectName(e.target.value)}
                   />
-                  <button type="button" className="default__button" onClick={handleAddSubject}>
+                  <button
+                    type="button"
+                    className="org-add-btn"
+                    style={{ padding: '6px 14px' }}
+                    onClick={handleAddSubject}
+                  >
                     Save
                   </button>
                 </div>
               )}
             </div>
 
-            <div className="col-md-4">
-              <label className="form-label">Topic</label>
+            {/* Topic */}
+            <div className="org-form-field">
+              <label className="org-form-label">
+                Topic <span className="org-required-star">*</span>
+              </label>
               <EdtpSelect
                 loading={topicsLoading}
                 value={topicId}
                 onChange={(e) => setTopicId(e.target.value)}
                 disabled={!subjectId || topicsLoading}
                 required
+                className="org-form-input"
               >
                 <option value="">
                   {topicsLoading ? 'Loading topics…' : 'Select topic'}
@@ -728,32 +1109,43 @@ export function QuestionBankPanel() {
                 loadingText="Fetching topics…"
               />
               {canAddTopic && subjectId && !topicsLoading && (
-                <button
-                  type="button"
-                  className="dashboard__small__btn__2 mt-2"
-                  onClick={() => setShowAddTopic((v) => !v)}
-                >
-                  {showAddTopic ? 'Cancel' : '+ Add Topic'}
-                </button>
+                <div style={{ marginTop: '4px' }}>
+                  <button
+                    type="button"
+                    className="org-pill"
+                    style={{ cursor: 'pointer', background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}
+                    onClick={() => setShowAddTopic((v) => !v)}
+                  >
+                    {showAddTopic ? 'Cancel' : '+ Add Topic'}
+                  </button>
+                </div>
               )}
               {showAddTopic && subjectId && (
-                <div className="edtp-inline-field mt-2">
+                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                   <input
-                    className="register__input"
+                    className="org-form-input"
                     placeholder="Topic name"
                     value={newTopicName}
                     onChange={(e) => setNewTopicName(e.target.value)}
                   />
-                  <button type="button" className="default__button" onClick={handleAddTopic}>
+                  <button
+                    type="button"
+                    className="org-add-btn"
+                    style={{ padding: '6px 14px' }}
+                    onClick={handleAddTopic}
+                  >
                     Save
                   </button>
                 </div>
               )}
             </div>
 
-            <div className="col-md-4">
-              <EdtpField label="Question Type" hint="Choose how students will answer.">
-                <EdtpSelect
+            {/* Question Type & Difficulty */}
+            <div className="org-grid-2">
+              <div className="org-form-field">
+                <label className="org-form-label">Question Type</label>
+                <select
+                  className="org-form-input"
                   value={questionType}
                   onChange={(e) => {
                     setQuestionType(e.target.value as QuestionType);
@@ -763,14 +1155,34 @@ export function QuestionBankPanel() {
                   {(Object.keys(QUESTION_TYPE_LABELS) as QuestionType[]).map((t) => (
                     <option key={t} value={t}>{QUESTION_TYPE_LABELS[t]}</option>
                   ))}
-                </EdtpSelect>
-              </EdtpField>
+                </select>
+              </div>
+
+              <div className="org-form-field">
+                <label className="org-form-label">Difficulty (1–5)</label>
+                <select
+                  className="org-form-input"
+                  value={difficultyInput}
+                  onChange={(e) => setDifficultyInput(e.target.value)}
+                >
+                  <option value="1">1 — Easy</option>
+                  <option value="2">2</option>
+                  <option value="3">3 — Medium</option>
+                  <option value="4">4</option>
+                  <option value="5">5 — Hard</option>
+                </select>
+              </div>
             </div>
-            <div className="col-md-4">
-              <EdtpField label="Marks per Question" hint="Stays selected until you change it.">
+
+            {/* Marks & Negative Marks */}
+            <div className="org-grid-2">
+              <div className="org-form-field">
+                <label className="org-form-label">
+                  Marks per Question <span className="org-required-star">*</span>
+                </label>
                 <input
                   type="number"
-                  className="register__input edtp-number-input"
+                  className="org-form-input"
                   min={1}
                   step={1}
                   value={marksInput}
@@ -778,78 +1190,77 @@ export function QuestionBankPanel() {
                   onBlur={() => setMarksInput(normalizeMarksInput(marksInput))}
                   required
                 />
-              </EdtpField>
-            </div>
-            <div className="col-md-4">
-              <EdtpField label="Difficulty (1–5)" hint="1 = easy, 5 = hard.">
-                <EdtpSelect value={difficultyInput} onChange={(e) => setDifficultyInput(e.target.value)}>
-                  <option value="1">1 — Easy</option>
-                  <option value="2">2</option>
-                  <option value="3">3 — Medium</option>
-                  <option value="4">4</option>
-                  <option value="5">5 — Hard</option>
-                </EdtpSelect>
-              </EdtpField>
-            </div>
-            <div className="col-md-4">
-              <EdtpField label="Negative marks" hint="Penalty if wrong (0 = none).">
+              </div>
+
+              <div className="org-form-field">
+                <label className="org-form-label">Negative Marks</label>
                 <input
                   type="number"
-                  className="register__input edtp-number-input"
+                  className="org-form-input"
                   min={0}
                   step={0.25}
                   value={negativeMarksInput}
                   onChange={(e) => setNegativeMarksInput(e.target.value)}
                 />
-              </EdtpField>
+              </div>
             </div>
-            <div className="col-md-4">
-              <EdtpField
-                label="Number of Options"
-                hint={
-                  needsTwoOptions(questionType)
-                    ? 'Default 4. Stays selected until you change it.'
-                    : 'Available for MCQ and MSQ only.'
-                }
-              >
-                <EdtpSelect
+
+            {/* Options Count for MCQ/MSQ */}
+            {needsTwoOptions(questionType) && (
+              <div className="org-form-field">
+                <label className="org-form-label">Number of Options</label>
+                <select
+                  className="org-form-input"
                   value={optionCount}
-                  disabled={!needsTwoOptions(questionType)}
                   onChange={(e) => handleOptionCountChange(Number(e.target.value) as McqOptionCount)}
                 >
-                  <option value={2}>2 options</option>
-                  <option value={3}>3 options</option>
-                  <option value={4}>4 options</option>
-                  <option value={5}>5 options</option>
-                </EdtpSelect>
-              </EdtpField>
-            </div>
-            <div className="col-12">
-              <label className="form-label">Question Text</label>
-              <input
-                className="register__input"
-                placeholder="Enter the question"
+                  <option value={2}>2 Options</option>
+                  <option value={3}>3 Options</option>
+                  <option value={4}>4 Options</option>
+                  <option value={5}>5 Options</option>
+                </select>
+              </div>
+            )}
+
+            {/* Question Text */}
+            <div className="org-form-field">
+              <label className="org-form-label">
+                Question Text <span className="org-required-star">*</span>
+              </label>
+              <textarea
+                className="org-form-input"
+                rows={3}
+                placeholder="Enter the complete question text..."
                 value={newQ}
                 onChange={(e) => setNewQ(e.target.value)}
+                style={{ height: '96px', minHeight: '96px', maxHeight: '96px', resize: 'none' }}
                 required
               />
             </div>
+
+            {/* True/False Answer */}
             {questionType === 'true_false' && (
-              <div className="col-md-4">
-                <label className="form-label">Correct Answer</label>
-                <EdtpSelect value={correct} onChange={(e) => setCorrect(e.target.value)}>
+              <div className="org-form-field">
+                <label className="org-form-label">Correct Answer</label>
+                <select
+                  className="org-form-input"
+                  value={correct}
+                  onChange={(e) => setCorrect(e.target.value)}
+                >
                   <option value="true">True</option>
                   <option value="false">False</option>
-                </EdtpSelect>
+                </select>
               </div>
             )}
+
+            {/* Fill in Blank / Integer / Numerical */}
             {needsAnswerOnly(questionType) && (
-              <div className="col-md-6">
-                <label className="form-label">
-                  {questionType === 'fill_blank' ? 'Correct Answer' : 'Correct Value'}
+              <div className="org-form-field">
+                <label className="org-form-label">
+                  {questionType === 'fill_blank' ? 'Correct Answer Text' : 'Correct Value'}
                 </label>
                 <input
-                  className="register__input"
+                  className="org-form-input"
                   placeholder={questionType === 'fill_blank' ? 'Answer text' : 'Numeric value'}
                   value={opt1}
                   onChange={(e) => setOpt1(e.target.value)}
@@ -857,242 +1268,68 @@ export function QuestionBankPanel() {
                 />
               </div>
             )}
+
+            {/* MCQ / MSQ Options */}
             {needsTwoOptions(questionType) && (
-              <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <label className="org-form-label">Options &amp; Correct Answer</label>
                 {Array.from({ length: optionCount }, (_, index) => (
-                  <div key={index} className="col-md-4">
-                    <EdtpField label={`Option ${index + 1}`}>
-                      <input
-                        className="register__input"
-                        value={optionTexts[index] ?? ''}
-                        onChange={(e) => handleOptionTextChange(index, e.target.value)}
-                        required
-                      />
-                    </EdtpField>
+                  <div key={index} className="org-form-field">
+                    <label className="org-form-hint">Option {index + 1}</label>
+                    <input
+                      className="org-form-input"
+                      placeholder={`Enter text for Option ${index + 1}`}
+                      value={optionTexts[index] ?? ''}
+                      onChange={(e) => handleOptionTextChange(index, e.target.value)}
+                      required
+                    />
                   </div>
                 ))}
-                <div className="col-md-4">
-                  <EdtpField label="Correct">
-                    <EdtpSelect value={correct} onChange={(e) => setCorrect(e.target.value)}>
-                      {Array.from({ length: optionCount }, (_, index) => (
-                        <option key={index} value={String(index + 1)}>
-                          Option {index + 1}
-                        </option>
-                      ))}
-                    </EdtpSelect>
-                  </EdtpField>
+
+                <div className="org-form-field" style={{ marginTop: '4px' }}>
+                  <label className="org-form-label">Select Correct Option</label>
+                  <select
+                    className="org-form-input"
+                    value={correct}
+                    onChange={(e) => setCorrect(e.target.value)}
+                  >
+                    {Array.from({ length: optionCount }, (_, index) => (
+                      <option key={index} value={String(index + 1)}>
+                        Option {index + 1}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                {(optionCount + 1) % 3 !== 0 &&
-                  Array.from({ length: 3 - ((optionCount + 1) % 3) }, (_, i) => (
-                    <div key={`opt-spacer-${i}`} className="col-md-4 edtp-form-col-spacer" aria-hidden />
-                  ))}
-              </>
+              </div>
             )}
-            <div className="col-12">
-              <EdtpFormActions>
-                <EdtpBtn type="submit" variant="primary" size="md" disabled={!topicId}>
-                  {editingId
-                    ? `Update ${QUESTION_TYPE_LABELS[questionType]} Question`
-                    : `Add ${QUESTION_TYPE_LABELS[questionType]} Question`}
-                </EdtpBtn>
-                {editingId && (
-                  <EdtpBtn variant="ghost" size="md" onClick={resetQuestionFields}>
-                    Cancel
-                  </EdtpBtn>
-                )}
-              </EdtpFormActions>
-            </div>
+          </div>
+
+          <div className="org-drawer-footer">
+            <button type="button" className="org-drawer-cancel" onClick={closeDrawer}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="org-drawer-submit"
+              disabled={!topicId}
+            >
+              {editingId ? 'Update Question' : 'Add Question'}
+            </button>
           </div>
         </form>
-
-        <div className="dashboard__section__title">
-          <h4>Questions ({questions.length})</h4>
-        </div>
-        <SearchField
-          value={questionSearch}
-          onChange={setQuestionSearch}
-          placeholder="Search questions by text, department, subject, topic…"
-        />
-        {(() => {
-          const filteredQuestions = questions.filter((q) => {
-            const qSearch = questionSearch.trim().toLowerCase();
-            if (!qSearch) return true;
-            return (
-              getQuestionText(q.content, '').toLowerCase().includes(qSearch) ||
-              (q.department_name ?? '').toLowerCase().includes(qSearch) ||
-              (q.subject_name ?? '').toLowerCase().includes(qSearch) ||
-              (q.topic_name ?? '').toLowerCase().includes(qSearch) ||
-              (q.type ?? '').toLowerCase().includes(qSearch)
-            );
-          });
-          const allFilteredSelected =
-            filteredQuestions.length > 0 &&
-            filteredQuestions.every((q) => selectedDeleteIds.includes(q.id));
-          return (
-            <div className="dashboard__table table-responsive">
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_15">
-                <span className="text-muted" style={{ fontSize: '0.875rem' }}>
-                  {selectedDeleteIds.length > 0
-                    ? `${selectedDeleteIds.length} selected`
-                    : 'Select questions to delete in bulk'}
-                </span>
-                <EdtpBtn
-                  variant="danger"
-                  disabled={selectedDeleteIds.length === 0}
-                  onClick={() => void handleBulkDelete()}
-                >
-                  Delete Selected ({selectedDeleteIds.length})
-                </EdtpBtn>
-              </div>
-              <table>
-                <thead>
-                  <tr>
-                    <th style={{ width: 48 }}>
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={allFilteredSelected}
-                        onChange={() => {
-                          if (allFilteredSelected) {
-                            setSelectedDeleteIds((prev) =>
-                              prev.filter((id) => !filteredQuestions.some((q) => q.id === id)),
-                            );
-                          } else {
-                            setSelectedDeleteIds((prev) => {
-                              const next = new Set(prev);
-                              filteredQuestions.forEach((q) => next.add(q.id));
-                              return [...next];
-                            });
-                          }
-                        }}
-                        aria-label="Select all questions"
-                      />
-                    </th>
-                    <th>Question</th>
-                    <th>Department</th>
-                    <th>Subject</th>
-                    <th>Topic</th>
-                    <th>Type</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredQuestions.map((q) => {
-                    const label = getQuestionText(q.content);
-                    return (
-                      <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
-                        <td>
-                          <input
-                            type="checkbox"
-                            className="form-check-input"
-                            checked={selectedDeleteIds.includes(q.id)}
-                            onChange={() =>
-                              setSelectedDeleteIds((prev) =>
-                                prev.includes(q.id) ? prev.filter((x) => x !== q.id) : [...prev, q.id],
-                              )
-                            }
-                            aria-label={`Select ${label}`}
-                          />
-                        </td>
-                        <td className="edtp-q-cell">{label}</td>
-                        <td>{q.department_name ?? '—'}</td>
-                        <td>{q.subject_name ?? '—'}</td>
-                        <td>{q.topic_name ?? '—'}</td>
-                        <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
-                        <td>{q.status}</td>
-                        <td>
-                          <EdtpRowActions>
-                            <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(q.id)}>
-                              Preview
-                            </EdtpBtn>
-                            <EdtpBtn variant="secondary" onClick={() => void handleEdit(q.id)}>
-                              Edit
-                            </EdtpBtn>
-                            <EdtpBtn
-                              variant="ghost"
-                              onClick={() =>
-                                void (async () => {
-                                  setError('');
-                                  try {
-                                    const improved = await withLoader(() =>
-                                      examinationService.improveQuestion(q.id),
-                                    );
-                                    setMessage(`Improved wording. Difficulty is now ${improved.difficulty}. You can edit it again.`);
-                                    showSuccess('Question improved', 'Grammar, wording, and distractors were updated. The learning objective is unchanged.');
-                                    await loadQuestions();
-                                  } catch (err) {
-                                    setError(parseApiError(err));
-                                    showError('Improve failed', parseApiError(err));
-                                  }
-                                })()
-                              }
-                            >
-                              Improve
-                            </EdtpBtn>
-                            {(q.type === 'mcq' || q.type === 'msq') && (
-                              <EdtpBtn
-                                variant="ghost"
-                                onClick={() =>
-                                  void (async () => {
-                                    setError('');
-                                    try {
-                                      const preview = await withLoader(() =>
-                                        examinationService.generateDistractors(q.id, false),
-                                      );
-                                      const lines = preview.options
-                                        .map((opt) =>
-                                          `${opt.isCorrect ? 'Correct' : 'Wrong'}: ${opt.text}${opt.whyWrong ? ` — ${opt.whyWrong}` : ''}`,
-                                        )
-                                        .join('\n');
-                                      const ok = await confirmAction({
-                                        title: 'Replace distractors?',
-                                        text: lines || 'No options returned.',
-                                        confirmText: 'Save options',
-                                      });
-                                      if (!ok) return;
-                                      await examinationService.generateDistractors(q.id, true, preview.options);
-                                      showSuccess('Distractors saved', 'Incorrect options were replaced. Review the question before using it.');
-                                      await loadQuestions();
-                                    } catch (err) {
-                                      setError(parseApiError(err));
-                                      showError('Distractors failed', parseApiError(err));
-                                    }
-                                  })()
-                                }
-                              >
-                                Distractors
-                              </EdtpBtn>
-                            )}
-                            <EdtpBtn variant="danger" onClick={() => void handleDelete(q.id)}>
-                              Delete
-                            </EdtpBtn>
-                          </EdtpRowActions>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  {filteredQuestions.length === 0 && (
-                    <tr>
-                      <td colSpan={8}>No questions yet. Select department → subject → topic and add your first question.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          );
-        })()}
       </div>
+
       <QuestionPreviewModal
         questionId={previewQuestionId}
         onClose={() => setPreviewQuestionId(null)}
       />
-    </>
+    </div>
   );
 }
 
 export function TestsListPanel({ title }: { title: string }) {
   const [tests, setTests] = useState<ExamTest[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -1239,183 +1476,291 @@ export function TestsListPanel({ title }: { title: string }) {
       cancelled: 'Cancelled',
       archived: 'Archived',
     };
-    const cls =
-      status === 'live'
-        ? 'edtp-badge--active'
-        : status === 'completed'
-          ? 'edtp-badge--danger'
-          : status === 'cancelled'
-            ? 'edtp-badge--danger'
-            : status === 'scheduled' || status === 'draft'
-              ? 'edtp-badge--role'
-              : 'edtp-badge--inactive';
-    return <span className={`edtp-badge ${cls}`}>{labels[status] ?? status}</span>;
+    if (status === 'live') {
+      return <span className="org-status-badge org-status-badge--active">Live</span>;
+    }
+    if (status === 'draft') {
+      return <span className="org-status-badge org-status-badge--inactive">Draft</span>;
+    }
+    if (status === 'scheduled') {
+      return <span className="org-status-badge org-status-badge--pending">Scheduled</span>;
+    }
+    if (status === 'completed' || status === 'cancelled') {
+      return <span className="org-status-badge" style={{ background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626' }}>{labels[status] ?? status}</span>;
+    }
+    return <span className="org-status-badge org-status-badge--inactive">{labels[status] ?? status}</span>;
   };
 
-  return (
-    <>
-      <DashboardPageHeader
-        badge="Step 3–5"
-        title={title}
-        subtitle="A draft is not live yet. Press Continue setup, add questions, publish, then assign students."
-      />
-      <AdminExamGuide activeStep={3} compact />
-      <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <h4 className="mb-0">Test List</h4>
-          <Link to="/dashboard/create-test" className="edtp-btn edtp-btn--primary edtp-btn--md">
-            + Create Test
-          </Link>
-        </div>
-        {error && <p className="login__error sp_bottom_15">{error}</p>}
+  const filteredTests = !searchTerm.trim()
+    ? tests
+    : tests.filter(
+        (t) =>
+          t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (t.status && t.status.toLowerCase().includes(searchTerm.toLowerCase())),
+      );
 
-        {editingId && (
-          <div className="edtp-form-card sp_bottom_20">
-            <h5>Edit test</h5>
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label>Title</label>
+  return (
+    <div className="org-panel-root">
+      <div className="org-top-bar">
+        <div>
+          <h2 className="org-page-title">{title}</h2>
+          <p className="org-page-desc">
+            A draft is not live yet. Press Continue setup, add questions, publish, then assign students.
+          </p>
+        </div>
+        <Link to="/dashboard/create-test" className="org-add-btn">
+          <FiPlus /> Create Test
+        </Link>
+      </div>
+
+      <AdminExamGuide activeStep={3} compact />
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card">
+        <div className="org-card-header">
+          <div className="org-search-box">
+            <FiSearch className="org-search-icon" />
+            <input
+              type="text"
+              className="org-search-input"
+              placeholder="Search tests by title or status…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+            Total Tests: {tests.length}
+          </span>
+        </div>
+
+        <div className="org-table-wrap">
+          <table className="org-table">
+            <thead>
+              <tr>
+                <th>TITLE</th>
+                <th>STATUS</th>
+                <th>DURATION</th>
+                <th>MARKS</th>
+                <th style={{ textAlign: 'right' }}>ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredTests.map((t) => (
+                <tr key={t.id}>
+                  <td>
+                    <strong style={{ color: '#0f172a', fontWeight: 600 }}>{t.title}</strong>
+                  </td>
+                  <td>{statusBadge(t.status)}</td>
+                  <td style={{ color: '#475569' }}>{t.duration_minutes} min</td>
+                  <td style={{ color: '#475569', fontWeight: 500 }}>{t.total_marks ?? '—'}</td>
+                  <td>
+                    <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                      {t.status === 'draft' && (
+                        <Link
+                          to={`/dashboard/test-builder/${t.id}?step=build`}
+                          className="org-icon-btn--switch"
+                          title="Continue setup"
+                          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <FiPlay style={{ fontSize: 13 }} /> Setup
+                        </Link>
+                      )}
+                      {(t.status === 'scheduled' || t.status === 'live') && (
+                        <Link
+                          to={`/dashboard/test-builder/${t.id}?step=assign`}
+                          className="org-icon-btn--switch"
+                          title="Assign students"
+                          style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                        >
+                          <FiZap style={{ fontSize: 13 }} /> Assign
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        className="org-icon-btn--edit"
+                        disabled={t.status === 'completed'}
+                        title={t.status === 'completed' ? 'Completed tests cannot be edited' : 'Edit test details'}
+                        onClick={() => {
+                          if (t.status !== 'completed') startEdit(t);
+                        }}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <FiEdit3 style={{ fontSize: 13 }} /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="org-icon-btn--danger"
+                        onClick={() => void remove(t.id, t.title)}
+                        title="Delete test"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <FiTrash2 style={{ fontSize: 13 }} /> Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredTests.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                    {tests.length === 0 ? (
+                      <>No tests yet. <Link to="/dashboard/create-test" style={{ color: '#2563eb', fontWeight: 600 }}>Create your first test</Link>.</>
+                    ) : (
+                      'No tests match your search filter.'
+                    )}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {editingId && (
+        <>
+          <div className="org-drawer-overlay" onClick={() => setEditingId(null)} />
+          <div className="org-drawer">
+            <div className="org-drawer-header">
+              <div>
+                <h3 className="org-drawer-title">Edit Test Details</h3>
+                <p className="org-drawer-subtitle">Update duration, scoring, and examination security rules</p>
+              </div>
+              <button
+                type="button"
+                className="org-drawer-close"
+                onClick={() => setEditingId(null)}
+                aria-label="Close drawer"
+              >
+                <FiX />
+              </button>
+            </div>
+            <div className="org-drawer-body">
+              <div className="org-form-field">
+                <label className="org-form-label">Test Title</label>
                 <input
-                  className="register__input"
+                  className="org-form-input"
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="e.g. Midterm Physics Examination"
                 />
               </div>
-              <div className="col-md-3">
-                <label>Duration (minutes)</label>
-                <input
-                  className="register__input edtp-number-input"
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={editDuration}
-                  onChange={(e) => setEditDuration(e.target.value)}
-                  onBlur={() => setEditDuration(normalizePositiveIntInput(editDuration, 60))}
-                />
-              </div>
-              <div className="col-md-3">
-                <label>Passing marks</label>
-                <input
-                  className="register__input edtp-number-input"
-                  type="number"
-                  min={0}
-                  value={editPassingMarks}
-                  onChange={(e) => setEditPassingMarks(e.target.value)}
-                />
-              </div>
-              <div className="col-md-6">
-                <label htmlFor="editExamType">Exam Type</label>
-                <select
-                  id="editExamType"
-                  className="register__input"
-                  value={editExamType}
-                  onChange={(e) => {
-                    const type = e.target.value as 'official' | 'practice';
-                    setEditExamType(type);
-                    if (type === 'official') {
-                      setEditMaxAttempts('1');
-                      setEditCertificationEnabled(true);
-                    } else {
-                      setEditCertificationEnabled(false);
-                    }
-                  }}
-                >
-                  <option value="official">Official Exam</option>
-                  <option value="practice">Practice Exam</option>
-                </select>
-              </div>
-              <div className="col-md-6">
-                <label className="d-flex align-items-center gap-2">
+
+              <div className="org-grid-2">
+                <div className="org-form-field">
+                  <label className="org-form-label">Duration (minutes)</label>
                   <input
-                    type="checkbox"
-                    checked={editCertificationEnabled}
-                    disabled={editExamType === 'practice'}
-                    onChange={(e) => setEditCertificationEnabled(e.target.checked)}
+                    className="org-form-input"
+                    type="number"
+                    min={1}
+                    value={editDuration}
+                    onChange={(e) => setEditDuration(e.target.value)}
+                    onBlur={() => setEditDuration(normalizePositiveIntInput(editDuration, 60))}
                   />
-                  Enable Certificate Generation
-                </label>
-                <small className="text-muted">
-                  {editExamType === 'practice'
-                    ? 'Certificates are disabled for practice exams.'
-                    : 'Certificates are available for eligible students.'}
-                </small>
+                </div>
+                <div className="org-form-field">
+                  <label className="org-form-label">Passing marks</label>
+                  <input
+                    className="org-form-input"
+                    type="number"
+                    min={0}
+                    value={editPassingMarks}
+                    onChange={(e) => setEditPassingMarks(e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="col-12">
-                <label>Instructions</label>
+
+              <div className="org-grid-2">
+                <div className="org-form-field">
+                  <label className="org-form-label" htmlFor="editExamType">Exam Type</label>
+                  <select
+                    id="editExamType"
+                    className="org-form-select"
+                    value={editExamType}
+                    onChange={(e) => {
+                      const type = e.target.value as 'official' | 'practice';
+                      setEditExamType(type);
+                      if (type === 'official') {
+                        setEditMaxAttempts('1');
+                        setEditCertificationEnabled(true);
+                      } else {
+                        setEditCertificationEnabled(false);
+                      }
+                    }}
+                  >
+                    <option value="official">Official Exam</option>
+                    <option value="practice">Practice Exam</option>
+                  </select>
+                </div>
+                <div className="org-form-field" style={{ justifyContent: 'center' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer', marginTop: 24 }}>
+                    <input
+                      type="checkbox"
+                      checked={editCertificationEnabled}
+                      disabled={editExamType === 'practice'}
+                      onChange={(e) => setEditCertificationEnabled(e.target.checked)}
+                      style={{ accentColor: '#2563eb', width: 16, height: 16 }}
+                    />
+                    Enable Certificate Generation
+                  </label>
+                </div>
+              </div>
+
+              <div className="org-form-field">
+                <label className="org-form-label">Instructions</label>
                 <textarea
-                  className="register__input"
-                  rows={2}
+                  className="org-form-input"
+                  rows={3}
                   value={editInstructions}
                   onChange={(e) => setEditInstructions(e.target.value)}
+                  placeholder="Instructions displayed to students before starting..."
                 />
               </div>
-              <div className="col-12">
-                <div className="row g-2">
-                  <div className="col-md-4">
-                    <label className="d-flex align-items-center gap-2">
-                      <input type="checkbox" checked={editShuffleQuestions} onChange={(e) => setEditShuffleQuestions(e.target.checked)} />
-                      Shuffle questions
-                    </label>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="d-flex align-items-center gap-2">
-                      <input type="checkbox" checked={editShuffleOptions} onChange={(e) => setEditShuffleOptions(e.target.checked)} />
-                      Shuffle options
-                    </label>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="d-flex align-items-center gap-2">
-                      <input type="checkbox" checked={editNegativeMarking} onChange={(e) => setEditNegativeMarking(e.target.checked)} />
-                      Negative marking
-                    </label>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="d-flex align-items-center gap-2">
-                      <input type="checkbox" checked={editFullScreen} onChange={(e) => setEditFullScreen(e.target.checked)} />
-                      Fullscreen
-                    </label>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="d-flex align-items-center gap-2">
-                      <input type="checkbox" checked={editAllowResume} onChange={(e) => setEditAllowResume(e.target.checked)} />
-                      Allow resume
-                    </label>
-                  </div>
-                  <div className="col-md-4">
-                    <label className="d-flex align-items-center gap-2">
-                      <input type="checkbox" checked={editReleaseAnswers} onChange={(e) => setEditReleaseAnswers(e.target.checked)} />
-                      Release answer key
-                    </label>
-                  </div>
-                  <div className="col-md-4">
-                    <label>Max tab switches</label>
+
+              <div style={{ marginTop: 12, padding: '16px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
+                <h5 style={{ fontSize: '0.9rem', fontWeight: 600, color: '#1e293b', marginBottom: 12 }}>Exam &amp; Security Rules</h5>
+                <div className="org-grid-3">
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={editShuffleQuestions} onChange={(e) => setEditShuffleQuestions(e.target.checked)} style={{ accentColor: '#2563eb' }} />
+                    Shuffle questions
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={editShuffleOptions} onChange={(e) => setEditShuffleOptions(e.target.checked)} style={{ accentColor: '#2563eb' }} />
+                    Shuffle options
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={editNegativeMarking} onChange={(e) => setEditNegativeMarking(e.target.checked)} style={{ accentColor: '#2563eb' }} />
+                    Negative marking
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={editFullScreen} onChange={(e) => setEditFullScreen(e.target.checked)} style={{ accentColor: '#2563eb' }} />
+                    Fullscreen required
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={editAllowResume} onChange={(e) => setEditAllowResume(e.target.checked)} style={{ accentColor: '#2563eb' }} />
+                    Allow resume
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.8125rem', color: '#475569', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={editReleaseAnswers} onChange={(e) => setEditReleaseAnswers(e.target.checked)} style={{ accentColor: '#2563eb' }} />
+                    Release answers
+                  </label>
+                </div>
+
+                <div className="org-grid-2" style={{ marginTop: 12 }}>
+                  <div className="org-form-field">
+                    <label className="org-form-label" style={{ fontSize: '0.75rem' }}>Max Tab Switches</label>
                     <input
-                      className="register__input edtp-number-input"
+                      className="org-form-input"
                       type="number"
                       min={0}
                       value={editMaxTabSwitches}
                       onChange={(e) => setEditMaxTabSwitches(e.target.value)}
                     />
                   </div>
-                  <div className="col-md-4">
-                    <label htmlFor="editMaxAttempts">Max attempts</label>
-                    {editExamType === 'official' ? (
-                      <>
-                        <input id="editMaxAttempts" className="register__input edtp-number-input" type="number" value={1} disabled />
-                        <small className="text-muted">Official exams allow one attempt only.</small>
-                      </>
-                    ) : (
-                      <select id="editMaxAttempts" className="register__input" value={editMaxAttempts} onChange={(e) => setEditMaxAttempts(e.target.value)}>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
-                          <option key={count} value={String(count)}>{count} {count === 1 ? 'Attempt' : 'Attempts'}</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
-                  <div className="col-md-4">
-                    <label>Scoring policy</label>
+                  <div className="org-form-field">
+                    <label className="org-form-label" style={{ fontSize: '0.75rem' }}>Scoring Policy</label>
                     <select
-                      className="register__input"
+                      className="org-form-select"
                       value={editScoringPolicy}
                       onChange={(e) => setEditScoringPolicy(e.target.value as 'latest' | 'highest')}
                     >
@@ -1423,93 +1768,29 @@ export function TestsListPanel({ title }: { title: string }) {
                       <option value="highest">Highest score</option>
                     </select>
                   </div>
-                  <div className="col-md-4">
-                    <label>Flag: max fullscreen exits</label>
-                    <input
-                      className="register__input edtp-number-input"
-                      type="number"
-                      min={0}
-                      value={editMaxFullscreenExits}
-                      onChange={(e) => setEditMaxFullscreenExits(e.target.value)}
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label>Flag: max copy/paste</label>
-                    <input
-                      className="register__input edtp-number-input"
-                      type="number"
-                      min={0}
-                      value={editMaxCopyPasteAttempts}
-                      onChange={(e) => setEditMaxCopyPasteAttempts(e.target.value)}
-                    />
-                  </div>
                 </div>
               </div>
-              <div className="col-12">
-                <EdtpFormActions>
-                  <EdtpBtn variant="primary" onClick={() => void saveEdit()}>Save</EdtpBtn>
-                  <EdtpBtn variant="ghost" onClick={() => setEditingId(null)}>Cancel</EdtpBtn>
-                </EdtpFormActions>
-              </div>
+            </div>
+            <div className="org-drawer-footer">
+              <button
+                type="button"
+                className="org-drawer-btn-cancel"
+                onClick={() => setEditingId(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="org-add-btn"
+                onClick={() => void saveEdit()}
+              >
+                <FiCheckCircle /> Save Changes
+              </button>
             </div>
           </div>
-        )}
-
-        <div className="dashboard__table table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Title</th>
-                <th>Status</th>
-                <th>Duration</th>
-                <th>Marks</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tests.map((t) => (
-                <tr key={t.id}>
-                  <td>{t.title}</td>
-                  <td>{statusBadge(t.status)}</td>
-                  <td>{t.duration_minutes} min</td>
-                  <td>{t.total_marks ?? '—'}</td>
-                  <td>
-                    <EdtpRowActions>
-                      {t.status === 'draft' && (
-                        <Link to={`/dashboard/test-builder/${t.id}?step=build`} className="edtp-btn edtp-btn--primary edtp-btn--sm">
-                          Continue setup
-                        </Link>
-                      )}
-                      {(t.status === 'scheduled' || t.status === 'live') && (
-                        <Link to={`/dashboard/test-builder/${t.id}?step=assign`} className="edtp-btn edtp-btn--primary edtp-btn--sm">
-                          Assign students
-                        </Link>
-                      )}
-                      <EdtpBtn
-                        variant="secondary"
-                        disabled={t.status === 'completed'}
-                        title={t.status === 'completed' ? 'Completed tests cannot be edited' : 'Edit test details'}
-                        onClick={() => {
-                          if (t.status !== 'completed') startEdit(t);
-                        }}
-                      >
-                        Edit
-                      </EdtpBtn>
-                      <EdtpBtn variant="danger" onClick={() => void remove(t.id, t.title)}>
-                        Delete
-                      </EdtpBtn>
-                    </EdtpRowActions>
-                  </td>
-                </tr>
-              ))}
-              {tests.length === 0 && (
-                <tr><td colSpan={5}>No tests yet. <Link to="/dashboard/create-test">Create your first test</Link>.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -2048,6 +2329,7 @@ export function AttemptsListPanel({
 }) {
   const navigate = useNavigate();
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -2062,62 +2344,147 @@ export function AttemptsListPanel({
 
   useDashboardLoadingEffect(loading);
 
+  const filteredAttempts = !searchTerm.trim()
+    ? attempts
+    : attempts.filter(
+        (a) =>
+          (a.test_title && a.test_title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (a.status && a.status.toLowerCase().includes(searchTerm.toLowerCase())),
+      );
+
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>{title}</h4>
+    <div className="org-panel-root">
+      <div className="org-top-bar">
+        <div>
+          <h2 className="org-page-title">{title}</h2>
+          <p className="org-page-desc">
+            Track and review student examination sessions, results, and proctoring status.
+          </p>
+        </div>
       </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      <div className="dashboard__table table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Test</th>
-              <th>Status</th>
-              <th>Score</th>
-              <th>Started</th>
-              {!readOnly && <th />}
-            </tr>
-          </thead>
-          <tbody>
-            {attempts.map((a) => (
-              <tr key={a.id}>
-                <td>
-                  {a.test_title ?? a.test_id}{' '}
-                  {a.proctoring_flagged ? (
-                    <span className="edtp-badge edtp-badge--inactive">Flagged</span>
-                  ) : null}
-                </td>
-                <td>{a.status.replace('_', ' ')}</td>
-                <td>{a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : '—'}</td>
-                <td>{formatDateTime(a.started_at)}</td>
-                {!readOnly && (
-                  <td>
-                    {a.status === 'in_progress' && (
-                      <button
-                        type="button"
-                        className="dashboard__small__btn__2"
-                        onClick={() => navigate(`/dashboard/exam/${a.test_id}/attempt/${a.id}`)}
-                      >
-                        Resume
-                      </button>
-                    )}
-                    {(a.status === 'submitted' || a.status === 'auto_submitted') && (
-                      <Link to={`/dashboard/exam-result/${a.id}`} className="dashboard__small__btn__2">
-                        Result
-                      </Link>
-                    )}
-                  </td>
-                )}
-              </tr>
-            ))}
-            {attempts.length === 0 && (
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card">
+        <div className="org-card-header">
+          <div className="org-search-box">
+            <FiSearch className="org-search-icon" />
+            <input
+              type="text"
+              className="org-search-input"
+              placeholder="Search attempts by test title or status…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+            Total Attempts: {attempts.length}
+          </span>
+        </div>
+
+        <div className="org-table-wrap">
+          <table className="org-table">
+            <thead>
               <tr>
-                <td colSpan={readOnly ? 4 : 5}>No attempts found.</td>
+                <th>TEST</th>
+                <th>STATUS</th>
+                <th>SCORE</th>
+                <th>STARTED</th>
+                {!readOnly && <th style={{ textAlign: 'right' }}>ACTIONS</th>}
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredAttempts.map((a) => (
+                <tr key={a.id}>
+                  <td>
+                    <strong style={{ color: '#0f172a', fontWeight: 600 }}>
+                      {a.test_title ?? a.test_id}
+                    </strong>
+                    {a.proctoring_flagged ? (
+                      <span
+                        className="org-status-badge"
+                        style={{
+                          marginLeft: 8,
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          color: '#dc2626',
+                        }}
+                      >
+                        Flagged
+                      </span>
+                    ) : null}
+                  </td>
+                  <td>
+                    <span
+                      className={`org-status-badge ${
+                        a.status === 'submitted' || a.status === 'auto_submitted'
+                          ? 'org-status-badge--active'
+                          : a.status === 'in_progress'
+                            ? 'org-status-badge--pending'
+                            : 'org-status-badge--inactive'
+                      }`}
+                    >
+                      {a.status.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: '2px 8px',
+                        borderRadius: 6,
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        background:
+                          a.percentage != null && Number(a.percentage) >= 40
+                            ? 'rgba(16, 185, 129, 0.1)'
+                            : '#f1f5f9',
+                        color:
+                          a.percentage != null && Number(a.percentage) >= 40
+                            ? '#059669'
+                            : '#475569',
+                      }}
+                    >
+                      {a.percentage != null ? `${Number(a.percentage).toFixed(1)}%` : '—'}
+                    </span>
+                  </td>
+                  <td style={{ color: '#475569' }}>{formatDateTime(a.started_at)}</td>
+                  {!readOnly && (
+                    <td>
+                      <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        {a.status === 'in_progress' && (
+                          <button
+                            type="button"
+                            className="org-icon-btn--switch"
+                            onClick={() => navigate(`/dashboard/exam/${a.test_id}/attempt/${a.id}`)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                          >
+                            <FiPlay style={{ fontSize: 13 }} /> Resume
+                          </button>
+                        )}
+                        {(a.status === 'submitted' || a.status === 'auto_submitted') && (
+                          <Link
+                            to={`/dashboard/exam-result/${a.id}`}
+                            className="org-icon-btn--edit"
+                            style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                          >
+                            <FiEye style={{ fontSize: 13 }} /> Result
+                          </Link>
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))}
+              {filteredAttempts.length === 0 && (
+                <tr>
+                  <td colSpan={readOnly ? 4 : 5} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                    {attempts.length === 0 ? 'No attempts found.' : 'No attempts match your search filter.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -2125,6 +2492,7 @@ export function AttemptsListPanel({
 
 export function ResultsPanel() {
   const [results, setResults] = useState<ExamResult[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -2139,45 +2507,104 @@ export function ResultsPanel() {
 
   useDashboardLoadingEffect(loading);
 
+  const filteredResults = !searchTerm.trim()
+    ? results
+    : results.filter(
+        (r) =>
+          (r.test_title && r.test_title.toLowerCase().includes(searchTerm.toLowerCase())),
+      );
+
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>My Results</h4>
+    <div className="org-panel-root">
+      <div className="org-top-bar">
+        <div>
+          <h2 className="org-page-title">My Results</h2>
+          <p className="org-page-desc">Review your past test scores, ranks, and percentiles.</p>
+        </div>
       </div>
-      {error && <p className="login__error sp_bottom_15">{error}</p>}
-      <div className="dashboard__table table-responsive">
-        <table>
-          <thead>
-            <tr>
-              <th>Test</th>
-              <th>Score</th>
-              <th>Percentage</th>
-              <th>Rank</th>
-              <th>Percentile</th>
-              <th>Date</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((r) => (
-              <tr key={r.id}>
-                <td>{r.test_title ?? r.test_id}</td>
-                <td>
-                  {r.total_score}/{r.max_score}
-                </td>
-                <td>{Number(r.percentage).toFixed(1)}%</td>
-                <td>{r.rank != null ? `#${r.rank}` : '—'}</td>
-                <td>{r.percentile != null ? `${Number(r.percentile).toFixed(1)}%` : '—'}</td>
-                <td>{formatDateTime(r.created_at)}</td>
-                <td>
-                  <Link to={`/dashboard/exam-result/${r.attempt_id}`} className="dashboard__small__btn__2">
-                    View
-                  </Link>
-                </td>
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card">
+        <div className="org-card-header">
+          <div className="org-search-box">
+            <FiSearch className="org-search-icon" />
+            <input
+              type="text"
+              className="org-search-input"
+              placeholder="Search results by test name…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>
+            Total Results: {results.length}
+          </span>
+        </div>
+
+        <div className="org-table-wrap">
+          <table className="org-table">
+            <thead>
+              <tr>
+                <th>TEST</th>
+                <th>SCORE</th>
+                <th>PERCENTAGE</th>
+                <th>RANK</th>
+                <th>PERCENTILE</th>
+                <th>DATE</th>
+                <th style={{ textAlign: 'right' }}>ACTIONS</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {filteredResults.map((r) => (
+                <tr key={r.id}>
+                  <td>
+                    <strong style={{ color: '#0f172a', fontWeight: 600 }}>{r.test_title ?? r.test_id}</strong>
+                  </td>
+                  <td style={{ color: '#475569' }}>
+                    {r.total_score}/{r.max_score}
+                  </td>
+                  <td>
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        padding: '2px 8px',
+                        borderRadius: 6,
+                        fontSize: '0.8125rem',
+                        fontWeight: 600,
+                        background: Number(r.percentage) >= 40 ? 'rgba(16, 185, 129, 0.1)' : '#f1f5f9',
+                        color: Number(r.percentage) >= 40 ? '#059669' : '#475569',
+                      }}
+                    >
+                      {Number(r.percentage).toFixed(1)}%
+                    </span>
+                  </td>
+                  <td style={{ color: '#475569' }}>{r.rank != null ? `#${r.rank}` : '—'}</td>
+                  <td style={{ color: '#475569' }}>{r.percentile != null ? `${Number(r.percentile).toFixed(1)}%` : '—'}</td>
+                  <td style={{ color: '#475569' }}>{formatDateTime(r.created_at)}</td>
+                  <td>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Link
+                        to={`/dashboard/exam-result/${r.attempt_id}`}
+                        className="org-icon-btn--edit"
+                        style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                      >
+                        <FiEye style={{ fontSize: 13 }} /> View
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredResults.length === 0 && (
+                <tr>
+                  <td colSpan={7} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                    {results.length === 0 ? 'No results found.' : 'No results match your search filter.'}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );
@@ -2469,287 +2896,416 @@ export function CreateTestPanel() {
 
   return (
     <>
-      <DashboardPageHeader
-        badge="Create Test"
-        title="Create Test"
-        subtitle="This is step 2. Fill Details, then Scoring, then Rules. Your typing is kept in this browser until you save."
-      />
-      <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <div className="org-panel-root">
+        <div className="org-top-bar">
           <div>
-            <h4>{formStep === 1 ? 'Exam details' : formStep === 2 ? 'Time and scoring' : 'Rules and security'}</h4>
-            {draftNote ? <p className="text-muted mb-0">{draftNote}</p> : null}
+            <h2 className="org-page-title">Create Test</h2>
+            <p className="org-page-desc">
+              Step 2: Fill Details, then Scoring, then Rules. Your typing is kept in this browser until you save.
+            </p>
           </div>
-          <Link to={getTestsListPath(user?.roles ?? [])} className="edtp-btn edtp-btn--secondary edtp-btn--md">
-            Edit saved tests
+          <Link
+            to={getTestsListPath(user?.roles ?? [])}
+            className="org-btn-outline-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+          >
+            <FiList /> Edit saved tests
           </Link>
         </div>
-        {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-        {message && <p className="form-success sp_bottom_15">{message}</p>}
-        <ExamStepper
-          activeStep={formStep}
-          onStep={(step) => setFormStep(step)}
-          steps={[
-            { step: 1, title: 'Details', desc: 'Subject and title' },
-            { step: 2, title: 'Scoring', desc: 'Time and marks' },
-            { step: 3, title: 'Rules', desc: 'Security settings' },
-          ]}
-        />
-        <form onSubmit={handleSubmit(onSubmit)} noValidate className="edtp-form-card">
-          <div className="row g-3">
-            {formStep === 1 && (
-            <>
-            <div className="col-md-4">
-              <label htmlFor="departmentId">Department</label>
-              <EdtpSelect
-                id="departmentId"
-                hasError={!!errors.departmentId}
-                loading={deptsLoading}
-                {...register('departmentId')}
-              >
-                <option value="">{deptsLoading ? 'Loading departments…' : 'Select department'}</option>
-                {departments.map((d) => (
-                  <option key={d.id} value={d.id}>{d.name}</option>
-                ))}
-              </EdtpSelect>
-              <FieldHint loading={deptsLoading} loadingText="Fetching departments…" />
-              <FormError message={errors.departmentId?.message} />
-            </div>
-            <div className="col-md-4">
-              <label htmlFor="subjectId">Subject</label>
-              <EdtpSelect
-                id="subjectId"
-                hasError={!!errors.subjectId}
-                loading={subjectsLoading}
-                disabled={!departmentId}
-                {...register('subjectId')}
-              >
-                <option value="">{subjectsLoading ? 'Loading subjects…' : 'Select subject'}</option>
-                {subjects.map((s) => (
-                  <option key={s.id} value={s.id}>{s.name}</option>
-                ))}
-              </EdtpSelect>
-              <FieldHint
-                loading={subjectsLoading}
-                empty={Boolean(departmentId && !subjectsLoading && subjects.length === 0)}
-                emptyText="No subjects for this department."
-                loadingText="Fetching subjects…"
-              />
-              <FormError message={errors.subjectId?.message} />
-            </div>
-            <div className="col-md-4">
-              <label htmlFor="topicId">Topic</label>
-              <EdtpSelect
-                id="topicId"
-                hasError={!!errors.topicId}
-                loading={topicsLoading}
-                disabled={!subjectId}
-                {...register('topicId')}
-              >
-                <option value="">{topicsLoading ? 'Loading topics…' : 'Select topic'}</option>
-                {topics.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </EdtpSelect>
-              <FieldHint
-                loading={topicsLoading}
-                empty={Boolean(subjectId && !topicsLoading && topics.length === 0)}
-                emptyText="No topics found for this subject."
-                loadingText="Fetching topics…"
-              />
-              <FormError message={errors.topicId?.message} />
-            </div>
-            <div className="col-12">
-              <label htmlFor="examTitle">Exam Title</label>
-              <input id="examTitle" className={inputClassName('register__input', !!errors.title)} {...register('title')} />
-              <FormError message={errors.title?.message} />
-            </div>
-            <div className="col-12">
-              <label htmlFor="aboutExam">Description (optional)</label>
-              <textarea id="aboutExam" rows={2} className={inputClassName('register__input', !!errors.description)} {...register('description')} />
-            </div>
-            </>
-            )}
-            {formStep === 2 && (
-            <>
-            <div className="col-md-6">
-              <label htmlFor="duration">Duration (minutes)</label>
-              <input
-                id="duration"
-                type="number"
-                min={1}
-                step={1}
-                className={inputClassName('register__input edtp-number-input', !!errors.duration)}
-                {...register('duration', {
-                  onBlur: (e) => {
-                    setValue('duration', normalizePositiveIntInput(e.target.value, 60), {
-                      shouldValidate: true,
-                    });
-                  },
-                })}
-              />
-              <FormError message={errors.duration?.message} />
-            </div>
-            <div className="col-md-6">
-              <label htmlFor="passingMarks">Passing marks</label>
-              <input
-                id="passingMarks"
-                type="number"
-                min={0}
-                step={1}
-                className={inputClassName('register__input edtp-number-input', !!errors.passingMarks)}
-                {...register('passingMarks')}
-              />
-              <FormError message={errors.passingMarks?.message} />
-            </div>
-            <div className="col-md-6">
-              <label htmlFor="examType">Exam Type</label>
-              <select id="examType" className="register__input" {...register('examType', {
-                onChange: (e) => {
-                  const type = e.target.value as 'official' | 'practice';
-                  if (type === 'official') {
-                    setValue('maxAttempts', '1');
-                    setValue('certificationEnabled', true);
-                  } else {
-                    setValue('certificationEnabled', false);
-                  }
-                },
-              })}>
-                <option value="official">Official Exam</option>
-                <option value="practice">Practice Exam</option>
-              </select>
-            </div>
-            <div className="col-md-6">
-              <label className="d-flex align-items-center gap-2">
-                <input type="checkbox" disabled={examType === 'practice'} {...register('certificationEnabled')} />
-                Enable Certificate Generation
-              </label>
-              <small className="text-muted">
-                {examType === 'practice'
-                  ? 'Certificates are disabled for practice exams.'
-                  : 'Certificates can be issued for eligible students when enabled.'}
-              </small>
-            </div>
-            <div className="col-12">
-              <label htmlFor="instructions">Exam instructions</label>
-              <textarea
-                id="instructions"
-                rows={3}
-                className={inputClassName('register__input', !!errors.instructions)}
-                {...register('instructions')}
-              />
-              <FormError message={errors.instructions?.message} />
-            </div>
-            </>
-            )}
-            {formStep === 3 && (
-            <div className="col-12">
-              <h5 className="mb-2">Exam rules</h5>
-              <div className="row g-2">
-                <div className="col-md-4">
-                  <label className="d-flex align-items-center gap-2">
-                    <input type="checkbox" {...register('shuffleQuestions')} /> Shuffle questions
-                  </label>
-                </div>
-                <div className="col-md-4">
-                  <label className="d-flex align-items-center gap-2">
-                    <input type="checkbox" {...register('shuffleOptions')} /> Shuffle options
-                  </label>
-                </div>
-                <div className="col-md-4">
-                  <label className="d-flex align-items-center gap-2">
-                    <input type="checkbox" {...register('negativeMarking')} /> Negative marking
-                  </label>
-                </div>
-                <div className="col-md-4">
-                  <label className="d-flex align-items-center gap-2">
-                    <input type="checkbox" {...register('fullScreen')} /> Fullscreen required
-                  </label>
-                </div>
-                <div className="col-md-4">
-                  <label className="d-flex align-items-center gap-2">
-                    <input type="checkbox" {...register('allowResume')} /> Allow resume
-                  </label>
-                </div>
-                <div className="col-md-4">
-                  <label className="d-flex align-items-center gap-2">
-                    <input type="checkbox" {...register('releaseAnswers')} /> Release answer key
-                  </label>
-                </div>
-                <div className="col-md-4">
-                  <label htmlFor="maxTabSwitches">Max tab switches</label>
-                  <input
-                    id="maxTabSwitches"
-                    type="number"
-                    min={0}
-                    className={inputClassName('register__input edtp-number-input', !!errors.maxTabSwitches)}
-                    {...register('maxTabSwitches')}
-                  />
-                  <FormError message={errors.maxTabSwitches?.message} />
-                </div>
-                <div className="col-md-4">
-                  <label htmlFor="maxAttempts">Max attempts</label>
-                  {examType === 'official' ? (
-                    <>
-                      <input id="maxAttempts" type="number" className="register__input edtp-number-input" value={1} disabled />
-                      <small className="text-muted">Official exams allow one attempt only.</small>
-                    </>
-                  ) : (
-                    <select id="maxAttempts" className="register__input" {...register('maxAttempts')}>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
-                        <option key={count} value={String(count)}>{count} {count === 1 ? 'Attempt' : 'Attempts'}</option>
+
+        {apiError && <div className="org-error-banner" style={{ marginBottom: 16 }}>{apiError}</div>}
+        {message && (
+          <div
+            style={{
+              padding: '12px 16px',
+              background: 'rgba(16, 185, 129, 0.1)',
+              border: '1px solid rgba(16, 185, 129, 0.25)',
+              borderRadius: 10,
+              color: '#059669',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              marginBottom: 16,
+            }}
+          >
+            {message}
+          </div>
+        )}
+
+        <div style={{ maxWidth: 860, margin: '0 auto', width: '100%' }}>
+          <ExamStepper
+            activeStep={formStep}
+            onStep={(step) => setFormStep(step)}
+            steps={[
+              { step: 1, title: 'Details', desc: 'Subject and title' },
+              { step: 2, title: 'Scoring', desc: 'Time and marks' },
+              { step: 3, title: 'Rules', desc: 'Security settings' },
+            ]}
+          />
+
+          <div className="org-table-card" style={{ padding: '24px 28px', marginTop: 16 }}>
+          <div style={{ marginBottom: 20, paddingBottom: 14, borderBottom: '1px solid #f1f5f9' }}>
+            <h4 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#0f172a', margin: 0 }}>
+              {formStep === 1 ? '1. Exam details' : formStep === 2 ? '2. Time and scoring' : '3. Rules and security'}
+            </h4>
+            {draftNote ? <p style={{ fontSize: '0.85rem', color: '#64748b', margin: '4px 0 0' }}>{draftNote}</p> : null}
+          </div>
+
+          <form onSubmit={handleSubmit(onSubmit)} noValidate>
+            <div className="row g-3">
+              {formStep === 1 && (
+                <>
+                  <div className="col-md-4">
+                    <label className="org-form-label" htmlFor="departmentId">Department</label>
+                    <EdtpSelect
+                      id="departmentId"
+                      className="org-form-select"
+                      hasError={!!errors.departmentId}
+                      loading={deptsLoading}
+                      {...register('departmentId')}
+                    >
+                      <option value="">{deptsLoading ? 'Loading departments…' : 'Select department'}</option>
+                      {departments.map((d) => (
+                        <option key={d.id} value={d.id}>{d.name}</option>
                       ))}
+                    </EdtpSelect>
+                    <FieldHint loading={deptsLoading} loadingText="Fetching departments…" />
+                    <FormError message={errors.departmentId?.message} />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="org-form-label" htmlFor="subjectId">Subject</label>
+                    <EdtpSelect
+                      id="subjectId"
+                      className="org-form-select"
+                      hasError={!!errors.subjectId}
+                      loading={subjectsLoading}
+                      disabled={!departmentId}
+                      {...register('subjectId')}
+                    >
+                      <option value="">{subjectsLoading ? 'Loading subjects…' : 'Select subject'}</option>
+                      {subjects.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}</option>
+                      ))}
+                    </EdtpSelect>
+                    <FieldHint
+                      loading={subjectsLoading}
+                      empty={Boolean(departmentId && !subjectsLoading && subjects.length === 0)}
+                      emptyText="No subjects for this department."
+                      loadingText="Fetching subjects…"
+                    />
+                    <FormError message={errors.subjectId?.message} />
+                  </div>
+                  <div className="col-md-4">
+                    <label className="org-form-label" htmlFor="topicId">Topic</label>
+                    <EdtpSelect
+                      id="topicId"
+                      className="org-form-select"
+                      hasError={!!errors.topicId}
+                      loading={topicsLoading}
+                      disabled={!subjectId}
+                      {...register('topicId')}
+                    >
+                      <option value="">{topicsLoading ? 'Loading topics…' : 'Select topic'}</option>
+                      {topics.map((t) => (
+                        <option key={t.id} value={t.id}>{t.name}</option>
+                      ))}
+                    </EdtpSelect>
+                    <FieldHint
+                      loading={topicsLoading}
+                      empty={Boolean(subjectId && !topicsLoading && topics.length === 0)}
+                      emptyText="No topics found for this subject."
+                      loadingText="Fetching topics…"
+                    />
+                    <FormError message={errors.topicId?.message} />
+                  </div>
+                  <div className="col-12">
+                    <label className="org-form-label" htmlFor="examTitle">Exam Title</label>
+                    <input
+                      id="examTitle"
+                      className={inputClassName('org-form-input', !!errors.title)}
+                      placeholder="e.g. Midterm Examination 2026"
+                      {...register('title')}
+                    />
+                    <FormError message={errors.title?.message} />
+                  </div>
+                  <div className="col-12">
+                    <label className="org-form-label" htmlFor="aboutExam">Description (optional)</label>
+                    <textarea
+                      id="aboutExam"
+                      rows={3}
+                      className={inputClassName('org-form-input', !!errors.description)}
+                      placeholder="Write brief description or instructions about this examination..."
+                      {...register('description')}
+                    />
+                  </div>
+                </>
+              )}
+              {formStep === 2 && (
+                <>
+                  <div className="col-md-6">
+                    <label className="org-form-label" htmlFor="duration">Duration (minutes)</label>
+                    <input
+                      id="duration"
+                      type="number"
+                      min={1}
+                      step={1}
+                      className={inputClassName('org-form-input', !!errors.duration)}
+                      {...register('duration', {
+                        onBlur: (e) => {
+                          setValue('duration', normalizePositiveIntInput(e.target.value, 60), {
+                            shouldValidate: true,
+                          });
+                        },
+                      })}
+                    />
+                    <FormError message={errors.duration?.message} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="org-form-label" htmlFor="passingMarks">Passing marks</label>
+                    <input
+                      id="passingMarks"
+                      type="number"
+                      min={0}
+                      step={1}
+                      className={inputClassName('org-form-input', !!errors.passingMarks)}
+                      {...register('passingMarks')}
+                    />
+                    <FormError message={errors.passingMarks?.message} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="org-form-label" htmlFor="examType">Exam Type</label>
+                    <select
+                      id="examType"
+                      className="org-form-select"
+                      {...register('examType', {
+                        onChange: (e) => {
+                          const type = e.target.value as 'official' | 'practice';
+                          if (type === 'official') {
+                            setValue('maxAttempts', '1');
+                            setValue('certificationEnabled', true);
+                          } else {
+                            setValue('certificationEnabled', false);
+                          }
+                        },
+                      })}
+                    >
+                      <option value="official">Official Exam</option>
+                      <option value="practice">Practice Exam</option>
                     </select>
-                  )}
-                  <FormError message={errors.maxAttempts?.message} />
+                  </div>
+                  <div className="col-md-6">
+                    <label className="org-form-label">Certificate Generation</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 44 }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          disabled={examType === 'practice'}
+                          {...register('certificationEnabled')}
+                          style={{ accentColor: '#2563eb', width: 16, height: 16 }}
+                        />
+                        Enable Certificate Generation
+                      </label>
+                    </div>
+                    <small style={{ color: '#64748b', fontSize: '0.8rem' }}>
+                      {examType === 'practice'
+                        ? 'Certificates are disabled for practice exams.'
+                        : 'Certificates can be issued for eligible students when enabled.'}
+                    </small>
+                  </div>
+                  <div className="col-12">
+                    <label className="org-form-label" htmlFor="instructions">Exam instructions</label>
+                    <textarea
+                      id="instructions"
+                      rows={3}
+                      className={inputClassName('org-form-input', !!errors.instructions)}
+                      placeholder="Instructions displayed to candidates before they start..."
+                      {...register('instructions')}
+                    />
+                    <FormError message={errors.instructions?.message} />
+                  </div>
+                </>
+              )}
+              {formStep === 3 && (
+                <div className="col-12">
+                  <h5 style={{ fontSize: '0.95rem', fontWeight: 600, color: '#1e293b', marginBottom: 14 }}>Security &amp; Proctoring Rules</h5>
+                  <div className="row g-2">
+                    <div className="col-md-4">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
+                        <input type="checkbox" {...register('shuffleQuestions')} style={{ accentColor: '#2563eb' }} /> Shuffle questions
+                      </label>
+                    </div>
+                    <div className="col-md-4">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
+                        <input type="checkbox" {...register('shuffleOptions')} style={{ accentColor: '#2563eb' }} /> Shuffle options
+                      </label>
+                    </div>
+                    <div className="col-md-4">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
+                        <input type="checkbox" {...register('negativeMarking')} style={{ accentColor: '#2563eb' }} /> Negative marking
+                      </label>
+                    </div>
+                    <div className="col-md-4">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
+                        <input type="checkbox" {...register('fullScreen')} style={{ accentColor: '#2563eb' }} /> Fullscreen required
+                      </label>
+                    </div>
+                    <div className="col-md-4">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
+                        <input type="checkbox" {...register('allowResume')} style={{ accentColor: '#2563eb' }} /> Allow resume
+                      </label>
+                    </div>
+                    <div className="col-md-4">
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', background: '#f8fafc', borderRadius: 8, border: '1px solid #e2e8f0', cursor: 'pointer', fontSize: '0.85rem', color: '#334155' }}>
+                        <input type="checkbox" {...register('releaseAnswers')} style={{ accentColor: '#2563eb' }} /> Release answer key
+                      </label>
+                    </div>
+
+                    <div className="col-md-4" style={{ marginTop: 12 }}>
+                      <label className="org-form-label" htmlFor="maxTabSwitches">Max tab switches</label>
+                      <input
+                        id="maxTabSwitches"
+                        type="number"
+                        min={0}
+                        className={inputClassName('org-form-input', !!errors.maxTabSwitches)}
+                        {...register('maxTabSwitches')}
+                      />
+                      <FormError message={errors.maxTabSwitches?.message} />
+                    </div>
+                    <div className="col-md-4" style={{ marginTop: 12 }}>
+                      <label className="org-form-label" htmlFor="maxAttempts">Max attempts</label>
+                      {examType === 'official' ? (
+                        <>
+                          <input id="maxAttempts" type="number" className="org-form-input" value={1} disabled />
+                          <small style={{ color: '#64748b', fontSize: '0.75rem' }}>Official exams allow 1 attempt only.</small>
+                        </>
+                      ) : (
+                        <select id="maxAttempts" className="org-form-select" {...register('maxAttempts')}>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((count) => (
+                            <option key={count} value={String(count)}>{count} {count === 1 ? 'Attempt' : 'Attempts'}</option>
+                          ))}
+                        </select>
+                      )}
+                      <FormError message={errors.maxAttempts?.message} />
+                    </div>
+                    <div className="col-md-4" style={{ marginTop: 12 }}>
+                      <label className="org-form-label" htmlFor="scoringPolicy">Scoring policy</label>
+                      <select id="scoringPolicy" className="org-form-select" {...register('scoringPolicy')}>
+                        <option value="latest">Latest attempt</option>
+                        <option value="highest">Highest score</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6" style={{ marginTop: 8 }}>
+                      <label className="org-form-label" htmlFor="maxFullscreenExits">Flag: fullscreen exits</label>
+                      <input
+                        id="maxFullscreenExits"
+                        type="number"
+                        min={0}
+                        className={inputClassName('org-form-input', !!errors.maxFullscreenExits)}
+                        {...register('maxFullscreenExits')}
+                      />
+                    </div>
+                    <div className="col-md-6" style={{ marginTop: 8 }}>
+                      <label className="org-form-label" htmlFor="maxCopyPasteAttempts">Flag: copy/paste</label>
+                      <input
+                        id="maxCopyPasteAttempts"
+                        type="number"
+                        min={0}
+                        className={inputClassName('org-form-input', !!errors.maxCopyPasteAttempts)}
+                        {...register('maxCopyPasteAttempts')}
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="col-md-4">
-                  <label htmlFor="scoringPolicy">Scoring policy</label>
-                  <select id="scoringPolicy" className="register__input" {...register('scoringPolicy')}>
-                    <option value="latest">Latest attempt</option>
-                    <option value="highest">Highest score</option>
-                  </select>
-                </div>
-                <div className="col-md-4">
-                  <label htmlFor="maxFullscreenExits">Flag: fullscreen exits</label>
-                  <input
-                    id="maxFullscreenExits"
-                    type="number"
-                    min={0}
-                    className={inputClassName('register__input edtp-number-input', !!errors.maxFullscreenExits)}
-                    {...register('maxFullscreenExits')}
-                  />
-                </div>
-                <div className="col-md-4">
-                  <label htmlFor="maxCopyPasteAttempts">Flag: copy/paste</label>
-                  <input
-                    id="maxCopyPasteAttempts"
-                    type="number"
-                    min={0}
-                    className={inputClassName('register__input edtp-number-input', !!errors.maxCopyPasteAttempts)}
-                    {...register('maxCopyPasteAttempts')}
-                  />
-                </div>
+              )}
+
+              {/* Centered navigation buttons with identical dimensions */}
+              <div
+                className="col-12"
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: 16,
+                  marginTop: 28,
+                  paddingTop: 20,
+                  borderTop: '1px solid #f1f5f9',
+                }}
+              >
+                {formStep > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setFormStep((step) => step - 1)}
+                    style={{
+                      width: 170,
+                      height: 44,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 10,
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      background: '#f8fafc',
+                      color: '#334155',
+                      border: '1.5px solid #cbd5e1',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxSizing: 'border-box',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#f1f5f9';
+                      e.currentTarget.style.borderColor = '#94a3b8';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#f8fafc';
+                      e.currentTarget.style.borderColor = '#cbd5e1';
+                    }}
+                  >
+                    Back
+                  </button>
+                )}
+                {formStep < 3 ? (
+                  <button
+                    type="button"
+                    className="org-add-btn"
+                    onClick={() => void goNext()}
+                    style={{
+                      width: 170,
+                      height: 44,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 10,
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    Next <FiArrowRight style={{ marginLeft: 6 }} />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="org-add-btn"
+                    style={{
+                      width: 190,
+                      height: 44,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: 10,
+                      fontSize: '0.9rem',
+                      fontWeight: 700,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <FiCheckCircle style={{ marginRight: 6 }} /> Save &amp; Build Test
+                  </button>
+                )}
               </div>
             </div>
-            )}
-            <div className="col-12 d-flex flex-wrap justify-content-between gap-2">
-              {formStep > 1 ? (
-                <button type="button" className="edtp-btn edtp-btn--secondary edtp-btn--md" onClick={() => setFormStep((step) => step - 1)}>
-                  Back
-                </button>
-              ) : <span />}
-              {formStep < 3 ? (
-                <button type="button" className="default__button auth-submit-btn" onClick={() => void goNext()}>
-                  Next
-                </button>
-              ) : (
-                <button type="submit" className="default__button auth-submit-btn">Save &amp; Build Test</button>
-              )}
-            </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
+    </div>
     </>
   );
 }

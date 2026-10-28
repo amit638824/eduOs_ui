@@ -69,6 +69,59 @@
   transform: translateY(0);
 }
 
+.org-btn-outline-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1.5px solid #225ce5;
+  background: #ffffff;
+  color: #225ce5;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none !important;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.org-btn-outline-primary:hover {
+  background: #eff6ff;
+  border-color: #1d4ed8;
+  color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.org-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--db-border, #cbd5e1);
+  background: #ffffff;
+  color: var(--db-text, #334155);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none !important;
+  white-space: nowrap;
+  box-sizing: border-box;
+}
+
+.org-btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
 /* ── Stat Header Cards (Matching Image 2 Reference) ── */
 .org-stats-row {
   display: grid;
@@ -796,6 +849,10 @@
   box-shadow: 0 0 0 3px rgba(34, 92, 229, 0.15);
 }
 
+textarea.org-form-input {
+  resize: none !important;
+}
+
 .org-form-hint {
   font-size: 0.725rem;
   color: var(--db-muted, #64748b);
@@ -806,6 +863,19 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.org-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .org-grid-2,
+  .org-grid-3 {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Drawer Toggle Card */
