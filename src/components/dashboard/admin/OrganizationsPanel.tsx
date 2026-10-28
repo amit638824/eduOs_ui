@@ -455,34 +455,37 @@ export function OrganizationsPanel() {
                         {/* 1. Switch to Account Icon (Blue) */}
                         <button
                           type="button"
-                          className="org-icon-btn org-icon-btn--switch"
+                          className="org-action-btn org-action-btn--switch"
                           title={`Switch to ${org.name}`}
                           aria-label={`Switch to ${org.name}`}
                           onClick={() => manageData(org)}
                         >
                           <FiLogIn />
+                          <span>Switch</span>
                         </button>
 
                         {/* 2. Edit Organization Icon (Green) */}
                         <button
                           type="button"
-                          className="org-icon-btn org-icon-btn--edit"
+                          className="org-action-btn org-action-btn--edit"
                           title="Edit organization"
                           aria-label="Edit organization"
                           onClick={() => openEditDrawer(org)}
                         >
                           <FiEdit3 />
+                          <span>Edit</span>
                         </button>
 
                         {/* 3. Delete Organization Icon (Red) */}
                         <button
                           type="button"
-                          className="org-icon-btn org-icon-btn--delete"
+                          className="org-action-btn org-action-btn--danger"
                           title="Delete organization"
                           aria-label="Delete organization"
                           onClick={() => void remove(org)}
                         >
                           <FiTrash2 />
+                          <span>Delete</span>
                         </button>
                       </div>
                     </td>

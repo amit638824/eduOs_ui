@@ -550,6 +550,8 @@ export interface AssignableStudent {
   first_name: string;
   last_name: string;
   status: string;
+  department_id?: string;
+  branch_id?: string;
 }
 
 export interface TestAssignment {

@@ -19,6 +19,13 @@ import {
   FiAlertTriangle,
   FiCopy,
   FiCheck,
+  FiDownload,
+  FiEye,
+  FiBell,
+  FiInfo,
+  FiArrowLeft,
+  FiArrowUp,
+  FiArrowDown,
 } from 'react-icons/fi';
 import { HiOfficeBuilding } from 'react-icons/hi';
 import '@/styles/organizations.css';
@@ -31,16 +38,7 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { ExamStepper } from '@/components/dashboard/AdminExamGuide';
-import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { getTestsListPath, isSuperAdmin } from '@/utils/dashboardRole';
-import { SearchField } from '@/components/ui/FieldHint';
-import {
-  EdtpAlert,
-  EdtpBtn,
-  EdtpEmpty,
-  EdtpField,
-  EdtpSelect,
-} from '@/components/ui/CrudUI';
 import { confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
@@ -63,6 +61,8 @@ export function NotificationsPanel() {
   const [error, setError] = useState('');
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const withLoader = useDashboardLoader();
 
   const load = async () => {
@@ -101,58 +101,214 @@ export function NotificationsPanel() {
     });
   };
 
+  const filteredItems = useMemo(() => {
+    return items.filter((n) => {
+      if (filter === 'unread' && n.is_read) return false;
+      if (filter === 'read' && !n.is_read) return false;
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const matchesTitle = n.title?.toLowerCase().includes(q);
+        const matchesBody = n.body?.toLowerCase().includes(q);
+        const matchesChannel = n.channel?.toLowerCase().includes(q);
+        if (!matchesTitle && !matchesBody && !matchesChannel) return false;
+      }
+      return true;
+    });
+  }, [items, searchTerm, filter]);
+
   return (
-    <>
-      <DashboardPageHeader
-        badge="Inbox"
-        title="Notifications"
-        subtitle="Updates for your account, assigned tests, exam submissions and results."
-      />
-      <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title d-flex justify-content-between align-items-center">
-          <h4>All notifications {unread > 0 && <span className="badge bg-primary ms-2">{unread}</span>}</h4>
-          {unread > 0 && (
-            <button type="button" className="default__button small-btn" onClick={markAll}>
-              Mark all read
-            </button>
-          )}
+    <div className="org-panel-page">
+      <div className="org-page-header">
+        <div className="org-page-header-left">
+          <h2 className="org-page-title">Notifications</h2>
+          <p className="org-page-desc">
+            Updates for your account, assigned tests, exam submissions and results.
+          </p>
         </div>
-        {error && <p className="login__error sp_bottom_15">{error}</p>}
-        <div className="dashboard__table table-responsive">
-          <table>
+
+        {unread > 0 && (
+          <button
+            type="button"
+            className="org-add-btn"
+            onClick={markAll}
+            id="btnMarkAllRead"
+          >
+            <FiCheckCircle />
+            <span>Mark all as read ({unread})</span>
+          </button>
+        )}
+      </div>
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card">
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">All Notifications</h3>
+              <span className="org-count-badge">
+                {filteredItems.length} {filteredItems.length === 1 ? 'Alert' : 'Alerts'}
+              </span>
+              {unread > 0 && (
+                <span
+                  className="org-count-badge"
+                  style={{ background: '#fef2f2', color: '#dc2626', borderColor: '#fecaca' }}
+                >
+                  {unread} Unread
+                </span>
+              )}
+            </div>
+            <p className="org-card-subtitle">
+              System alerts, examination events, and activity updates
+            </p>
+          </div>
+
+          <div className="org-controls-row">
+            {/* Filter pills: All, Unread, Read */}
+            <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: 3, borderRadius: 8, gap: 2 }}>
+              {(['all', 'unread', 'read'] as const).map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setFilter(mode)}
+                  style={{
+                    border: 'none',
+                    background: filter === mode ? '#ffffff' : 'transparent',
+                    color: filter === mode ? '#225ce5' : '#64748b',
+                    fontWeight: filter === mode ? 700 : 500,
+                    fontSize: '0.75rem',
+                    padding: '4px 10px',
+                    borderRadius: 6,
+                    cursor: 'pointer',
+                    boxShadow: filter === mode ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                    textTransform: 'capitalize',
+                  }}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search notifications…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="org-table-wrapper">
+          <table className="org-table">
             <thead>
               <tr>
-                <th>Title</th>
-                <th>Channel</th>
-                <th>Date</th>
-                <th>Status</th>
-                <th />
+                <th style={{ width: '48%' }}>TITLE &amp; MESSAGE</th>
+                <th style={{ width: '15%' }}>CHANNEL</th>
+                <th style={{ width: '18%' }}>DATE</th>
+                <th style={{ width: '10%' }}>STATUS</th>
+                <th style={{ textAlign: 'right', width: '9%' }}>ACTION</th>
               </tr>
             </thead>
             <tbody>
-              {items.map((n) => (
-                <tr key={n.id} className={n.is_read ? '' : 'fw-semibold'}>
-                  <td>{n.title}<br /><small>{n.body}</small></td>
-                  <td>{n.channel}</td>
-                  <td>{formatDateTime(n.created_at)}</td>
-                  <td>{n.is_read ? 'Read' : 'Unread'}</td>
+              {filteredItems.map((n) => (
+                <tr key={n.id} style={{ background: n.is_read ? 'transparent' : 'rgba(34, 92, 229, 0.025)' }}>
                   <td>
-                    {!n.is_read && (
-                      <button type="button" className="default__button small-btn" onClick={() => markRead(n.id)}>
-                        Mark read
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <span
+                        style={{
+                          fontWeight: n.is_read ? 600 : 700,
+                          color: n.is_read ? '#1e293b' : '#0f172a',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        {n.title}
+                      </span>
+                      {n.body && (
+                        <span style={{ fontSize: '0.775rem', color: '#64748b', lineHeight: 1.4 }}>
+                          {n.body}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td>
+                    <span
+                      style={{
+                        padding: '3px 8px',
+                        borderRadius: 6,
+                        background: '#f1f5f9',
+                        color: '#475569',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.03em',
+                      }}
+                    >
+                      {n.channel || 'IN-APP'}
+                    </span>
+                  </td>
+                  <td style={{ color: '#64748b', fontSize: '0.8rem', whiteSpace: 'nowrap' }}>
+                    {formatDateTime(n.created_at)}
+                  </td>
+                  <td>
+                    {n.is_read ? (
+                      <span className="org-status-badge org-status-badge--active" style={{ fontSize: '0.72rem' }}>
+                        Read
+                      </span>
+                    ) : (
+                      <span className="org-status-badge org-status-badge--inactive" style={{ fontSize: '0.72rem' }}>
+                        Unread
+                      </span>
+                    )}
+                  </td>
+                  <td style={{ textAlign: 'right' }}>
+                    {!n.is_read ? (
+                      <button
+                        type="button"
+                        className="org-action-btn org-action-btn--switch"
+                        onClick={() => markRead(n.id)}
+                        title="Mark as read"
+                      >
+                        <FiCheck />
+                        <span>Mark read</span>
                       </button>
+                    ) : (
+                      <span style={{ color: '#94a3b8', fontSize: '0.78rem' }}>—</span>
                     )}
                   </td>
                 </tr>
               ))}
-              {items.length === 0 && (
-                <tr><td colSpan={5}>No notifications yet.</td></tr>
+              {filteredItems.length === 0 && (
+                <tr>
+                  <td colSpan={5}>
+                    <div className="org-empty-state">
+                      <FiBell className="org-empty-icon" />
+                      <p className="org-empty-title">No notifications found</p>
+                      <p className="org-empty-desc">
+                        {searchTerm ? 'No notifications match your search query.' : 'You are all caught up! When updates arrive, they will appear here.'}
+                      </p>
+                    </div>
+                  </td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -999,22 +1155,24 @@ export function UsersManagementPanel({
                         >
                           <button
                             type="button"
-                            className="org-icon-btn org-icon-btn--edit"
+                            className="org-action-btn org-action-btn--edit"
                             title={`Edit ${u.first_name}`}
                             aria-label={`Edit ${u.first_name}`}
                             onClick={() => startEdit(u)}
                           >
                             <FiEdit3 />
+                            <span>Edit</span>
                           </button>
                           {canDeleteUsers && (
                             <button
                               type="button"
-                              className="org-icon-btn org-icon-btn--delete"
+                              className="org-action-btn org-action-btn--danger"
                               title={`Delete ${u.first_name}`}
                               aria-label={`Delete ${u.first_name}`}
                               onClick={() => void removeUser(u.id, `${u.first_name} ${u.last_name}`)}
                             >
                               <FiTrash2 />
+                              <span>Delete</span>
                             </button>
                           )}
                         </div>
@@ -1349,44 +1507,71 @@ export function ReportsPanel() {
 
   return (
     <>
-      <DashboardPageHeader
-        badge="Insights"
-        title="Reports & Analytics"
-        subtitle="Organization overview, score distribution, per-test ranks, CSV/PDF export, and certificates."
-      />
-      <div className="dashboard__content__wraper">
-        {error && <EdtpAlert type="error">{error}</EdtpAlert>}
+      <div className="org-page-header">
+        <div className="org-page-header-left">
+          <h2 className="org-page-title">Reports &amp; Analytics</h2>
+          <p className="org-page-desc" style={{ margin: 0, whiteSpace: 'nowrap' }}>
+            Organization overview, score distribution, per-test ranks, CSV/PDF export, and certificates.
+          </p>
+        </div>
+      </div>
 
-        <div className="sca-report-overview">
+      <div className="org-panel-page" style={{ padding: 0 }}>
+        {error && <div className="org-error-banner" style={{ marginBottom: 16 }}>{error}</div>}
+
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(135px, 1fr))',
+            gap: 12,
+            marginBottom: 20,
+          }}
+        >
           {overviewCards.map((card) => (
-            <div key={card.key} className="sca-report-stat">
-              <span className="sca-report-stat__label">{card.label}</span>
-              <strong className="sca-report-stat__value">
+            <div
+              key={card.key}
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: 12,
+                padding: '16px 18px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                boxShadow: '0 1px 3px rgba(15, 23, 42, 0.04)',
+              }}
+            >
+              <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                {card.label}
+              </span>
+              <strong style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2563eb', margin: '2px 0' }}>
                 {card.prefix ?? ''}
                 {overview ? String(overview[card.key] ?? '0') : '—'}
                 {card.suffix ?? ''}
               </strong>
-              <span className="sca-report-stat__hint">{card.hint}</span>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{card.hint}</span>
             </div>
           ))}
         </div>
 
         {dist && (
-          <section className="edtp-form-card sca-report-panel sp_bottom_20">
-            <h5 className="mb-2">{distTitle}</h5>
+          <div className="org-table-card" style={{ padding: '24px 28px', marginBottom: 20 }}>
+            <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>
+              {distTitle}
+            </h4>
             {selected && testAnalytics && (
-              <p className="text-muted sp_bottom_15" style={{ fontSize: '0.8125rem' }}>
+              <p style={{ fontSize: '0.825rem', color: '#64748b', margin: '0 0 16px' }}>
                 Attempts {testAnalytics.total_attempts ?? 0} · Completed {testAnalytics.completed ?? 0} · Avg{' '}
                 {Number(testAnalytics.avg_percentage ?? 0).toFixed(1)}% · Pass rate{' '}
                 {Number(testAnalytics.pass_rate ?? 0).toFixed(1)}%
               </p>
             )}
-            <div className="sca-score-bars">
+            <div className="sca-score-bars" style={{ marginTop: 16 }}>
               {[
-                { label: '< 40%', value: Number(dist.below_40 ?? 0) },
-                { label: '40–60%', value: Number(dist.from_40_60 ?? 0) },
-                { label: '60–80%', value: Number(dist.from_60_80 ?? 0) },
-                { label: '80%+', value: Number(dist.above_80 ?? 0) },
+                { label: '< 40%', value: Number(dist.below_40 ?? 0), gradient: 'linear-gradient(90deg, #ef4444 0%, #f97316 100%)' },
+                { label: '40–60%', value: Number(dist.from_40_60 ?? 0), gradient: 'linear-gradient(90deg, #f59e0b 0%, #eab308 100%)' },
+                { label: '60–80%', value: Number(dist.from_60_80 ?? 0), gradient: 'linear-gradient(90deg, #3b82f6 0%, #2563eb 100%)' },
+                { label: '80%+', value: Number(dist.above_80 ?? 0), gradient: 'linear-gradient(90deg, #10b981 0%, #059669 100%)' },
               ].map((b) => {
                 const total =
                   Number(dist.below_40 ?? 0) +
@@ -1398,7 +1583,7 @@ export function ReportsPanel() {
                   <div key={b.label} className="sca-score-bars__row">
                     <span className="sca-score-bars__label">{b.label}</span>
                     <div className="sca-score-bars__track">
-                      <div className="sca-score-bars__fill" style={{ width: `${pct}%` }} />
+                      <div className="sca-score-bars__fill" style={{ width: `${pct}%`, background: b.gradient }} />
                     </div>
                     <span className="sca-score-bars__value">
                       {b.value} ({pct}%)
@@ -1407,7 +1592,7 @@ export function ReportsPanel() {
                 );
               })}
             </div>
-          </section>
+          </div>
         )}
 
         {selected && questionAnalytics ? (
@@ -1549,47 +1734,71 @@ export function ReportsPanel() {
           </section>
         ) : null}
 
-        <section className="edtp-form-card sca-report-panel">
-          <div className="sca-report-panel__head">
+        <div className="org-table-card" style={{ padding: '24px 28px', marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12, marginBottom: 16 }}>
             <div>
-              <h5 className="mb-1">Test report</h5>
-              <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
+              <h4 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0f172a', margin: '0 0 4px' }}>
+                Test report
+              </h4>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
                 Choose a test to view ranks, export CSV/PDF, and issue certificates for passers.
               </p>
             </div>
             {selected && (
-              <div className="d-flex flex-wrap gap-2">
-                <EdtpBtn variant="ghost" onClick={() => void recomputeRanks()}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <button
+                  type="button"
+                  className="org-action-btn org-action-btn--secondary"
+                  onClick={() => void recomputeRanks()}
+                >
                   Recompute ranks
-                </EdtpBtn>
-                <EdtpBtn variant="secondary" onClick={() => void exportReport('csv')} disabled={results.length === 0}>
-                  Export CSV
-                </EdtpBtn>
-                <EdtpBtn variant="primary" onClick={() => void exportReport('pdf')} disabled={results.length === 0}>
-                  Export PDF
-                </EdtpBtn>
+                </button>
+                <button
+                  type="button"
+                  className="org-action-btn org-action-btn--switch"
+                  onClick={() => void exportReport('csv')}
+                  disabled={results.length === 0}
+                >
+                  <FiDownload style={{ fontSize: 13 }} /> Export CSV
+                </button>
+                <button
+                  type="button"
+                  className="org-action-btn org-action-btn--primary"
+                  onClick={() => void exportReport('pdf')}
+                  disabled={results.length === 0}
+                >
+                  <FiDownload style={{ fontSize: 13 }} /> Export PDF
+                </button>
               </div>
             )}
           </div>
 
-          <EdtpField label="Select test">
-            <EdtpSelect value={selected} onChange={(e) => void loadReport(e.target.value)}>
+          <div style={{ marginBottom: 16 }}>
+            <label className="org-form-label">Select test</label>
+            <select
+              className="org-form-select"
+              value={selected}
+              onChange={(e) => void loadReport(e.target.value)}
+              style={{ width: '100%', maxWidth: 480, height: 42 }}
+            >
               <option value="">Select test for detailed report</option>
               {tests.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.title}{t.status ? ` (${t.status})` : ''}
                 </option>
               ))}
-            </EdtpSelect>
-          </EdtpField>
+            </select>
+          </div>
 
           {!selected && (
-            <EdtpEmpty>Select a test above to load student results and rankings.</EdtpEmpty>
+            <div style={{ textAlign: 'center', padding: '36px 20px', color: '#64748b', background: '#f8fafc', borderRadius: 8 }}>
+              Select a test above to load student results and rankings.
+            </div>
           )}
 
           {selected && report && (
             <>
-              <div className="sca-report-meta">
+              <div className="sca-report-meta" style={{ marginBottom: 20 }}>
                 <div>
                   <span className="sca-report-meta__label">Test</span>
                   <strong>{selectedTitle}</strong>
@@ -1609,58 +1818,73 @@ export function ReportsPanel() {
               </div>
 
               {results.length === 0 ? (
-                <EdtpEmpty>
+                <div style={{ textAlign: 'center', padding: '36px 20px', color: '#64748b', background: '#f8fafc', borderRadius: 8 }}>
                   No submitted results for this test yet. Assign students and wait for attempts.
-                </EdtpEmpty>
+                </div>
               ) : (
-                <div className="dashboard__table table-responsive">
-                  <table>
+                <div className="org-table-wrap">
+                  <table className="org-table">
                     <thead>
                       <tr>
-                        <th>Rank</th>
-                        <th>Student</th>
-                        <th>Email</th>
-                        <th>Score</th>
-                        <th>%</th>
-                        <th>Certificate</th>
-                        <th />
+                        <th>RANK</th>
+                        <th>STUDENT</th>
+                        <th>EMAIL</th>
+                        <th>SCORE</th>
+                        <th>PERCENT</th>
+                        <th>CERTIFICATE</th>
+                        <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 100 }}>ACTIONS</th>
                       </tr>
                     </thead>
                     <tbody>
                       {results.map((r, i) => (
                         <tr key={(r.result_id as string) ?? (r.id as string) ?? i}>
                           <td>
-                            <span className="sca-report-rank">{(r.rank as number) ?? i + 1}</span>
+                            <span className="sca-report-rank" style={{ fontWeight: 700, color: '#2563eb' }}>
+                              #{(r.rank as number) ?? i + 1}
+                            </span>
                           </td>
                           <td>
-                            {r.first_name as string} {r.last_name as string}
+                            <strong style={{ color: '#0f172a' }}>
+                              {r.first_name as string} {r.last_name as string}
+                            </strong>
                           </td>
-                          <td>{(r.email as string) ?? '—'}</td>
-                          <td>
+                          <td style={{ color: '#64748b' }}>{(r.email as string) ?? '—'}</td>
+                          <td style={{ color: '#334155', fontWeight: 500 }}>
                             {r.total_score as number}/{r.max_score as number}
                           </td>
-                          <td>{Number(r.percentage).toFixed(1)}%</td>
                           <td>
-                            {(r.certificate_no as string) || (
-                              <EdtpBtn
-                                variant="ghost"
+                            <span style={{ fontWeight: 600, color: '#059669' }}>
+                              {Number(r.percentage).toFixed(1)}%
+                            </span>
+                          </td>
+                          <td>
+                            {(r.certificate_no as string) ? (
+                              <code style={{ background: '#f1f5f9', padding: '2px 6px', borderRadius: 4, fontSize: '0.8rem' }}>
+                                {r.certificate_no as string}
+                              </code>
+                            ) : (
+                              <button
+                                type="button"
+                                className="org-action-btn org-action-btn--secondary"
                                 onClick={() => void issueCert(String(r.result_id ?? r.id))}
                               >
                                 Issue
-                              </EdtpBtn>
+                              </button>
                             )}
                           </td>
-                          <td>
-                            {r.attempt_id ? (
-                              <Link
-                                to={`/dashboard/exam-result/${r.attempt_id as string}`}
-                                className="edtp-btn edtp-btn--secondary edtp-btn--sm"
-                              >
-                                View
-                              </Link>
-                            ) : (
-                              '—'
-                            )}
+                          <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                              {r.attempt_id ? (
+                                <Link
+                                  to={`/dashboard/exam-result/${r.attempt_id as string}`}
+                                  className="org-action-btn org-action-btn--edit"
+                                >
+                                  <FiEye style={{ fontSize: 13 }} /> View
+                                </Link>
+                              ) : (
+                                '—'
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -1670,7 +1894,7 @@ export function ReportsPanel() {
               )}
             </>
           )}
-        </section>
+        </div>
       </div>
     </>
   );
@@ -2716,21 +2940,23 @@ export function OrgStructurePanel() {
                       >
                         <button
                           type="button"
-                          className="org-icon-btn org-icon-btn--edit"
+                          className="org-action-btn org-action-btn--edit"
                           title={`Edit ${d.name}`}
                           aria-label={`Edit ${d.name}`}
                           onClick={() => startEditDept(d)}
                         >
                           <FiEdit3 />
+                          <span>Edit</span>
                         </button>
                         <button
                           type="button"
-                          className="org-icon-btn org-icon-btn--delete"
+                          className="org-action-btn org-action-btn--danger"
                           title={`Delete ${d.name}`}
                           aria-label={`Delete ${d.name}`}
                           onClick={() => void deleteDept(d.id, d.name)}
                         >
                           <FiTrash2 />
+                          <span>Delete</span>
                         </button>
                       </div>
                     </td>
@@ -3224,30 +3450,47 @@ export function TestBuilderPanel() {
 
   if (!testId) {
     return (
-      <div className="dashboard__content__wraper">
-        <p>Select a draft test from <Link to={testsListPath}>My Tests</Link> to build it.</p>
+      <div className="org-panel-page">
+        <div className="org-empty-state">
+          <FiLayers className="org-empty-icon" />
+          <p className="org-empty-title">No test selected</p>
+          <p className="org-empty-desc">
+            Select a draft test from <Link to={testsListPath}>My Tests</Link> to build it.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <>
-      <div className="dashboard__content__wraper sp_bottom_20">
-        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <div>
-            <h4 className="mb-1">Test Builder — {test?.title}</h4>
-            <p className="mb-0 text-muted" style={{ fontSize: '0.875rem' }}>
-              {test?.duration_minutes} min · {test?.total_marks ?? 0} marks · Status:{' '}
-              <span className={`edtp-badge ${isLive ? 'edtp-badge--active' : 'edtp-badge--role'}`}>{test?.status}</span>
-              {' · '}
-              {phase === 'build' && 'Add questions, then continue.'}
-              {phase === 'publish' && 'Review the paper, then publish.'}
-              {phase === 'assign' && 'Choose who can attempt this exam.'}
-            </p>
+    <div className="org-panel-page">
+      <div className="org-page-header">
+        <div className="org-page-header-left">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+            <h2 className="org-page-title">Test Builder — {test?.title}</h2>
+            <span
+              className={isLive ? 'org-status-badge org-status-badge--active' : 'org-status-badge org-status-badge--pending'}
+            >
+              {test?.status || 'Draft'}
+            </span>
           </div>
-          <Link to={testsListPath} className="dashboard__small__btn__2">← Back to Tests</Link>
+          <p className="org-page-desc">
+            {test?.duration_minutes} min duration · {test?.total_marks ?? 0} total marks ·{' '}
+            {phase === 'build' && 'Add questions from the question bank, then continue.'}
+            {phase === 'publish' && 'Review examination parameters, then publish or schedule.'}
+            {phase === 'assign' && 'Choose candidate students and assign test access.'}
+          </p>
         </div>
+        <Link
+          to={testsListPath}
+          className="org-btn-secondary"
+          style={{ height: 38, padding: '0 16px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
+        >
+          <FiArrowLeft />
+          <span>Back to Tests</span>
+        </Link>
       </div>
+
       <ExamStepper
         activeStep={phase === 'assign' ? 3 : phase === 'publish' ? 2 : 1}
         canOpen={(step) => {
@@ -3267,410 +3510,796 @@ export function TestBuilderPanel() {
           { step: 3, title: 'Assign', desc: 'Choose students' },
         ]}
       />
-      <p className="exam-stepper__help">
-        {phase === 'build' && 'Tick the questions, press Submit Selected, then Continue to Publish.'}
-        {phase === 'publish' && 'Check the list. Publish now, or pick a start time. Students cannot see a draft.'}
-        {phase === 'assign' && 'Choose the students, then press Assign Selected. They will see this exam in My Tests.'}
-      </p>
-      <div className="dashboard__content__wraper">
-        {error && <p className="login__error sp_bottom_15">{error}</p>}
-        {message && <p className="form-success sp_bottom_15">{message}</p>}
 
-        <div className={`sca-exam-builder-grid${phase !== 'build' ? ' sca-exam-builder-grid--single' : ''}`}>
-          {phase !== 'assign' && (
-          <section className="edtp-form-card">
-            <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_10">
-              <h5 className="mb-0">Questions in this test ({testQuestions.length})</h5>
-              {phase === 'publish' && !isPublished && (
-                <EdtpBtn variant="secondary" onClick={() => setPhase('build')}>
-                  ← Edit questions
-                </EdtpBtn>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '12px 18px',
+          background: '#eff6ff',
+          border: '1px solid #bfdbfe',
+          borderRadius: 12,
+          fontSize: '0.85rem',
+          color: '#1e40af',
+          fontWeight: 500,
+        }}
+      >
+        <FiInfo style={{ fontSize: 16, flexShrink: 0, color: '#2563eb' }} />
+        <span>
+          {phase === 'build' && 'Tick the questions, press Submit Selected, then continue to Publish.'}
+          {phase === 'publish' && 'Check the checklist. Publish live immediately or schedule for a specific date and time.'}
+          {phase === 'assign' && 'Choose the students, then press Assign Selected. They will see this exam in My Tests.'}
+        </span>
+      </div>
+
+      {error && <div className="org-error-banner">{error}</div>}
+      {message && (
+        <div
+          style={{
+            padding: '12px 16px',
+            borderRadius: 10,
+            background: '#ecfdf5',
+            color: '#065f46',
+            border: '1px solid #a7f3d0',
+            fontSize: '0.85rem',
+            fontWeight: 600,
+          }}
+        >
+          {message}
+        </div>
+      )}
+
+      {/* ── PHASE 1: BUILD (Add Questions) ── */}
+      {phase === 'build' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, width: '100%' }}>
+          {/* Left Card: Questions in Test */}
+          <div className="org-table-card">
+            <div className="org-card-header">
+              <div className="org-title-group">
+                <div className="org-title-row">
+                  <h3 className="org-card-title">Test Questions</h3>
+                  <span className="org-count-badge">
+                    {testQuestions.length} {testQuestions.length === 1 ? 'Question' : 'Questions'}
+                  </span>
+                </div>
+                <p className="org-card-subtitle">Questions included in this examination paper</p>
+              </div>
+
+              {testQuestions.length > 0 && !isPublished && (
+                <button
+                  type="button"
+                  className="org-add-btn"
+                  onClick={() => setPhase('publish')}
+                >
+                  <span>Continue to Publish →</span>
+                </button>
               )}
             </div>
-            {testQuestions.length === 0 ? (
-              <p className="text-muted mb-0">No questions yet. Select from the question bank and submit.</p>
-            ) : (
-              <ol className="sca-exam-builder-qlist">
-                {testQuestions.map((tq, i) => {
-                  const label = getQuestionText(tq.content);
-                  return (
-                    <li key={tq.question_id}>
-                      <span className="sca-exam-builder-qlist__num">Q{i + 1}</span>
-                      <span className="edtp-q-cell">{label}</span>
-                      <span className="edtp-badge edtp-badge--role">{tq.type ?? '—'}</span>
-                      <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(tq.question_id)}>
-                        Preview
-                      </EdtpBtn>
-                      {phase === 'build' && !isPublished && (
-                        <>
-                          <EdtpBtn
-                            variant="ghost"
-                            disabled={i === 0}
-                            onClick={() => void moveQuestion(tq.question_id, -1)}
-                          >
-                            Up
-                          </EdtpBtn>
-                          <EdtpBtn
-                            variant="ghost"
-                            disabled={i === testQuestions.length - 1}
-                            onClick={() => void moveQuestion(tq.question_id, 1)}
-                          >
-                            Down
-                          </EdtpBtn>
-                          <EdtpBtn variant="danger" onClick={() => void removeQuestion(tq.question_id)}>
-                            Remove
-                          </EdtpBtn>
-                        </>
-                      )}
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
 
-            {phase === 'build' && hardQuestions.length > 0 && (
-              <div className="edtp-form-card sp_bottom_15">
-                <h6 className="mb-2">Hard questions (from past attempts)</h6>
-                <ul className="mb-0" style={{ fontSize: '0.875rem' }}>
-                  {hardQuestions.slice(0, 5).map((q) => (
-                    <li key={q.question_id}>
-                      {q.text || q.question_id.slice(0, 8)} —{' '}
-                      {q.correct_pct != null ? `${q.correct_pct}%` : 'n/a'} correct (n={q.answered_count})
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {phase === 'build' && testQuestions.length > 0 && (
-              <div className="sca-exam-builder-actions">
-                <span className="sca-exam-builder-actions__count">
-                  Ready for publish when you are done adding questions.
-                </span>
-                <div className="sca-exam-builder-actions__btns">
-                  <EdtpBtn variant="primary" onClick={() => setPhase('publish')}>
-                    Continue to Publish →
-                  </EdtpBtn>
+            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {testQuestions.length === 0 ? (
+                <div className="org-empty-state">
+                  <FiLayers className="org-empty-icon" />
+                  <p className="org-empty-title">No questions added yet</p>
+                  <p className="org-empty-desc">
+                    Pick questions from the Question Bank on the right and submit.
+                  </p>
                 </div>
-              </div>
-            )}
-
-            {phase === 'publish' && !isPublished && (
-              <div className="sca-exam-builder-publish">
-                <p className="text-muted mb-3" style={{ fontSize: '0.9rem' }}>
-                  Review the checklist, then choose when this test becomes available.
-                </p>
-                <ul className="sp_bottom_15" style={{ fontSize: '0.9rem', paddingLeft: '1.1rem' }}>
-                  <li style={{ color: checklist.hasQuestions ? '#15803d' : '#b91c1c' }}>
-                    {checklist.hasQuestions ? '✓' : '✗'} At least one question ({testQuestions.length})
-                  </li>
-                  <li style={{ color: checklist.hasDuration ? '#15803d' : '#b91c1c' }}>
-                    {checklist.hasDuration ? '✓' : '✗'} Duration set ({test?.duration_minutes ?? 0} min)
-                  </li>
-                  <li style={{ color: checklist.hasPassingMarks ? '#15803d' : '#64748b' }}>
-                    {checklist.hasPassingMarks ? '✓' : '○'} Passing marks ({test?.passing_marks ?? '—'})
-                  </li>
-                  <li style={{ color: checklist.hasInstructions ? '#15803d' : '#64748b' }}>
-                    {checklist.hasInstructions ? '✓' : '○'} Instructions filled
-                  </li>
-                  <li style={{ color: checklist.hasAssignees ? '#15803d' : '#64748b' }}>
-                    {checklist.hasAssignees ? '✓' : '○'} Students assigned ({assignments.length}) — can assign after publish
-                  </li>
-                </ul>
-                <div className="row g-3 sp_bottom_15">
-                  <div className="col-md-6">
-                    <EdtpField label="Publish mode">
-                      <EdtpSelect
-                        value={publishMode}
-                        onChange={(e) => setPublishMode(e.target.value as 'live_now' | 'schedule')}
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {testQuestions.map((tq, i) => {
+                    const label = getQuestionText(tq.content);
+                    return (
+                      <div
+                        key={tq.question_id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '10px 14px',
+                          borderRadius: 10,
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          gap: 12,
+                        }}
                       >
-                        <option value="live_now">Live now</option>
-                        <option value="schedule">Schedule for later</option>
-                      </EdtpSelect>
-                    </EdtpField>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: 6,
+                              background: '#152559',
+                              color: '#fff',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              flexShrink: 0,
+                            }}
+                          >
+                            Q{i + 1}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.85rem',
+                              color: '#0f172a',
+                              fontWeight: 500,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {label}
+                          </span>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: 6,
+                              background: '#eff6ff',
+                              color: '#225ce5',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {tq.type ?? '—'}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                          <button
+                            type="button"
+                            className="org-action-btn org-action-btn--switch"
+                            onClick={() => setPreviewQuestionId(tq.question_id)}
+                            title="Preview question"
+                          >
+                            <FiEye />
+                            <span>Preview</span>
+                          </button>
+                          {!isPublished && (
+                            <>
+                              <button
+                                type="button"
+                                className="org-icon-btn org-icon-btn--switch"
+                                disabled={i === 0}
+                                onClick={() => void moveQuestion(tq.question_id, -1)}
+                                title="Move up"
+                              >
+                                <FiArrowUp />
+                              </button>
+                              <button
+                                type="button"
+                                className="org-icon-btn org-icon-btn--switch"
+                                disabled={i === testQuestions.length - 1}
+                                onClick={() => void moveQuestion(tq.question_id, 1)}
+                                title="Move down"
+                              >
+                                <FiArrowDown />
+                              </button>
+                              <button
+                                type="button"
+                                className="org-action-btn org-action-btn--danger"
+                                onClick={() => void removeQuestion(tq.question_id)}
+                                title="Remove question"
+                              >
+                                <FiTrash2 />
+                                <span>Remove</span>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {hardQuestions.length > 0 && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    padding: '12px 16px',
+                    borderRadius: 10,
+                    background: '#fffbeb',
+                    border: '1px solid #fef3c7',
+                  }}
+                >
+                  <span className="org-stat-label" style={{ color: '#b45309', fontWeight: 600 }}>
+                    Hard Questions (from past candidate attempts)
+                  </span>
+                  <ul style={{ margin: '6px 0 0', paddingLeft: 18, fontSize: '0.825rem', color: '#92400e' }}>
+                    {hardQuestions.slice(0, 5).map((q) => (
+                      <li key={q.question_id} style={{ marginTop: 4 }}>
+                        {q.text || q.question_id.slice(0, 8)} —{' '}
+                        <strong>{q.correct_pct != null ? `${q.correct_pct}%` : 'n/a'} correct</strong> (n={q.answered_count})
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right Card: Question Bank Pool */}
+          <div className="org-table-card">
+            <div className="org-card-header">
+              <div className="org-title-group">
+                <div className="org-title-row">
+                  <h3 className="org-card-title">Add from Question Bank</h3>
+                  <span className="org-count-badge">
+                    {availableQuestions.length} Available
+                  </span>
+                  {selectedQuestionIds.length > 0 && (
+                    <span
+                      className="org-count-badge"
+                      style={{ background: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' }}
+                    >
+                      {selectedQuestionIds.length} Selected
+                    </span>
+                  )}
+                </div>
+                <p className="org-card-subtitle">Tick questions and submit into this exam paper</p>
+              </div>
+
+              <div className="org-controls-row">
+                <div className="org-search-box">
+                  <FiSearch className="org-search-icon" />
+                  <input
+                    type="text"
+                    className="org-search-input"
+                    placeholder="Search bank questions…"
+                    value={questionSearch}
+                    onChange={(e) => setQuestionSearch(e.target.value)}
+                  />
+                  {questionSearch && (
+                    <button
+                      type="button"
+                      className="org-search-clear"
+                      onClick={() => setQuestionSearch('')}
+                      aria-label="Clear search"
+                    >
+                      <FiX />
+                    </button>
+                  )}
+                </div>
+
+                {availableQuestions.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      type="button"
+                      className="org-btn-secondary"
+                      style={{ height: 36, padding: '0 12px', fontSize: '0.8rem', borderRadius: 8 }}
+                      onClick={toggleAllQuestions}
+                    >
+                      {allQuestionsSelected ? 'Clear All' : 'Select All'}
+                    </button>
+                    <button
+                      type="button"
+                      className="org-add-btn"
+                      style={{ height: 36, padding: '0 16px' }}
+                      disabled={selectedQuestionIds.length === 0}
+                      onClick={() => void submitSelectedQuestions()}
+                    >
+                      <FiCheckCircle />
+                      <span>Submit ({selectedQuestionIds.length})</span>
+                    </button>
                   </div>
+                )}
+              </div>
+            </div>
+
+            <div className="org-table-wrapper">
+              <table className="org-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 48, textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        style={{ width: 16, height: 16, cursor: 'pointer', verticalAlign: 'middle' }}
+                        checked={allQuestionsSelected}
+                        onChange={toggleAllQuestions}
+                        disabled={availableQuestions.length === 0}
+                        aria-label="Select all questions"
+                      />
+                    </th>
+                    <th>QUESTION</th>
+                    <th>TYPE</th>
+                    <th style={{ textAlign: 'right', width: 100 }}>PREVIEW</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {availableQuestions.map((q) => {
+                    const isSelected = selectedQuestionIds.includes(q.id);
+                    const label = getQuestionText(q.content);
+                    return (
+                      <tr
+                        key={q.id}
+                        onClick={() => toggleQuestion(q.id)}
+                        style={{
+                          cursor: 'pointer',
+                          background: isSelected ? 'rgba(34, 92, 229, 0.04)' : undefined,
+                        }}
+                      >
+                        <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            style={{ width: 16, height: 16, cursor: 'pointer', verticalAlign: 'middle' }}
+                            checked={isSelected}
+                            onChange={() => toggleQuestion(q.id)}
+                            aria-label={`Select question ${label}`}
+                          />
+                        </td>
+                        <td>
+                          <span style={{ fontSize: '0.85rem', color: '#0f172a', fontWeight: 500 }}>
+                            {label}
+                          </span>
+                        </td>
+                        <td>
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: 6,
+                              background: '#eff6ff',
+                              color: '#225ce5',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {q.type}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                          <button
+                            type="button"
+                            className="org-action-btn org-action-btn--switch"
+                            onClick={() => setPreviewQuestionId(q.id)}
+                          >
+                            <FiEye />
+                            <span>Preview</span>
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                  {availableQuestions.length === 0 && (
+                    <tr>
+                      <td colSpan={4}>
+                        <div className="org-empty-state">
+                          <FiLayers className="org-empty-icon" />
+                          <p className="org-empty-title">
+                            {qSearch
+                              ? 'No questions match your search.'
+                              : bankQuestions.length === 0
+                              ? 'No approved questions in bank.'
+                              : 'All available questions are already in this test.'}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PHASE 2: PUBLISH (Review & Release) ── */}
+      {phase === 'publish' && (
+        <div className="org-table-card" style={{ maxWidth: 840, margin: '0 auto', width: '100%' }}>
+          <div className="org-card-header">
+            <div className="org-title-group">
+              <div className="org-title-row">
+                <h3 className="org-card-title">Review &amp; Publish Examination</h3>
+                <span className={isPublished ? 'org-status-badge org-status-badge--active' : 'org-status-badge org-status-badge--pending'}>
+                  {isPublished ? 'Published' : 'Draft Ready'}
+                </span>
+              </div>
+              <p className="org-card-subtitle">Verify the launch checklist, configure timing, and release to candidates</p>
+            </div>
+
+            {!isPublished && (
+              <button
+                type="button"
+                className="org-btn-secondary"
+                style={{ height: 36, padding: '0 14px', borderRadius: 8 }}
+                onClick={() => setPhase('build')}
+              >
+                ← Back to Questions
+              </button>
+            )}
+          </div>
+
+          <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Checklist */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <span className="org-stat-label">Pre-Flight Checklist</span>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                {[
+                  { ok: checklist.hasQuestions, label: `Questions Added (${testQuestions.length})` },
+                  { ok: checklist.hasDuration, label: `Duration Configured (${test?.duration_minutes ?? 0} min)` },
+                  { ok: checklist.hasPassingMarks, label: `Passing Marks Defined (${test?.passing_marks ?? '—'})` },
+                  { ok: checklist.hasInstructions, label: 'Exam Instructions Filled' },
+                  { ok: checklist.hasAssignees, label: `Candidates Assigned (${assignments.length})` },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '10px 14px',
+                      borderRadius: 8,
+                      background: item.ok ? '#ecfdf5' : '#f8fafc',
+                      border: `1px solid ${item.ok ? '#a7f3d0' : '#e2e8f0'}`,
+                      fontSize: '0.825rem',
+                      fontWeight: 600,
+                      color: item.ok ? '#065f46' : '#64748b',
+                    }}
+                  >
+                    <FiCheckCircle style={{ color: item.ok ? '#10b981' : '#cbd5e1', fontSize: 16 }} />
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Timing & Mode */}
+            {!isPublished && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingTop: 10, borderTop: '1px solid #f1f5f9' }}>
+                <span className="org-stat-label">Publish Options</span>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+                  <div className="org-form-field">
+                    <label className="org-form-label">Publish Mode</label>
+                    <select
+                      className="org-form-select"
+                      value={publishMode}
+                      onChange={(e) => setPublishMode(e.target.value as 'live_now' | 'schedule')}
+                    >
+                      <option value="live_now">Go Live Immediately</option>
+                      <option value="schedule">Schedule for Later</option>
+                    </select>
+                  </div>
+
                   {publishMode === 'schedule' && (
                     <>
-                      <div className="col-md-6">
-                        <EdtpField label="Go live at" hint="Students see a countdown until this time.">
-                          <input
-                            type="datetime-local"
-                            className="register__input"
-                            value={scheduleStart}
-                            onChange={(e) => setScheduleStart(e.target.value)}
-                          />
-                        </EdtpField>
+                      <div className="org-form-field">
+                        <label className="org-form-label">Go Live At</label>
+                        <input
+                          type="datetime-local"
+                          className="org-form-input"
+                          value={scheduleStart}
+                          onChange={(e) => setScheduleStart(e.target.value)}
+                        />
                       </div>
-                      <div className="col-md-6">
-                        <EdtpField label="End at (optional)">
-                          <input
-                            type="datetime-local"
-                            className="register__input"
-                            value={scheduleEnd}
-                            onChange={(e) => setScheduleEnd(e.target.value)}
-                          />
-                        </EdtpField>
+                      <div className="org-form-field">
+                        <label className="org-form-label">End At (Optional)</label>
+                        <input
+                          type="datetime-local"
+                          className="org-form-input"
+                          value={scheduleEnd}
+                          onChange={(e) => setScheduleEnd(e.target.value)}
+                        />
                       </div>
                     </>
                   )}
                 </div>
-                <EdtpBtn
-                  variant="primary"
-                  size="md"
-                  disabled={!canPublish}
-                  onClick={() => void publish()}
-                >
-                  {publishMode === 'schedule' ? 'Schedule Test' : 'Publish Test'}
-                </EdtpBtn>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 10 }}>
+                  <button
+                    type="button"
+                    className="org-add-btn"
+                    style={{ height: 42, padding: '0 24px', fontSize: '0.875rem' }}
+                    disabled={!canPublish}
+                    onClick={() => void publish()}
+                  >
+                    <FiCheckCircle />
+                    <span>{publishMode === 'schedule' ? 'Schedule Test' : 'Publish Test Now'}</span>
+                  </button>
+                </div>
               </div>
             )}
-          </section>
-          )}
+          </div>
+        </div>
+      )}
 
-          {phase === 'build' && !isPublished && (
-            <section className="edtp-form-card">
-              <h5 className="sp_bottom_15">Add from Question Bank</h5>
-              <SearchField
-                value={questionSearch}
-                onChange={setQuestionSearch}
-                placeholder="Search questions by text or type…"
-              />
-              <div className="dashboard__table table-responsive">
-                <table>
-                  <thead>
-                    <tr>
-                      <th style={{ width: 48 }}>
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={allQuestionsSelected}
-                          onChange={toggleAllQuestions}
-                          disabled={availableQuestions.length === 0}
-                          aria-label="Select all questions"
-                        />
-                      </th>
-                      <th>Question</th>
-                      <th>Type</th>
-                      <th style={{ width: 100 }} />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {availableQuestions.map((q) => {
-                      const label = getQuestionText(q.content);
-                      return (
-                        <tr key={q.id}>
-                          <td>
-                            <input
-                              type="checkbox"
-                              className="form-check-input"
-                              checked={selectedQuestionIds.includes(q.id)}
-                              onChange={() => toggleQuestion(q.id)}
-                              aria-label={`Select question ${label}`}
-                            />
-                          </td>
-                          <td className="edtp-q-cell">{label}</td>
-                          <td><span className="edtp-badge edtp-badge--role">{q.type}</span></td>
-                          <td>
-                            <EdtpBtn variant="ghost" onClick={() => setPreviewQuestionId(q.id)}>
-                              Preview
-                            </EdtpBtn>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    {availableQuestions.length === 0 && (
-                      <tr>
-                        <td colSpan={4}>
-                          {qSearch
-                            ? 'No questions match your search.'
-                            : bankQuestions.length === 0
-                              ? (
-                                <>No approved questions. <Link to="/dashboard/admin-question-bank">Add questions</Link> first.</>
-                              )
-                              : 'All available questions are already in this test.'}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {availableQuestions.length > 0 && (
-                <div className="sca-exam-builder-actions">
-                  <span className="sca-exam-builder-actions__count">
-                    {selectedQuestionIds.length} selected
+      {/* ── PHASE 3: ASSIGN (Candidate Selection & Enrollment) ── */}
+      {phase === 'assign' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, width: '100%' }}>
+          {/* Card 1: Available Students to Assign */}
+          <div className="org-table-card">
+            <div className="org-card-header">
+              <div className="org-title-group">
+                <div className="org-title-row">
+                  <h3 className="org-card-title">Assign to Students</h3>
+                  <span className="org-count-badge">
+                    {unassignedStudents.length} Available
                   </span>
-                  <div className="sca-exam-builder-actions__btns">
-                    <EdtpBtn variant="secondary" onClick={toggleAllQuestions}>
-                      {allQuestionsSelected ? 'Clear All' : 'Select All'}
-                    </EdtpBtn>
-                    <EdtpBtn
-                      variant="primary"
-                      disabled={selectedQuestionIds.length === 0}
-                      onClick={() => void submitSelectedQuestions()}
+                  {selectedStudentIds.length > 0 && (
+                    <span
+                      className="org-count-badge"
+                      style={{ background: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' }}
                     >
-                      Submit Selected
-                    </EdtpBtn>
-                  </div>
+                      {selectedStudentIds.length} Selected
+                    </span>
+                  )}
                 </div>
-              )}
-            </section>
-          )}
-
-          {phase === 'assign' && (
-            <section className="edtp-form-card">
-              <div className="sp_bottom_15">
-                <h5 className="mb-1">Assign to Students</h5>
-                <p className="text-muted mb-0" style={{ fontSize: '0.875rem' }}>
-                  Filter by department, search, select students, then submit.
+                <p className="org-card-subtitle">
+                  Filter by department, search, select candidates, then assign exam access
                 </p>
               </div>
-              <div className="row g-2 sp_bottom_15">
-                <div className="col-md-4">
-                  <EdtpField label="Department filter">
-                    <EdtpSelect
-                      value={assignDepartmentId}
-                      onChange={(e) => {
-                        setAssignDepartmentId(e.target.value);
-                        setSelectedStudentIds([]);
-                      }}
-                    >
-                      <option value="">All departments</option>
-                      {departments.map((d) => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
-                    </EdtpSelect>
-                  </EdtpField>
+
+              <div className="org-controls-row">
+                {/* Department Filter Select */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <select
+                    className="org-form-select"
+                    style={{ height: 36, width: 'auto', minWidth: 160, padding: '4px 10px', fontSize: '0.825rem' }}
+                    value={assignDepartmentId}
+                    onChange={(e) => {
+                      setAssignDepartmentId(e.target.value);
+                      setSelectedStudentIds([]);
+                    }}
+                  >
+                    <option value="">All departments</option>
+                    {departments.map((d) => (
+                      <option key={d.id} value={d.id}>{d.name}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="col-md-8 d-flex align-items-end">
-                  <SearchField
-                    value={studentSearch}
-                    onChange={setStudentSearch}
+
+                {/* Search Box */}
+                <div className="org-search-box">
+                  <FiSearch className="org-search-icon" />
+                  <input
+                    type="text"
+                    className="org-search-input"
                     placeholder="Search by name or email…"
+                    value={studentSearch}
+                    onChange={(e) => setStudentSearch(e.target.value)}
                   />
+                  {studentSearch && (
+                    <button
+                      type="button"
+                      className="org-search-clear"
+                      onClick={() => setStudentSearch('')}
+                      aria-label="Clear search"
+                    >
+                      <FiX />
+                    </button>
+                  )}
                 </div>
+
+                {/* Select All & Assign Buttons */}
+                {unassignedStudents.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      type="button"
+                      className="org-btn-secondary"
+                      style={{ height: 36, padding: '0 12px', fontSize: '0.8rem', borderRadius: 8 }}
+                      onClick={toggleAllStudents}
+                    >
+                      {allStudentsSelected ? 'Clear All' : 'Select All'}
+                    </button>
+                    <button
+                      type="button"
+                      className="org-add-btn"
+                      style={{ height: 36, padding: '0 16px' }}
+                      disabled={selectedStudentIds.length === 0}
+                      onClick={() => void submitSelectedStudents()}
+                    >
+                      <FiCheckCircle />
+                      <span>Assign Selected ({selectedStudentIds.length})</span>
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="dashboard__table table-responsive sp_bottom_15">
-                <table>
-                  <thead>
-                    <tr>
-                      <th style={{ width: 48 }}>
-                        <input
-                          type="checkbox"
-                          className="form-check-input"
-                          checked={allStudentsSelected}
-                          onChange={toggleAllStudents}
-                          disabled={unassignedStudents.length === 0}
-                          aria-label="Select all students"
-                        />
-                      </th>
-                      <th>Name</th>
-                      <th>Email</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unassignedStudents.map((s) => (
-                      <tr key={s.student_id}>
-                        <td>
+            </div>
+
+            <div className="org-table-wrapper">
+              <table className="org-table">
+                <thead>
+                  <tr>
+                    <th style={{ width: 50, textAlign: 'center' }}>
+                      <input
+                        type="checkbox"
+                        style={{ width: 16, height: 16, cursor: 'pointer', verticalAlign: 'middle' }}
+                        checked={allStudentsSelected}
+                        onChange={toggleAllStudents}
+                        disabled={unassignedStudents.length === 0}
+                        aria-label="Select all students"
+                      />
+                    </th>
+                    <th>STUDENT NAME</th>
+                    <th>EMAIL ADDRESS</th>
+                    <th>STATUS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {unassignedStudents.map((s) => {
+                    const isSelected = selectedStudentIds.includes(s.student_id);
+                    const initials = getUserInitials(s.first_name, s.last_name, s.email);
+                    return (
+                      <tr
+                        key={s.student_id}
+                        onClick={() => toggleStudent(s.student_id)}
+                        style={{
+                          cursor: 'pointer',
+                          background: isSelected ? 'rgba(34, 92, 229, 0.04)' : undefined,
+                        }}
+                      >
+                        <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
                           <input
                             type="checkbox"
-                            className="form-check-input"
-                            checked={selectedStudentIds.includes(s.student_id)}
+                            style={{ width: 16, height: 16, cursor: 'pointer', verticalAlign: 'middle' }}
+                            checked={isSelected}
                             onChange={() => toggleStudent(s.student_id)}
                             aria-label={`Select ${s.first_name} ${s.last_name}`}
                           />
                         </td>
-                        <td>{s.first_name} {s.last_name}</td>
-                        <td>{s.email}</td>
-                      </tr>
-                    ))}
-                    {unassignedStudents.length === 0 && (
-                      <tr>
-                        <td colSpan={3}>
-                          {sSearch
-                            ? 'No students match your search.'
-                            : students.length === 0
-                              ? 'No active students found.'
-                              : 'All students are already assigned.'}
+                        <td>
+                          <div className="org-cell-flex">
+                            <div className="org-avatar-badge">{initials}</div>
+                            <span className="org-name-text">
+                              {s.first_name} {s.last_name}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ color: '#475569', fontSize: '0.85rem' }}>{s.email}</span>
+                        </td>
+                        <td>
+                          <span className="org-status-badge org-status-badge--active">
+                            {s.status || 'Active'}
+                          </span>
                         </td>
                       </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {unassignedStudents.length > 0 && (
-                <div className="sca-exam-builder-actions sp_bottom_20">
-                  <span className="sca-exam-builder-actions__count">
-                    {selectedStudentIds.length} selected
+                    );
+                  })}
+                  {unassignedStudents.length === 0 && (
+                    <tr>
+                      <td colSpan={4}>
+                        <div className="org-empty-state">
+                          <FiUsers className="org-empty-icon" />
+                          <p className="org-empty-title">
+                            {sSearch
+                              ? 'No candidates match your search filter'
+                              : students.length === 0
+                              ? 'No active students found in this organization'
+                              : 'All eligible students are already assigned'}
+                          </p>
+                          <p className="org-empty-desc">
+                            {sSearch
+                              ? 'Try clearing the search or changing the department filter.'
+                              : 'Review the enrolled list below.'}
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Card 2: Currently Enrolled / Assigned Students */}
+          <div className="org-table-card">
+            <div className="org-card-header">
+              <div className="org-title-group">
+                <div className="org-title-row">
+                  <h3 className="org-card-title">Enrolled Students</h3>
+                  <span className="org-count-badge" style={{ background: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' }}>
+                    {assignments.length} Enrolled
                   </span>
-                  <div className="sca-exam-builder-actions__btns">
-                    <EdtpBtn variant="secondary" onClick={toggleAllStudents}>
-                      {allStudentsSelected ? 'Clear All' : 'Select All'}
-                    </EdtpBtn>
-                    <EdtpBtn
-                      variant="primary"
-                      disabled={selectedStudentIds.length === 0}
-                      onClick={() => void submitSelectedStudents()}
-                    >
-                      Assign Selected
-                    </EdtpBtn>
+                </div>
+                <p className="org-card-subtitle">
+                  Candidates who have been granted access to take this examination
+                </p>
+              </div>
+
+              {assignments.length > 0 && (
+                <div className="org-controls-row">
+                  <div className="org-search-box">
+                    <FiSearch className="org-search-icon" />
+                    <input
+                      type="text"
+                      className="org-search-input"
+                      placeholder="Search enrolled students…"
+                      value={assignedSearch}
+                      onChange={(e) => setAssignedSearch(e.target.value)}
+                    />
+                    {assignedSearch && (
+                      <button
+                        type="button"
+                        className="org-search-clear"
+                        onClick={() => setAssignedSearch('')}
+                        aria-label="Clear search"
+                      >
+                        <FiX />
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
+            </div>
 
-              <div className="d-flex flex-wrap justify-content-between align-items-center gap-2 sp_bottom_10">
-                <h6 className="mb-0">Assigned ({assignments.length})</h6>
-              </div>
-              {assignments.length > 0 && (
-                <SearchField
-                  value={assignedSearch}
-                  onChange={setAssignedSearch}
-                  placeholder="Search assigned students…"
-                />
-              )}
-              {assignments.length === 0 ? (
-                <p className="text-muted mb-0">No students assigned yet.</p>
-              ) : (
-                <div className="dashboard__table table-responsive">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Actions</th>
+            <div className="org-table-wrapper">
+              <table className="org-table">
+                <thead>
+                  <tr>
+                    <th>STUDENT NAME</th>
+                    <th>EMAIL ADDRESS</th>
+                    <th style={{ textAlign: 'right', width: 130 }}>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredAssignments.map((a) => {
+                    const initials = getUserInitials(a.first_name, a.last_name, a.email);
+                    return (
+                      <tr key={a.student_id}>
+                        <td>
+                          <div className="org-cell-flex">
+                            <div className="org-avatar-badge">{initials}</div>
+                            <span className="org-name-text">
+                              {a.first_name} {a.last_name}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <span style={{ color: '#475569', fontSize: '0.85rem' }}>{a.email}</span>
+                        </td>
+                        <td style={{ textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="org-action-btn org-action-btn--danger"
+                            onClick={() =>
+                              void unassignStudent(a.student_id, `${a.first_name} ${a.last_name}`)
+                            }
+                            title={`Unassign ${a.first_name}`}
+                          >
+                            <FiTrash2 />
+                            <span>Unassign</span>
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredAssignments.map((a) => (
-                        <tr key={a.student_id}>
-                          <td>{a.first_name} {a.last_name}</td>
-                          <td>{a.email}</td>
-                          <td>
-                            <EdtpBtn
-                              variant="danger"
-                              onClick={() =>
-                                void unassignStudent(a.student_id, `${a.first_name} ${a.last_name}`)
-                              }
-                            >
-                              Unassign
-                            </EdtpBtn>
-                          </td>
-                        </tr>
-                      ))}
-                      {filteredAssignments.length === 0 && (
-                        <tr><td colSpan={3}>No assigned students match your search.</td></tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          )}
+                    );
+                  })}
+                  {assignments.length === 0 && (
+                    <tr>
+                      <td colSpan={3}>
+                        <div className="org-empty-state">
+                          <FiUsers className="org-empty-icon" />
+                          <p className="org-empty-title">No students assigned yet</p>
+                          <p className="org-empty-desc">
+                            Select students from the available list above and click "Assign Selected" to grant test access.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  {assignments.length > 0 && filteredAssignments.length === 0 && (
+                    <tr>
+                      <td colSpan={3}>
+                        <div className="org-empty-state">
+                          <FiSearch className="org-empty-icon" />
+                          <p className="org-empty-title">No matching students</p>
+                          <p className="org-empty-desc">No enrolled students match your search query.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
       <QuestionPreviewModal
         questionId={previewQuestionId}
         onClose={() => setPreviewQuestionId(null)}
       />
-    </>
+    </div>
   );
 }

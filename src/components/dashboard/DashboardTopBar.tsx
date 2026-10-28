@@ -4,7 +4,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { useOrgScope } from '@/context/OrgScopeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
 import { platformService } from '@/services';
-import HamburgerIcon from '@/components/ui/HamburgerIcon';
 import OrgSwitcher from './OrgSwitcher';
 
 interface DashboardTopBarProps {
@@ -12,6 +11,33 @@ interface DashboardTopBarProps {
   role: DashboardRole;
   onToggleMenu: () => void;
   menuOpen?: boolean;
+}
+
+function MenuIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={`sca-menu-icon${open ? ' is-open' : ''}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      width="20"
+      height="20"
+      aria-hidden="true"
+    >
+      <g className="sca-menu-icon__menu">
+        <path d="M4 7h16" />
+        <path d="M4 12h10" />
+        <path d="M4 17h14" />
+      </g>
+      <g className="sca-menu-icon__close">
+        <path d="M6 6l12 12" />
+        <path d="M18 6L6 18" />
+      </g>
+    </svg>
+  );
 }
 
 function notificationsHref(role: DashboardRole) {
@@ -51,36 +77,13 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
       <div className="sca-db-header__left">
         <button
           type="button"
-          className="sca-db-icon-btn sca-db-icon-btn--menu sca-hamburger-btn"
+          className={`sca-db-icon-btn sca-db-icon-btn--menu${menuOpen ? ' is-open' : ''}`}
           onClick={onToggleMenu}
           aria-label="Toggle sidebar menu"
           aria-expanded={menuOpen}
         >
-          <HamburgerIcon open={menuOpen} />
+          <MenuIcon open={menuOpen} />
         </button>
-
-        <div className="sca-db-search">
-          <svg
-            className="sca-db-search-icon"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            width="16"
-            height="16"
-          >
-            <circle cx="9" cy="9" r="6" />
-            <line x1="13.5" y1="13.5" x2="18" y2="18" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search tests, students, or topics..."
-            aria-label="Search dashboard"
-          />
-          <kbd className="sca-db-search-kbd">Ctrl + K</kbd>
-        </div>
       </div>
 
       <div className="sca-db-header__center">
