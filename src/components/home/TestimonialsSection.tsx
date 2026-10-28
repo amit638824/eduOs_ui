@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import type { HomepageContent } from '@/types/homepage';
 
-const testimonials = [
+const fallbackTestimonials = [
   {
     avatar: '/eduleb/img/testimonial/1.png',
     name: 'Ajmain Adil',
@@ -33,7 +34,8 @@ const testimonials = [
   },
 ];
 
-export default function TestimonialsSection() {
+export default function TestimonialsSection({ content }: { content?: HomepageContent['testimonials'] }) {
+  const testimonials = content?.items?.length ? content.items : fallbackTestimonials;
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -41,23 +43,22 @@ export default function TestimonialsSection() {
       setIndex((i) => (i + 1) % testimonials.length);
     }, 4500);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [testimonials.length]);
 
-  const item = testimonials[index];
+  const item = testimonials[index % testimonials.length];
 
   return (
     <section className="testi_area section-padding">
       <div className="container">
         <div className="section-title" data-aos="fade-up">
           <h2 data-aos="fade-up" data-aos-delay="100">
-            What Student’s Say To Do <br />
-            Their Online Course
+            {content?.title || 'What Student’s Say To Do Their Online Course'}
           </h2>
         </div>
         <div className="row align-items-center">
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-right" data-aos-delay="150">
             <div className="ab_img" data-aos="zoom-in" data-aos-delay="200">
-              <img src="/eduleb/img/review.png" className="img-fluid" alt="image" />
+              <img src={content?.image || '/eduleb/img/review.png'} className="img-fluid" alt="image" />
             </div>
           </div>
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-left" data-aos-delay="200">

@@ -1,6 +1,20 @@
 import { Link } from 'react-router-dom';
+import type { HomepageContent } from '@/types/homepage';
 
-export default function WhyChooseSection() {
+export default function WhyChooseSection({ content }: { content?: HomepageContent['why'] }) {
+  const paragraphs = content?.paragraphs?.length
+    ? content.paragraphs
+    : [
+        'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.',
+        'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.',
+      ];
+  const points = content?.points?.length
+    ? content.points
+    : [
+        'Get access to 12,000+ of our top courses',
+        'Popular topic to learn now in our online courses for student',
+        'Find the right instructor for you',
+      ];
   return (
     <section className="ab_area section-padding">
       <div className="container">
@@ -8,42 +22,34 @@ export default function WhyChooseSection() {
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-right">
             <div className="ab_content">
               <h2 data-aos="fade-up" data-aos-delay="100">
-                Why Choose Us For Your Online Education Courses
+                {content?.title || 'Why Choose Us For Your Online Education Courses'}
               </h2>
-              <p data-aos="fade-up" data-aos-delay="150">
-                We offer a brand new approach to the most basic learning paradigms. Choose from a
-                wide range of learning options and gain new skills! Our school is know.
-              </p>
-              <p data-aos="fade-up" data-aos-delay="200">
-                We offer a brand new approach to the most basic learning paradigms. Choose from a
-                wide range of learning options and gain new skills! Our school is know.
-              </p>
+              {paragraphs.map((text, index) => (
+                <p key={text} data-aos="fade-up" data-aos-delay={150 + index * 50}>
+                  {text}
+                </p>
+              ))}
               <ul>
-                <li data-aos="fade-up" data-aos-delay="250">
-                  <span className="ti-check" /> Get access to <b>12,000+</b> of our top courses
-                </li>
-                <li data-aos="fade-up" data-aos-delay="300">
-                  <span className="ti-check" /> Popular topic to learn now in our online courses for
-                  student
-                </li>
-                <li data-aos="fade-up" data-aos-delay="350">
-                  <span className="ti-check" /> Find the right instructor for you
-                </li>
+                {points.map((point, index) => (
+                  <li key={point} data-aos="fade-up" data-aos-delay={250 + index * 50}>
+                    <span className="ti-check" /> {point}
+                  </li>
+                ))}
               </ul>
               <div data-aos="fade-up" data-aos-delay="400">
-                <Link className="btn_one" to="/exams">
-                  View All Courses <i className="ti-arrow-top-right" />
+                <Link className="btn_one" to={content?.cta.href || '/exams'}>
+                  {content?.cta.label || 'View All Courses'} <i className="ti-arrow-top-right" />
                 </Link>
               </div>
             </div>
           </div>
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-left">
             <div className="ab_img" data-aos="zoom-in" data-aos-delay="150">
-              <img src="/eduleb/img/about3.png" className="img-fluid" alt="image" />
+              <img src={content?.image || '/eduleb/img/about3.png'} className="img-fluid" alt="image" />
               <div className="home_ps2" data-aos="zoom-in" data-aos-delay="300">
                 <span className="ti-book" />
-                <h2>3300+</h2>
-                <p>Online Course</p>
+                <h2>{content?.statValue || '3300+'}</h2>
+                <p>{content?.statLabel || 'Online Course'}</p>
               </div>
             </div>
           </div>

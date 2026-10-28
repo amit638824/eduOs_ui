@@ -1,4 +1,6 @@
-const logos = [
+import type { HomepageContent } from '@/types/homepage';
+
+const fallbackLogos = [
   '/eduleb/img/clients/1.png',
   '/eduleb/img/clients/2.png',
   '/eduleb/img/clients/3.png',
@@ -7,7 +9,8 @@ const logos = [
   '/eduleb/img/clients/6.png',
 ];
 
-export default function PartnersSection() {
+export default function PartnersSection({ content }: { content?: HomepageContent['partners'] }) {
+  const logos = content?.logos?.length ? content.logos : fallbackLogos;
   return (
     <div className="partner-logo section-padding" data-aos="fade-up">
       <div className="container">
@@ -15,7 +18,7 @@ export default function PartnersSection() {
           <div className="col-lg-4 col-sm-4 col-xs-12" data-aos="fade-right" data-aos-delay="100">
             <div className="partner_title">
               <h3>
-                Helping <span>86,000+</span> global companies take the gloves off
+                {content?.title || 'Helping 86,000+ global companies take the gloves off'}
               </h3>
             </div>
           </div>

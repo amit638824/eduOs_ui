@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { parseApiError } from '@/lib/errors';
+import { notify } from '@/lib/toast';
 import type { AiGenerateInput, AiJob } from '@/services/examination.service';
 import * as examinationService from '@/services/examination.service';
 
@@ -92,8 +93,12 @@ export function AiBuildPanel() {
     const timer = window.setInterval(() => {
       void examinationService.getAiJob(job.id).then((next) => {
         setJob(next);
+        if (next.status === 'failed' && next.error_message) {
+          setError(next.error_message);
+          notify.error(next.error_message);
+        }
         if (next.status === 'completed' || next.status === 'failed') void refreshLists();
-      }).catch(() => undefined);
+      }).catch((err) => setError(parseApiError(err)));
     }, 2000);
     return () => window.clearInterval(timer);
   }, [job?.id, job?.status]);
@@ -266,7 +271,9 @@ export function AiBuildPanel() {
               {job.progress_current} / {job.progress_total} saved · {job.skipped_count} skipped
             </p>
             <progress value={job.progress_current} max={Math.max(job.progress_total, 1)} />
-            {job.error_message ? <p className="login__error">{job.error_message}</p> : null}
+            {job.error_message && job.error_message !== error ? (
+              <p className="login__error">{job.error_message}</p>
+            ) : null}
             {jobErrors(job).length > 0 ? (
               <ul>
                 {jobErrors(job).slice(0, 8).map((item, index) => (

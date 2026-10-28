@@ -1102,6 +1102,30 @@ i[class*="icon"],
   border: 1px solid #e2e8f0;
 }
 
+.mad-v3-student-avatar--letter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mad-v3-empty {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.mad-v3-stat-trend--down {
+  color: #dc2626;
+}
+
+.mad-v3-stat-trend--down .trend-arrow {
+  transform: rotate(180deg);
+}
+
 .mad-v3-student-name {
   font-size: 0.8125rem;
   font-weight: 600;
