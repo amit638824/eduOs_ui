@@ -211,7 +211,6 @@ export function buildDashboardNavigation(
           title: 'USER MANAGEMENT',
           collapsible: true,
           defaultOpen: false,
-          countBadge: '5 tabs',
           items: [
             {
               label: 'Users',
@@ -243,10 +242,9 @@ export function buildDashboardNavigation(
 
         {
           id: 'platform_gov',
-          title: 'PLATFORM GOVERNANCE',
+          title: 'GOVERNANCE',
           collapsible: true,
           defaultOpen: false,
-          countBadge: '4 tabs',
           items: [
             {
               label: 'Organizations',
@@ -273,7 +271,6 @@ export function buildDashboardNavigation(
 
         {
           id: 'pinned_bottom',
-          title: 'PINNED BOTTOM',
           collapsible: false,
           className: 'sca-db-sidebar__group--pinned',
           items: [
@@ -390,7 +387,6 @@ export function buildDashboardNavigation(
           title: 'USER MANAGEMENT',
           collapsible: true,
           defaultOpen: false,
-          countBadge: '2 tabs',
           items: [
             {
               label: 'Students',
@@ -407,7 +403,6 @@ export function buildDashboardNavigation(
 
         {
           id: 'pinned_bottom',
-          title: 'PINNED BOTTOM',
           collapsible: false,
           className: 'sca-db-sidebar__group--pinned',
           items: [
@@ -523,7 +518,6 @@ export function buildDashboardNavigation(
         title: 'USER MANAGEMENT',
         collapsible: true,
         defaultOpen: false,
-        countBadge: '4 tabs',
         items: [
           {
             label: 'Faculty',
@@ -550,7 +544,6 @@ export function buildDashboardNavigation(
 
       {
         id: 'pinned_bottom',
-        title: 'PINNED BOTTOM',
         collapsible: false,
         className: 'sca-db-sidebar__group--pinned',
         items: [
@@ -652,7 +645,6 @@ export function buildDashboardNavigation(
 
       {
         id: 'pinned_bottom',
-        title: 'PINNED BOTTOM',
         collapsible: false,
         className: 'sca-db-sidebar__group--pinned',
         items: [
@@ -802,3 +794,4 @@ export function buildProfileFields(user: ApiUser) {
     },
   ];
 }
+

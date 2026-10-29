@@ -16,7 +16,7 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   --db-sidebar-muted: #94a3b8;
   --db-sidebar-accent-soft: rgba(59, 130, 246, 0.15);
 
-  --db-sidebar-w: 240px;
+  --db-sidebar-w: 260px;
   --db-sidebar-w-collapsed: 72px;
   --db-sidebar-ease: cubic-bezier(0.4, 0, 0.2, 1);
   --db-sidebar-duration: 0.24s;
@@ -144,9 +144,10 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 
 .sca-db-sidebar__nav {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 8px 0 16px;
+  padding: 10px 0 12px;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
@@ -168,76 +169,106 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   background: rgba(255, 255, 255, 0.35);
 }
 
-.sca-db-sidebar__group+.sca-db-sidebar__group {
-  margin-top: 4px;
-  padding-top: 8px;
+.sca-db-sidebar__group + .sca-db-sidebar__group {
+  margin-top: 2px;
+  padding-top: 6px;
   border-top: 1px solid var(--db-sidebar-border);
 }
 
+.sca-db-sidebar__group--collapsible.is-open {
+  background: rgba(255, 255, 255, 0.02);
+}
+
 .sca-db-sidebar__section-title {
-  padding: 8px 20px 6px;
+  padding: 8px 16px 6px 20px;
   font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.4);
+  white-space: nowrap;
 }
 
 .sca-db-sidebar__section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
   width: 100%;
-  padding: 8px 20px 6px;
+  padding: 10px 14px 10px 20px;
   background: transparent;
   border: none;
+  border-radius: 0;
   cursor: pointer;
   text-align: left;
   user-select: none;
+  color: inherit;
+  transition: background 0.15s ease;
 }
 
-.sca-db-sidebar__section-header:hover .sca-db-sidebar__section-title-text {
-  color: rgba(255, 255, 255, 0.85);
+.sca-db-sidebar__section-header:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sca-db-sidebar__section-header:hover .sca-db-sidebar__section-title-text,
+.sca-db-sidebar__section-header:hover .sca-db-sidebar__chevron {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.sca-db-sidebar__section-header--open {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.sca-db-sidebar__section-header--open .sca-db-sidebar__section-title-text {
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .sca-db-sidebar__section-title-text {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 0.6875rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.15s ease;
 }
 
 .sca-db-sidebar__section-meta {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .sca-db-sidebar__count-badge {
   font-size: 0.625rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(255, 255, 255, 0.7);
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 2px 7px;
   border-radius: 9999px;
-  line-height: 1;
+  line-height: 1.2;
   letter-spacing: 0.02em;
   display: inline-flex;
   align-items: center;
+  white-space: nowrap;
 }
 
 .sca-db-sidebar__chevron {
   color: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
   transform: rotate(-90deg);
   transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
 }
 
 .sca-db-sidebar__chevron--open {
   transform: rotate(0deg);
-  color: rgba(255, 255, 255, 0.85);
+  color: #93c5fd;
 }
 
 .sca-db-sidebar__items-list {
@@ -445,28 +476,16 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
 }
 
-/* Pinned Bottom Section */
-.sca-db-sidebar__pinned {
-  flex-shrink: 0;
-  border-top: 1px solid var(--db-sidebar-border);
-  background: var(--db-sidebar-bg);
-  padding: 8px 0 10px;
-  z-index: 5;
+/* Top menu (Settings / Profile / Notifications / Logout) */
+.sca-db-sidebar__group--top-menu {
+  margin-bottom: 4px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--db-sidebar-border);
 }
 
-.sca-db-sidebar__section-title--pinned {
-  padding: 6px 20px 4px;
-}
-
-.sca-dashboard--collapsed .sca-db-sidebar__pinned .sca-db-sidebar__section-title--pinned {
-  display: none !important;
-}
-
-.sca-dashboard--collapsed .sca-db-sidebar__pinned .sca-db-nav-item {
-  justify-content: center;
-  gap: 0;
-  padding: 14px 0;
-  border-left-width: 3px;
+.sca-db-sidebar__group--top-menu + .sca-db-sidebar__group {
+  border-top: none;
+  padding-top: 6px;
 }
 
 .sca-dashboard--collapsed .sca-db-nav-item {
