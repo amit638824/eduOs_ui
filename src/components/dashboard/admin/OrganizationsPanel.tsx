@@ -1,4 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { Pagination } from '@/components/ui/Pagination';
+import { useServerList } from '@/hooks/useServerList';
 import {
   FiPlus,
   FiSearch,
@@ -41,13 +43,34 @@ function getInitials(name: string) {
 export function OrganizationsPanel() {
   const { refreshOrganizations, setSelectedOrgId } = useOrgScope();
   const withLoader = useDashboardLoader();
-  const [orgs, setOrgs] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
-  // Search & Filter state
-  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended'>('all');
+
+  const {
+    items: orgs,
+    pagination,
+    page,
+    limit,
+    searchQuery,
+    loading,
+    error,
+    setError,
+    setSearchQuery,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh,
+  } = useServerList<Organization>({
+    fetcher: ({ page: p, limit: l, search }) =>
+      organizationService.listOrganizations(
+        p,
+        l,
+        search || undefined,
+        statusFilter === 'all' ? undefined : statusFilter === 'active',
+      ),
+    deps: [statusFilter],
+    defaultLimit: 10,
+  });
 
   // Side Drawer state
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -62,23 +85,6 @@ export function OrganizationsPanel() {
   const [adminPassword, setAdminPassword] = useState(DEFAULT_SUGGESTED_PASSWORD);
   const [passwordError, setPasswordError] = useState('');
   const [activateNow, setActivateNow] = useState(true);
-
-  const load = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const list = await organizationService.listOrganizations(1, 100);
-      setOrgs(list.data);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-  }, []);
 
   useDashboardLoadingEffect(loading);
 
@@ -173,7 +179,7 @@ export function OrganizationsPanel() {
           );
         }
         closeDrawer();
-        await load();
+        await refresh();
         await refreshOrganizations();
       } catch (err) {
         setDrawerError(parseApiError(err));
@@ -194,7 +200,7 @@ export function OrganizationsPanel() {
     try {
       await withLoader(async () => {
         await organizationService.verifyOrganization(org.id);
-        await load();
+        await refresh();
         await refreshOrganizations();
       });
       showSuccess('Activated!', `${org.name} can now access the platform.`);
@@ -216,7 +222,7 @@ export function OrganizationsPanel() {
     try {
       await withLoader(async () => {
         await organizationService.updateOrganization(org.id, { isActive: false });
-        await load();
+        await refresh();
         await refreshOrganizations();
       });
       showSuccess('Suspended', `${org.name} has been suspended.`);
@@ -236,7 +242,7 @@ export function OrganizationsPanel() {
     try {
       await withLoader(async () => {
         await organizationService.deleteOrganization(org.id);
-        await load();
+        await refresh();
         await refreshOrganizations();
       });
       showSuccess('Deleted!', `${org.name} has been removed.`);
@@ -251,28 +257,7 @@ export function OrganizationsPanel() {
     showSuccess('Organization Switched', `Switched active organization to ${org.name}.`);
   };
 
-  // Filtered organizations
-  const filteredOrgs = useMemo(() => {
-    return orgs.filter((org) => {
-      if (statusFilter === 'active' && !org.isActive) return false;
-      if (statusFilter === 'suspended' && org.isActive) return false;
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesName = org.name.toLowerCase().includes(q);
-        const matchesSlug = org.slug.toLowerCase().includes(q);
-        const matchesEmail =
-          typeof org.settings?.contactEmail === 'string' &&
-          org.settings.contactEmail.toLowerCase().includes(q);
-        return matchesName || matchesSlug || matchesEmail;
-      }
-
-      return true;
-    });
-  }, [orgs, statusFilter, searchQuery]);
-
-  const activeCount = useMemo(() => orgs.filter((o) => o.isActive).length, [orgs]);
-  const suspendedCount = useMemo(() => orgs.filter((o) => !o.isActive).length, [orgs]);
+  const filteredOrgs = orgs;
 
   return (
     <div className="org-panel-root">
@@ -311,7 +296,7 @@ export function OrganizationsPanel() {
             <div className="org-title-row">
               <h3 className="org-card-title">All Organizations</h3>
               <span className="org-count-badge">
-                {filteredOrgs.length} {filteredOrgs.length === 1 ? 'Vendor' : 'Vendors'}
+                {pagination.total} {pagination.total === 1 ? 'Vendor' : 'Vendors'}
               </span>
             </div>
             <p className="org-card-subtitle">Manage and monitor platform vendor organizations</p>
@@ -333,7 +318,7 @@ export function OrganizationsPanel() {
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchQuery('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -348,21 +333,21 @@ export function OrganizationsPanel() {
                 className={`org-pill ${statusFilter === 'all' ? 'is-active' : ''}`}
                 onClick={() => setStatusFilter('all')}
               >
-                All ({orgs.length})
+                All{statusFilter === 'all' ? ` (${pagination.total})` : ''}
               </button>
               <button
                 type="button"
                 className={`org-pill ${statusFilter === 'active' ? 'is-active' : ''}`}
                 onClick={() => setStatusFilter('active')}
               >
-                Active ({activeCount})
+                Active
               </button>
               <button
                 type="button"
                 className={`org-pill ${statusFilter === 'suspended' ? 'is-active' : ''}`}
                 onClick={() => setStatusFilter('suspended')}
               >
-                Suspended ({suspendedCount})
+                Suspended
               </button>
             </div>
           </div>
@@ -495,6 +480,15 @@ export function OrganizationsPanel() {
             </table>
           </div>
         )}
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════

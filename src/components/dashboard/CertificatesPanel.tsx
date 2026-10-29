@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { Pagination } from '@/components/ui/Pagination';
+import { useServerList } from '@/hooks/useServerList';
 import { Link } from 'react-router-dom';
 import { examinationService } from '@/services';
 import type { Certificate } from '@/services/examination.service';
@@ -17,36 +19,51 @@ import '@/styles/organizations.css';
 
 export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) {
   const { user } = useAuth();
-  const [items, setItems] = useState<Certificate[]>([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
   const [certBusy, setCertBusy] = useState(false);
   const withLoader = useDashboardLoader();
   const canRevoke =
     user?.roles.some((r) => ['super_admin', 'org_admin', 'staff'].includes(r)) ?? false;
 
-  const load = async () => {
-    setLoading(true);
-    setError('');
-    try {
+  const {
+    items,
+    pagination,
+    page,
+    limit,
+    searchQuery: searchTerm,
+    loading,
+    error,
+    setSearchQuery: setSearchTerm,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh: load,
+  } = useServerList<Certificate>({
+    fetcher: async ({ page: p, limit: l, search }) => {
       if (mode === 'org') {
-        const res = await examinationService.listCertificates(1, 100);
-        setItems(res.data);
-      } else {
-        setItems(await examinationService.listMyCertificates());
+        return examinationService.listCertificates(p, l, search || undefined);
       }
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-  }, [mode]);
+      // "My certificates" API is not paginated: search + slice locally so the UI stays consistent.
+      const all = await examinationService.listMyCertificates();
+      const q = search.toLowerCase();
+      const matched = q
+        ? all.filter(
+            (c) =>
+              c.certificate_no?.toLowerCase().includes(q) ||
+              c.student_name?.toLowerCase().includes(q) ||
+              c.test_title?.toLowerCase().includes(q) ||
+              c.verification_code?.toLowerCase().includes(q),
+          )
+        : all;
+      const total = matched.length;
+      return {
+        data: matched.slice((p - 1) * l, p * l),
+        pagination: { page: p, limit: l, total, totalPages: Math.ceil(total / l) },
+      };
+    },
+    deps: [mode],
+    defaultLimit: 10,
+  });
 
   useDashboardLoadingEffect(loading);
 
@@ -95,16 +112,6 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
     });
   };
 
-  const filteredItems = items.filter((c) => {
-    if (!searchTerm.trim()) return true;
-    const q = searchTerm.toLowerCase();
-    return (
-      (c.certificate_no && c.certificate_no.toLowerCase().includes(q)) ||
-      (c.student_name && c.student_name.toLowerCase().includes(q)) ||
-      (c.test_title && c.test_title.toLowerCase().includes(q)) ||
-      (c.verification_code && c.verification_code.toLowerCase().includes(q))
-    );
-  });
 
   return (
     <div className="org-panel-page">
@@ -127,7 +134,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
             <div className="org-title-row">
               <h3 className="org-card-title">All Certificates</h3>
               <span className="org-count-badge">
-                {filteredItems.length} {filteredItems.length === 1 ? 'Certificate' : 'Certificates'}
+                {pagination.total} {pagination.total === 1 ? 'Certificate' : 'Certificates'}
               </span>
             </div>
             <p className="org-card-subtitle">
@@ -152,7 +159,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchTerm('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -177,7 +184,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
               </tr>
             </thead>
             <tbody>
-              {filteredItems.map((c) => (
+              {items.map((c) => (
                 <tr key={c.id}>
                   <td>
                     <code style={{ background: '#f1f5f9', padding: '3px 8px', borderRadius: 6, fontSize: '0.8rem', color: '#1e293b', fontWeight: 600 }}>
@@ -238,16 +245,25 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                   </td>
                 </tr>
               ))}
-              {filteredItems.length === 0 && (
+              {items.length === 0 && !loading && (
                 <tr>
                   <td colSpan={mode === 'org' ? 8 : 7} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-                    {items.length === 0 ? 'No certificates yet.' : 'No certificates match your search query.'}
+                    {!searchTerm.trim() ? 'No certificates yet.' : 'No certificates match your search query.'}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
 
       {mode === 'org' && (

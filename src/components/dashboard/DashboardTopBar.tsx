@@ -4,6 +4,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useOrgScope } from '@/context/OrgScopeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
 import { platformService } from '@/services';
+import { REALTIME_NOTIFICATION_EVENT, type RealtimeNotificationDetail } from '@/lib/realtime';
 import OrgSwitcher from './OrgSwitcher';
 
 interface DashboardTopBarProps {
@@ -54,21 +55,25 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
   useEffect(() => {
     if (isSuperAdmin && !scopeReady) return;
     let cancelled = false;
-    const load = () => {
-      platformService
-        .getUnreadCount()
-        .then((count) => {
-          if (!cancelled) setUnread(count);
-        })
-        .catch(() => {
-          if (!cancelled) setUnread(0);
-        });
+    platformService
+      .getUnreadCount()
+      .then((count) => {
+        if (!cancelled) setUnread(count);
+      })
+      .catch(() => {
+        if (!cancelled) setUnread(0);
+      });
+
+    const onRealtime = (event: Event) => {
+      const detail = (event as CustomEvent<RealtimeNotificationDetail>).detail;
+      if (typeof detail?.unreadCount === 'number' && !cancelled) {
+        setUnread(detail.unreadCount);
+      }
     };
-    load();
-    const timer = window.setInterval(load, 30_000);
+    window.addEventListener(REALTIME_NOTIFICATION_EVENT, onRealtime);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      window.removeEventListener(REALTIME_NOTIFICATION_EVENT, onRealtime);
     };
   }, [isSuperAdmin, scopeReady, selectedOrgId]);
 

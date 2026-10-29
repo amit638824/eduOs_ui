@@ -68,9 +68,9 @@ export interface OrgSetting {
   value: unknown;
 }
 
-export async function listNotifications(page = 1, limit = 20) {
+export async function listNotifications(page = 1, limit = 10, search?: string) {
   const { data } = await api.get<PaginatedResponse<Notification>>(`${base}/notifications`, {
-    params: { page, limit },
+    params: { page, limit, search: search || undefined },
   });
   return data;
 }
@@ -90,9 +90,19 @@ export async function getUnreadCount() {
   return data.data.count;
 }
 
-export async function listPayments(page = 1, limit = 20) {
+export async function listPayments(
+  page = 1,
+  limit = 10,
+  search?: string,
+  status?: string,
+) {
   const { data } = await api.get<PaginatedResponse<Payment>>(`${base}/payments`, {
-    params: { page, limit },
+    params: {
+      page,
+      limit,
+      search: search || undefined,
+      status: status && status !== 'all' ? status : undefined,
+    },
   });
   return data;
 }
@@ -138,9 +148,21 @@ export async function verifyRazorpayPayment(input: {
   return data.data;
 }
 
-export async function listUsers(page = 1, limit = 20, search?: string, role?: string) {
+export async function listUsers(
+  page = 1,
+  limit = 10,
+  search?: string,
+  role?: string,
+  status?: string,
+) {
   const { data } = await api.get<PaginatedResponse<PlatformUser>>(`${base}/users`, {
-    params: { page, limit, search, role },
+    params: {
+      page,
+      limit,
+      search: search || undefined,
+      role: role || undefined,
+      status: status && status !== 'all' ? status : undefined,
+    },
   });
   return data;
 }
@@ -189,10 +211,15 @@ export async function updateUserStatus(userId: string, status: 'active' | 'inact
   return data.data;
 }
 
-export async function listDepartments(branchId: string, page = 1, limit = 50) {
+export async function listDepartments(
+  branchId: string,
+  page = 1,
+  limit = 10,
+  search?: string,
+) {
   const { data } = await api.get<PaginatedResponse<Department>>(
     `${base}/branches/${branchId}/departments`,
-    { params: { page, limit } },
+    { params: { page, limit, search: search || undefined } },
   );
   return data;
 }
@@ -251,9 +278,19 @@ export async function deleteSetting(key: string) {
   return data.data;
 }
 
-export async function listAuditLogs(page = 1, limit = 20) {
+export async function listAuditLogs(
+  page = 1,
+  limit = 10,
+  search?: string,
+  action?: string,
+) {
   const { data } = await api.get<PaginatedResponse<AuditLog>>(`${base}/audit-logs`, {
-    params: { page, limit },
+    params: {
+      page,
+      limit,
+      search: search || undefined,
+      action: action && action !== 'all' ? action : undefined,
+    },
   });
   return data;
 }

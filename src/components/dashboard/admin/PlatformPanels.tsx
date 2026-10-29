@@ -1,4 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
+import { Pagination } from '@/components/ui/Pagination';
+import { useServerList } from '@/hooks/useServerList';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   FiPlus,
@@ -33,6 +35,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { examinationService, platformService } from '@/services';
 import { parseApiError } from '@/lib/errors';
+import { REALTIME_NOTIFICATION_EVENT } from '@/lib/realtime';
 import { FormError, PasswordInput } from '@/components/ui/FormField';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
@@ -57,64 +60,75 @@ import {
 } from 'recharts';
 
 export function NotificationsPanel() {
-  const [items, setItems] = useState<Awaited<ReturnType<typeof platformService.listNotifications>>['data']>([]);
-  const [error, setError] = useState('');
   const [unread, setUnread] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
   const withLoader = useDashboardLoader();
 
-  const load = async () => {
-    setLoading(true);
+  const {
+    items,
+    pagination,
+    page,
+    limit,
+    searchQuery: searchTerm,
+    loading,
+    error,
+    setSearchQuery: setSearchTerm,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh,
+  } = useServerList({
+    fetcher: ({ page: p, limit: l, search }) => platformService.listNotifications(p, l, search || undefined),
+    defaultLimit: 10,
+  });
+
+  const loadUnread = async () => {
     try {
-      const [list, count] = await Promise.all([
-        platformService.listNotifications(1, 30),
-        platformService.getUnreadCount(),
-      ]);
-      setItems(list.data);
-      setUnread(count);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
+      setUnread(await platformService.getUnreadCount());
+    } catch {
+      /* unread badge is non-critical */
     }
   };
 
   useEffect(() => {
-    void load();
-  }, []);
+    void loadUnread();
+  }, [items]);
+
+  useEffect(() => {
+    const onRealtime = () => {
+      void refresh();
+      void loadUnread();
+    };
+    window.addEventListener(REALTIME_NOTIFICATION_EVENT, onRealtime);
+    return () => window.removeEventListener(REALTIME_NOTIFICATION_EVENT, onRealtime);
+  }, [refresh]);
 
   useDashboardLoadingEffect(loading);
 
   const markRead = async (id: string) => {
     await withLoader(async () => {
       await platformService.markNotificationRead(id);
-      await load();
+      await refresh();
+      await loadUnread();
     });
   };
 
   const markAll = async () => {
     await withLoader(async () => {
       await platformService.markAllNotificationsRead();
-      await load();
+      await refresh();
+      await loadUnread();
     });
   };
 
+  // API has no is_read filter: read/unread applies to the current server page only.
   const filteredItems = useMemo(() => {
     return items.filter((n) => {
       if (filter === 'unread' && n.is_read) return false;
       if (filter === 'read' && !n.is_read) return false;
-      if (searchTerm.trim()) {
-        const q = searchTerm.toLowerCase();
-        const matchesTitle = n.title?.toLowerCase().includes(q);
-        const matchesBody = n.body?.toLowerCase().includes(q);
-        const matchesChannel = n.channel?.toLowerCase().includes(q);
-        if (!matchesTitle && !matchesBody && !matchesChannel) return false;
-      }
       return true;
     });
-  }, [items, searchTerm, filter]);
+  }, [items, filter]);
 
   return (
     <div className="org-panel-page">
@@ -147,7 +161,7 @@ export function NotificationsPanel() {
             <div className="org-title-row">
               <h3 className="org-card-title">All Notifications</h3>
               <span className="org-count-badge">
-                {filteredItems.length} {filteredItems.length === 1 ? 'Alert' : 'Alerts'}
+                {pagination.total} {pagination.total === 1 ? 'Alert' : 'Alerts'}
               </span>
               {unread > 0 && (
                 <span
@@ -202,7 +216,7 @@ export function NotificationsPanel() {
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchTerm('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -307,6 +321,15 @@ export function NotificationsPanel() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
     </div>
   );
@@ -314,30 +337,51 @@ export function NotificationsPanel() {
 
 export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) {
   const { user } = useAuth();
-  const [payments, setPayments] = useState<Awaited<ReturnType<typeof platformService.listPayments>>['data']>([]);
   const [wallet, setWallet] = useState<Record<string, unknown> | null>(null);
   const [paymentConfig, setPaymentConfig] = useState<Awaited<ReturnType<typeof platformService.getPaymentConfig>> | null>(null);
   const [amount, setAmount] = useState('500');
-  const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [paying, setPaying] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [metaLoading, setMetaLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
 
-  const load = async () => {
-    const [list, w] = await Promise.all([
-      platformService.listPayments(1, 30),
-      platformService.getWallet(),
-    ]);
-    setPayments(list.data);
-    setWallet(w);
+  const {
+    items: payments,
+    pagination,
+    page,
+    limit,
+    searchQuery,
+    loading: listLoading,
+    error,
+    setError,
+    setSearchQuery,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh,
+  } = useServerList({
+    fetcher: ({ page: p, limit: l, search }) =>
+      platformService.listPayments(
+        p,
+        l,
+        search || undefined,
+        statusFilter === 'paid' ? 'completed' : statusFilter === 'pending' ? 'pending' : undefined,
+      ),
+    deps: [statusFilter],
+    defaultLimit: 10,
+  });
+  const loading = listLoading || metaLoading;
+
+  const loadWallet = async () => {
+    setWallet(await platformService.getWallet());
   };
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([load(), platformService.getPaymentConfig()])
+    setMetaLoading(true);
+    Promise.all([loadWallet(), platformService.getPaymentConfig()])
       .then(([, config]) => setPaymentConfig(config))
       .catch((err) => setError(parseApiError(err)))
-      .finally(() => setLoading(false));
+      .finally(() => setMetaLoading(false));
   }, []);
 
   useDashboardLoadingEffect(loading || paying);
@@ -392,7 +436,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
               razorpaySignature: response.razorpay_signature,
             });
             setMessage('Payment successful! Wallet updated.');
-            await load();
+            await Promise.all([refresh(), loadWallet()]);
           } catch (err) {
             setError(parseApiError(err));
           } finally {
@@ -406,26 +450,6 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
       setPaying(false);
     }
   };
-
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
-
-  const filteredPayments = useMemo(() => {
-    return payments.filter((p) => {
-      const st = (p.status || '').toLowerCase();
-      if (statusFilter === 'paid' && !st.includes('paid') && !st.includes('complete') && !st.includes('success')) return false;
-      if (statusFilter === 'pending' && !st.includes('pend')) return false;
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const nameMatch = `${p.first_name || ''} ${p.last_name || ''}`.toLowerCase().includes(q);
-        const emailMatch = (p.email || '').toLowerCase().includes(q);
-        const amountMatch = String(p.amount || '').includes(q);
-        return nameMatch || emailMatch || amountMatch;
-      }
-      return true;
-    });
-  }, [payments, statusFilter, searchQuery]);
 
   return (
     <div className="org-panel-root">
@@ -530,7 +554,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
             <div className="org-title-row">
               <h3 className="org-card-title">All Transactions</h3>
               <span className="org-count-badge">
-                {filteredPayments.length} {filteredPayments.length === 1 ? 'Record' : 'Records'}
+                {pagination.total} {pagination.total === 1 ? 'Record' : 'Records'}
               </span>
             </div>
             <p className="org-card-subtitle">
@@ -554,7 +578,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchQuery('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -569,7 +593,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
                 className={`org-pill${statusFilter === 'all' ? ' is-active' : ''}`}
                 onClick={() => setStatusFilter('all')}
               >
-                All ({payments.length})
+                All{statusFilter === 'all' ? ` (${pagination.total})` : ''}
               </button>
               <button
                 type="button"
@@ -590,7 +614,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
         </div>
 
         {/* Table Content */}
-        {filteredPayments.length === 0 && !loading ? (
+        {payments.length === 0 && !loading ? (
           <div className="org-empty-state">
             <FiCreditCard className="org-empty-icon" />
             <p className="org-empty-text">
@@ -611,8 +635,8 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
                 </tr>
               </thead>
               <tbody>
-                {filteredPayments.map((p) => {
-                  const isPaid = (p.status || '').toLowerCase().includes('paid') || (p.status || '').toLowerCase().includes('success');
+                {payments.map((p) => {
+                  const isPaid = ['paid', 'success', 'complete'].some((s) => (p.status || '').toLowerCase().includes(s));
                   const initials = getUserInitials(p.first_name, p.last_name, p.email);
 
                   return (
@@ -678,6 +702,15 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
             </table>
           </div>
         )}
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
     </div>
   );
@@ -719,13 +752,36 @@ export function UsersManagementPanel({
   lockedRole?: 'student' | 'teacher' | 'org_admin' | 'staff';
   title?: string;
 } = {}) {
-  const [users, setUsers] = useState<Awaited<ReturnType<typeof platformService.listUsers>>['data']>([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+
+  const {
+    items: users,
+    pagination,
+    page,
+    limit,
+    searchQuery,
+    loading,
+    error,
+    setError,
+    setSearchQuery,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh,
+  } = useServerList({
+    fetcher: ({ page: p, limit: l, search }) =>
+      platformService.listUsers(
+        p,
+        l,
+        search || undefined,
+        lockedRole,
+        statusFilter === 'all' ? undefined : statusFilter,
+      ),
+    deps: [lockedRole, statusFilter],
+    defaultLimit: 10,
+  });
 
   const withLoader = useDashboardLoader();
   const { user: authUser } = useAuth();
@@ -756,22 +812,6 @@ export function UsersManagementPanel({
   });
   const watchedRole = watch('role');
   const showEnrollmentField = lockedRole === 'student' || watchedRole === 'student';
-
-  const load = async () => {
-    setLoading(true);
-    try {
-      const res = await platformService.listUsers(1, 100, undefined, lockedRole);
-      setUsers(res.data);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void load();
-  }, [lockedRole]);
 
   useEffect(() => {
     if (editingId || !showEnrollmentField) return;
@@ -871,7 +911,7 @@ export function UsersManagementPanel({
           showSuccess('Created', 'Login credentials emailed.');
         }
         closeDrawer();
-        await load();
+        await refresh();
       } catch (err) {
         setError(parseApiError(err));
       }
@@ -887,7 +927,7 @@ export function UsersManagementPanel({
           status === 'active' ? 'Activated' : 'Deactivated',
           status === 'active' ? 'Account is active and can log in.' : 'Account is deactivated and cannot log in.',
         );
-        await load();
+        await refresh();
       } catch (err) {
         setError(parseApiError(err));
       }
@@ -906,7 +946,7 @@ export function UsersManagementPanel({
       await withLoader(async () => {
         await platformService.deleteUser(userId);
         if (editingId === userId) closeDrawer();
-        await load();
+        await refresh();
       });
       showSuccess('Deleted!', `${name} has been removed.`);
     } catch (err) {
@@ -951,26 +991,6 @@ export function UsersManagementPanel({
           ? 'Directory of platform administrators, proctors, and support staff'
           : 'Directory of all registered institution users, permissions, and roles';
 
-  // Filtered users
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      if (statusFilter === 'active' && u.status !== 'active') return false;
-      if (statusFilter === 'inactive' && u.status === 'active') return false;
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const fullName = `${u.first_name} ${u.last_name}`.toLowerCase();
-        const email = u.email.toLowerCase();
-        const enrollment = (u.enrollment_no ?? '').toLowerCase();
-        return fullName.includes(q) || email.includes(q) || enrollment.includes(q);
-      }
-      return true;
-    });
-  }, [users, statusFilter, searchQuery]);
-
-  const activeCount = useMemo(() => users.filter((u) => u.status === 'active').length, [users]);
-  const inactiveCount = useMemo(() => users.filter((u) => u.status !== 'active').length, [users]);
-
   return (
     <div className="org-panel-root">
       {/* ── Top Bar with Heading, Sub-heading & Add Gradient Button ── */}
@@ -1005,7 +1025,7 @@ export function UsersManagementPanel({
             <div className="org-title-row">
               <h3 className="org-card-title">All {heading}</h3>
               <span className="org-count-badge">
-                {filteredUsers.length} {filteredUsers.length === 1 ? 'Member' : 'Members'}
+                {pagination.total} {pagination.total === 1 ? 'Member' : 'Members'}
               </span>
             </div>
             <p className="org-card-subtitle">
@@ -1029,7 +1049,7 @@ export function UsersManagementPanel({
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchQuery('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -1044,27 +1064,27 @@ export function UsersManagementPanel({
                 className={`org-pill${statusFilter === 'all' ? ' is-active' : ''}`}
                 onClick={() => setStatusFilter('all')}
               >
-                All ({users.length})
+                All{statusFilter === 'all' ? ` (${pagination.total})` : ''}
               </button>
               <button
                 type="button"
                 className={`org-pill${statusFilter === 'active' ? ' is-active' : ''}`}
                 onClick={() => setStatusFilter('active')}
               >
-                Active ({activeCount})
+                Active{statusFilter === 'active' ? ` (${pagination.total})` : ''}
               </button>
               <button
                 type="button"
                 className={`org-pill${statusFilter === 'inactive' ? ' is-active' : ''}`}
                 onClick={() => setStatusFilter('inactive')}
               >
-                Inactive ({inactiveCount})
+                Inactive{statusFilter === 'inactive' ? ` (${pagination.total})` : ''}
               </button>
             </div>
           </div>
         </div>
 
-        {filteredUsers.length === 0 ? (
+        {users.length === 0 ? (
           <div className="org-empty-state">
             <FiUsers className="org-empty-icon" />
             <p className="org-empty-text">
@@ -1087,7 +1107,7 @@ export function UsersManagementPanel({
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((u) => {
+                {users.map((u) => {
                   const isActive = u.status === 'active';
                   const initials = getUserInitials(u.first_name, u.last_name, u.email);
                   const primaryRole = (u.roles as string[])[0] || 'student';
@@ -1184,6 +1204,15 @@ export function UsersManagementPanel({
             </table>
           </div>
         )}
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
 
       {/* ── Side-Drawer Component (UNDER TOPNAV: top 72px) ── */}
@@ -1901,49 +1930,35 @@ export function ReportsPanel() {
 }
 
 export function AuditLogPanel() {
-  const [logs, setLogs] = useState<Awaited<ReturnType<typeof platformService.listAuditLogs>>['data']>([]);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
   const [actionFilter, setActionFilter] = useState<'all' | 'create' | 'update' | 'delete'>('all');
   const withLoader = useDashboardLoader();
 
-  const loadLogs = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const r = await platformService.listAuditLogs(1, 100);
-      setLogs(r.data);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadLogs();
-  }, []);
+  const {
+    items: logs,
+    pagination,
+    page,
+    limit,
+    searchQuery,
+    loading,
+    error,
+    setSearchQuery,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh,
+  } = useServerList({
+    fetcher: ({ page: p, limit: l, search }) =>
+      platformService.listAuditLogs(
+        p,
+        l,
+        search || undefined,
+        actionFilter === 'all' ? undefined : actionFilter,
+      ),
+    deps: [actionFilter],
+    defaultLimit: 10,
+  });
 
   useDashboardLoadingEffect(loading);
-
-  const filteredLogs = useMemo(() => {
-    return logs.filter((l) => {
-      const act = (l.action || '').toLowerCase();
-      if (actionFilter === 'create' && !act.includes('create') && !act.includes('add')) return false;
-      if (actionFilter === 'update' && !act.includes('update') && !act.includes('edit')) return false;
-      if (actionFilter === 'delete' && !act.includes('delete') && !act.includes('remove')) return false;
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const actionMatch = act.includes(q);
-        const resourceMatch = (l.resource || '').toLowerCase().includes(q);
-        const userMatch = (l.user_email || '').toLowerCase().includes(q);
-        return actionMatch || resourceMatch || userMatch;
-      }
-      return true;
-    });
-  }, [logs, actionFilter, searchQuery]);
 
   return (
     <div className="org-panel-root">
@@ -1959,7 +1974,7 @@ export function AuditLogPanel() {
         <button
           type="button"
           className="org-add-btn"
-          onClick={() => void withLoader(loadLogs)}
+          onClick={() => void withLoader(refresh)}
           id="btnRefreshAuditLogs"
         >
           <FiRefreshCw className="org-add-btn-icon" />
@@ -1980,7 +1995,7 @@ export function AuditLogPanel() {
             <div className="org-title-row">
               <h3 className="org-card-title">System Activity Logs</h3>
               <span className="org-count-badge">
-                {filteredLogs.length} {filteredLogs.length === 1 ? 'Event' : 'Events'}
+                {pagination.total} {pagination.total === 1 ? 'Event' : 'Events'}
               </span>
             </div>
             <p className="org-card-subtitle">
@@ -2004,7 +2019,7 @@ export function AuditLogPanel() {
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchQuery('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -2019,7 +2034,7 @@ export function AuditLogPanel() {
                 className={`org-pill${actionFilter === 'all' ? ' is-active' : ''}`}
                 onClick={() => setActionFilter('all')}
               >
-                All ({logs.length})
+                All{actionFilter === 'all' ? ` (${pagination.total})` : ''}
               </button>
               <button
                 type="button"
@@ -2046,7 +2061,7 @@ export function AuditLogPanel() {
           </div>
         </div>
 
-        {filteredLogs.length === 0 && !loading ? (
+        {logs.length === 0 && !loading ? (
           <div className="org-empty-state">
             <FiActivity className="org-empty-icon" />
             <p className="org-empty-text">
@@ -2067,7 +2082,7 @@ export function AuditLogPanel() {
                 </tr>
               </thead>
               <tbody>
-                {filteredLogs.map((l) => {
+                {logs.map((l) => {
                   const act = (l.action || '').toLowerCase();
                   const isDelete = act.includes('delete') || act.includes('remove');
                   const isCreate = act.includes('create') || act.includes('add');
@@ -2136,6 +2151,15 @@ export function AuditLogPanel() {
             </table>
           </div>
         )}
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
     </div>
   );
@@ -2684,33 +2708,36 @@ export function SessionsSecurityPanel() {
 export function OrgStructurePanel() {
   const { branches, loading: orgLoading } = useOrganization();
   const [branchId, setBranchId] = useState('');
-  const [departments, setDepartments] = useState<Awaited<ReturnType<typeof platformService.listDepartments>>['data']>([]);
   const [deptName, setDeptName] = useState('');
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
-  const [error, setError] = useState('');
-  const [deptLoading, setDeptLoading] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const withLoader = useDashboardLoader();
 
-  const reloadDepartments = async (id = branchId) => {
-    if (!id) return;
-    const r = await platformService.listDepartments(id);
-    setDepartments(r.data);
-  };
+  const {
+    items: departments,
+    pagination,
+    page,
+    limit,
+    searchQuery,
+    loading: deptLoading,
+    error,
+    setError,
+    setSearchQuery,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh: reloadDepartments,
+  } = useServerList({
+    fetcher: ({ page: p, limit: l, search }) =>
+      platformService.listDepartments(branchId, p, l, search || undefined),
+    deps: [branchId],
+    defaultLimit: 10,
+    enabled: Boolean(branchId),
+  });
 
   useEffect(() => {
     if (branches[0] && !branchId) setBranchId(branches[0].id);
   }, [branches, branchId]);
-
-  useEffect(() => {
-    if (!branchId) return;
-    setDeptLoading(true);
-    platformService.listDepartments(branchId)
-      .then((r) => setDepartments(r.data))
-      .catch((err) => setError(parseApiError(err)))
-      .finally(() => setDeptLoading(false));
-  }, [branchId]);
 
   useDashboardLoadingEffect(orgLoading || deptLoading);
 
@@ -2786,18 +2813,6 @@ export function OrgStructurePanel() {
 
   const selectedBranchName = branches.find((b) => b.id === branchId)?.name || 'Main Campus';
 
-  const filteredDepts = useMemo(() => {
-    return departments.filter((d) => {
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesName = d.name.toLowerCase().includes(q);
-        const matchesCode = d.code ? d.code.toLowerCase().includes(q) : false;
-        return matchesName || matchesCode;
-      }
-      return true;
-    });
-  }, [departments, searchQuery]);
-
   return (
     <div className="org-panel-root">
       {/* ── Top Bar ── */}
@@ -2833,7 +2848,7 @@ export function OrgStructurePanel() {
             <div className="org-title-row">
               <h3 className="org-card-title">All Departments</h3>
               <span className="org-count-badge">
-                {filteredDepts.length} {filteredDepts.length === 1 ? 'Department' : 'Departments'}
+                {pagination.total} {pagination.total === 1 ? 'Department' : 'Departments'}
               </span>
             </div>
             <p className="org-card-subtitle">
@@ -2876,7 +2891,7 @@ export function OrgStructurePanel() {
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchQuery('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -2886,7 +2901,7 @@ export function OrgStructurePanel() {
           </div>
         </div>
 
-        {filteredDepts.length === 0 ? (
+        {departments.length === 0 ? (
           <div className="org-empty-state">
             <HiOfficeBuilding className="org-empty-icon" />
             <p className="org-empty-text">
@@ -2906,7 +2921,7 @@ export function OrgStructurePanel() {
                 </tr>
               </thead>
               <tbody>
-                {filteredDepts.map((d) => (
+                {departments.map((d) => (
                   <tr key={d.id}>
                     {/* Name Cell */}
                     <td>
@@ -2966,6 +2981,15 @@ export function OrgStructurePanel() {
             </table>
           </div>
         )}
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={deptLoading}
+        />
       </div>
 
       {/* ── Side-Drawer Component (UNDER TOPNAV: top 72px) ── */}

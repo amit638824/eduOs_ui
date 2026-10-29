@@ -1,4 +1,6 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useState } from 'react';
+import { Pagination } from '@/components/ui/Pagination';
+import { useServerList } from '@/hooks/useServerList';
 import { Link } from 'react-router-dom';
 import { examinationService } from '@/services';
 import { parseApiError } from '@/lib/errors';
@@ -36,38 +38,37 @@ type FlaggedRow = {
 };
 
 export function FlaggedAttemptsPanel() {
-  const [rows, setRows] = useState<FlaggedRow[]>([]);
   const [filter, setFilter] = useState('pending');
   const [testId, setTestId] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [severity, setSeverity] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<{ event: string; at: string }[]>([]);
 
-  const load = () => {
-    setLoading(true);
-    setError('');
-
-    examinationService
-      .listFlaggedAttempts(1, 50, filter, {
+  const {
+    items: rows,
+    pagination,
+    page,
+    limit,
+    loading,
+    error,
+    onPageChange,
+    onLimitChange,
+    refresh: load,
+  } = useServerList<FlaggedRow>({
+    fetcher: async ({ page: p, limit: l }) => {
+      const res = await examinationService.listFlaggedAttempts(p, l, filter, {
         testId: testId || undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
-        severity: severity
-          ? (severity as 'low' | 'medium' | 'high')
-          : undefined,
-      })
-      .then((res) => setRows(res.data as FlaggedRow[]))
-      .catch((err) => setError(parseApiError(err)))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    load();
-  }, [filter, testId, dateFrom, dateTo, severity]);
+        severity: severity ? (severity as 'low' | 'medium' | 'high') : undefined,
+      });
+      return { data: res.data as unknown as FlaggedRow[], pagination: res.pagination };
+    },
+    deps: [filter, testId, dateFrom, dateTo, severity],
+    defaultLimit: 10,
+  });
 
   useDashboardLoadingEffect(loading);
 
@@ -88,16 +89,8 @@ export function FlaggedAttemptsPanel() {
   const review = async (attemptId: string, status: 'reviewed' | 'dismissed') => {
     try {
       await examinationService.updateProctoringReview(attemptId, status);
-      setRows((current) => {
-        if (filter === 'all' || filter === status) {
-          return current.map((row) =>
-            row.id === attemptId ? { ...row, proctoring_review_status: status } : row,
-          );
-        }
-        return current.filter((row) => row.id !== attemptId);
-      });
       showSuccess('Updated', `Marked as ${status}`);
-      load();
+      await load();
     } catch (err) {
       showError('Review', parseApiError(err));
     }
@@ -125,7 +118,7 @@ export function FlaggedAttemptsPanel() {
             <div className="org-title-row">
               <h3 className="org-card-title">Proctoring Violations</h3>
               <span className="org-count-badge">
-                {rows.length} {rows.length === 1 ? 'Attempt' : 'Attempts'}
+                {pagination.total} {pagination.total === 1 ? 'Attempt' : 'Attempts'}
               </span>
             </div>
             <p className="org-card-subtitle">
@@ -417,7 +410,7 @@ export function FlaggedAttemptsPanel() {
                   </Fragment>
                 );
               })}
-              {rows.length === 0 && (
+              {rows.length === 0 && !loading && (
                 <tr>
                   <td colSpan={6} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748b' }}>
                     <FiShield style={{ fontSize: 32, color: '#10b981', marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
@@ -429,6 +422,15 @@ export function FlaggedAttemptsPanel() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
     </div>
   );

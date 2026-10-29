@@ -9,6 +9,7 @@ type ToastExtra = {
   title?: string;
   status?: number;
   code?: string;
+  count?: number;
 };
 
 const DEDUPE_MS = 4000;
@@ -36,9 +37,23 @@ function claim(message: string): boolean {
 
 let lastSuccessAt = 0;
 
-function ToastCard({ title, message }: { title?: string; message: string }) {
+function ToastCard({
+  title,
+  message,
+  count,
+}: {
+  title?: string;
+  message: string;
+  count?: number;
+}) {
+  const showCount = typeof count === 'number' && count > 0;
   return (
     <div className="ms-toast">
+      {showCount ? (
+        <span className="ms-toast__count" aria-label={`${count} unread notifications`}>
+          {count > 99 ? '99+' : count}
+        </span>
+      ) : null}
       <div className="ms-toast__copy">
         {title ? <p className="ms-toast__title">{title}</p> : null}
         <p className="ms-toast__message">{message}</p>
@@ -57,7 +72,7 @@ function push(tone: ToastTone, message: string, extra?: ToastExtra): void {
     autoClose: tone === 'error' ? 6500 : 3200,
     toastId: `${tone}:${text.slice(0, 180)}`,
   };
-  const node = <ToastCard title={extra?.title} message={text} />;
+  const node = <ToastCard title={extra?.title} message={text} count={extra?.count} />;
   if (tone === 'success') toast.success(node, options);
   else if (tone === 'info') toast.info(node, options);
   else if (tone === 'warning') toast.warning(node, options);
