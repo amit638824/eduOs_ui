@@ -17,7 +17,6 @@ import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/Dashboa
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
 import ExamAttemptPlayer from './ExamAttemptPlayer';
 import { PracticeInsights } from './AiBuildPanel';
-import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide, { ExamStepper } from '@/components/dashboard/AdminExamGuide';
 import { FieldHint } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpSelect } from '@/components/ui/CrudUI';
@@ -2133,29 +2132,28 @@ export function StudentTestsPanel() {
   };
 
   return (
-    <>
-      <DashboardPageHeader
-        badge="Online Tests"
-        title="My Assigned Tests"
-        subtitle="Start, resume or view results for your institute examinations."
-      />
-
-      <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <h4 className="mb-0">
-            Available Tests
-          </h4>
-
-          <span className="badge bg-primary">
-            {tests.length}
-          </span>
-        </div>
-
-        {error && (
-          <p className="login__error sp_bottom_15">
-            {error}
+    <div className="org-panel-root">
+      <div className="org-top-bar">
+        <div>
+          <h2 className="org-page-title">My Assigned Tests</h2>
+          <p className="org-page-desc">
+            Start, resume, or view results for your institute examinations.
           </p>
-        )}
+        </div>
+      </div>
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card" style={{ padding: '20px 22px' }}>
+        <div className="org-card-header" style={{ marginBottom: 16 }}>
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">Available Tests</h3>
+              <span className="org-count-badge">{tests.length}</span>
+            </div>
+            <p className="org-card-subtitle">Live, scheduled, and completed exams assigned to you</p>
+          </div>
+        </div>
 
         {tests.length === 0 &&
           !error &&
@@ -2333,7 +2331,7 @@ export function StudentTestsPanel() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
 

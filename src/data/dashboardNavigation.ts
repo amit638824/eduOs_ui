@@ -159,7 +159,7 @@ export function buildDashboardNavigation(
             {
               label: 'Students',
               href: `${base}/admin-students`,
-              icon: 'bookmark',
+              icon: 'users',
             },
             {
               label: 'Departments',
@@ -169,7 +169,7 @@ export function buildDashboardNavigation(
             {
               label: 'Users',
               href: `${base}/admin-users`,
-              icon: 'user',
+              icon: 'users',
             },
           ],
         },
@@ -205,7 +205,7 @@ export function buildDashboardNavigation(
             {
               label: 'Assignments',
               href: `${base}/admin-assignments`,
-              icon: 'bookmark',
+              icon: 'assignment',
             },
           ],
         },
@@ -219,17 +219,17 @@ export function buildDashboardNavigation(
             {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
-              icon: 'assignment',
+              icon: 'clock',
               subItems: [
                 {
                   label: 'All Attempts',
                   href: `${base}/admin-quiz-attempts`,
-                  icon: 'assignment',
+                  icon: 'clock',
                 },
                 {
                   label: 'Flagged Attempts',
                   href: `${base}/admin-flagged-attempts`,
-                  icon: 'assignment',
+                  icon: 'flag',
                   badge: 'Review',
                   badgeVariant: 'danger',
                 },
@@ -238,7 +238,7 @@ export function buildDashboardNavigation(
             {
               label: 'Reports',
               href: `${base}/admin-reviews`,
-              icon: 'star',
+              icon: 'chart',
             },
             {
               label: 'Certificates',
@@ -320,7 +320,7 @@ export function buildDashboardNavigation(
             {
               label: 'Students',
               href: `${base}/admin-students`,
-              icon: 'bookmark',
+              icon: 'users',
             },
             {
               label: 'Departments',
@@ -361,7 +361,7 @@ export function buildDashboardNavigation(
             {
               label: 'Assignments',
               href: `${base}/admin-assignments`,
-              icon: 'bookmark',
+              icon: 'assignment',
             },
           ],
         },
@@ -375,17 +375,17 @@ export function buildDashboardNavigation(
             {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
-              icon: 'assignment',
+              icon: 'clock',
               subItems: [
                 {
                   label: 'All Attempts',
                   href: `${base}/admin-quiz-attempts`,
-                  icon: 'assignment',
+                  icon: 'clock',
                 },
                 {
                   label: 'Flagged Attempts',
                   href: `${base}/admin-flagged-attempts`,
-                  icon: 'assignment',
+                  icon: 'flag',
                   badge: 'Review',
                   badgeVariant: 'danger',
                 },
@@ -394,7 +394,7 @@ export function buildDashboardNavigation(
             {
               label: 'Reports',
               href: `${base}/admin-reviews`,
-              icon: 'star',
+              icon: 'chart',
             },
             {
               label: 'Certificates',
@@ -465,7 +465,7 @@ export function buildDashboardNavigation(
           {
             label: 'Students',
             href: `${base}/admin-students`,
-            icon: 'bookmark',
+            icon: 'users',
           },
           {
             label: 'Departments',
@@ -506,7 +506,7 @@ export function buildDashboardNavigation(
           {
             label: 'Assignments',
             href: `${base}/admin-assignments`,
-            icon: 'bookmark',
+            icon: 'assignment',
           },
         ],
       },
@@ -520,17 +520,17 @@ export function buildDashboardNavigation(
           {
             label: 'Attempts',
             href: `${base}/admin-quiz-attempts`,
-            icon: 'assignment',
+            icon: 'clock',
             subItems: [
               {
                 label: 'All Attempts',
                 href: `${base}/admin-quiz-attempts`,
-                icon: 'assignment',
+                icon: 'clock',
               },
               {
                 label: 'Flagged Attempts',
                 href: `${base}/admin-flagged-attempts`,
-                icon: 'assignment',
+                icon: 'flag',
                 badge: 'Review',
                 badgeVariant: 'danger',
               },
@@ -539,7 +539,7 @@ export function buildDashboardNavigation(
           {
             label: 'Reports',
             href: `${base}/admin-reviews`,
-            icon: 'star',
+            icon: 'chart',
           },
           {
             label: 'Certificates',
@@ -628,7 +628,7 @@ export function buildDashboardNavigation(
           {
             label: 'Assignments',
             href: `${base}/teacher-assignments`,
-            icon: 'bookmark',
+            icon: 'assignment',
           },
         ],
       },
@@ -642,14 +642,14 @@ export function buildDashboardNavigation(
           {
             label: 'Flagged Attempts',
             href: `${base}/teacher-flagged-attempts`,
-            icon: 'assignment',
+            icon: 'flag',
             badge: 'Review',
             badgeVariant: 'danger',
           },
           {
             label: 'Reports',
             href: `${base}/teacher-reviews`,
-            icon: 'star',
+            icon: 'chart',
           },
           {
             label: 'Certificates',
@@ -709,7 +709,7 @@ export function buildDashboardNavigation(
         {
           label: 'My Tests',
           href: `${base}/student-enrolled-courses`,
-          icon: 'bookmark',
+          icon: 'monitor',
         },
 
         {
@@ -721,7 +721,7 @@ export function buildDashboardNavigation(
         {
           label: 'My Attempts',
           href: `${base}/student-my-quiz-attempts`,
-          icon: 'quiz',
+          icon: 'clock',
         },
 
         {
@@ -733,7 +733,7 @@ export function buildDashboardNavigation(
         {
           label: 'Results',
           href: `${base}/student-reviews`,
-          icon: 'star',
+          icon: 'chart',
         },
 
         {

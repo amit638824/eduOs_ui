@@ -324,11 +324,14 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 
 .sca-db-nav-item i,
 .sca-db-nav-item .dashboard-nav-icon {
+  display: block;
   font-size: 1.125rem;
-  width: 22px;
-  min-width: 22px;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
   text-align: center;
   flex-shrink: 0;
+  color: currentColor;
 }
 
 .sca-db-nav-item__label {
@@ -3777,23 +3780,22 @@ body.sca-dashboard-body .sca-dashboard .row>[class*='col-'] {
    ========================================================= */
 
 .student-exam-calendar .fc-button {
-  background: #0b2c5f !important;
-  border: 1px solid #0b2c5f !important;
-  border-radius: 5px !important;
+  background: linear-gradient(135deg, #12193b 0%, #225ce5 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
   color: #ffffff !important;
   box-shadow: none !important;
+  font-weight: 600 !important;
 }
 
 .student-exam-calendar .fc-button:hover {
-  background: #071f45 !important;
-  border-color: #071f45 !important;
+  background: linear-gradient(135deg, #0d122b 0%, #1a4bc4 100%) !important;
   color: #ffffff !important;
 }
 
 .student-exam-calendar .fc-button-active,
 .student-exam-calendar .fc-button:active {
-  background: #071f45 !important;
-  border-color: #071f45 !important;
+  background: linear-gradient(135deg, #0d122b 0%, #1a4bc4 100%) !important;
   color: #ffffff !important;
 }
 
@@ -3803,8 +3805,7 @@ body.sca-dashboard-body .sca-dashboard .row>[class*='col-'] {
 }
 
 .student-exam-calendar .fc-button:disabled {
-  background: #0b2c5f !important;
-  border-color: #0b2c5f !important;
+  background: linear-gradient(135deg, #12193b 0%, #225ce5 100%) !important;
   color: #ffffff !important;
   opacity: 0.65;
 }

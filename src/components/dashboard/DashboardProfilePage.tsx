@@ -118,9 +118,8 @@ export default function DashboardProfilePage() {
 
   const organizationName = useMemo(() => {
     if (organization?.name) return organization.name;
-    if (user?.roles.includes('super_admin')) return 'softfix solution';
     return siteContent.brand.name;
-  }, [organization, user]);
+  }, [organization]);
 
   const branchName = useMemo(() => {
     if (!user?.branchId || !branches.length) return null;
@@ -129,22 +128,38 @@ export default function DashboardProfilePage() {
 
   const locationText = useMemo(() => {
     if (branchName) return branchName;
-    return 'Main Technical Campus';
-  }, [branchName]);
+    return organizationName;
+  }, [branchName, organizationName]);
 
-  const memberSince = user?.createdAt ? formatDate(user.createdAt) : '10 Sep 2026';
+  const memberSince = user?.createdAt ? formatDate(user.createdAt) : '—';
 
-  // Counts for the header and metrics
-  const studentsCount = adminDash?.totals.students ?? orgStats?.students ?? studentStats?.assigned_tests ?? 10;
-  const testsCount = adminDash?.totals.tests ?? orgStats?.tests ?? 68;
-  const attemptsCount = adminDash?.totals.attempts ?? orgStats?.attempts ?? studentStats?.attempts ?? 59;
-  const trends = adminDash?.trends ?? { tests: 1500, students: 800, attempts: 2750 };
+  const statPills = layoutRole === 'student'
+    ? [
+        { value: studentStats?.assigned_tests ?? 0, label: 'Assigned' },
+        { value: studentStats?.attempts ?? 0, label: 'Attempts' },
+        { value: studentStats?.results ?? 0, label: 'Results' },
+      ]
+    : [
+        { value: adminDash?.totals.students ?? orgStats?.students ?? 0, label: 'Students' },
+        { value: adminDash?.totals.tests ?? orgStats?.tests ?? 0, label: 'Tests' },
+        { value: adminDash?.totals.attempts ?? orgStats?.attempts ?? 0, label: 'Attempts' },
+      ];
+  const testsCount = layoutRole === 'student'
+    ? (studentStats?.assigned_tests ?? 0)
+    : (adminDash?.totals.tests ?? orgStats?.tests ?? 0);
+  const studentsCount = layoutRole === 'student'
+    ? (studentStats?.in_progress ?? 0)
+    : (adminDash?.totals.students ?? orgStats?.students ?? 0);
+  const attemptsCount = layoutRole === 'student'
+    ? (studentStats?.attempts ?? 0)
+    : (adminDash?.totals.attempts ?? orgStats?.attempts ?? 0);
+  const trends = adminDash?.trends ?? { tests: 0, students: 0, attempts: 0 };
 
   const sparks = useMemo(() => {
     return {
-      tests: sparkGeometry(adminDash?.sparklines?.tests ?? [4, 8, 14, 22, 35, 52, 68]),
-      students: sparkGeometry(adminDash?.sparklines?.students ?? [1, 2, 3, 5, 7, 9, 10]),
-      attempts: sparkGeometry(adminDash?.sparklines?.attempts ?? [3, 9, 18, 28, 42, 51, 59]),
+      tests: sparkGeometry(adminDash?.sparklines?.tests ?? [0, 0]),
+      students: sparkGeometry(adminDash?.sparklines?.students ?? [0, 0]),
+      attempts: sparkGeometry(adminDash?.sparklines?.attempts ?? [0, 0]),
     };
   }, [adminDash]);
 
@@ -164,47 +179,26 @@ export default function DashboardProfilePage() {
     if (user?.lastLoginAt) {
       list.push({
         id: 'login-1',
-        title: 'Portal Session Authenticated',
-        sub: 'Logged in via Google Workspace from IP 192.168.1.45 (Windows Chrome)',
+        title: 'Signed in',
+        sub: 'Your latest portal session',
         time: formatRelativeDate(user.lastLoginAt),
-        type: 'logins',
-        badge: 'Active Session',
-        badgeType: 'active',
-      });
-    } else {
-      list.push({
-        id: 'login-1',
-        title: 'Portal Session Authenticated',
-        sub: 'Logged in via Google Workspace from IP 192.168.1.45 (Windows Chrome)',
-        time: '1 min ago',
         type: 'logins',
         badge: 'Active Session',
         badgeType: 'active',
       });
     }
 
-    // Dynamic attempts or fallback exam events
     if (attempts.length > 0) {
       attempts.slice(0, 2).forEach((a, idx) => {
         list.push({
           id: `attempt-${idx}`,
-          title: `Examination Event: ${a.test_title ?? 'Advanced Assessment'}`,
-          sub: `Candidate attempt processed with status ${a.status.replace(/_/g, ' ')}`,
+          title: a.test_title ?? 'Examination',
+          sub: `Attempt status: ${a.status.replace(/_/g, ' ')}`,
           time: formatRelativeDate(a.started_at),
           type: 'exams',
           badge: 'Exam Event',
           badgeType: 'exam',
         });
-      });
-    } else {
-      list.push({
-        id: 'exam-default-1',
-        title: 'Created & Published Test: Advanced Physics Assessment',
-        sub: 'Examination successfully created and published for Softfix Solution batch',
-        time: '2 hours ago',
-        type: 'exams',
-        badge: 'Exam Event',
-        badgeType: 'exam',
       });
     }
 
@@ -222,38 +216,8 @@ export default function DashboardProfilePage() {
       });
     }
 
-    list.push({
-      id: 'report-1',
-      title: 'Exported Student Performance Report',
-      sub: 'Downloaded CSV report for completed attempts in Mathematics Section',
-      time: 'Yesterday, 4:30 PM',
-      type: 'exams',
-      badge: 'Report Export',
-      badgeType: 'export',
-    });
-
-    list.push({
-      id: 'perm-1',
-      title: 'Updated Department Faculty Permissions',
-      sub: 'Assigned Examiner role in Computer Science Department',
-      time: '24 Oct 2026',
-      type: 'security',
-      badge: 'Permission',
-      badgeType: 'perm',
-    });
-
-    list.push({
-      id: 'acc-created',
-      title: 'Admin Account Created & Initialized',
-      sub: `Primary credentials generated and scoped to organization ${organizationName}`,
-      time: memberSince,
-      type: 'security',
-      badge: 'Account Created',
-      badgeType: 'account',
-    });
-
     return list;
-  }, [user, attempts, notifications, organizationName, memberSince]);
+  }, [user, attempts, notifications]);
 
   const filteredActivities = useMemo(() => {
     if (activityFilter === 'all') return allActivities;
@@ -262,7 +226,7 @@ export default function DashboardProfilePage() {
 
   if (!user) return null;
 
-  const fullName = `${user.firstName} ${user.lastName}`.trim() || 'Rahul Sharma';
+  const fullName = `${user.firstName} ${user.lastName}`.trim() || user.email;
 
   return (
     <div className="sca-profile edtp-profile-enhanced">
@@ -278,7 +242,7 @@ export default function DashboardProfilePage() {
                 <img src={avatarUrl} alt={fullName} className="edtp-profile-avatar-img" />
               ) : (
                 <div className="edtp-profile-avatar-initials" aria-hidden="true">
-                  {initials(user.firstName || 'Rahul', user.lastName || 'Sharma')}
+                  {initials(user.firstName || user.email, user.lastName || '')}
                 </div>
               )}
               <span className="edtp-profile-online-dot" title="Active Online" />
@@ -315,18 +279,12 @@ export default function DashboardProfilePage() {
             {/* Right Side: Quick Stats & Actions */}
             <div className="edtp-profile-hero-actions-col">
               <div className="edtp-profile-stat-pills">
-                <div className="edtp-stat-pill">
-                  <span className="edtp-stat-pill-val">{studentsCount}</span>
-                  <span className="edtp-stat-pill-lbl">Students</span>
-                </div>
-                <div className="edtp-stat-pill">
-                  <span className="edtp-stat-pill-val">{testsCount}</span>
-                  <span className="edtp-stat-pill-lbl">Created Tests</span>
-                </div>
-                <div className="edtp-stat-pill">
-                  <span className="edtp-stat-pill-val">{attemptsCount}</span>
-                  <span className="edtp-stat-pill-lbl">Attempts</span>
-                </div>
+                {statPills.map((pill) => (
+                  <div key={pill.label} className="edtp-stat-pill">
+                    <span className="edtp-stat-pill-val">{pill.value}</span>
+                    <span className="edtp-stat-pill-lbl">{pill.label}</span>
+                  </div>
+                ))}
               </div>
 
               <div className="edtp-hero-buttons">
@@ -420,7 +378,7 @@ export default function DashboardProfilePage() {
               <div className="edtp-tile-item">
                 <div className="edtp-tile-text">
                   <span className="edtp-tile-label">Phone Number</span>
-                  <span className="edtp-tile-value">{user.phone || '+91 98765 00001'}</span>
+                  <span className="edtp-tile-value">{user.phone || '—'}</span>
                 </div>
                 <span className="edtp-badge edtp-badge--primary">Primary</span>
               </div>
@@ -430,7 +388,7 @@ export default function DashboardProfilePage() {
                   <span className="edtp-tile-label">System Role</span>
                   <span className="edtp-tile-value">{primaryRoleLabel(user.roles)}</span>
                 </div>
-                <span className="edtp-badge edtp-badge--scope">Full Access</span>
+                <span className="edtp-badge edtp-badge--scope">{primaryRoleLabel(user.roles)}</span>
               </div>
 
               <div className="edtp-tile-item">
@@ -453,7 +411,7 @@ export default function DashboardProfilePage() {
                 <div className="edtp-tile-text">
                   <span className="edtp-tile-label">Email Verification</span>
                   <span className="edtp-tile-value">
-                    {user.emailVerified ? 'Verified & Authenticated' : 'Verified & Authenticated'}
+                    {user.emailVerified ? 'Verified' : 'Not verified'}
                   </span>
                 </div>
                 <span className="edtp-badge edtp-badge--verified">Secure</span>
@@ -469,7 +427,7 @@ export default function DashboardProfilePage() {
                     Two-Factor Authentication: {user.mfaEnabled ? 'Enabled' : 'Not Enabled'}
                   </h4>
                   <p className="edtp-alert-desc">
-                    Protect your super admin account with an additional security layer via authenticator app.
+                    Add an authenticator app so sign-in needs a second step.
                   </p>
                 </div>
               </div>
@@ -505,7 +463,7 @@ export default function DashboardProfilePage() {
               <div className="mad-v3-stat-mid">
                 <div className="mad-v3-stat-value-group">
                   <span className="mad-v3-stat-num">{testsCount}</span>
-                  <span className="mad-v3-stat-title">Total Tests</span>
+                  <span className="mad-v3-stat-title">{layoutRole === 'student' ? 'Assigned Tests' : 'Total Tests'}</span>
                 </div>
                 {/* Blue Sparkline SVG */}
                 <div className="mad-v3-sparkline-box">
@@ -551,7 +509,7 @@ export default function DashboardProfilePage() {
               <div className="mad-v3-stat-mid">
                 <div className="mad-v3-stat-value-group">
                   <span className="mad-v3-stat-num">{studentsCount}</span>
-                  <span className="mad-v3-stat-title">Total Students</span>
+                  <span className="mad-v3-stat-title">{layoutRole === 'student' ? 'In Progress' : 'Total Students'}</span>
                 </div>
                 {/* Green Sparkline SVG */}
                 <div className="mad-v3-sparkline-box">
@@ -597,7 +555,7 @@ export default function DashboardProfilePage() {
               <div className="mad-v3-stat-mid">
                 <div className="mad-v3-stat-value-group">
                   <span className="mad-v3-stat-num">{attemptsCount}</span>
-                  <span className="mad-v3-stat-title">Total Attempts</span>
+                  <span className="mad-v3-stat-title">{layoutRole === 'student' ? 'My Attempts' : 'Total Attempts'}</span>
                 </div>
                 {/* Purple Sparkline SVG */}
                 <div className="mad-v3-sparkline-box">
@@ -670,6 +628,9 @@ export default function DashboardProfilePage() {
             <div className="edtp-timeline-container">
               <div className="edtp-timeline-line" aria-hidden="true" />
               <div className="edtp-timeline-list">
+                {filteredActivities.length === 0 && (
+                  <p className="edtp-timeline-sub" style={{ margin: '8px 0 0 28px' }}>No activity yet.</p>
+                )}
                 {filteredActivities.map((act) => (
                   <div key={act.id} className="edtp-timeline-item">
                     <div className="edtp-timeline-node" aria-hidden="true" />

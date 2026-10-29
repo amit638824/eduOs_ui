@@ -16,17 +16,18 @@ export interface PaginationProps {
 }
 
 function buildPageItems(current: number, totalPages: number): Array<number | 'ellipsis'> {
-  if (totalPages <= 7) {
+  if (totalPages <= 5) {
     return Array.from({ length: totalPages }, (_, i) => i + 1);
   }
 
-  const items: Array<number | 'ellipsis'> = [1];
-  const start = Math.max(2, current - 1);
-  const end = Math.min(totalPages - 1, current + 1);
+  const items: Array<number | 'ellipsis'> = [];
+  const windowStart = Math.max(2, current - 1);
+  const windowEnd = Math.min(totalPages - 1, current + 1);
 
-  if (start > 2) items.push('ellipsis');
-  for (let p = start; p <= end; p += 1) items.push(p);
-  if (end < totalPages - 1) items.push('ellipsis');
+  items.push(1);
+  if (windowStart > 2) items.push('ellipsis');
+  for (let page = windowStart; page <= windowEnd; page += 1) items.push(page);
+  if (windowEnd < totalPages - 1) items.push('ellipsis');
   items.push(totalPages);
   return items;
 }

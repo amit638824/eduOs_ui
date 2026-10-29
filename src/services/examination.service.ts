@@ -802,7 +802,7 @@ export async function getMyStats() {
     ApiResponse<
       import('@/types/examination').StudentStats
     >
-  >(`${base}/stats/my`);
+  >(`${base}/stats/my`, { skipToast: true });
 
   return data.data;
 }
@@ -824,6 +824,7 @@ export async function listAttempts(
 export async function listMyResults() {
   const { data } = await api.get<ApiResponse<ExamResult[]>>(
     `${base}/results/my`,
+    { skipToast: true },
   );
 
   return data.data;
