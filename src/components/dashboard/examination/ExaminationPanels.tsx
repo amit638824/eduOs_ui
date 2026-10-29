@@ -2144,7 +2144,7 @@ export function StudentTestsPanel() {
 
       {error && <div className="org-error-banner">{error}</div>}
 
-      <div className="org-table-card" style={{ padding: '20px 22px' }}>
+      <div className="org-table-card sca-student-tests-panel">
         <div className="org-card-header" style={{ marginBottom: 16 }}>
           <div className="org-title-group">
             <div className="org-title-row">
@@ -2176,38 +2176,40 @@ export function StudentTestsPanel() {
 
               const wait = opensInMs(t);
 
+              const score = t.result_percentage != null ? Number(t.result_percentage) : null;
+              let examConfig: Record<string, unknown> = {};
+              try {
+                examConfig = typeof t.config === 'string'
+                  ? JSON.parse(t.config) as Record<string, unknown>
+                  : (t.config ?? {}) as Record<string, unknown>;
+              } catch {
+                examConfig = {};
+              }
+              const isPractice = examConfig.examType === 'practice';
+
               return (
                 <article
                   key={t.id}
                   className="sca-student-test-card"
                 >
-
                   <div className="sca-student-test-card__top">
-                    <span className={`edtp-badge ${status.cls}`}>
-                      {status.label}
-                    </span>
-
-                    {(() => {
-                      let config: Record<string, unknown> = {};
-                      try {
-                        config = typeof t.config === 'string'
-                          ? JSON.parse(t.config) as Record<string, unknown>
-                          : (t.config ?? {}) as Record<string, unknown>;
-                      } catch {
-                        config = {};
-                      }
-                      const isPractice = config.examType === 'practice';
-                      return (
-                        <span className={`edtp-badge ${isPractice ? 'edtp-badge--role' : 'edtp-badge--active'}`}>
-                          {isPractice ? 'Practice Exam' : 'Official Exam'}
-                        </span>
-                      );
-                    })()}
-
-                    {t.result_percentage != null && (
-                      <span className="sca-student-test-card__score">
-                        {Number(t.result_percentage).toFixed(1)}%
+                    <div className="sca-student-test-card__badges">
+                      <span className={`edtp-badge ${status.cls}`}>
+                        {status.label}
                       </span>
+                      <span className={`edtp-badge ${isPractice ? 'edtp-badge--role' : 'edtp-badge--active'}`}>
+                        {isPractice ? 'Practice Exam' : 'Official Exam'}
+                      </span>
+                    </div>
+
+                    {score != null && Number.isFinite(score) && (
+                      <div
+                        className="sca-student-test-card__ring"
+                        style={{ ['--score' as string]: String(Math.max(0, Math.min(100, score))) }}
+                      >
+                        <span>{score.toFixed(1)}%</span>
+                        <small>Score</small>
+                      </div>
                     )}
                   </div>
 

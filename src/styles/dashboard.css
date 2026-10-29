@@ -1,7 +1,13 @@
 /* ═══ Mindsprint — Dashboard Shell ═══ */
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body.sca-dashboard-body {
   overflow-x: hidden;
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 body.sca-dashboard-body .main_wrapper--dashboard {
@@ -756,7 +762,54 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 
 @media (max-width: 768px) {
   .sca-dashboard__content {
-    padding: 16px;
+    padding: 14px 12px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .sca-db-header {
+    height: calc(var(--db-header-h) + env(safe-area-inset-top));
+    padding-top: env(safe-area-inset-top);
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .sca-db-sidebar {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    width: min(86vw, 300px);
+  }
+
+  .sca-student-tests-panel {
+    padding: 14px 12px 16px;
+  }
+
+  .sca-student-test-card {
+    padding: 14px;
+  }
+
+  .sca-student-test-card__ring {
+    width: 58px;
+    height: 58px;
+  }
+
+  .sca-student-test-card__title {
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .student-exam-calendar {
+    padding: 12px;
+  }
+
+  .student-exam-calendar .fc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .mad-v3-root,
+  .org-panel-root,
+  .org-panel-page {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 
@@ -2362,6 +2415,10 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   font-size: 0.85rem;
 }
 
+.sca-student-tests-panel {
+  padding: 18px 20px 20px;
+}
+
 .sca-student-tests-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -2383,19 +2440,68 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 .sca-student-test-card {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px 18px 16px;
-  border: 1px solid var(--db-border);
-  border-radius: 12px;
-  background: var(--db-surface, #fff);
-  min-height: 220px;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid #e6edf7;
+  border-radius: 16px;
+  background: #fff;
+  min-width: 0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .sca-student-test-card__top {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
+}
+
+.sca-student-test-card__badges {
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  min-width: 0;
+}
+
+.sca-student-test-card__ring {
+  --score: 0;
+  position: relative;
+  width: 68px;
+  height: 68px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(#225ce5 calc(var(--score) * 1%), #e8eefc 0);
+}
+
+.sca-student-test-card__ring::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.sca-student-test-card__ring span,
+.sca-student-test-card__ring small {
+  position: relative;
+  z-index: 1;
+  line-height: 1.1;
+}
+
+.sca-student-test-card__ring span {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #225ce5;
+}
+
+.sca-student-test-card__ring small {
+  font-size: 0.62rem;
+  color: #64748b;
+  font-weight: 600;
 }
 
 .sca-student-test-card__score {
@@ -2415,11 +2521,12 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 .sca-student-test-card__meta {
   list-style: none;
   margin: 0;
-  padding: 12px 0 0;
-  border-top: 1px solid var(--db-border);
+  padding: 12px;
+  border-radius: 12px;
+  background: #f8fafc;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .sca-student-test-card__meta li {
@@ -3744,6 +3851,20 @@ body.sca-dashboard-body .sca-dashboard .row>[class*='col-'] {
   .sca-student-exam-live {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .sca-student-exam-countdown-box > strong,
+  .sca-student-exam-countdown-large {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .sca-student-test-card__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .sca-student-test-card__action .d-flex {
+    flex-direction: column;
   }
 }
 

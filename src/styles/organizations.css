@@ -1030,6 +1030,46 @@ textarea.org-form-input {
   .org-grid-3 {
     grid-template-columns: 1fr;
   }
+
+  .org-page-title {
+    font-size: 1.45rem;
+  }
+
+  .org-top-bar,
+  .org-page-header {
+    align-items: stretch;
+  }
+
+  .org-add-btn,
+  .org-btn-outline-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .org-search-box {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .org-controls-row,
+  .org-filter-pills {
+    width: 100%;
+  }
+
+  .org-card-header {
+    padding: 14px 16px;
+    align-items: stretch;
+  }
+
+  .org-table {
+    min-width: 640px;
+  }
+
+  .org-form-input,
+  .org-form-select,
+  .org-search-input {
+    font-size: 16px;
+  }
 }
 
 /* Drawer Toggle Card */
