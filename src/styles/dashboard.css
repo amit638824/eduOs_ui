@@ -476,16 +476,20 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
 }
 
-/* Top menu (Settings / Profile / Notifications / Logout) */
-.sca-db-sidebar__group--top-menu {
-  margin-bottom: 4px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--db-sidebar-border);
+/* Account / logout — always anchored at bottom */
+.sca-db-sidebar__pinned {
+  flex-shrink: 0;
+  border-top: 1px solid var(--db-sidebar-border);
+  background: var(--db-sidebar-bg);
+  padding: 10px 0 12px;
+  z-index: 5;
 }
 
-.sca-db-sidebar__group--top-menu + .sca-db-sidebar__group {
-  border-top: none;
-  padding-top: 6px;
+.sca-dashboard--collapsed .sca-db-sidebar__pinned .sca-db-nav-item {
+  justify-content: center;
+  gap: 0;
+  padding: 14px 0;
+  border-left-width: 3px;
 }
 
 .sca-dashboard--collapsed .sca-db-nav-item {

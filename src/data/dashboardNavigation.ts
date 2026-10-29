@@ -99,10 +99,9 @@ const logoutItem = {
 /**
  * Role-based sidebar:
  *
- * - Super Admin ΓåÆ 4-domain hierarchy (Core, Academic Suite, User Management, Platform Governance, Pinned Bottom)
- * - Org Admin ΓåÆ departments, faculty, students + oversight
- * - Teacher ΓåÆ create tests, question bank
- * - Student ΓåÆ take tests, assignments, calendar + results
+ * - Admin: Dashboard → Organization → Exam Setup → Priority → Account
+ * - Teacher: Dashboard → Exam Setup → Priority → Account
+ * - Student: take tests, assignments, calendar + results
  */
 export function buildDashboardNavigation(
   user: ApiUser,
@@ -142,10 +141,44 @@ export function buildDashboardNavigation(
         },
 
         {
-          id: 'academic',
-          title: 'ACADEMIC SUITE',
+          id: 'organization',
+          title: 'ORGANIZATION',
           collapsible: true,
           defaultOpen: true,
+          items: [
+            {
+              label: 'Organizations',
+              href: `${base}/admin-organizations`,
+              icon: 'shield',
+            },
+            {
+              label: 'Teachers',
+              href: `${base}/admin-faculty`,
+              icon: 'user',
+            },
+            {
+              label: 'Students',
+              href: `${base}/admin-students`,
+              icon: 'bookmark',
+            },
+            {
+              label: 'Departments',
+              href: `${base}/admin-org`,
+              icon: 'course',
+            },
+            {
+              label: 'Users',
+              href: `${base}/admin-users`,
+              icon: 'user',
+            },
+          ],
+        },
+
+        {
+          id: 'exam_setup',
+          title: 'EXAM SETUP',
+          collapsible: true,
+          defaultOpen: false,
           items: [
             {
               label: 'All Tests',
@@ -170,6 +203,20 @@ export function buildDashboardNavigation(
               icon: 'quiz',
             },
             {
+              label: 'Assignments',
+              href: `${base}/admin-assignments`,
+              icon: 'bookmark',
+            },
+          ],
+        },
+
+        {
+          id: 'priority',
+          title: 'PRIORITY',
+          collapsible: true,
+          defaultOpen: false,
+          items: [
+            {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
               icon: 'assignment',
@@ -189,11 +236,6 @@ export function buildDashboardNavigation(
               ],
             },
             {
-              label: 'Assignments',
-              href: `${base}/admin-assignments`,
-              icon: 'bookmark',
-            },
-            {
               label: 'Reports',
               href: `${base}/admin-reviews`,
               icon: 'star',
@@ -202,54 +244,6 @@ export function buildDashboardNavigation(
               label: 'Certificates',
               href: `${base}/admin-certificates`,
               icon: 'certificate',
-            },
-          ],
-        },
-
-        {
-          id: 'user_mgmt',
-          title: 'USER MANAGEMENT',
-          collapsible: true,
-          defaultOpen: false,
-          items: [
-            {
-              label: 'Users',
-              href: `${base}/admin-users`,
-              icon: 'user',
-            },
-            {
-              label: 'Faculty',
-              href: `${base}/admin-faculty`,
-              icon: 'user',
-            },
-            {
-              label: 'Staff',
-              href: `${base}/admin-staff`,
-              icon: 'user',
-            },
-            {
-              label: 'Students',
-              href: `${base}/admin-students`,
-              icon: 'bookmark',
-            },
-            {
-              label: 'Departments',
-              href: `${base}/admin-org`,
-              icon: 'course',
-            },
-          ],
-        },
-
-        {
-          id: 'platform_gov',
-          title: 'GOVERNANCE',
-          collapsible: true,
-          defaultOpen: false,
-          items: [
-            {
-              label: 'Organizations',
-              href: `${base}/admin-organizations`,
-              icon: 'shield',
             },
             {
               label: 'Payments',
@@ -318,10 +312,29 @@ export function buildDashboardNavigation(
         },
 
         {
-          id: 'academic',
-          title: 'ACADEMIC SUITE',
+          id: 'organization',
+          title: 'ORGANIZATION',
           collapsible: true,
           defaultOpen: true,
+          items: [
+            {
+              label: 'Students',
+              href: `${base}/admin-students`,
+              icon: 'bookmark',
+            },
+            {
+              label: 'Departments',
+              href: `${base}/admin-org`,
+              icon: 'course',
+            },
+          ],
+        },
+
+        {
+          id: 'exam_setup',
+          title: 'EXAM SETUP',
+          collapsible: true,
+          defaultOpen: false,
           items: [
             {
               label: 'All Tests',
@@ -346,6 +359,20 @@ export function buildDashboardNavigation(
               icon: 'quiz',
             },
             {
+              label: 'Assignments',
+              href: `${base}/admin-assignments`,
+              icon: 'bookmark',
+            },
+          ],
+        },
+
+        {
+          id: 'priority',
+          title: 'PRIORITY',
+          collapsible: true,
+          defaultOpen: false,
+          items: [
+            {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
               icon: 'assignment',
@@ -365,11 +392,6 @@ export function buildDashboardNavigation(
               ],
             },
             {
-              label: 'Assignments',
-              href: `${base}/admin-assignments`,
-              icon: 'bookmark',
-            },
-            {
               label: 'Reports',
               href: `${base}/admin-reviews`,
               icon: 'star',
@@ -378,25 +400,6 @@ export function buildDashboardNavigation(
               label: 'Certificates',
               href: `${base}/admin-certificates`,
               icon: 'certificate',
-            },
-          ],
-        },
-
-        {
-          id: 'user_mgmt',
-          title: 'USER MANAGEMENT',
-          collapsible: true,
-          defaultOpen: false,
-          items: [
-            {
-              label: 'Students',
-              href: `${base}/admin-students`,
-              icon: 'bookmark',
-            },
-            {
-              label: 'Departments',
-              href: `${base}/admin-org`,
-              icon: 'course',
             },
           ],
         },
@@ -449,10 +452,34 @@ export function buildDashboardNavigation(
       },
 
       {
-        id: 'academic',
-        title: 'ACADEMIC SUITE',
+        id: 'organization',
+        title: 'ORGANIZATION',
         collapsible: true,
         defaultOpen: true,
+        items: [
+          {
+            label: 'Teachers',
+            href: `${base}/admin-faculty`,
+            icon: 'user',
+          },
+          {
+            label: 'Students',
+            href: `${base}/admin-students`,
+            icon: 'bookmark',
+          },
+          {
+            label: 'Departments',
+            href: `${base}/admin-org`,
+            icon: 'course',
+          },
+        ],
+      },
+
+      {
+        id: 'exam_setup',
+        title: 'EXAM SETUP',
+        collapsible: true,
+        defaultOpen: false,
         items: [
           {
             label: 'All Tests',
@@ -477,6 +504,20 @@ export function buildDashboardNavigation(
             icon: 'quiz',
           },
           {
+            label: 'Assignments',
+            href: `${base}/admin-assignments`,
+            icon: 'bookmark',
+          },
+        ],
+      },
+
+      {
+        id: 'priority',
+        title: 'PRIORITY',
+        collapsible: true,
+        defaultOpen: false,
+        items: [
+          {
             label: 'Attempts',
             href: `${base}/admin-quiz-attempts`,
             icon: 'assignment',
@@ -496,11 +537,6 @@ export function buildDashboardNavigation(
             ],
           },
           {
-            label: 'Assignments',
-            href: `${base}/admin-assignments`,
-            icon: 'bookmark',
-          },
-          {
             label: 'Reports',
             href: `${base}/admin-reviews`,
             icon: 'star',
@@ -509,35 +545,6 @@ export function buildDashboardNavigation(
             label: 'Certificates',
             href: `${base}/admin-certificates`,
             icon: 'certificate',
-          },
-        ],
-      },
-
-      {
-        id: 'user_mgmt',
-        title: 'USER MANAGEMENT',
-        collapsible: true,
-        defaultOpen: false,
-        items: [
-          {
-            label: 'Faculty',
-            href: `${base}/admin-faculty`,
-            icon: 'user',
-          },
-          {
-            label: 'Staff',
-            href: `${base}/admin-staff`,
-            icon: 'user',
-          },
-          {
-            label: 'Students',
-            href: `${base}/admin-students`,
-            icon: 'bookmark',
-          },
-          {
-            label: 'Departments',
-            href: `${base}/admin-org`,
-            icon: 'course',
           },
         ],
       },
@@ -591,8 +598,8 @@ export function buildDashboardNavigation(
       },
 
       {
-        id: 'academic',
-        title: 'ACADEMIC SUITE',
+        id: 'exam_setup',
+        title: 'EXAM SETUP',
         collapsible: true,
         defaultOpen: true,
         items: [
@@ -619,16 +626,25 @@ export function buildDashboardNavigation(
             icon: 'quiz',
           },
           {
+            label: 'Assignments',
+            href: `${base}/teacher-assignments`,
+            icon: 'bookmark',
+          },
+        ],
+      },
+
+      {
+        id: 'priority',
+        title: 'PRIORITY',
+        collapsible: true,
+        defaultOpen: false,
+        items: [
+          {
             label: 'Flagged Attempts',
             href: `${base}/teacher-flagged-attempts`,
             icon: 'assignment',
             badge: 'Review',
             badgeVariant: 'danger',
-          },
-          {
-            label: 'Assignments',
-            href: `${base}/teacher-assignments`,
-            icon: 'bookmark',
           },
           {
             label: 'Reports',

@@ -255,12 +255,6 @@ export default function DashboardSidebar({
       </div>
 
       <nav className="sca-db-sidebar__nav">
-        {pinnedSection && (
-          <div className="sca-db-sidebar__group sca-db-sidebar__group--top-menu">
-            {renderSectionItems(pinnedSection)}
-          </div>
-        )}
-
         {mainSections.map((section, index) => {
           const sectionKey = sectionKeyOf(section, index);
           const isCollapsible = Boolean(section.collapsible && !collapsed);
@@ -323,6 +317,12 @@ export default function DashboardSidebar({
           );
         })}
       </nav>
+
+      {pinnedSection && (
+        <div className="sca-db-sidebar__pinned">
+          {renderSectionItems(pinnedSection)}
+        </div>
+      )}
     </aside>
   );
 }
