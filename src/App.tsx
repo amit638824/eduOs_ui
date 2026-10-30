@@ -22,7 +22,6 @@ import EdulebPricingPage from '@/pages/EdulebPricingPage';
 import EdulebNotFoundPage from '@/pages/EdulebNotFoundPage';
 import ExamsPage from '@/pages/ExamsPage';
 import ExamSlugPage from '@/pages/ExamSlugPage';
-import SchoolsPage from '@/pages/SchoolsPage';
 import HelpPage from '@/pages/HelpPage';
 import PrivacyPage from '@/pages/PrivacyPage';
 import BlogPage from '@/pages/BlogPage';
@@ -94,7 +93,7 @@ export default function App() {
                   element={<ExamSlugPage />}
                 />
 
-                <Route path="/schools" element={<SchoolsPage />} />
+                <Route path="/schools" element={<Navigate to="/" replace />} />
 
                 <Route path="/help" element={<HelpPage />} />
 

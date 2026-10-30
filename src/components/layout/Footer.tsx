@@ -53,9 +53,6 @@ export default function Footer() {
                     <Link to="/exams">Practice Tests</Link>
                   </li>
                   <li>
-                    <Link to="/schools">For Institutes</Link>
-                  </li>
-                  <li>
                     <Link to="/pricing">Pricing Plans</Link>
                   </li>
                   <li>

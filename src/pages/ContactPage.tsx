@@ -6,8 +6,13 @@ export default function ContactPage() {
 
   return (
     <>
-      <PageBanner title="Contact" crumb="Contact" />
-      <section className="contact_area section-padding eduleb-contact">
+      <PageBanner
+        title="Contact"
+        crumb="Contact"
+        tone="soft"
+        subtitle="Have a question about exams, courses, or institute onboarding? Reach out and our team will get back to you shortly."
+      />
+      <section className="contact_area section-padding eduleb-contact eduleb-page-merge">
         <div className="container">
           <div className="row align-items-start">
             <div className="col-lg-5 col-sm-12 col-xs-12">

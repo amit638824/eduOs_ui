@@ -1,4 +1,4 @@
-import Breadcrumb from '@/components/ui/Breadcrumb';
+import PageBanner from '@/components/eduleb/PageBanner';
 import ExamGridSection from '@/components/home/ExamGridSection';
 import SubjectsSection from '@/components/home/SubjectsSection';
 import type { ExamCategorySlug } from '@/utils/routes';
@@ -11,7 +11,12 @@ interface ExamsPageProps {
 export default function ExamsPage({ category, title = 'Practice Tests' }: ExamsPageProps) {
   return (
     <>
-      <Breadcrumb title={title} />
+      <PageBanner
+        title={title}
+        crumb="Practice Tests"
+        tone="exams"
+        subtitle="Choose your target exam and start preparing with confidence."
+      />
       <SubjectsSection />
       <ExamGridSection activeCategory={category} />
     </>

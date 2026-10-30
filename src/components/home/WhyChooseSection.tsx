@@ -50,9 +50,11 @@ export default function WhyChooseSection({ content }: { content?: HomepageConten
             <div className="ab_img" data-aos="zoom-in" data-aos-delay="150">
               <img src={content?.image || '/eduleb/img/about3.png'} className="img-fluid" alt="Why choose Mindsprint" />
               <div className="home_ps2" data-aos="zoom-in" data-aos-delay="300">
-                <span className="ti-book" />
-                <h2>{content?.statValue || '250+'}</h2>
-                <p>{content?.statLabel || 'Active Mock Tests'}</p>
+                <span className="ti-book" aria-hidden />
+                <div className="home_ps2__text">
+                  <h2>{content?.statValue || '250+'}</h2>
+                  <p>{content?.statLabel || 'Active Mock Tests'}</p>
+                </div>
               </div>
             </div>
           </div>

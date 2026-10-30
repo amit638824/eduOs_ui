@@ -45,8 +45,13 @@ const plans = [
 export default function EdulebPricingPage() {
   return (
     <>
-      <PageBanner title="Assessment Pricing Plans" crumb="Pricing" />
-      <section className="home_course section-padding">
+      <PageBanner
+        title="Assessment Pricing Plans"
+        crumb="Pricing"
+        tone="soft"
+        subtitle="Choose a plan that fits your goals and start your preparation today."
+      />
+      <section className="home_course section-padding eduleb-page-merge">
         <div className="container">
           <div className="row">
             {plans.map((plan) => (

@@ -337,7 +337,6 @@ export const siteContent: SiteContent = {
     usefulLinks: [
       { label: 'About Us', href: '/about' },
       { label: 'Our Website', href: 'https://techwagger.com/' },
-      { label: 'For Institutes', href: '/schools' },
       { label: 'Become a Teacher', href: '/dashboard/become-a-teacher' },
       { label: 'Help Center', href: '/help' },
       { label: 'Privacy Policy', href: '/privacy' },

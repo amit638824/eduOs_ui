@@ -15,7 +15,6 @@ const navItems: NavItem[] = [
   { label: 'Online Tests', href: '/exams' },
   { label: 'About', href: '/about' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'For Institutes', href: '/schools' },
   { label: 'Blog', href: '/blog' },
   { label: 'Contact', href: '/contact' },
 ];
