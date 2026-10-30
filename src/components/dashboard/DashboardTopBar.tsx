@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { FiBell } from 'react-icons/fi';
 import { useTheme } from '@/context/ThemeContext';
 import { useOrgScope } from '@/context/OrgScopeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
@@ -101,19 +102,7 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
           className="sca-db-icon-btn sca-db-notif-btn"
           aria-label={unread > 0 ? `${unread} unread notifications` : 'Notifications'}
         >
-          <svg
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            width="18"
-            height="18"
-          >
-            <path d="M15 14c.7-1 1-2.2 1-3.5V8a6 6 0 10-12 0v2.5C4 11.8 4.3 13 5 14h10z" />
-            <path d="M8 17a2 2 0 004 0" />
-          </svg>
+          <FiBell size={18} strokeWidth={2.1} aria-hidden />
           {unread > 0 && <span className="sca-db-notif-btn__badge">{unread > 99 ? '99+' : unread}</span>}
         </Link>
         <button

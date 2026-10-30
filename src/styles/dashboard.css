@@ -185,13 +185,33 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* Smooth accordion open/close for collapsible sections */
+.sca-db-sidebar__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.28s ease;
+}
+
+.sca-db-sidebar__panel.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.sca-db-sidebar__panel-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
 .sca-db-sidebar__section-title {
   padding: 8px 16px 6px 20px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.45);
   white-space: nowrap;
 }
 
@@ -232,15 +252,15 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 .sca-db-sidebar__section-title-text {
   flex: 1 1 auto;
   min-width: 0;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: rgba(255, 255, 255, 0.55);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: color 0.15s ease;
+  transition: color 0.2s ease;
 }
 
 .sca-db-sidebar__section-meta {
@@ -269,7 +289,7 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   color: rgba(255, 255, 255, 0.45);
   flex-shrink: 0;
   transform: rotate(-90deg);
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.15s ease;
+  transition: transform 0.36s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease;
 }
 
 .sca-db-sidebar__chevron--open {
@@ -312,8 +332,9 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   border-radius: 0;
   color: var(--db-sidebar-muted);
   text-decoration: none;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   border: none;
   border-left: 3px solid transparent;
   background: transparent;
@@ -323,9 +344,9 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   overflow: hidden;
   transition:
     padding var(--db-sidebar-duration) var(--db-sidebar-ease),
-    background 0.15s ease,
-    color 0.15s ease,
-    border-color 0.15s ease;
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .sca-db-nav-item i,
@@ -369,7 +390,7 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 .sca-db-nav-item--active {
   background: rgba(59, 130, 246, 0.18) !important;
   color: #fff !important;
-  font-weight: 600;
+  font-weight: 700;
   border-left-color: var(--db-accent) !important;
 }
 
@@ -390,7 +411,7 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 .sca-db-sidebar__sub-chevron {
   color: rgba(255, 255, 255, 0.45);
   transform: rotate(-90deg);
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.36s cubic-bezier(0.4, 0, 0.2, 1);
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -398,6 +419,26 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 .sca-db-sidebar__sub-chevron--open {
   transform: rotate(0deg);
   color: rgba(255, 255, 255, 0.85);
+}
+
+/* Nested submenu — smooth height transition */
+.sca-db-sidebar__submenu-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.36s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.26s ease;
+}
+
+.sca-db-sidebar__submenu-wrap.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.sca-db-sidebar__submenu-wrap > .sca-db-sidebar__submenu {
+  overflow: hidden;
+  min-height: 0;
 }
 
 /* Submenu container with vertical guide line */
@@ -427,9 +468,10 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   border-radius: 6px;
   color: var(--db-sidebar-muted);
   font-size: 0.8125rem;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .sca-db-nav-subitem:hover {
@@ -2676,7 +2718,7 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   flex-shrink: 0;
   font-size: 0.75rem;
   color: var(--db-muted);
-  transition: transform 0.15s ease;
+  transition: transform 0.32s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sca-db-org-switcher__chevron.is-open {
@@ -2698,6 +2740,23 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   box-shadow: 0 16px 40px rgba(15, 23, 42, 0.14);
   max-height: min(280px, 50vh);
   overflow-y: auto;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top center;
+  transition:
+    opacity 0.28s ease,
+    transform 0.32s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.32s;
+}
+
+.sca-db-org-switcher__menu.is-open,
+.sca-db-org-switcher.is-open .sca-db-org-switcher__menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
 }
 
 .sca-dashboard.sca-dashboard--dark .sca-db-org-switcher__menu {

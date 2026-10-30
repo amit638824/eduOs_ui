@@ -162,34 +162,41 @@ export default function DashboardSidebar({
                 )}
               </button>
 
-              {!collapsed && isSubOpen && (
-                <ul className="sca-db-sidebar__submenu">
-                  {item.subItems!.map((sub) => (
-                    <li key={sub.href}>
-                      <NavLink
-                        to={sub.href}
-                        className={({ isActive }) =>
-                          `sca-db-nav-subitem${isActive ? ' sca-db-nav-subitem--active' : ''}`
-                        }
-                        end
-                        onClick={onNavigate}
-                      >
-                        <span className="sca-db-nav-subitem__label">{sub.label}</span>
-                        {sub.badge && (
-                          <span
-                            className={`sca-db-nav-item__badge${
-                              sub.badgeVariant
-                                ? ` sca-db-nav-item__badge--${sub.badgeVariant}`
-                                : ''
-                            }`}
-                          >
-                            {sub.badge}
-                          </span>
-                        )}
-                      </NavLink>
-                    </li>
-                  ))}
-                </ul>
+              {!collapsed && (
+                <div
+                  className={`sca-db-sidebar__submenu-wrap${
+                    isSubOpen ? ' is-open' : ''
+                  }`}
+                >
+                  <ul className="sca-db-sidebar__submenu">
+                    {item.subItems!.map((sub) => (
+                      <li key={sub.href}>
+                        <NavLink
+                          to={sub.href}
+                          className={({ isActive }) =>
+                            `sca-db-nav-subitem${isActive ? ' sca-db-nav-subitem--active' : ''}`
+                          }
+                          end
+                          onClick={onNavigate}
+                          tabIndex={isSubOpen ? 0 : -1}
+                        >
+                          <span className="sca-db-nav-subitem__label">{sub.label}</span>
+                          {sub.badge && (
+                            <span
+                              className={`sca-db-nav-item__badge${
+                                sub.badgeVariant
+                                  ? ` sca-db-nav-item__badge--${sub.badgeVariant}`
+                                  : ''
+                              }`}
+                            >
+                              {sub.badge}
+                            </span>
+                          )}
+                        </NavLink>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </li>
           );
@@ -312,7 +319,15 @@ export default function DashboardSidebar({
                 )
               )}
 
-              {(!isCollapsible || isOpen) && renderSectionItems(section)}
+              {isCollapsible ? (
+                <div className={`sca-db-sidebar__panel${isOpen ? ' is-open' : ''}`}>
+                  <div className="sca-db-sidebar__panel-inner">
+                    {renderSectionItems(section)}
+                  </div>
+                </div>
+              ) : (
+                renderSectionItems(section)
+              )}
             </div>
           );
         })}
