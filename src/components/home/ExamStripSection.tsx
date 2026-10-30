@@ -2,14 +2,14 @@ import { Link } from 'react-router-dom';
 import type { HomepageContent } from '@/types/homepage';
 
 const fallbackExams = [
-  { title: 'CAT', sub: 'MBA Entrance', color: '#ea580c', bg: '#fff7ed' },
-  { title: 'JEE', sub: 'Main & Advanced', color: '#2563eb', bg: '#eff6ff' },
-  { title: 'UPSC', sub: 'Civil Services', color: '#7c3aed', bg: '#f5f3ff' },
-  { title: 'Banking', sub: 'IBPS | SBI | RBI', color: '#dc2626', bg: '#fef2f2' },
-  { title: 'SSC', sub: 'CGL | CHSL | CPO', color: '#0891b2', bg: '#ecfeff' },
-  { title: 'GATE', sub: 'IITs & PSUs', color: '#16a34a', bg: '#f0fdf4' },
-  { title: 'CLAT', sub: 'Law Entrance', color: '#ca8a04', bg: '#fefce8' },
-  { title: '& More', sub: 'View all exams', color: '#3861fb', bg: '#eff4ff' },
+  { title: 'CCC & O Level', sub: 'Govt IT Certifications', color: '#ea580c', bg: '#fff7ed' },
+  { title: 'Hardware & Net', sub: 'A+, CCNA & Network Basics', color: '#2563eb', bg: '#eff6ff' },
+  { title: 'Computer App', sub: 'Office Tools & Tally', color: '#7c3aed', bg: '#f5f3ff' },
+  { title: 'Programming', sub: 'Python, Java & Web Tech', color: '#dc2626', bg: '#fef2f2' },
+  { title: 'Aptitude & Core', sub: 'Quant & Logical Reasoning', color: '#0891b2', bg: '#ecfeff' },
+  { title: 'Diploma Exams', sub: 'Semester & Terminal CBT', color: '#16a34a', bg: '#f0fdf4' },
+  { title: 'Skill Screening', sub: 'Hiring & Corporate Tests', color: '#ca8a04', bg: '#fefce8' },
+  { title: '& More', sub: '250+ Practice Tests', color: '#3861fb', bg: '#eff4ff' },
 ];
 
 export default function ExamStripSection({ content }: { content?: HomepageContent['exams'] }) {
@@ -18,7 +18,7 @@ export default function ExamStripSection({ content }: { content?: HomepageConten
     <section className="eduleb-exam-strip">
       <div className="container">
         <div className="text-center mb-4" data-aos="fade-up" data-aos-duration="1000">
-          <p className="eduleb-exam-strip-eyebrow">{content?.eyebrow || 'PREPARE FOR TOP EXAMS'}</p>
+          <p className="eduleb-exam-strip-eyebrow">{content?.eyebrow || 'POPULAR EXAM CATEGORIES & CERTIFICATIONS'}</p>
         </div>
         <div className="row g-3 justify-content-center">
           {exams.map((exam, idx) => (

@@ -12,9 +12,10 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { label: 'Home', href: '/' },
+  { label: 'Online Tests', href: '/exams' },
   { label: 'About', href: '/about' },
-  { label: 'Course', href: '/course' },
-  { label: 'Page', href: '/pricing' },
+  { label: 'Pricing', href: '/pricing' },
+  { label: 'For Institutes', href: '/schools' },
   { label: 'Blog', href: '/blog' },
   { label: 'Contact', href: '/contact' },
 ];

@@ -4,58 +4,58 @@ import PageBanner from '@/components/eduleb/PageBanner';
 const courses = [
   {
     img: '/eduleb/img/course/1.png',
-    tag: 'Education',
-    title: 'Complete User fundamentals beginners to advanced',
-    lessons: '12 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - 99$',
+    tag: 'Govt IT',
+    title: 'CCC (Course on Computer Concepts) Comprehensive Mock Exam',
+    lessons: '100 Questions',
+    duration: '90 Mins',
+    price: 'Free Practice',
   },
   {
     img: '/eduleb/img/course/2.png',
-    tag: 'UI/UX',
-    title: 'Advanced Android 12 & Kotlin Development Course',
-    lessons: '41 Course',
-    duration: '3 Hrs 32 Min',
-    price: 'Course Fee - 49$',
+    tag: 'Hardware',
+    title: 'PC Hardware & Network Engineering Certification Exam',
+    lessons: '80 Questions',
+    duration: '60 Mins',
+    price: 'Free Practice',
   },
   {
     img: '/eduleb/img/course/3.png',
-    tag: 'Lifestyle',
-    title: 'Complete HTML, CSS and Javascript Course',
-    lessons: '32 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - Free',
+    tag: 'Govt IT',
+    title: 'O Level (M1-R5) Information Technology Tools Practice Paper',
+    lessons: '100 Questions',
+    duration: '120 Mins',
+    price: 'Free Practice',
   },
   {
     img: '/eduleb/img/course/4.png',
-    tag: 'Science',
-    title: 'IOS and Swift Complete iOS Application Development',
-    lessons: '19 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - 59$',
+    tag: 'Software',
+    title: 'Advanced Computer Applications & Office Automation Test',
+    lessons: '60 Questions',
+    duration: '45 Mins',
+    price: 'Free Practice',
   },
   {
     img: '/eduleb/img/course/5.png',
-    tag: 'Modern',
-    title: 'Learn graphics design with a best IT Trainer',
-    lessons: '22 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - 79$',
+    tag: 'Coding',
+    title: 'Python Programming & Problem Solving Skill Assessment',
+    lessons: '50 Questions',
+    duration: '60 Mins',
+    price: '₹49.00',
   },
   {
     img: '/eduleb/img/course/6.png',
-    tag: 'Marketing',
-    title: 'Complete data science for your next business',
-    lessons: '11 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - 39$',
+    tag: 'Aptitude',
+    title: 'Quantitative Aptitude & Logical Reasoning Mock Challenge',
+    lessons: '75 Questions',
+    duration: '75 Mins',
+    price: 'Free Practice',
   },
 ];
 
 export default function CoursePage() {
   return (
     <>
-      <PageBanner title="All Course" crumb="Course" />
+      <PageBanner title="Online Mock Tests & Exams" crumb="Examinations" />
       <section className="home_course section-padding">
         <div className="container">
           <div className="row">
@@ -63,16 +63,18 @@ export default function CoursePage() {
               <div key={course.title} className="col-lg-4 col-sm-6 col-xs-12">
                 <div className="single_course">
                   <div className="single_c_img">
-                    <img src={course.img} className="img-fluid" alt="course-image" />
+                    <img src={course.img} className="img-fluid" alt={course.title} />
                     <span>{course.tag}</span>
                   </div>
-                  <i className="fa fa-star" />
-                  <i className="fa fa-star" />
-                  <i className="fa fa-star" />
-                  <i className="fa fa-star" />
-                  <i className="fa fa-star" />
+                  <div className="my-2" style={{ color: '#f59e0b' }}>
+                    <i className="fa fa-star" />
+                    <i className="fa fa-star" />
+                    <i className="fa fa-star" />
+                    <i className="fa fa-star" />
+                    <i className="fa fa-star" />
+                  </div>
                   <h4>
-                    <Link to="/course-details">{course.title}</Link>
+                    <Link to="/exams">{course.title}</Link>
                   </h4>
                   <p>
                     <span className="ti-book"> </span> {course.lessons}

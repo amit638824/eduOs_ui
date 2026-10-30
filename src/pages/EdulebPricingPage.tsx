@@ -3,42 +3,41 @@ import PageBanner from '@/components/eduleb/PageBanner';
 
 const plans = [
   {
-    name: 'Basic',
-    price: '29',
+    name: 'Free Demo',
+    price: '0',
+    currency: '₹',
     features: [
-      'Access to 20 courses',
-      'Community support',
-      'Certificate of completion',
-      'Weekly practice quizzes',
-      'Progress tracking dashboard',
-      'Mobile app access',
+      '5 free mock tests / month',
+      'Basic scorecard & answer key',
+      'Instant test ranking',
+      'Verified certificate preview',
+      'Mobile web test player',
     ],
   },
   {
-    name: 'Standard',
-    price: '49',
+    name: 'Student Pro',
+    price: '199',
+    currency: '₹',
     features: [
-      'Access to 80 courses',
-      'Priority email support',
-      'Offline downloads',
-      'Certificate of completion',
-      'Mock exams & analytics',
-      'Live doubt sessions (2/mo)',
-      'Study planner & reminders',
+      'Unlimited mock tests & practice papers',
+      'Detailed topic-wise weak area analysis',
+      'Assigned institute examinations',
+      'AI-powered performance recommendations',
+      'Full verified certificate download',
+      'Priority academic support',
     ],
   },
   {
-    name: 'Premium',
-    price: '99',
+    name: 'Institute / Academy',
+    price: '999',
+    currency: '₹',
     features: [
-      'Unlimited courses',
-      '1:1 mentoring sessions',
-      'Lifetime downloads',
-      'Career guidance support',
-      'All mock tests unlocked',
-      'Priority live doubt support',
-      'Interview prep materials',
-      'Early access to new courses',
+      'Unlimited students & exam batches',
+      'Custom question bank & AI test builder',
+      'Live AI anti-cheating proctoring',
+      'Subjective evaluation & rubric marking',
+      'Batch-wise analytics & CSV export',
+      'Custom branded certificate generator',
     ],
   },
 ];
@@ -46,7 +45,7 @@ const plans = [
 export default function EdulebPricingPage() {
   return (
     <>
-      <PageBanner title="Pricing Plan" crumb="Pricing Plan" />
+      <PageBanner title="Assessment Pricing Plans" crumb="Pricing" />
       <section className="home_course section-padding">
         <div className="container">
           <div className="row">
@@ -55,20 +54,21 @@ export default function EdulebPricingPage() {
                 <div className="single_course eduleb-pricing-card">
                   <h4>{plan.name}</h4>
                   <div className="eduleb-pricing-price">
-                    ${plan.price}
+                    {plan.currency}{plan.price}
                     <span>/mo</span>
                   </div>
                   <ul className="eduleb-pricing-features">
-                    {plan.features.map((f) => (
-                      <li key={f}>
-                        <i className="ti-check" aria-hidden />
-                        <span>{f}</span>
+                    {plan.features.map((feat) => (
+                      <li key={feat}>
+                        <i className="ti-check" /> {feat}
                       </li>
                     ))}
                   </ul>
-                  <Link to="/login" className="btn_one">
-                    Get Started <i className="ti-arrow-top-right" />
-                  </Link>
+                  <div className="mt-4">
+                    <Link to="/login" className="btn_one w-100 text-center">
+                      Get Started <i className="ti-arrow-top-right" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}

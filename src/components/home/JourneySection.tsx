@@ -1,11 +1,34 @@
 import type { HomepageContent } from '@/types/homepage';
 
-const stepText = 'Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.';
 const fallbackSteps = [
-  { cls: 'sc_one', num: '01', title: 'Expert', line2: 'Teacher', text: stepText },
-  { cls: 'sc_two', num: '02', title: 'Quality', line2: 'Education', text: stepText },
-  { cls: 'sc_three', num: '03', title: 'Remote', line2: 'Learning', text: stepText },
-  { cls: 'sc_four', num: '04', title: 'Life Time', line2: 'Support', text: stepText },
+  {
+    cls: 'sc_one',
+    num: '01',
+    title: 'Select or Build',
+    line2: 'Exam / Test',
+    text: 'Pick from curated question banks or generate custom AI-assisted test papers with defined marking schemes.',
+  },
+  {
+    cls: 'sc_two',
+    num: '02',
+    title: 'Secure AI',
+    line2: 'Proctoring',
+    text: 'Attempt exams with automated anti-cheat monitoring, fullscreen lockdown, tab-switch detection, and webcam verification.',
+  },
+  {
+    cls: 'sc_three',
+    num: '03',
+    title: 'Instant Evaluation',
+    line2: '& Deep Analytics',
+    text: 'Receive real-time automated scoring, accuracy breakdowns, percentile ranks, and topic-wise performance insights.',
+  },
+  {
+    cls: 'sc_four',
+    num: '04',
+    title: 'Verified Digital',
+    line2: 'Certification',
+    text: 'Instantly download tamper-proof, QR-verified digital certificates and detailed scorecards for academic or career credentials.',
+  },
 ];
 
 export default function JourneySection({ content }: { content?: HomepageContent['journey'] }) {
@@ -21,10 +44,10 @@ export default function JourneySection({ content }: { content?: HomepageContent[
     >
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up" data-aos-duration="1000">
-          <h2>{content?.title || 'Start your journey With us'}</h2>
+          <h2>{content?.title || 'How Our Online Examination System Works'}</h2>
           <p>
             {content?.description ||
-              'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.'}
+              'From AI-driven test creation to proctored execution and instant verified results, experience an end-to-end digital assessment workflow.'}
           </p>
         </div>
         <div className="row">
@@ -42,7 +65,7 @@ export default function JourneySection({ content }: { content?: HomepageContent[
                   {s.title} <br />
                   {s.line2}
                 </h3>
-                <p>{s.text || 'Lorem ipsum dolor sit amet, consectetur notted adipisicing elit ut labore.'}</p>
+                <p>{s.text}</p>
               </div>
             </div>
           ))}
