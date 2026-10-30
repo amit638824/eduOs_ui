@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -348,6 +348,19 @@ type CreateUserForm = {
   enrollmentNo?: string;
 };
 
+type UserRoleTab = 'teachers' | 'students' | 'admin' | 'all';
+
+const isTeacherUser = (roles: string[] = []) =>
+  roles.some((r) => ['teacher', 'faculty', 'examiner', 'evaluator'].includes(r.toLowerCase()));
+
+const isStudentUser = (roles: string[] = []) =>
+  roles.some((r) => ['student', 'learner'].includes(r.toLowerCase()));
+
+const isAdminUser = (roles: string[] = []) =>
+  roles.some((r) =>
+    ['org_admin', 'admin', 'super_admin', 'staff', 'branch_admin'].includes(r.toLowerCase())
+  );
+
 export function UsersManagementPanel({
   lockedRole,
   title,
@@ -364,7 +377,47 @@ export function UsersManagementPanel({
   const { user: authUser } = useAuth();
   const canDeleteUsers =
     isSuperAdmin(authUser?.roles ?? []) || (authUser?.roles.includes('org_admin') ?? false);
-  const defaultRole = lockedRole ?? 'student';
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabQuery = (searchParams.get('tab') || '').toLowerCase();
+  const initialRoleTab: UserRoleTab =
+    tabQuery === 'students' || tabQuery === 'student'
+      ? 'students'
+      : tabQuery === 'admin' || tabQuery === 'admins'
+        ? 'admin'
+        : tabQuery === 'all'
+          ? 'all'
+          : 'teachers'; // Default to Teachers tab as requested
+
+  const [activeRoleTab, setActiveRoleTab] = useState<UserRoleTab>(initialRoleTab);
+
+  const counts = useMemo(
+    () => ({
+      teachers: users.filter((u) => isTeacherUser(u.roles as string[])).length,
+      students: users.filter((u) => isStudentUser(u.roles as string[])).length,
+      admin: users.filter((u) => isAdminUser(u.roles as string[])).length,
+      all: users.length,
+    }),
+    [users]
+  );
+
+  const filteredUsers = useMemo(() => {
+    if (lockedRole) return users;
+    if (activeRoleTab === 'teachers') return users.filter((u) => isTeacherUser(u.roles as string[]));
+    if (activeRoleTab === 'students') return users.filter((u) => isStudentUser(u.roles as string[]));
+    if (activeRoleTab === 'admin') return users.filter((u) => isAdminUser(u.roles as string[]));
+    return users;
+  }, [users, lockedRole, activeRoleTab]);
+
+  const defaultRole =
+    lockedRole ??
+    (activeRoleTab === 'teachers'
+      ? 'teacher'
+      : activeRoleTab === 'students'
+        ? 'student'
+        : activeRoleTab === 'admin'
+          ? 'org_admin'
+          : 'student');
   const {
     register,
     handleSubmit,
@@ -388,7 +441,7 @@ export function UsersManagementPanel({
     },
   });
   const watchedRole = watch('role');
-  const showEnrollmentField = lockedRole === 'student' || watchedRole === 'student';
+  const showEnrollmentField = lockedRole === 'student' || (!lockedRole && activeRoleTab === 'students') || watchedRole === 'student';
 
   const load = async () => {
     setLoading(true);
@@ -414,17 +467,45 @@ export function UsersManagementPanel({
 
   useDashboardLoadingEffect(loading);
 
+  const handleRoleTabChange = (tab: UserRoleTab) => {
+    setActiveRoleTab(tab);
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('tab', tab);
+    setSearchParams(nextParams, { replace: true });
+    if (!editingId) {
+      if (tab === 'teachers') setValue('role', 'teacher');
+      else if (tab === 'students') {
+        setValue('role', 'student');
+        platformService
+          .previewEnrollmentNumber()
+          .then((no) => setValue('enrollmentNo', no))
+          .catch(() => undefined);
+      } else if (tab === 'admin') {
+        setValue('role', 'org_admin');
+      }
+    }
+  };
+
   const resetForm = () => {
     setEditingId(null);
+    const targetRole =
+      lockedRole ??
+      (activeRoleTab === 'teachers'
+        ? 'teacher'
+        : activeRoleTab === 'students'
+          ? 'student'
+          : activeRoleTab === 'admin'
+            ? 'org_admin'
+            : 'student');
     reset({
       email: '',
       password: DEFAULT_SUGGESTED_PASSWORD,
       firstName: '',
       lastName: '',
-      role: defaultRole,
+      role: targetRole,
       enrollmentNo: '',
     });
-    if (defaultRole === 'student' || lockedRole === 'student') {
+    if (targetRole === 'student') {
       platformService
         .previewEnrollmentNumber()
         .then((no) => setValue('enrollmentNo', no))
@@ -543,25 +624,75 @@ export function UsersManagementPanel({
         ? 'Students'
         : lockedRole === 'staff'
           ? 'Staff'
-          : 'User Management');
+          : activeRoleTab === 'teachers'
+            ? 'Teachers'
+            : activeRoleTab === 'students'
+              ? 'Students'
+              : activeRoleTab === 'admin'
+                ? 'Administrators'
+                : 'User Management');
+
   const addLabel = editingId
     ? 'Update User'
-    : lockedRole === 'teacher'
-      ? 'Add Faculty'
-      : lockedRole === 'student'
+    : lockedRole === 'teacher' || (!lockedRole && activeRoleTab === 'teachers')
+      ? 'Add Teacher'
+      : lockedRole === 'student' || (!lockedRole && activeRoleTab === 'students')
         ? 'Add Student'
         : lockedRole === 'staff'
           ? 'Add Staff'
-          : 'Add User';
+          : !lockedRole && activeRoleTab === 'admin'
+            ? 'Add Admin'
+            : 'Add User';
 
   return (
     <div className="dashboard__content__wraper">
       <div className="dashboard__section__title">
         <h4>{heading}</h4>
-        <span className="badge bg-primary">{users.length}</span>
+        <span className="badge bg-primary">{filteredUsers.length}</span>
       </div>
       {error && <EdtpAlert type="error">{error}</EdtpAlert>}
       {message && <EdtpAlert type="success">{message}</EdtpAlert>}
+
+      {!lockedRole && (
+        <div className="sca-tabs" role="tablist">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeRoleTab === 'teachers'}
+            className={`sca-tabs__btn${activeRoleTab === 'teachers' ? ' sca-tabs__btn--active' : ''}`}
+            onClick={() => handleRoleTabChange('teachers')}
+          >
+            Teachers ({counts.teachers})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeRoleTab === 'students'}
+            className={`sca-tabs__btn${activeRoleTab === 'students' ? ' sca-tabs__btn--active' : ''}`}
+            onClick={() => handleRoleTabChange('students')}
+          >
+            Students ({counts.students})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeRoleTab === 'admin'}
+            className={`sca-tabs__btn${activeRoleTab === 'admin' ? ' sca-tabs__btn--active' : ''}`}
+            onClick={() => handleRoleTabChange('admin')}
+          >
+            Admin ({counts.admin})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeRoleTab === 'all'}
+            className={`sca-tabs__btn${activeRoleTab === 'all' ? ' sca-tabs__btn--active' : ''}`}
+            onClick={() => handleRoleTabChange('all')}
+          >
+            All Users ({counts.all})
+          </button>
+        </div>
+      )}
 
       <div className="edtp-form-card">
         <h5>{editingId ? 'Edit user' : addLabel}</h5>
@@ -653,30 +784,98 @@ export function UsersManagementPanel({
         </form>
       </div>
 
+      {!lockedRole && (
+        <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 mt-4">
+          <div className="d-flex align-items-center gap-2">
+            <h5 className="mb-0" style={{ fontSize: '1rem', fontWeight: 700 }}>
+              {activeRoleTab === 'teachers'
+                ? 'Teachers'
+                : activeRoleTab === 'students'
+                  ? 'Students'
+                  : activeRoleTab === 'admin'
+                    ? 'Administrators'
+                    : 'All Users'}
+            </h5>
+            <span className="badge bg-primary">{filteredUsers.length}</span>
+          </div>
+          <div className="btn-group btn-group-sm" role="group" aria-label="Filter role group">
+            <button
+              type="button"
+              className={`btn ${activeRoleTab === 'teachers' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => handleRoleTabChange('teachers')}
+            >
+              Teachers ({counts.teachers})
+            </button>
+            <button
+              type="button"
+              className={`btn ${activeRoleTab === 'students' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => handleRoleTabChange('students')}
+            >
+              Students ({counts.students})
+            </button>
+            <button
+              type="button"
+              className={`btn ${activeRoleTab === 'admin' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => handleRoleTabChange('admin')}
+            >
+              Admin ({counts.admin})
+            </button>
+            <button
+              type="button"
+              className={`btn ${activeRoleTab === 'all' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              onClick={() => handleRoleTabChange('all')}
+            >
+              All ({counts.all})
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard__table table-responsive">
         <table>
           <thead>
-            <tr><th>Name</th><th>Email</th>{lockedRole === 'student' && <th>Enrollment</th>}<th>Roles</th><th>Status</th><th>Actions</th></tr>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              {(lockedRole === 'student' || (!lockedRole && activeRoleTab === 'students')) && (
+                <th>Enrollment</th>
+              )}
+              <th>Roles</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
           </thead>
           <tbody>
-            {users.map((u) => (
+            {filteredUsers.map((u) => (
               <tr key={u.id} className={editingId === u.id ? 'edtp-row--editing' : undefined}>
-                <td>{u.first_name} {u.last_name}</td>
+                <td>
+                  {u.first_name} {u.last_name}
+                </td>
                 <td>{u.email}</td>
-                {lockedRole === 'student' && <td>{u.enrollment_no ?? '—'}</td>}
+                {(lockedRole === 'student' || (!lockedRole && activeRoleTab === 'students')) && (
+                  <td>{u.enrollment_no ?? '—'}</td>
+                )}
                 <td>{(u.roles as string[]).join(', ')}</td>
                 <td>
-                  <span className={`edtp-badge ${u.status === 'active' ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
+                  <span
+                    className={`edtp-badge ${u.status === 'active' ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}
+                  >
                     {formatUserStatus(u.status)}
                   </span>
                 </td>
                 <td>
                   <EdtpRowActions>
-                    <EdtpBtn variant="secondary" onClick={() => startEdit(u)}>Edit</EdtpBtn>
+                    <EdtpBtn variant="secondary" onClick={() => startEdit(u)}>
+                      Edit
+                    </EdtpBtn>
                     {u.status === 'active' ? (
-                      <EdtpBtn variant="danger" onClick={() => void setStatus(u.id, 'inactive')}>Deactivate</EdtpBtn>
+                      <EdtpBtn variant="danger" onClick={() => void setStatus(u.id, 'inactive')}>
+                        Deactivate
+                      </EdtpBtn>
                     ) : (
-                      <EdtpBtn variant="success" onClick={() => void setStatus(u.id, 'active')}>Activate</EdtpBtn>
+                      <EdtpBtn variant="success" onClick={() => void setStatus(u.id, 'active')}>
+                        Activate
+                      </EdtpBtn>
                     )}
                     {canDeleteUsers && (
                       <EdtpBtn
@@ -690,8 +889,21 @@ export function UsersManagementPanel({
                 </td>
               </tr>
             ))}
-            {users.length === 0 && (
-              <tr><td colSpan={lockedRole === 'student' ? 6 : 5}>No users found.</td></tr>
+            {filteredUsers.length === 0 && (
+              <tr>
+                <td
+                  colSpan={lockedRole === 'student' || (!lockedRole && activeRoleTab === 'students') ? 6 : 5}
+                  className="text-center py-4 text-muted"
+                >
+                  {activeRoleTab === 'teachers'
+                    ? 'No teachers found.'
+                    : activeRoleTab === 'students'
+                      ? 'No students found.'
+                      : activeRoleTab === 'admin'
+                        ? 'No admin users found.'
+                        : 'No users found.'}
+                </td>
+              </tr>
             )}
           </tbody>
         </table>

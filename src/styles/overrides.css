@@ -297,24 +297,71 @@
   color: #1e293b;
 }
 
-.loginarea__wraper.auth-card .common__login__input {
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 12px 14px;
-  background: #fff;
-  color: #0f172a;
+.loginarea__wraper.auth-card .common__login__input,
+.loginarea__wraper form .login__form .common__login__input,
+.loginarea__wraper .password-input-wrap .common__login__input,
+.loginarea__wraper input.common__login__input,
+.loginarea__wraper input[type="password"],
+.loginarea__wraper input[type="text"],
+.password-input-wrap input,
+.is_dark .loginarea__wraper .common__login__input,
+.is_dark .loginarea__wraper form .login__form .common__login__input,
+.is_dark .loginarea__wraper input[type="password"],
+.is_dark .loginarea__wraper input[type="text"],
+.is_dark .password-input-wrap input {
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 12px 14px !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  caret-color: #0f172a !important;
   box-shadow: none;
+  font-size: 15px !important;
 }
 
-.loginarea__wraper.auth-card .common__login__input:focus {
-  border-color: #6366f1;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+.loginarea__wraper.auth-card .common__login__input:focus,
+.loginarea__wraper form .login__form .common__login__input:focus,
+.loginarea__wraper .password-input-wrap .common__login__input:focus,
+.loginarea__wraper input.common__login__input:focus,
+.loginarea__wraper input[type="password"]:focus,
+.loginarea__wraper input[type="text"]:focus,
+.password-input-wrap input:focus,
+.is_dark .loginarea__wraper .common__login__input:focus,
+.is_dark .loginarea__wraper form .login__form .common__login__input:focus,
+.is_dark .loginarea__wraper input[type="password"]:focus,
+.is_dark .loginarea__wraper input[type="text"]:focus,
+.is_dark .password-input-wrap input:focus {
+  border-color: #6366f1 !important;
+  outline: none !important;
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  caret-color: #0f172a !important;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
 }
 
-.loginarea__wraper.auth-card .common__login__input.input-error {
+.loginarea__wraper.auth-card .common__login__input.input-error,
+.loginarea__wraper form .login__form .common__login__input.input-error,
+.loginarea__wraper .password-input-wrap .common__login__input.input-error {
   border-color: #ef4444 !important;
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12) !important;
+}
+
+.loginarea__wraper.auth-card .common__login__input::placeholder,
+.loginarea__wraper form .login__form .common__login__input::placeholder,
+.loginarea__wraper .password-input-wrap .common__login__input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Chrome autofill text color & background preservation */
+.loginarea__wraper input:-webkit-autofill,
+.loginarea__wraper input:-webkit-autofill:hover,
+.loginarea__wraper input:-webkit-autofill:focus,
+.loginarea__wraper input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  transition: background-color 5000s ease-in-out 0s;
 }
 
 .auth-alert {

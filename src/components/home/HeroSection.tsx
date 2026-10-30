@@ -7,13 +7,6 @@ const fallbackPhrases = ['Every Exam', 'CAT & MBA', 'JEE & NEET', 'Banking & SSC
 export default function HeroSection({ content }: { content?: HomepageContent['hero'] }) {
   const phrases = content?.phrases?.length ? content.phrases : fallbackPhrases;
   const sequence = phrases.flatMap((phrase) => [phrase, 2400] as [string, number]);
-  const bars = content?.score.bars?.length
-    ? content.score.bars
-    : [
-        { label: 'Quantitative Aptitude', pct: 85 },
-        { label: 'Reasoning', pct: 78 },
-        { label: 'English', pct: 82 },
-      ];
   const trust = content?.trust?.length
     ? content.trust
     : [
@@ -114,28 +107,6 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
                 data-aos-duration="900"
                 data-aos-delay="200"
               />
-
-              <div className="ms-float-score-box eduleb-hover-lift" data-aos="fade-up" data-aos-duration="900" data-aos-delay="350">
-                <div className="eduleb-ms-score-title">{content?.score.title || 'Your Last Test Score'}</div>
-                <div className="d-flex align-items-center gap-3 mb-3">
-                  <div className="ms-score-ring-circle">{content?.score.percent || '82%'}</div>
-                  <div>
-                    <div className="eduleb-ms-score-num">{content?.score.marks || '164 / 200'}</div>
-                    <div className="eduleb-ms-score-good">{content?.score.remark || 'Excellent!'}</div>
-                  </div>
-                </div>
-                {bars.map((row) => (
-                  <div key={row.label} className="mb-2">
-                    <div className="d-flex justify-content-between eduleb-ms-bar-label">
-                      <span>{row.label}</span>
-                      <span>{row.pct}%</span>
-                    </div>
-                    <div className="eduleb-ms-bar-track">
-                      <div className="eduleb-ms-bar-fill" style={{ width: `${row.pct}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
 
               <div className="eduleb-ms-tip-card eduleb-hover-lift" data-aos="fade-up" data-aos-duration="900" data-aos-delay="450">
                 <span className="eduleb-ms-tip-icon">📈</span>
