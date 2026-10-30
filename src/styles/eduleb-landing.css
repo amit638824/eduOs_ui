@@ -15,6 +15,30 @@ body.eduleb-page .eduleb-main {
   font-family: 'Roboto', sans-serif !important;
 }
 
+/* Sticky footer shell — kills bottom white gap on short pages */
+body.eduleb-page #root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+body.eduleb-page .main_wrapper.eduleb-main {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+body.eduleb-page .main_wrapper.eduleb-main > *:not(.footer):not(footer) {
+  flex: 0 0 auto;
+}
+
+body.eduleb-page .main_wrapper.eduleb-main > .footer,
+body.eduleb-page .main_wrapper.eduleb-main > footer {
+  margin-top: auto !important;
+}
+
 /* Do NOT force fonts on * — that breaks Themify / Font Awesome icons */
 body.eduleb-page button:not([class*='fa']):not([class^='ti-']):not([class*=' ti-']),
 body.eduleb-page input,
@@ -1619,6 +1643,172 @@ body.eduleb-page .contact_area.eduleb-contact,
 body.eduleb-page .blog_area.eduleb-page-merge,
 body.eduleb-page .home_course.eduleb-page-merge {
   background: #f9f9f9 !important;
+}
+
+/* —— Verify certificate page —— */
+body.eduleb-page .eduleb-verify-page {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  background: #f9f9f9;
+}
+
+body.eduleb-page .eduleb-verify-body {
+  flex: 1 1 auto;
+  padding: 12px 0 64px !important;
+  background: #f9f9f9 !important;
+}
+
+body.eduleb-page .eduleb-verify-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+body.eduleb-page .eduleb-verify-card,
+body.eduleb-page .eduleb-verify-result,
+.eduleb-verify-card,
+.eduleb-verify-result {
+  background: #fff !important;
+  border: 1px solid #e8edf5 !important;
+  border-radius: 16px !important;
+  padding: 28px 24px !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.05);
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 14px !important;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 20px;
+}
+
+/* Stacked label → full-width input → theme blue Verify */
+.eduleb-verify-label {
+  display: block !important;
+  float: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 0.9rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  line-height: 1.35 !important;
+}
+
+.eduleb-verify-input {
+  display: block !important;
+  float: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  min-height: 48px !important;
+  margin: 0 !important;
+  padding: 12px 14px !important;
+  border: 1px solid #dbe3f0 !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: #0f172a !important;
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  font-family: inherit !important;
+}
+
+.eduleb-verify-input:focus {
+  outline: none !important;
+  border-color: #225ce5 !important;
+  box-shadow: 0 0 0 3px rgba(34, 92, 229, 0.18) !important;
+}
+
+.eduleb-verify-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  align-self: flex-start !important;
+  min-height: 46px !important;
+  min-width: 120px !important;
+  margin: 4px 0 0 !important;
+  padding: 12px 28px !important;
+  border: none !important;
+  border-radius: 10px !important;
+  background: linear-gradient(90deg, #3b82f6 0%, #225ce5 55%, #1a4bc4 100%) !important;
+  color: #fff !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 18px rgba(34, 92, 229, 0.28) !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  font-family: inherit !important;
+}
+
+.eduleb-verify-btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+  color: #fff !important;
+}
+
+.eduleb-verify-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Verify / marketing errors — red (EdtpAlert is otherwise dashboard-scoped) */
+.eduleb-verify-page .edtp-alert,
+body.eduleb-page .edtp-alert {
+  display: block;
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.eduleb-verify-page .edtp-alert--error,
+body.eduleb-page .edtp-alert--error {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  color: #dc2626 !important;
+}
+
+.eduleb-verify-page .edtp-alert--success,
+body.eduleb-page .edtp-alert--success {
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #15803d !important;
+}
+
+.eduleb-verify-result.is-valid {
+  border-color: #16a34a !important;
+  border-width: 2px !important;
+}
+
+.eduleb-verify-result.is-invalid {
+  border-color: #dc2626 !important;
+  border-width: 2px !important;
+}
+
+.eduleb-verify-result h5 {
+  margin: 0 0 8px !important;
+  font-size: 1.15rem !important;
+  font-weight: 800 !important;
+  color: #0f172a !important;
+}
+
+.eduleb-verify-dl {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0 !important;
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.eduleb-verify-dl strong {
+  color: #0f172a;
+  font-weight: 700;
+  margin-right: 6px;
 }
 
 body.eduleb-page .eduleb-contact .contact_info h4 {

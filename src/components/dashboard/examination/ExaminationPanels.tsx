@@ -836,7 +836,7 @@ export function QuestionBankPanel() {
                 <th>Topic</th>
                 <th>Type</th>
                 <th>Status</th>
-                <th style={{ textAlign: 'right', paddingRight: '20px' }}>Actions</th>
+                <th className="edtp-th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -877,8 +877,8 @@ export function QuestionBankPanel() {
                         {q.status}
                       </span>
                     </td>
-                    <td style={{ textAlign: 'right', paddingRight: '16px' }}>
-                      <div className="org-actions-cell" style={{ justifyContent: 'flex-end' }}>
+                    <td className="org-td-actions" style={{ textAlign: 'left' }}>
+                      <div className="org-actions-cell" style={{ justifyContent: 'flex-start' }}>
                         <button
                           type="button"
                           className="org-icon-btn org-icon-btn--switch"
@@ -1553,7 +1553,7 @@ export function TestsListPanel({ title }: { title: string }) {
                 <th>STATUS</th>
                 <th>DURATION</th>
                 <th>MARKS</th>
-                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 220 }}>ACTIONS</th>
+                <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -1565,8 +1565,8 @@ export function TestsListPanel({ title }: { title: string }) {
                   <td>{statusBadge(t.status)}</td>
                   <td style={{ color: '#475569' }}>{t.duration_minutes} min</td>
                   <td style={{ color: '#475569', fontWeight: 500 }}>{t.total_marks ?? '—'}</td>
-                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap' }}>
+                  <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'nowrap' }}>
                       {t.status === 'draft' && (
                         <Link
                           to={`/dashboard/test-builder/${t.id}?step=build`}
@@ -1708,7 +1708,7 @@ export function TestsListPanel({ title }: { title: string }) {
                     <option value="practice">Practice Exam</option>
                   </select>
                 </div>
-                <div className="org-form-field" style={{ justifyContent: 'center' }}>
+                <div className="org-form-field" style={{ justifyContent: 'flex-start' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.875rem', fontWeight: 500, color: '#334155', cursor: 'pointer', marginTop: 24 }}>
                     <input
                       type="checkbox"
@@ -2422,7 +2422,7 @@ export function AttemptsListPanel({
                 <th>STATUS</th>
                 <th>SCORE</th>
                 <th>STARTED</th>
-                {!readOnly && <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 150 }}>ACTIONS</th>}
+                {!readOnly && <th className="edtp-th-actions">ACTIONS</th>}
               </tr>
             </thead>
             <tbody>
@@ -2481,8 +2481,8 @@ export function AttemptsListPanel({
                   </td>
                   <td style={{ color: '#475569' }}>{formatDateTime(a.started_at)}</td>
                   {!readOnly && (
-                    <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                      <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap' }}>
+                    <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'nowrap' }}>
                         {a.status === 'in_progress' && (
                           <button
                             type="button"
@@ -2610,7 +2610,7 @@ export function ResultsPanel() {
                 <th>RANK</th>
                 <th>PERCENTILE</th>
                 <th>DATE</th>
-                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 100 }}>ACTIONS</th>
+                <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -2640,8 +2640,8 @@ export function ResultsPanel() {
                   <td style={{ color: '#475569' }}>{r.rank != null ? `#${r.rank}` : '—'}</td>
                   <td style={{ color: '#475569' }}>{r.percentile != null ? `${Number(r.percentile).toFixed(1)}%` : '—'}</td>
                   <td style={{ color: '#475569' }}>{formatDateTime(r.created_at)}</td>
-                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                  <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
                       <Link
                         to={`/dashboard/exam-result/${r.attempt_id}`}
                         className="org-action-btn org-action-btn--edit"
@@ -3274,12 +3274,12 @@ export function CreateTestPanel() {
                 </div>
               )}
 
-              {/* Centered navigation buttons with identical dimensions */}
+              {/* Form step navigation */}
               <div
                 className="col-12"
                 style={{
                   display: 'flex',
-                  justifyContent: 'center',
+                  justifyContent: 'flex-start',
                   alignItems: 'center',
                   gap: 16,
                   marginTop: 28,
@@ -4227,7 +4227,7 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
         <button
           type="submit"
           className="org-add-btn"

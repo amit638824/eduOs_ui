@@ -239,7 +239,7 @@ export function FlaggedAttemptsPanel() {
                 <th>VIOLATIONS</th>
                 <th>SCORE</th>
                 <th>REVIEW STATUS</th>
-                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 260 }}>ACTIONS</th>
+                <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -318,8 +318,8 @@ export function FlaggedAttemptsPanel() {
                           {row.proctoring_review_status ?? 'pending'}
                         </span>
                       </td>
-                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'nowrap' }}>
+                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-start', alignItems: 'center', flexWrap: 'nowrap' }}>
                           <button
                             type="button"
                             className="org-action-btn org-action-btn--secondary"
@@ -412,10 +412,14 @@ export function FlaggedAttemptsPanel() {
               })}
               {rows.length === 0 && !loading && (
                 <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748b' }}>
-                    <FiShield style={{ fontSize: 32, color: '#10b981', marginBottom: 8, display: 'block', margin: '0 auto 8px' }} />
-                    <strong style={{ display: 'block', color: '#0f172a', marginBottom: 4 }}>No Flagged Attempts</strong>
-                    <span>No test attempts match the selected filter criteria.</span>
+                  <td colSpan={6} className="org-table-empty" style={{ padding: '48px 20px', color: '#64748b' }}>
+                    <FiShield style={{ fontSize: 32, color: '#10b981', display: 'block', margin: '0 auto 8px' }} />
+                    <strong style={{ display: 'block', color: '#0f172a', marginBottom: 4, textAlign: 'center' }}>
+                      No Flagged Attempts
+                    </strong>
+                    <span style={{ display: 'block', textAlign: 'center' }}>
+                      No test attempts match the selected filter criteria.
+                    </span>
                   </td>
                 </tr>
               )}

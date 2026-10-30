@@ -372,7 +372,7 @@ export function OrganizationsPanel() {
                   <th>Users</th>
                   <th>Created Date</th>
                   <th>Status</th>
-                  <th style={{ textAlign: 'right', paddingRight: '28px' }}>Actions</th>
+                  <th className="edtp-th-actions">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -432,11 +432,8 @@ export function OrganizationsPanel() {
                     </td>
 
                     {/* Actions Cell (COLORFUL ICONS: Blue Switch, Green Edit, Red Delete) */}
-                    <td>
-                      <div
-                        className="org-actions-cell"
-                        style={{ justifyContent: 'flex-end', paddingRight: '8px' }}
-                      >
+                    <td className="org-td-actions">
+                      <div className="org-actions-cell">
                         {/* 1. Switch to Account Icon (Blue) */}
                         <button
                           type="button"

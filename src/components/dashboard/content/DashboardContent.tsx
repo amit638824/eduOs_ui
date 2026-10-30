@@ -579,7 +579,7 @@ export function DashboardAssignmentsContent() {
                     <th>ATTEMPTS</th>
                   </>
                 )}
-                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 120 }}>ACTIONS</th>
+                <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -619,8 +619,8 @@ export function DashboardAssignmentsContent() {
                           '—'
                         )}
                       </td>
-                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
                           {renderStudentAction(row)}
                         </div>
                       </td>
@@ -630,8 +630,8 @@ export function DashboardAssignmentsContent() {
                       <td style={{ color: '#475569', fontWeight: 500 }}>{row.assigned_count ?? 0}</td>
                       <td style={{ color: '#475569', fontWeight: 500 }}>{row.submitted_count ?? 0}</td>
                       <td style={{ color: '#475569', fontWeight: 500 }}>{row.attempt_count ?? 0}</td>
-                      <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
                           <Link
                             to={`/dashboard/test-builder/${row.id}`}
                             className="org-action-btn org-action-btn--switch"
@@ -888,7 +888,7 @@ function OrganizationSettingsForm({
           <FormError message={errors.slug?.message} />
         </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
         <button
           type="submit"
           className="org-add-btn"
@@ -1111,7 +1111,7 @@ function CertificateBrandingForm() {
           </EdtpSelect>
         </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
         <button
           type="button"
           className="org-add-btn"
@@ -1210,7 +1210,7 @@ function PasswordChangeForm() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: '24px', width: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
         <button
           type="submit"
           className="org-add-btn"
@@ -1337,7 +1337,7 @@ function SocialLinksForm() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
           gap: '12px',
           marginTop: '24px',
           flexWrap: 'wrap',

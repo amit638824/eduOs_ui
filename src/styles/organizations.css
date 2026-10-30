@@ -416,12 +416,16 @@
 /* ── Modern Table with UNIFIED MERGED HEADER GRADIENT (#12193B to #225CE5) ── */
 .org-table-wrap {
   width: 100%;
-  overflow-x: auto;
+  max-width: 100%;
+  overflow-x: hidden;
   background: var(--db-card, #ffffff);
 }
 
 .org-table {
   width: 100%;
+  max-width: 100%;
+  min-width: 0 !important;
+  table-layout: fixed;
   border-collapse: collapse;
   text-align: left;
   margin: 0;
@@ -444,14 +448,43 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 8px 16px;
+  padding: 12px 16px;
   border: none !important;
   white-space: nowrap;
+  text-align: left !important;
+  overflow: visible;
 }
 
-.org-th-actions {
-  text-align: right;
-  padding-right: 24px !important;
+/* Header + cell same left edge — Actions included */
+.org-th-actions,
+.org-table thead th.edtp-th-actions,
+.org-table thead th.org-th-actions {
+  width: 26%;
+  text-align: left !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  overflow: visible !important;
+}
+
+.org-td-actions,
+.org-table tbody td.org-td-actions,
+.org-table tbody td.edtp-td-actions {
+  width: 26%;
+  text-align: left !important;
+  overflow: visible !important;
+}
+
+.org-td-actions .org-action-btns,
+.org-td-actions .edtp-row-actions,
+.org-actions-cell,
+.org-td-actions .org-actions-cell {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 6px !important;
+  width: auto !important;
+  max-width: 100%;
 }
 
 .org-table td {
@@ -460,7 +493,38 @@
   vertical-align: middle;
   font-size: 0.835rem;
   color: var(--db-text, #0f172a);
+  text-align: left !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: background 0.15s ease;
+}
+
+.org-table td .org-cell-flex,
+.org-table td .org-users-count,
+.org-table td .org-status-cell {
+  justify-content: flex-start;
+}
+
+.org-table td.org-td-actions,
+.org-table td.edtp-td-actions {
+  text-align: left !important;
+}
+
+/* Empty-state row — icon + text centered in table */
+.org-table td[colspan],
+.org-table td.org-table-empty {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.org-table td[colspan] strong,
+.org-table td[colspan] span,
+.org-table td.org-table-empty strong,
+.org-table td.org-table-empty span {
+  display: block;
+  text-align: center !important;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .org-table tr:hover td {
@@ -614,8 +678,13 @@
 /* ── COLORFUL ACTION ICONS (react-icons) ── */
 .org-actions-cell {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start;
+  gap: 6px;
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .org-icon-btn {
@@ -695,17 +764,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 5px;
   height: 30px;
-  padding: 0 12px;
+  padding: 0 10px;
   border-radius: 7px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none !important;
   white-space: nowrap;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
   border: 1px solid transparent;
   line-height: 1;
   box-sizing: border-box;
@@ -1061,8 +1131,19 @@ textarea.org-form-input {
     align-items: stretch;
   }
 
+  .org-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .org-table {
-    min-width: 640px;
+    min-width: 0;
+  }
+
+  .org-table thead th.edtp-th-actions,
+  .org-table thead th.org-th-actions,
+  .org-table tbody td.org-td-actions {
+    width: 32%;
   }
 
   .org-form-input,

@@ -180,7 +180,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                 <th>VERIFY CODE</th>
                 <th>STATUS</th>
                 <th>ISSUED</th>
-                <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 160 }}>ACTIONS</th>
+                <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -221,8 +221,8 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                     </span>
                   </td>
                   <td style={{ color: '#475569', fontSize: '0.825rem' }}>{formatDateTime(c.issued_at)}</td>
-                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-start', alignItems: 'center' }}>
                       {mode === 'org' && c.status === 'issued' && (
                         <button
                           type="button"

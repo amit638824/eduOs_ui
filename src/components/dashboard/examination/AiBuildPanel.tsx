@@ -271,7 +271,7 @@ export function AiBuildPanel() {
               className="col-12"
               style={{
                 display: 'flex',
-                justifyContent: 'center',
+                justifyContent: 'flex-start',
                 alignItems: 'center',
                 gap: 14,
                 marginTop: 28,
@@ -457,7 +457,7 @@ export function AiBuildPanel() {
                 <th>SAVED</th>
                 <th>SKIPPED</th>
                 <th>COST</th>
-                <th style={{ textAlign: 'right', minWidth: 120 }}>ACTIONS</th>
+                <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
@@ -485,8 +485,8 @@ export function AiBuildPanel() {
                   <td style={{ color: '#475569' }}>{item.created_count}</td>
                   <td style={{ color: '#475569' }}>{item.skipped_count}</td>
                   <td style={{ color: '#475569' }}>${Number(item.estimated_cost_usd ?? 0).toFixed(4)}</td>
-                  <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                  <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
                       {item.status === 'failed' ? (
                         <button
                           type="button"

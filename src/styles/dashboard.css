@@ -1406,6 +1406,60 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   gap: 6px;
 }
 
+/* Header + data same left alignment in every column (incl. Actions) */
+.sca-dashboard .edtp-th-actions,
+.sca-dashboard .org-th-actions,
+.sca-dashboard .dashboard__table thead th.edtp-th-actions,
+.sca-dashboard table thead th.edtp-th-actions,
+.sca-dashboard .org-table thead th.edtp-th-actions,
+.sca-dashboard .org-table thead th.org-th-actions,
+.sca-dashboard .dashboard__table thead th:is([data-col='actions']) {
+  text-align: left !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  width: 22%;
+  white-space: nowrap;
+  overflow: visible !important;
+}
+
+.sca-dashboard .edtp-td-actions,
+.sca-dashboard .org-td-actions,
+.sca-dashboard .dashboard__table tbody td.edtp-td-actions,
+.sca-dashboard .org-table tbody td.org-td-actions,
+.sca-dashboard .org-table tbody td.edtp-td-actions {
+  text-align: left !important;
+  width: 22%;
+  overflow: visible !important;
+}
+
+.sca-dashboard .org-table th,
+.sca-dashboard .org-table td,
+.sca-dashboard .dashboard__table thead th,
+.sca-dashboard .dashboard__table tbody td {
+  text-align: left !important;
+}
+
+.sca-dashboard .org-table td[colspan],
+.sca-dashboard .org-table td.org-table-empty,
+.sca-dashboard .dashboard__table td[colspan],
+.sca-dashboard .dashboard__table td.org-table-empty {
+  text-align: center !important;
+}
+
+.sca-dashboard .edtp-td-actions .edtp-row-actions,
+.sca-dashboard .org-td-actions .edtp-row-actions,
+.sca-dashboard .org-td-actions .org-action-btns,
+.sca-dashboard .org-actions-cell,
+.sca-dashboard .edtp-row-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  align-items: center !important;
+  gap: 6px;
+  width: auto;
+  max-width: 100%;
+}
+
 .sca-dashboard .edtp-form-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1739,16 +1793,42 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 /* Tables */
 .dashboard__table {
   width: 100%;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+  overflow-x: hidden;
   border-radius: 10px;
   border: 1px solid var(--db-border);
 }
 
 .dashboard__table table {
   width: 100%;
-  min-width: 520px;
+  max-width: 100%;
+  min-width: 0;
+  table-layout: fixed;
   border-collapse: collapse;
+}
+
+.dashboard__table table th,
+.dashboard__table table td {
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.dashboard__table table thead th.edtp-th-actions,
+.dashboard__table table tbody td.edtp-td-actions,
+.dashboard__table table tbody td.org-td-actions {
+  width: 22%;
+  white-space: nowrap;
+  text-align: left !important;
+  overflow: visible !important;
+}
+
+@media (max-width: 900px) {
+  .dashboard__table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 }
 
 .dashboard__table thead th {

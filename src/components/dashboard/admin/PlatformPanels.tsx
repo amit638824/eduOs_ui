@@ -52,11 +52,14 @@ import * as yup from 'yup';
 import {
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  LabelList,
+  Legend,
 } from 'recharts';
 
 export function NotificationsPanel() {
@@ -234,7 +237,7 @@ export function NotificationsPanel() {
                 <th style={{ width: '15%' }}>CHANNEL</th>
                 <th style={{ width: '18%' }}>DATE</th>
                 <th style={{ width: '10%' }}>STATUS</th>
-                <th style={{ textAlign: 'right', width: '9%' }}>ACTION</th>
+                <th className="edtp-th-actions" style={{ width: '9%' }}>ACTION</th>
               </tr>
             </thead>
             <tbody>
@@ -288,7 +291,7 @@ export function NotificationsPanel() {
                       </span>
                     )}
                   </td>
-                  <td style={{ textAlign: 'right' }}>
+                  <td style={{ textAlign: 'left' }}>
                     {!n.is_read ? (
                       <button
                         type="button"
@@ -1170,8 +1173,7 @@ export function UsersManagementPanel({
                       {/* Actions Cell with Colorful Icons */}
                       <td>
                         <div
-                          className="org-actions-cell"
-                          style={{ justifyContent: 'flex-end', paddingRight: '8px' }}
+                          className="org-actions-cell" style={{ justifyContent: 'flex-start' }}
                         >
                           <button
                             type="button"
@@ -1655,9 +1657,9 @@ export function ReportsPanel() {
 
                 {questionAnalytics.questions.map((q) => {
                   const chartData = q.distractors.map((d, index) => ({
-                    option: `Option ${index + 1}`,
+                    option: `Option ${String.fromCharCode(65 + index)}`,
                     selected: d.selected_count,
-                    percentage: d.selected_pct,
+                    percentage: Number(d.selected_pct ?? 0),
                     correct: d.is_correct,
                   }));
 
@@ -1668,31 +1670,87 @@ export function ReportsPanel() {
                       </strong>
 
                       {chartData.length > 0 ? (
-                        <div style={{ width: '100%', height: 260, marginTop: 12 }}>
+                        <div style={{ width: '100%', height: 300, marginTop: 12 }}>
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart
                               data={chartData}
-                              layout="vertical"
-                              margin={{ top: 8, right: 24, left: 16, bottom: 8 }}
+                              margin={{ top: 28, right: 16, left: 8, bottom: 8 }}
                             >
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis type="number" allowDecimals={false} />
-                              <YAxis
-                                type="category"
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                              <XAxis
                                 dataKey="option"
-                                width={90}
+                                tick={{ fill: '#475569', fontSize: 12, fontWeight: 600 }}
+                                axisLine={{ stroke: '#94a3b8' }}
+                                tickLine={false}
+                              />
+                              <YAxis
+                                type="number"
+                                domain={[0, 100]}
+                                tickFormatter={(v) => `${v}`}
+                                tick={{ fill: '#64748b', fontSize: 12 }}
+                                axisLine={{ stroke: '#94a3b8' }}
+                                tickLine={false}
+                                label={{
+                                  value: 'Percentage',
+                                  angle: -90,
+                                  position: 'insideLeft',
+                                  style: { fill: '#64748b', fontSize: 12 },
+                                }}
                               />
                               <Tooltip
-                                formatter={(value, _name, item) => [
-                                  `${value} students (${item.payload.percentage}%)`,
-                                  item.payload.correct ? 'Correct option' : 'Wrong option',
+                                cursor={{ fill: 'rgba(15, 23, 42, 0.04)' }}
+                                content={({ active, payload, label }) => {
+                                  if (!active || !payload?.length) return null;
+                                  const row = payload[0]?.payload as {
+                                    selected?: number;
+                                    percentage?: number;
+                                    correct?: boolean;
+                                  };
+                                  const ok = Boolean(row?.correct);
+                                  return (
+                                    <div
+                                      style={{
+                                        background: '#fff',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: 10,
+                                        padding: '10px 12px',
+                                        boxShadow: '0 8px 20px rgba(15,23,42,0.1)',
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      <div style={{ fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
+                                        {label}
+                                      </div>
+                                      <div style={{ fontWeight: 600, color: ok ? '#16a34a' : '#ef4444' }}>
+                                        {ok ? 'Correct answer' : 'Incorrect answer'}:{' '}
+                                        {row?.selected ?? 0} students ({row?.percentage ?? 0}%)
+                                      </div>
+                                    </div>
+                                  );
+                                }}
+                              />
+                              <Legend
+                                verticalAlign="top"
+                                height={28}
+                                payload={[
+                                  { value: 'Correct Answer', type: 'square', color: '#16a34a' },
+                                  { value: 'Incorrect Answer', type: 'square', color: '#ef4444' },
                                 ]}
                               />
-                              <Bar
-                                dataKey="selected"
-                                name="Students"
-                                fill="#6366f1"
-                              />
+                              <Bar dataKey="percentage" name="Selected %" radius={[6, 6, 0, 0]} maxBarSize={56}>
+                                {chartData.map((entry, idx) => (
+                                  <Cell
+                                    key={`${q.question_id}-${idx}`}
+                                    fill={entry.correct ? '#16a34a' : '#ef4444'}
+                                  />
+                                ))}
+                                <LabelList
+                                  dataKey="percentage"
+                                  position="top"
+                                  formatter={(v: number) => `${v}%`}
+                                  style={{ fill: '#0f172a', fontSize: 12, fontWeight: 700 }}
+                                />
+                              </Bar>
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
@@ -1861,7 +1919,7 @@ export function ReportsPanel() {
                         <th>SCORE</th>
                         <th>PERCENT</th>
                         <th>CERTIFICATE</th>
-                        <th style={{ textAlign: 'right', whiteSpace: 'nowrap', minWidth: 100 }}>ACTIONS</th>
+                        <th className="edtp-th-actions">ACTIONS</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1901,8 +1959,8 @@ export function ReportsPanel() {
                               </button>
                             )}
                           </td>
-                          <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                            <div style={{ display: 'inline-flex', justifyContent: 'flex-end' }}>
+                          <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
                               {r.attempt_id ? (
                                 <Link
                                   to={`/dashboard/exam-result/${r.attempt_id as string}`}
@@ -2669,8 +2727,7 @@ export function SessionsSecurityPanel() {
                       {/* Actions Cell */}
                       <td>
                         <div
-                          className="org-actions-cell"
-                          style={{ justifyContent: 'flex-end', paddingRight: '8px' }}
+                          className="org-actions-cell" style={{ justifyContent: 'flex-start' }}
                         >
                           {isActive ? (
                             <button
@@ -2859,7 +2916,7 @@ export function OrgStructurePanel() {
           <div className="org-controls-row">
             {/* Branch Switcher if multiple branches */}
             {branches.length > 1 && (
-              <div style={{ minWidth: 160 }}>
+              <div >
                 <select
                   className="org-form-select"
                   style={{ padding: '6px 12px', fontSize: '0.8125rem' }}
@@ -2950,8 +3007,7 @@ export function OrgStructurePanel() {
                     {/* Actions Cell */}
                     <td>
                       <div
-                        className="org-actions-cell"
-                        style={{ justifyContent: 'flex-end', paddingRight: '8px' }}
+                        className="org-actions-cell" style={{ justifyContent: 'flex-start' }}
                       >
                         <button
                           type="button"
@@ -3873,7 +3929,7 @@ export function TestBuilderPanel() {
                             {q.type}
                           </span>
                         </td>
-                        <td style={{ textAlign: 'right' }} onClick={(e) => e.stopPropagation()}>
+                        <td style={{ textAlign: 'left' }} onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
                             className="org-action-btn org-action-btn--switch"
@@ -4010,7 +4066,7 @@ export function TestBuilderPanel() {
                   )}
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-start', gap: 12, marginTop: 10 }}>
                   <button
                     type="button"
                     className="org-add-btn"
@@ -4254,7 +4310,7 @@ export function TestBuilderPanel() {
                   <tr>
                     <th>STUDENT NAME</th>
                     <th>EMAIL ADDRESS</th>
-                    <th style={{ textAlign: 'right', width: 130 }}>ACTIONS</th>
+                    <th className="edtp-th-actions">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -4273,7 +4329,7 @@ export function TestBuilderPanel() {
                         <td>
                           <span style={{ color: '#475569', fontSize: '0.85rem' }}>{a.email}</span>
                         </td>
-                        <td style={{ textAlign: 'right' }}>
+                        <td style={{ textAlign: 'left' }}>
                           <button
                             type="button"
                             className="org-action-btn org-action-btn--danger"
