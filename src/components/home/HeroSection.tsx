@@ -74,35 +74,35 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
               </a>
             </div>
 
-            <div className="eduleb-ms-trust d-flex align-items-center flex-wrap gap-4 pt-3" data-aos="fade-up" data-aos-duration="900" data-aos-delay="380">
-              <div className="d-flex align-items-center gap-2">
+            <div className="eduleb-ms-trust" data-aos="fade-up" data-aos-duration="900" data-aos-delay="380">
+              <div className="eduleb-ms-trust-item">
                 <span className="eduleb-ms-trust-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </span>
-                <div>
+                <div className="eduleb-ms-trust-copy">
                   <div className="eduleb-ms-trust-label">{trust[0]?.label || 'Trusted by'}</div>
                   <div className="eduleb-ms-trust-value">{trust[0]?.value || '50,000+ candidates'}</div>
                 </div>
               </div>
-              <div className="d-flex align-items-center gap-2">
+              <div className="eduleb-ms-trust-item">
                 <span className="eduleb-ms-trust-icon star">★</span>
-                <div>
+                <div className="eduleb-ms-trust-copy">
                   <div className="eduleb-ms-trust-value">{trust[1]?.value || '4.9/5'}</div>
                   <div className="eduleb-ms-trust-label">{trust[1]?.label || 'average rating'}</div>
                 </div>
               </div>
-              <div className="d-flex align-items-center gap-2">
+              <div className="eduleb-ms-trust-item">
                 <span className="eduleb-ms-trust-icon">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                 </span>
-                <div>
+                <div className="eduleb-ms-trust-copy">
                   <div className="eduleb-ms-trust-value">{trust[2]?.value || 'AI Proctored &'}</div>
-                  <div className="eduleb-ms-trust-label">{trust[2]?.label || 'Secure CBT'}</div>
+                  <div className="eduleb-ms-trust-label">{trust[2]?.label || 'reliable platform'}</div>
                 </div>
               </div>
             </div>
