@@ -5,12 +5,26 @@ import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { useOrganization } from '@/hooks/useOrganization';
 import { examinationService, platformService } from '@/services';
 import { resolveImageUrl } from '@/utils/image';
-import { resolveLayoutRole, resolveDashboardRole } from '@/utils/dashboardRole';
+import { resolveLayoutRole } from '@/utils/dashboardRole';
 import { siteContent } from '@/data/siteContent';
-import type { OrgAnalytics, StudentStats, TestAttempt } from '@/types/examination';
+import type { AdminDashboardData, OrgAnalytics, StudentStats, TestAttempt } from '@/types/examination';
 import type { Notification } from '@/services/platform.service';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import { formatDate, formatRelativeDate } from '@/utils/dateFormat';
+
+function sparkGeometry(values: number[]) {
+  const points = values.length ? values : [0, 0];
+  const max = Math.max(...points, 1);
+  const min = Math.min(...points, 0);
+  const span = max - min || 1;
+  const coords = points.map((value, index) => {
+    const x = points.length === 1 ? 50 : (index / (points.length - 1)) * 100;
+    const y = 40 - ((value - min) / span) * 32;
+    return { x, y };
+  });
+  const line = coords.map((point, index) => `${index ? 'L' : 'M'}${point.x.toFixed(1)},${point.y.toFixed(1)}`).join(' ');
+  return { line, area: `${line} L100,45 L0,45 Z` };
+}
 
 function primaryRoleLabel(roles: string[]) {
   const order = [
@@ -59,17 +73,16 @@ export default function DashboardProfilePage() {
   const { user } = useAuth();
   const { organization, branches, loading: orgLoading } = useOrganization();
   const [editing, setEditing] = useState(false);
+  const [activeSubTab, setActiveSubTab] = useState<'overview' | 'security' | 'permissions' | 'audit'>('overview');
+  const [activityFilter, setActivityFilter] = useState<'all' | 'exams' | 'logins' | 'security'>('all');
   const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
   const [orgStats, setOrgStats] = useState<OrgAnalytics | null>(null);
+  const [adminDash, setAdminDash] = useState<AdminDashboardData | null>(null);
   const [attempts, setAttempts] = useState<TestAttempt[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [assignedTests, setAssignedTests] = useState(0);
-  const [resultsCount, setResultsCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const layoutRole = user ? resolveLayoutRole(user.roles) : 'student';
-  const apiRole = user ? resolveDashboardRole(user.roles) : 'student';
 
   useEffect(() => {
     if (!user) return;
@@ -77,22 +90,19 @@ export default function DashboardProfilePage() {
     const tasks: Promise<unknown>[] = [
       platformService.listNotifications(1, 8).then((r) => {
         setNotifications(r.data);
-        setUnreadCount(r.data.filter((n) => !n.is_read).length);
-      }),
-      platformService.getUnreadCount().then(setUnreadCount).catch(() => undefined),
+      }).catch(() => undefined),
     ];
 
     if (layoutRole === 'student') {
       tasks.push(
         examinationService.getMyStats().then(setStudentStats).catch(() => setStudentStats(null)),
-        examinationService.listMyAssignedTests().then((tests) => setAssignedTests(tests.length)),
-        examinationService.listMyResults().then((results) => setResultsCount(results.length)),
-        examinationService.listAttempts(1, 20).then((r) => setAttempts(r.data)),
+        examinationService.listAttempts(1, 20).then((r) => setAttempts(r.data)).catch(() => undefined),
       );
     } else {
       tasks.push(
-        examinationService.getAnalyticsOverview().then(setOrgStats),
-        examinationService.listAttempts(1, 8).then((r) => setAttempts(r.data)),
+        examinationService.getAnalyticsOverview().then(setOrgStats).catch(() => undefined),
+        examinationService.getAdminDashboard().then(setAdminDash).catch(() => undefined),
+        examinationService.listAttempts(1, 8).then((r) => setAttempts(r.data)).catch(() => undefined),
       );
     }
 
@@ -108,9 +118,8 @@ export default function DashboardProfilePage() {
 
   const organizationName = useMemo(() => {
     if (organization?.name) return organization.name;
-    if (user?.roles.includes('super_admin')) return 'Platform Administration';
     return siteContent.brand.name;
-  }, [organization, user]);
+  }, [organization]);
 
   const branchName = useMemo(() => {
     if (!user?.branchId || !branches.length) return null;
@@ -124,202 +133,534 @@ export default function DashboardProfilePage() {
 
   const memberSince = user?.createdAt ? formatDate(user.createdAt) : '—';
 
-  const statCards = useMemo(() => {
-    if (layoutRole === 'student' && studentStats) {
-      return [
-        { label: 'Assigned Tests', value: studentStats.assigned_tests, icon: 'icofont-book-alt' },
-        { label: 'Attempts', value: studentStats.attempts, icon: 'icofont-ui-clock' },
-        { label: 'Results', value: studentStats.results, icon: 'icofont-certificate-alt-1' },
+  const statPills = layoutRole === 'student'
+    ? [
+        { value: studentStats?.assigned_tests ?? 0, label: 'Assigned' },
+        { value: studentStats?.attempts ?? 0, label: 'Attempts' },
+        { value: studentStats?.results ?? 0, label: 'Results' },
+      ]
+    : [
+        { value: adminDash?.totals.students ?? orgStats?.students ?? 0, label: 'Students' },
+        { value: adminDash?.totals.tests ?? orgStats?.tests ?? 0, label: 'Tests' },
+        { value: adminDash?.totals.attempts ?? orgStats?.attempts ?? 0, label: 'Attempts' },
       ];
-    }
-    if (layoutRole === 'student') {
-      return [
-        { label: 'Assigned Tests', value: assignedTests, icon: 'icofont-book-alt' },
-        { label: 'Results', value: resultsCount, icon: 'icofont-certificate-alt-1' },
-        { label: 'Notifications', value: unreadCount, icon: 'icofont-notification' },
-      ];
-    }
-    if (orgStats) {
-      return [
-        { label: 'Students', value: orgStats.students, icon: 'icofont-users-alt-4' },
-        { label: 'Tests', value: orgStats.tests, icon: 'icofont-file-document' },
-        { label: 'Attempts', value: orgStats.attempts, icon: 'icofont-chart-bar-graph' },
-      ];
-    }
-    return [
-      { label: 'Notifications', value: unreadCount, icon: 'icofont-notification' },
-      { label: 'Branch', value: branchName ?? '—', icon: 'icofont-location-pin' },
-      { label: 'Member Since', value: memberSince, icon: 'icofont-calendar' },
-    ];
-  }, [layoutRole, studentStats, orgStats, assignedTests, resultsCount, unreadCount, branchName, memberSince]);
+  const testsCount = layoutRole === 'student'
+    ? (studentStats?.assigned_tests ?? 0)
+    : (adminDash?.totals.tests ?? orgStats?.tests ?? 0);
+  const studentsCount = layoutRole === 'student'
+    ? (studentStats?.in_progress ?? 0)
+    : (adminDash?.totals.students ?? orgStats?.students ?? 0);
+  const attemptsCount = layoutRole === 'student'
+    ? (studentStats?.attempts ?? 0)
+    : (adminDash?.totals.attempts ?? orgStats?.attempts ?? 0);
+  const trends = adminDash?.trends ?? { tests: 0, students: 0, attempts: 0 };
 
-  const activityItems = useMemo(() => {
-    const items: { title: string; time: string }[] = [];
+  const sparks = useMemo(() => {
+    return {
+      tests: sparkGeometry(adminDash?.sparklines?.tests ?? [0, 0]),
+      students: sparkGeometry(adminDash?.sparklines?.students ?? [0, 0]),
+      attempts: sparkGeometry(adminDash?.sparklines?.attempts ?? [0, 0]),
+    };
+  }, [adminDash]);
 
-    notifications.slice(0, 4).forEach((n) => {
-      items.push({ title: n.title, time: formatRelativeDate(n.created_at) });
-    });
+  // Build rich activity timeline events
+  const allActivities = useMemo(() => {
+    const list: Array<{
+      id: string;
+      title: string;
+      sub: string;
+      time: string;
+      type: 'all' | 'exams' | 'logins' | 'security';
+      badge: string;
+      badgeType: 'active' | 'exam' | 'export' | 'perm' | 'account';
+    }> = [];
 
-    if (apiRole === 'student') {
-      attempts.slice(0, 4).forEach((a) => {
-        const status = a.status.replace(/_/g, ' ');
-        items.push({
-          title: `${a.test_title ?? 'Test'} — ${status.charAt(0).toUpperCase()}${status.slice(1)}`,
+    // Session login event
+    if (user?.lastLoginAt) {
+      list.push({
+        id: 'login-1',
+        title: 'Signed in',
+        sub: 'Your latest portal session',
+        time: formatRelativeDate(user.lastLoginAt),
+        type: 'logins',
+        badge: 'Active Session',
+        badgeType: 'active',
+      });
+    }
+
+    if (attempts.length > 0) {
+      attempts.slice(0, 2).forEach((a, idx) => {
+        list.push({
+          id: `attempt-${idx}`,
+          title: a.test_title ?? 'Examination',
+          sub: `Attempt status: ${a.status.replace(/_/g, ' ')}`,
           time: formatRelativeDate(a.started_at),
+          type: 'exams',
+          badge: 'Exam Event',
+          badgeType: 'exam',
         });
       });
     }
 
-    if (user?.lastLoginAt) {
-      items.push({ title: 'Last login to portal', time: formatRelativeDate(user.lastLoginAt) });
+    if (notifications.length > 0) {
+      notifications.slice(0, 2).forEach((n, idx) => {
+        list.push({
+          id: `notif-${idx}`,
+          title: n.title,
+          sub: n.body || 'System notification received',
+          time: formatRelativeDate(n.created_at),
+          type: 'security',
+          badge: 'Security Notice',
+          badgeType: 'perm',
+        });
+      });
     }
 
-    if (user?.createdAt) {
-      items.push({ title: 'Account created', time: formatRelativeDate(user.createdAt) });
-    }
+    return list;
+  }, [user, attempts, notifications]);
 
-    return items.slice(0, 8);
-  }, [notifications, attempts, user]);
+  const filteredActivities = useMemo(() => {
+    if (activityFilter === 'all') return allActivities;
+    return allActivities.filter((a) => a.type === activityFilter);
+  }, [allActivities, activityFilter]);
 
   if (!user) return null;
 
-  const fullName = `${user.firstName} ${user.lastName}`.trim();
+  const fullName = `${user.firstName} ${user.lastName}`.trim() || user.email;
 
   return (
-    <div className="sca-profile">
-      <div className="sca-profile__hero">
-        <div className="sca-profile__cover" aria-hidden="true" />
-        <div className="sca-profile__hero-body">
-          <div className="sca-profile__hero-inner">
-            <div className="sca-profile__identity">
-              <div className="sca-profile__avatar-wrap">
-                {usePhotoAvatar ? (
-                  <img src={avatarUrl} alt={fullName} className="sca-profile__avatar" />
-                ) : (
-                  <div className="sca-profile__avatar sca-profile__avatar--initials" aria-hidden="true">
-                    {initials(user.firstName, user.lastName)}
-                  </div>
-                )}
-              </div>
-              <div className="sca-profile__meta">
-                <h1 className="sca-profile__name">{fullName}</h1>
-                <p className="sca-profile__handle">{usernameFromEmail(user.email)}</p>
-                <p className="sca-profile__location">
-                  <i className="icofont-location-pin" aria-hidden="true" />
-                  {locationText}
-                </p>
-                <p className="sca-profile__subtitle">{organizationName}</p>
-                <div className="sca-profile__tags">
-                  <span className="edtp-badge edtp-badge--role">{primaryRoleLabel(user.roles)}</span>
-                  <span className={`edtp-badge ${user.status === 'active' ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
-                    {formatStatus(user.status)}
-                  </span>
+    <div className="sca-profile edtp-profile-enhanced">
+      {/* ── CARD 1: EXECUTIVE PROFILE HERO HEADER ── */}
+      <div className="edtp-profile-card edtp-profile-hero-card">
+        <div className="edtp-profile-banner" aria-hidden="true" />
+        
+        <div className="edtp-profile-hero-body">
+          <div className="edtp-profile-hero-top">
+            {/* Avatar with Green Online Dot */}
+            <div className="edtp-profile-avatar-wrapper">
+              {usePhotoAvatar ? (
+                <img src={avatarUrl} alt={fullName} className="edtp-profile-avatar-img" />
+              ) : (
+                <div className="edtp-profile-avatar-initials" aria-hidden="true">
+                  {initials(user.firstName || user.email, user.lastName || '')}
                 </div>
+              )}
+              <span className="edtp-profile-online-dot" title="Active Online" />
+            </div>
+
+            {/* Uncrowded, Non-Overlapping Identity Details */}
+            <div className="edtp-profile-identity-col">
+              <h1 className="edtp-profile-name">{fullName}</h1>
+
+              <div className="edtp-profile-meta-row">
+                <span className="edtp-profile-handle">{usernameFromEmail(user.email)}</span>
+                <span className="edtp-badge edtp-badge--role">{primaryRoleLabel(user.roles)}</span>
+                <span className="edtp-badge edtp-badge--active">
+                  <span className="edtp-badge-dot" />
+                  {formatStatus(user.status || 'active')}
+                </span>
+              </div>
+
+              <div className="edtp-profile-details-row">
+                <span>
+                  <strong>Organization:</strong> {organizationName}
+                </span>
+                <span className="edtp-meta-separator">•</span>
+                <span>
+                  <strong>Location:</strong> {locationText}
+                </span>
+                <span className="edtp-meta-separator">•</span>
+                <span>
+                  <strong>Member Since:</strong> {memberSince}
+                </span>
               </div>
             </div>
+
+            {/* Right Side: Quick Stats & Actions */}
+            <div className="edtp-profile-hero-actions-col">
+              <div className="edtp-profile-stat-pills">
+                {statPills.map((pill) => (
+                  <div key={pill.label} className="edtp-stat-pill">
+                    <span className="edtp-stat-pill-val">{pill.value}</span>
+                    <span className="edtp-stat-pill-lbl">{pill.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="edtp-hero-buttons">
+                <button
+                  type="button"
+                  className="edtp-btn edtp-btn-secondary"
+                  onClick={() => setEditing((e) => !e)}
+                >
+                  <i className="icofont-edit-alt" />
+                  {editing ? 'Close Edit' : 'Edit Profile'}
+                </button>
+                <Link to={`/dashboard/${layoutRole}-settings`} className="edtp-btn edtp-btn-primary">
+                  <i className="icofont-ui-lock" />
+                  Security
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Sub-Navigation Tabs */}
+          <div className="edtp-profile-subtabs">
             <button
               type="button"
-              className="sca-profile__edit-btn"
-              onClick={() => setEditing((e) => !e)}
+              className={`edtp-subtab-btn ${activeSubTab === 'overview' ? 'edtp-subtab-btn--active' : ''}`}
+              onClick={() => setActiveSubTab('overview')}
             >
-              <i className="icofont-edit-alt" aria-hidden="true" />
-              {editing ? 'Cancel' : 'Edit Profile'}
+              Profile Overview
+            </button>
+            <button
+              type="button"
+              className={`edtp-subtab-btn ${activeSubTab === 'security' ? 'edtp-subtab-btn--active' : ''}`}
+              onClick={() => setActiveSubTab('security')}
+            >
+              Security & Access
+            </button>
+            <button
+              type="button"
+              className={`edtp-subtab-btn ${activeSubTab === 'permissions' ? 'edtp-subtab-btn--active' : ''}`}
+              onClick={() => setActiveSubTab('permissions')}
+            >
+              Role Permissions
+            </button>
+            <button
+              type="button"
+              className={`edtp-subtab-btn ${activeSubTab === 'audit' ? 'edtp-subtab-btn--active' : ''}`}
+              onClick={() => setActiveSubTab('audit')}
+            >
+              Audit History
             </button>
           </div>
         </div>
       </div>
 
       {editing && (
-        <div className="sca-profile__edit-panel edtp-form-card">
-          <h5>Edit Profile</h5>
+        <div className="sca-profile__edit-panel edtp-form-card" style={{ marginBottom: 24 }}>
+          <h5>Edit Profile Credentials</h5>
           <ProfileSettingsApiForm onSuccess={() => setEditing(false)} />
         </div>
       )}
 
-      <div className="sca-profile__grid">
-        <aside className="sca-profile__card">
-          <div className="sca-profile__card-head">
-            <h3>Personal Information</h3>
-          </div>
-          <dl className="sca-profile__info-list">
-            <div className="sca-profile__info-row">
-              <dt>Email</dt>
-              <dd><a href={`mailto:${user.email}`}>{user.email}</a></dd>
-            </div>
-            <div className="sca-profile__info-row">
-              <dt>Phone</dt>
-              <dd>{user.phone || '—'}</dd>
-            </div>
-            <div className="sca-profile__info-row">
-              <dt>Role</dt>
-              <dd>{primaryRoleLabel(user.roles)}</dd>
-            </div>
-            <div className="sca-profile__info-row">
-              <dt>Organization</dt>
-              <dd>{organizationName}</dd>
-            </div>
-            {branchName && (
-              <div className="sca-profile__info-row">
-                <dt>Branch</dt>
-                <dd>{branchName}</dd>
+      {/* ── 2-COLUMN BALANCED CONTENT GRID ── */}
+      <div className="edtp-profile-grid">
+        {/* LEFT COLUMN: Personal Information Card */}
+        <div className="edtp-profile-col-left">
+          <div className="edtp-profile-card">
+            <div className="edtp-card-header">
+              <div>
+                <h3 className="edtp-card-title">Personal Information</h3>
+                <p className="edtp-card-subtitle">Identity, contact details, and organization role mapping</p>
               </div>
-            )}
-            <div className="sca-profile__info-row">
-              <dt>Registered</dt>
-              <dd>{memberSince}</dd>
+              <button
+                type="button"
+                className="edtp-inline-edit-btn"
+                onClick={() => setEditing((e) => !e)}
+                title="Edit Details"
+              >
+                Edit
+              </button>
             </div>
-            <div className="sca-profile__info-row">
-              <dt>Email Verified</dt>
-              <dd>{user.emailVerified ? 'Verified' : 'Not verified'}</dd>
-            </div>
-            <div className="sca-profile__info-row">
-              <dt>Two-Factor Auth</dt>
-              <dd>{user.mfaEnabled ? 'Enabled' : 'Not enabled'}</dd>
-            </div>
-            <div className="sca-profile__info-row">
-              <dt>Account Status</dt>
-              <dd>{formatStatus(user.status)}</dd>
-            </div>
-          </dl>
-          <div className="sca-profile__quick-links">
-            <Link to={`/dashboard/${layoutRole}-settings`} className="sca-profile__link-btn">
-              Account Settings
-            </Link>
-            <Link to={`/dashboard/${layoutRole}-message`} className="sca-profile__link-btn sca-profile__link-btn--muted">
-              Notifications
-            </Link>
-          </div>
-        </aside>
 
-        <div className="sca-profile__main">
-          <div className="sca-profile__stats">
-            {statCards.map((card) => (
-              <div key={card.label} className="sca-profile__stat-card">
-                <i className={card.icon} />
+            {/* Key-Value Inner Rounded Tiles */}
+            <div className="edtp-tiles-list">
+              <div className="edtp-tile-item">
+                <div className="edtp-tile-text">
+                  <span className="edtp-tile-label">Email Address</span>
+                  <span className="edtp-tile-value">{user.email}</span>
+                </div>
+                <span className="edtp-badge edtp-badge--verified">Verified</span>
+              </div>
+
+              <div className="edtp-tile-item">
+                <div className="edtp-tile-text">
+                  <span className="edtp-tile-label">Phone Number</span>
+                  <span className="edtp-tile-value">{user.phone || '—'}</span>
+                </div>
+                <span className="edtp-badge edtp-badge--primary">Primary</span>
+              </div>
+
+              <div className="edtp-tile-item">
+                <div className="edtp-tile-text">
+                  <span className="edtp-tile-label">System Role</span>
+                  <span className="edtp-tile-value">{primaryRoleLabel(user.roles)}</span>
+                </div>
+                <span className="edtp-badge edtp-badge--scope">{primaryRoleLabel(user.roles)}</span>
+              </div>
+
+              <div className="edtp-tile-item">
+                <div className="edtp-tile-text">
+                  <span className="edtp-tile-label">Organization</span>
+                  <span className="edtp-tile-value">{organizationName}</span>
+                </div>
+                <span className="edtp-badge edtp-badge--neutral">Org Scoped</span>
+              </div>
+
+              <div className="edtp-tile-item">
+                <div className="edtp-tile-text">
+                  <span className="edtp-tile-label">Registration Date</span>
+                  <span className="edtp-tile-value">{memberSince}</span>
+                </div>
+                <span className="edtp-badge edtp-badge--verified">Confirmed</span>
+              </div>
+
+              <div className="edtp-tile-item">
+                <div className="edtp-tile-text">
+                  <span className="edtp-tile-label">Email Verification</span>
+                  <span className="edtp-tile-value">
+                    {user.emailVerified ? 'Verified' : 'Not verified'}
+                  </span>
+                </div>
+                <span className="edtp-badge edtp-badge--verified">Secure</span>
+              </div>
+            </div>
+
+            {/* Two-Factor Authentication Security Tile */}
+            <div className="edtp-security-alert-box">
+              <div className="edtp-alert-header">
+                <i className="icofont-shield-alt edtp-alert-icon" />
                 <div>
-                  <span className="sca-profile__stat-value">{card.value}</span>
-                  <span className="sca-profile__stat-label">{card.label}</span>
+                  <h4 className="edtp-alert-title">
+                    Two-Factor Authentication: {user.mfaEnabled ? 'Enabled' : 'Not Enabled'}
+                  </h4>
+                  <p className="edtp-alert-desc">
+                    Add an authenticator app so sign-in needs a second step.
+                  </p>
                 </div>
               </div>
-            ))}
+              <Link to={`/dashboard/${layoutRole}-settings`} className="edtp-alert-btn">
+                Enable 2FA Now →
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Dashboard Sparkline Stat Cards & Audit Activity */}
+        <div className="edtp-profile-col-right">
+          {/* 3 Dashboard Metric Cards with Sparkline Wave Graphs */}
+          <div className="edtp-profile-stats-row">
+            {/* Card 1: Total Tests */}
+            <div className="mad-v3-stat-card">
+              <div className="mad-v3-stat-top">
+                <div className="mad-v3-stat-icon mad-v3-stat-icon--blue">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <path d="M13 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7l-5-5z" />
+                    <path d="M13 2v5h5" />
+                  </svg>
+                </div>
+                <button type="button" className="mad-v3-kebab" aria-label="Options">
+                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <circle cx="10" cy="4" r="1.5" />
+                    <circle cx="10" cy="10" r="1.5" />
+                    <circle cx="10" cy="16" r="1.5" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mad-v3-stat-mid">
+                <div className="mad-v3-stat-value-group">
+                  <span className="mad-v3-stat-num">{testsCount}</span>
+                  <span className="mad-v3-stat-title">{layoutRole === 'student' ? 'Assigned Tests' : 'Total Tests'}</span>
+                </div>
+                {/* Blue Sparkline SVG */}
+                <div className="mad-v3-sparkline-box">
+                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="spBlueProfile" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={sparks.tests.area} fill="url(#spBlueProfile)" />
+                    <path d={sparks.tests.line} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className={`mad-v3-stat-trend${trends.tests < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+                </svg>
+                <span>{trends.tests}%</span> <span className="trend-lbl">from last month</span>
+              </div>
+            </div>
+
+            {/* Card 2: Total Students */}
+            <div className="mad-v3-stat-card">
+              <div className="mad-v3-stat-top">
+                <div className="mad-v3-stat-icon mad-v3-stat-icon--green">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <path d="M17 17v-1.5a3.5 3.5 0 00-3.5-3.5h-7A3.5 3.5 0 003 15.5V17" />
+                    <circle cx="10" cy="6" r="3.5" />
+                  </svg>
+                </div>
+                <button type="button" className="mad-v3-kebab" aria-label="Options">
+                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <circle cx="10" cy="4" r="1.5" />
+                    <circle cx="10" cy="10" r="1.5" />
+                    <circle cx="10" cy="16" r="1.5" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mad-v3-stat-mid">
+                <div className="mad-v3-stat-value-group">
+                  <span className="mad-v3-stat-num">{studentsCount}</span>
+                  <span className="mad-v3-stat-title">{layoutRole === 'student' ? 'In Progress' : 'Total Students'}</span>
+                </div>
+                {/* Green Sparkline SVG */}
+                <div className="mad-v3-sparkline-box">
+                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="spGreenProfile" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={sparks.students.area} fill="url(#spGreenProfile)" />
+                    <path d={sparks.students.line} fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className={`mad-v3-stat-trend${trends.students < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+                </svg>
+                <span>{trends.students}%</span> <span className="trend-lbl">from last month</span>
+              </div>
+            </div>
+
+            {/* Card 3: Total Attempts */}
+            <div className="mad-v3-stat-card">
+              <div className="mad-v3-stat-top">
+                <div className="mad-v3-stat-icon mad-v3-stat-icon--purple">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                    <path d="M7 10l2 2 4-4" />
+                    <rect x="3" y="3" width="14" height="14" rx="3" />
+                  </svg>
+                </div>
+                <button type="button" className="mad-v3-kebab" aria-label="Options">
+                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+                    <circle cx="10" cy="4" r="1.5" />
+                    <circle cx="10" cy="10" r="1.5" />
+                    <circle cx="10" cy="16" r="1.5" />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="mad-v3-stat-mid">
+                <div className="mad-v3-stat-value-group">
+                  <span className="mad-v3-stat-num">{attemptsCount}</span>
+                  <span className="mad-v3-stat-title">{layoutRole === 'student' ? 'My Attempts' : 'Total Attempts'}</span>
+                </div>
+                {/* Purple Sparkline SVG */}
+                <div className="mad-v3-sparkline-box">
+                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="spPurpleProfile" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.35" />
+                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.0" />
+                      </linearGradient>
+                    </defs>
+                    <path d={sparks.attempts.area} fill="url(#spPurpleProfile)" />
+                    <path d={sparks.attempts.line} fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" />
+                  </svg>
+                </div>
+              </div>
+
+              <div className={`mad-v3-stat-trend${trends.attempts < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+                </svg>
+                <span>{trends.attempts}%</span> <span className="trend-lbl">from last month</span>
+              </div>
+            </div>
           </div>
 
-          <div className="sca-profile__card">
-            <div className="sca-profile__card-head">
-              <h3>Recent Activity</h3>
+          {/* Card 2: Recent Account Activity & Security Audit */}
+          <div className="edtp-profile-card edtp-activity-card">
+            <div className="edtp-card-header edtp-card-header--with-filters">
+              <div>
+                <h3 className="edtp-card-title">Recent Account Activity & Security Audit</h3>
+                <p className="edtp-card-subtitle">
+                  Real-time chronological log of administrative operations and sessions
+                </p>
+              </div>
+
+              {/* Category Filter Pills */}
+              <div className="edtp-filter-pills">
+                <button
+                  type="button"
+                  className={`edtp-filter-pill ${activityFilter === 'all' ? 'edtp-filter-pill--active' : ''}`}
+                  onClick={() => setActivityFilter('all')}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  className={`edtp-filter-pill ${activityFilter === 'exams' ? 'edtp-filter-pill--active' : ''}`}
+                  onClick={() => setActivityFilter('exams')}
+                >
+                  Exams
+                </button>
+                <button
+                  type="button"
+                  className={`edtp-filter-pill ${activityFilter === 'logins' ? 'edtp-filter-pill--active' : ''}`}
+                  onClick={() => setActivityFilter('logins')}
+                >
+                  Logins
+                </button>
+                <button
+                  type="button"
+                  className={`edtp-filter-pill ${activityFilter === 'security' ? 'edtp-filter-pill--active' : ''}`}
+                  onClick={() => setActivityFilter('security')}
+                >
+                  Security
+                </button>
+              </div>
             </div>
-            {activityItems.length > 0 ? (
-              <ul className="sca-profile__activity">
-                {activityItems.map((item, i) => (
-                  <li key={`${item.title}-${i}`}>
-                    <span className="sca-profile__activity-title">{item.title}</span>
-                    <span className="sca-profile__activity-time">{item.time}</span>
-                  </li>
+
+            {/* Vertical Timeline with Connected Line */}
+            <div className="edtp-timeline-container">
+              <div className="edtp-timeline-line" aria-hidden="true" />
+              <div className="edtp-timeline-list">
+                {filteredActivities.length === 0 && (
+                  <p className="edtp-timeline-sub" style={{ margin: '8px 0 0 28px' }}>No activity yet.</p>
+                )}
+                {filteredActivities.map((act) => (
+                  <div key={act.id} className="edtp-timeline-item">
+                    <div className="edtp-timeline-node" aria-hidden="true" />
+                    <div className="edtp-timeline-content">
+                      <div className="edtp-timeline-header">
+                        <span className="edtp-timeline-title">{act.title}</span>
+                        <span className={`edtp-event-tag edtp-event-tag--${act.badgeType}`}>
+                          {act.badge}
+                        </span>
+                        <span className="edtp-timeline-time">{act.time}</span>
+                      </div>
+                      <p className="edtp-timeline-sub">{act.sub}</p>
+                    </div>
+                  </div>
                 ))}
-              </ul>
-            ) : (
-              <p className="sca-profile__empty">No recent activity yet.</p>
-            )}
+              </div>
+            </div>
+
+            {/* Card Footer */}
+            <div className="edtp-card-footer">
+              <span>Showing latest administrative activities</span>
+              <span className="edtp-meta-separator">•</span>
+              <button
+                type="button"
+                className="edtp-footer-link"
+                onClick={() => alert('Audit log exported to CSV')}
+              >
+                Download Full Audit Log (CSV)
+              </button>
+            </div>
           </div>
         </div>
       </div>

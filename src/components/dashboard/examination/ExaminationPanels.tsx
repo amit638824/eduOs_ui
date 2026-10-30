@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Pagination } from '@/components/ui/Pagination';
+import { useServerList } from '@/hooks/useServerList';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -15,7 +17,6 @@ import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/Dashboa
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
 import ExamAttemptPlayer from './ExamAttemptPlayer';
 import { PracticeInsights } from './AiBuildPanel';
-import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import AdminExamGuide, { ExamStepper } from '@/components/dashboard/AdminExamGuide';
 import { FieldHint } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpSelect } from '@/components/ui/CrudUI';
@@ -113,7 +114,25 @@ export function QuestionBankPanel() {
       ['org_admin', 'super_admin', 'branch_admin', 'staff'].includes(r),
     ) ?? false);
 
-  const [questions, setQuestions] = useState<Question[]>([]);
+  const {
+    items: questions,
+    pagination,
+    page,
+    limit,
+    searchQuery: questionSearch,
+    loading,
+    error,
+    setError,
+    setSearchQuery: setQuestionSearch,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh: loadQuestions,
+  } = useServerList<Question>({
+    fetcher: ({ page: p, limit: l, search }) =>
+      examinationService.listQuestions(p, l, undefined, search || undefined),
+    defaultLimit: 10,
+  });
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
   const [topics, setTopics] = useState<{ id: string; name: string }[]>([]);
@@ -128,12 +147,9 @@ export function QuestionBankPanel() {
   const [showAddTopic, setShowAddTopic] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [topicsLoading, setTopicsLoading] = useState(false);
   const [deptsLoading, setDeptsLoading] = useState(false);
-  const [questionSearch, setQuestionSearch] = useState('');
-  const [error, setError] = useState('');
   const [newQ, setNewQ] = useState('');
   const [questionType, setQuestionType] = useState<QuestionType>('mcq');
   const [marksInput, setMarksInput] = useState(() => String(loadQbPrefs().marksPerQuestion ?? 1));
@@ -174,23 +190,6 @@ export function QuestionBankPanel() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isDrawerOpen]);
-
-  const loadQuestions = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await examinationService.listQuestions(1, 100);
-      setQuestions(res.data);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadQuestions();
-  }, []);
 
   useEffect(() => {
     saveQbPrefs({ departmentId, subjectId, topicId });
@@ -637,21 +636,9 @@ export function QuestionBankPanel() {
     }
   };
 
-  const filteredQuestions = questions.filter((q) => {
-    const qSearch = questionSearch.trim().toLowerCase();
-    if (!qSearch) return true;
-    return (
-      getQuestionText(q.content, '').toLowerCase().includes(qSearch) ||
-      (q.department_name ?? '').toLowerCase().includes(qSearch) ||
-      (q.subject_name ?? '').toLowerCase().includes(qSearch) ||
-      (q.topic_name ?? '').toLowerCase().includes(qSearch) ||
-      (q.type ?? '').toLowerCase().includes(qSearch)
-    );
-  });
-
   const allFilteredSelected =
-    filteredQuestions.length > 0 &&
-    filteredQuestions.every((q) => selectedDeleteIds.includes(q.id));
+    questions.length > 0 &&
+    questions.every((q) => selectedDeleteIds.includes(q.id));
 
   return (
     <div className="org-panel-root">
@@ -730,7 +717,7 @@ export function QuestionBankPanel() {
             <div className="org-title-row">
               <h3 className="org-card-title">Questions Library</h3>
               <span className="org-count-badge">
-                {filteredQuestions.length} {filteredQuestions.length === 1 ? 'Question' : 'Questions'}
+                {pagination.total} {pagination.total === 1 ? 'Question' : 'Questions'}
               </span>
             </div>
             <p className="org-card-subtitle">Manage, curate and organize verified examination questions bank</p>
@@ -751,7 +738,7 @@ export function QuestionBankPanel() {
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setQuestionSearch('')}
+                  onClick={clearSearch}
                 >
                   <FiX />
                 </button>
@@ -830,12 +817,12 @@ export function QuestionBankPanel() {
                     onChange={() => {
                       if (allFilteredSelected) {
                         setSelectedDeleteIds((prev) =>
-                          prev.filter((id) => !filteredQuestions.some((q) => q.id === id)),
+                          prev.filter((id) => !questions.some((q) => q.id === id)),
                         );
                       } else {
                         setSelectedDeleteIds((prev) => {
                           const next = new Set(prev);
-                          filteredQuestions.forEach((q) => next.add(q.id));
+                          questions.forEach((q) => next.add(q.id));
                           return [...next];
                         });
                       }
@@ -853,7 +840,7 @@ export function QuestionBankPanel() {
               </tr>
             </thead>
             <tbody>
-              {filteredQuestions.map((q) => {
+              {questions.map((q) => {
                 const label = getQuestionText(q.content);
                 return (
                   <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
@@ -941,7 +928,7 @@ export function QuestionBankPanel() {
                   </tr>
                 );
               })}
-              {filteredQuestions.length === 0 && (
+              {questions.length === 0 && (
                 <tr>
                   <td colSpan={8} style={{ textAlign: 'center', padding: '36px 20px', color: '#64748b' }}>
                     No questions found. Click <strong>+ Add Question</strong> above or import questions from CSV.
@@ -951,6 +938,15 @@ export function QuestionBankPanel() {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
 
       {/* ── Side Drawer for Adding/Editing Questions ── */}
@@ -1330,10 +1326,25 @@ export function QuestionBankPanel() {
 }
 
 export function TestsListPanel({ title }: { title: string }) {
-  const [tests, setTests] = useState<ExamTest[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
+  const {
+    items: tests,
+    pagination,
+    page,
+    limit,
+    searchQuery: searchTerm,
+    loading,
+    error,
+    setError,
+    setSearchQuery: setSearchTerm,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+    refresh: load,
+  } = useServerList<ExamTest>({
+    fetcher: ({ page: p, limit: l, search }) =>
+      examinationService.listTests(p, l, undefined, search || undefined),
+    defaultLimit: 10,
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editDuration, setEditDuration] = useState('60');
@@ -1353,19 +1364,6 @@ export function TestsListPanel({ title }: { title: string }) {
   const [editExamType, setEditExamType] = useState<'official' | 'practice'>('official');
   const [editCertificationEnabled, setEditCertificationEnabled] = useState(true);
   const withLoader = useDashboardLoader();
-
-  const load = () => {
-    setLoading(true);
-    examinationService
-      .listTests(1, 50)
-      .then((res) => setTests(res.data))
-      .catch((err) => setError(parseApiError(err)))
-      .finally(() => setLoading(false));
-  };
-
-  useEffect(() => {
-    load();
-  }, []);
 
   useDashboardLoadingEffect(loading);
 
@@ -1443,7 +1441,7 @@ export function TestsListPanel({ title }: { title: string }) {
         });
         setEditingId(null);
         showSuccess('Updated', 'Test details saved.');
-        load();
+        await load();
       } catch (err) {
         setError(parseApiError(err));
       }
@@ -1461,7 +1459,7 @@ export function TestsListPanel({ title }: { title: string }) {
     try {
       await withLoader(async () => {
         await examinationService.deleteTest(id);
-        load();
+        await load();
       });
       showSuccess('Deleted!', `${name} has been removed.`);
     } catch (err) {
@@ -1493,14 +1491,6 @@ export function TestsListPanel({ title }: { title: string }) {
     return <span className="org-status-badge org-status-badge--inactive">{labels[status] ?? status}</span>;
   };
 
-  const filteredTests = !searchTerm.trim()
-    ? tests
-    : tests.filter(
-        (t) =>
-          t.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (t.status && t.status.toLowerCase().includes(searchTerm.toLowerCase())),
-      );
-
   return (
     <div className="org-panel-root">
       <div className="org-top-bar">
@@ -1525,7 +1515,7 @@ export function TestsListPanel({ title }: { title: string }) {
             <div className="org-title-row">
               <h3 className="org-card-title">All Tests</h3>
               <span className="org-count-badge">
-                {filteredTests.length} {filteredTests.length === 1 ? 'Test' : 'Tests'}
+                {pagination.total} {pagination.total === 1 ? 'Test' : 'Tests'}
               </span>
             </div>
             <p className="org-card-subtitle">Manage, schedule, and assign assessment tests</p>
@@ -1545,7 +1535,7 @@ export function TestsListPanel({ title }: { title: string }) {
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchTerm('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -1567,7 +1557,7 @@ export function TestsListPanel({ title }: { title: string }) {
               </tr>
             </thead>
             <tbody>
-              {filteredTests.map((t) => (
+              {tests.map((t) => (
                 <tr key={t.id}>
                   <td>
                     <strong style={{ color: '#0f172a', fontWeight: 600 }}>{t.title}</strong>
@@ -1618,10 +1608,10 @@ export function TestsListPanel({ title }: { title: string }) {
                   </td>
                 </tr>
               ))}
-              {filteredTests.length === 0 && (
+              {tests.length === 0 && !loading && (
                 <tr>
                   <td colSpan={5} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-                    {tests.length === 0 ? (
+                    {!searchTerm.trim() ? (
                       <>No tests yet. <Link to="/dashboard/create-test" style={{ color: '#2563eb', fontWeight: 600 }}>Create your first test</Link>.</>
                     ) : (
                       'No tests match your search filter.'
@@ -1632,6 +1622,15 @@ export function TestsListPanel({ title }: { title: string }) {
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
 
       {editingId && (
@@ -2133,29 +2132,28 @@ export function StudentTestsPanel() {
   };
 
   return (
-    <>
-      <DashboardPageHeader
-        badge="Online Tests"
-        title="My Assigned Tests"
-        subtitle="Start, resume or view results for your institute examinations."
-      />
-
-      <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title d-flex flex-wrap justify-content-between align-items-center gap-2">
-          <h4 className="mb-0">
-            Available Tests
-          </h4>
-
-          <span className="badge bg-primary">
-            {tests.length}
-          </span>
-        </div>
-
-        {error && (
-          <p className="login__error sp_bottom_15">
-            {error}
+    <div className="org-panel-root">
+      <div className="org-top-bar">
+        <div>
+          <h2 className="org-page-title">My Assigned Tests</h2>
+          <p className="org-page-desc">
+            Start, resume, or view results for your institute examinations.
           </p>
-        )}
+        </div>
+      </div>
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card sca-student-tests-panel">
+        <div className="org-card-header" style={{ marginBottom: 16 }}>
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">Available Tests</h3>
+              <span className="org-count-badge">{tests.length}</span>
+            </div>
+            <p className="org-card-subtitle">Live, scheduled, and completed exams assigned to you</p>
+          </div>
+        </div>
 
         {tests.length === 0 &&
           !error &&
@@ -2178,38 +2176,40 @@ export function StudentTestsPanel() {
 
               const wait = opensInMs(t);
 
+              const score = t.result_percentage != null ? Number(t.result_percentage) : null;
+              let examConfig: Record<string, unknown> = {};
+              try {
+                examConfig = typeof t.config === 'string'
+                  ? JSON.parse(t.config) as Record<string, unknown>
+                  : (t.config ?? {}) as Record<string, unknown>;
+              } catch {
+                examConfig = {};
+              }
+              const isPractice = examConfig.examType === 'practice';
+
               return (
                 <article
                   key={t.id}
                   className="sca-student-test-card"
                 >
-
                   <div className="sca-student-test-card__top">
-                    <span className={`edtp-badge ${status.cls}`}>
-                      {status.label}
-                    </span>
-
-                    {(() => {
-                      let config: Record<string, unknown> = {};
-                      try {
-                        config = typeof t.config === 'string'
-                          ? JSON.parse(t.config) as Record<string, unknown>
-                          : (t.config ?? {}) as Record<string, unknown>;
-                      } catch {
-                        config = {};
-                      }
-                      const isPractice = config.examType === 'practice';
-                      return (
-                        <span className={`edtp-badge ${isPractice ? 'edtp-badge--role' : 'edtp-badge--active'}`}>
-                          {isPractice ? 'Practice Exam' : 'Official Exam'}
-                        </span>
-                      );
-                    })()}
-
-                    {t.result_percentage != null && (
-                      <span className="sca-student-test-card__score">
-                        {Number(t.result_percentage).toFixed(1)}%
+                    <div className="sca-student-test-card__badges">
+                      <span className={`edtp-badge ${status.cls}`}>
+                        {status.label}
                       </span>
+                      <span className={`edtp-badge ${isPractice ? 'edtp-badge--role' : 'edtp-badge--active'}`}>
+                        {isPractice ? 'Practice Exam' : 'Official Exam'}
+                      </span>
+                    </div>
+
+                    {score != null && Number.isFinite(score) && (
+                      <div
+                        className="sca-student-test-card__ring"
+                        style={{ ['--score' as string]: String(Math.max(0, Math.min(100, score))) }}
+                      >
+                        <span>{score.toFixed(1)}%</span>
+                        <small>Score</small>
+                      </div>
                     )}
                   </div>
 
@@ -2333,7 +2333,7 @@ export function StudentTestsPanel() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -2345,29 +2345,25 @@ export function AttemptsListPanel({
   readOnly?: boolean;
 }) {
   const navigate = useNavigate();
-  const [attempts, setAttempts] = useState<TestAttempt[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    examinationService
-      .listAttempts(1, 50)
-      .then((res) => setAttempts(res.data))
-      .catch((err) => setError(parseApiError(err)))
-      .finally(() => setLoading(false));
-  }, []);
+  const {
+    items: attempts,
+    pagination,
+    page,
+    limit,
+    searchQuery: searchTerm,
+    loading,
+    error,
+    setSearchQuery: setSearchTerm,
+    clearSearch,
+    onPageChange,
+    onLimitChange,
+  } = useServerList<TestAttempt>({
+    fetcher: ({ page: p, limit: l, search }) =>
+      examinationService.listAttempts(p, l, search || undefined),
+    defaultLimit: 10,
+  });
 
   useDashboardLoadingEffect(loading);
-
-  const filteredAttempts = !searchTerm.trim()
-    ? attempts
-    : attempts.filter(
-        (a) =>
-          (a.test_title && a.test_title.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (a.status && a.status.toLowerCase().includes(searchTerm.toLowerCase())),
-      );
 
   return (
     <div className="org-panel-root">
@@ -2388,7 +2384,7 @@ export function AttemptsListPanel({
             <div className="org-title-row">
               <h3 className="org-card-title">All Attempts</h3>
               <span className="org-count-badge">
-                {filteredAttempts.length} {filteredAttempts.length === 1 ? 'Attempt' : 'Attempts'}
+                {pagination.total} {pagination.total === 1 ? 'Attempt' : 'Attempts'}
               </span>
             </div>
             <p className="org-card-subtitle">Real-time records of student tests, scores, and proctoring logs</p>
@@ -2408,7 +2404,7 @@ export function AttemptsListPanel({
                 <button
                   type="button"
                   className="org-search-clear"
-                  onClick={() => setSearchTerm('')}
+                  onClick={clearSearch}
                   aria-label="Clear search"
                 >
                   <FiX />
@@ -2430,7 +2426,7 @@ export function AttemptsListPanel({
               </tr>
             </thead>
             <tbody>
-              {filteredAttempts.map((a) => (
+              {attempts.map((a) => (
                 <tr key={a.id}>
                   <td>
                     <strong style={{ color: '#0f172a', fontWeight: 600 }}>
@@ -2509,16 +2505,25 @@ export function AttemptsListPanel({
                   )}
                 </tr>
               ))}
-              {filteredAttempts.length === 0 && (
+              {attempts.length === 0 && !loading && (
                 <tr>
                   <td colSpan={readOnly ? 4 : 5} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-                    {attempts.length === 0 ? 'No attempts found.' : 'No attempts match your search filter.'}
+                    {!searchTerm.trim() ? 'No attempts found.' : 'No attempts match your search filter.'}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
       </div>
     </div>
   );

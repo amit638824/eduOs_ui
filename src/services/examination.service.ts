@@ -131,13 +131,19 @@ export async function createTopicForSubject(
 
 export async function listQuestions(
   page = 1,
-  limit = 20,
+  limit = 10,
   status?: string,
+  search?: string,
 ) {
   const { data } = await api.get<PaginatedResponse<Question>>(
     `${base}/questions`,
     {
-      params: { page, limit, status },
+      params: {
+        page,
+        limit,
+        status: status || undefined,
+        search: search || undefined,
+      },
     },
   );
 
@@ -249,11 +255,11 @@ export async function listMyCertificates() {
   return data.data;
 }
 
-export async function listCertificates(page = 1, limit = 50) {
+export async function listCertificates(page = 1, limit = 10, search?: string) {
   const { data } = await api.get<PaginatedResponse<Certificate>>(
     `${base}/certificates`,
     {
-      params: { page, limit },
+      params: { page, limit, search: search || undefined },
     },
   );
 
@@ -371,13 +377,19 @@ export async function importQuestionsFromCsv(csvText: string) {
 
 export async function listTests(
   page = 1,
-  limit = 20,
+  limit = 10,
   status?: string,
+  search?: string,
 ) {
   const { data } = await api.get<PaginatedResponse<ExamTest>>(
     `${base}/tests`,
     {
-      params: { page, limit, status },
+      params: {
+        page,
+        limit,
+        status: status || undefined,
+        search: search || undefined,
+      },
     },
   );
 
@@ -665,7 +677,7 @@ export async function logProctoringEvent(
 }
 export async function listFlaggedAttempts(
   page = 1,
-  limit = 50,
+  limit = 10,
   reviewStatus?: string,
   filters?: {
     testId?: string;
@@ -790,19 +802,20 @@ export async function getMyStats() {
     ApiResponse<
       import('@/types/examination').StudentStats
     >
-  >(`${base}/stats/my`);
+  >(`${base}/stats/my`, { skipToast: true });
 
   return data.data;
 }
 
 export async function listAttempts(
   page = 1,
-  limit = 20,
+  limit = 10,
+  search?: string,
 ) {
   const { data } = await api.get<
     PaginatedResponse<TestAttempt>
   >(`${base}/attempts`, {
-    params: { page, limit },
+    params: { page, limit, search: search || undefined },
   });
 
   return data;
@@ -811,6 +824,7 @@ export async function listAttempts(
 export async function listMyResults() {
   const { data } = await api.get<ApiResponse<ExamResult[]>>(
     `${base}/results/my`,
+    { skipToast: true },
   );
 
   return data.data;

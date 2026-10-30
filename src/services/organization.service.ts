@@ -9,9 +9,19 @@ import type {
 } from '@/types/api';
 import { normalizeBranch, normalizeOrganization } from '@/utils/normalize';
 
-export async function listOrganizations(page = 1, limit = 20) {
+export async function listOrganizations(
+  page = 1,
+  limit = 10,
+  search?: string,
+  isActive?: boolean,
+) {
   const { data } = await api.get<PaginatedResponse<Record<string, unknown>>>('/organizations', {
-    params: { page, limit },
+    params: {
+      page,
+      limit,
+      search: search || undefined,
+      isActive: typeof isActive === 'boolean' ? String(isActive) : undefined,
+    },
   });
   return {
     data: data.data.map((row) => normalizeOrganization(row)),

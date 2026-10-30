@@ -5,21 +5,174 @@ import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { useOrganization } from '@/hooks/useOrganization';
 import { parseApiError } from '@/lib/errors';
 import { examinationService } from '@/services';
-import type { AdminDashboardData } from '@/types/examination';
+import type { AdminDashboardData, ExamResult, StudentStats } from '@/types/examination';
+import type { DashboardRole } from '@/types/dashboard';
 
 interface ModernAdminDashboardProps {
   error?: string | null;
+  role?: DashboardRole;
 }
 
-const STEP_LINKS = [
-  '/dashboard/admin-question-bank',
-  '/dashboard/create-test',
-  '/dashboard/admin-course',
-  '/dashboard/admin-course',
-  '/dashboard/admin-course',
-];
+const COPY: Record<DashboardRole, {
+  welcome: (org: string) => string;
+  stats: [string, string, string, string];
+  stepperTitle: string;
+  stepperHint: string;
+  footer: string;
+  steps: { title: string; desc: string; href: string }[];
+  banner: { href: string; title: string; hint: string }[];
+  primary: { href: string; label: string };
+  quick: { href: string; label: string }[];
+  activityHref: string;
+  topTitle: string;
+  topHref: string;
+}> = {
+  admin: {
+    welcome: (org) => `Manage exams, track student performance, and administer ${org} — all in one place.`,
+    stats: ['Total Tests', 'Total Students', 'Total Attempts', 'Average Score'],
+    stepperTitle: 'Exam Creation & Delivery',
+    stepperHint: 'Step-by-step progress from question bank to student assignment',
+    footer: 'Follow the five steps from left to right.',
+    steps: [
+      { title: 'Question Bank', desc: 'Add questions', href: '/dashboard/admin-question-bank' },
+      { title: 'Exam Details', desc: 'Name, time, rules', href: '/dashboard/create-test' },
+      { title: 'Add Questions', desc: 'Build the paper', href: '/dashboard/admin-course' },
+      { title: 'Publish', desc: 'Make it available', href: '/dashboard/admin-course' },
+      { title: 'Assign', desc: 'Students can start', href: '/dashboard/admin-course' },
+    ],
+    banner: [
+      { href: '/dashboard/create-test', title: 'Create Tests', hint: 'Build custom assessments' },
+      { href: '/dashboard/admin-students', title: 'Manage Students', hint: 'Track progress & performance' },
+      { href: '/dashboard/admin-reviews', title: 'View Reports', hint: 'Get detailed insights' },
+      { href: '/dashboard/admin-question-bank', title: 'Question Bank', hint: 'Organize & reuse questions' },
+    ],
+    primary: { href: '/dashboard/create-test', label: 'Create New Test' },
+    quick: [
+      { href: '/dashboard/admin-question-bank', label: 'Add Question' },
+      { href: '/dashboard/admin-question-bank', label: 'Import Questions (CSV)' },
+      { href: '/dashboard/admin-reviews', label: 'View Reports' },
+    ],
+    activityHref: '/dashboard/admin-audit',
+    topTitle: 'Top Performing Students',
+    topHref: '/dashboard/admin-students',
+  },
+  teacher: {
+    welcome: () => 'Create tests, review attempts, and track how your students are scoring.',
+    stats: ['Total Tests', 'Questions', 'Total Attempts', 'Average Score'],
+    stepperTitle: 'Exam Creation & Delivery',
+    stepperHint: 'Build a paper, publish it, then assign it to students',
+    footer: 'Follow the five steps from left to right.',
+    steps: [
+      { title: 'Question Bank', desc: 'Add questions', href: '/dashboard/admin-question-bank' },
+      { title: 'Exam Details', desc: 'Name, time, rules', href: '/dashboard/create-test' },
+      { title: 'Add Questions', desc: 'Build the paper', href: '/dashboard/teacher-course' },
+      { title: 'Publish', desc: 'Make it available', href: '/dashboard/teacher-course' },
+      { title: 'Assign', desc: 'Students can start', href: '/dashboard/teacher-assignments' },
+    ],
+    banner: [
+      { href: '/dashboard/create-test', title: 'Create Tests', hint: 'Build custom assessments' },
+      { href: '/dashboard/teacher-course', title: 'My Tests', hint: 'Review and publish papers' },
+      { href: '/dashboard/teacher-reviews', title: 'View Reports', hint: 'See student scores' },
+      { href: '/dashboard/admin-question-bank', title: 'Question Bank', hint: 'Organize & reuse questions' },
+    ],
+    primary: { href: '/dashboard/create-test', label: 'Create New Test' },
+    quick: [
+      { href: '/dashboard/admin-question-bank', label: 'Add Question' },
+      { href: '/dashboard/ai-questions', label: 'Build with AI' },
+      { href: '/dashboard/teacher-reviews', label: 'View Reports' },
+    ],
+    activityHref: '/dashboard/teacher-course',
+    topTitle: 'Top Performing Students',
+    topHref: '/dashboard/teacher-reviews',
+  },
+  student: {
+    welcome: () => 'Your assigned tests, attempts, results and certificates — all in one place.',
+    stats: ['Assigned Tests', 'In Progress', 'Attempts', 'Average Score'],
+    stepperTitle: 'Your Exam Journey',
+    stepperHint: 'From assigned test to result and certificate',
+    footer: 'Open a live test when you are ready.',
+    steps: [
+      { title: 'Assigned', desc: 'Tests waiting', href: '/dashboard/student-enrolled-courses' },
+      { title: 'Start', desc: 'Open a live test', href: '/dashboard/student-enrolled-courses' },
+      { title: 'Result', desc: 'See your score', href: '/dashboard/student-reviews' },
+      { title: 'Certificate', desc: 'Download it', href: '/dashboard/student-certificates' },
+      { title: 'Done', desc: 'Keep practicing', href: '/dashboard/student-reviews' },
+    ],
+    banner: [
+      { href: '/dashboard/student-enrolled-courses', title: 'My Tests', hint: 'Start or resume an exam' },
+      { href: '/dashboard/student-assignments', title: 'Assignments', hint: 'Tests assigned to you' },
+      { href: '/dashboard/student-reviews', title: 'Results', hint: 'Scores and rank' },
+      { href: '/dashboard/student-certificates', title: 'Certificates', hint: 'Download your awards' },
+    ],
+    primary: { href: '/dashboard/student-enrolled-courses', label: 'Open My Tests' },
+    quick: [
+      { href: '/dashboard/student-assignments', label: 'Assignments' },
+      { href: '/dashboard/student-my-quiz-attempts', label: 'My Attempts' },
+      { href: '/dashboard/student-certificates', label: 'Certificates' },
+    ],
+    activityHref: '/dashboard/student-my-quiz-attempts',
+    topTitle: 'Recent Results',
+    topHref: '/dashboard/student-reviews',
+  },
+};
 
 const SUBJECT_COLORS = ['blue', 'purple', 'teal', 'amber'];
+
+function studentDashboard(stats: StudentStats, results: ExamResult[]): AdminDashboardData {
+  const scores = results
+    .map((result) => Number(result.percentage))
+    .filter((score) => Number.isFinite(score));
+  const averageScore = scores.length
+    ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
+    : 0;
+  const series = scores.length ? scores.slice(-7) : [averageScore];
+  const recent = [...results].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+  );
+
+  return {
+    totals: {
+      tests: stats.assigned_tests,
+      students: stats.in_progress,
+      attempts: stats.attempts,
+      averageScore,
+    },
+    trends: { tests: 0, students: 0, attempts: 0, averageScore: 0 },
+    sparklines: {
+      tests: [stats.assigned_tests],
+      students: [stats.in_progress],
+      attempts: [stats.attempts],
+      averageScore: series,
+    },
+    performance: { last7: [], last30: [], month: [] },
+    topStudents: recent.slice(0, 5).map((result) => ({
+      id: result.id,
+      name: result.test_title || 'Result',
+      score: Math.round(Number(result.percentage) || 0),
+    })),
+    subjects: {
+      month: [],
+      lastMonth: [],
+      all: [],
+      overall: { month: averageScore, lastMonth: 0, all: averageScore },
+    },
+    activity: recent.slice(0, 6).map((result) => ({
+      id: result.id,
+      title: result.test_title || 'Result published',
+      subtitle: `${Math.round(Number(result.percentage) || 0)}% score`,
+      createdAt: result.created_at,
+      tag: 'Completed',
+      kind: 'chart',
+    })),
+    workflow: {
+      questions: stats.assigned_tests,
+      tests: stats.attempts,
+      withQuestions: stats.results,
+      published: stats.certificates_count ?? 0,
+      assigned: stats.results > 0 ? 1 : 0,
+    },
+  };
+}
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -80,7 +233,7 @@ function tagColor(tag: string): string {
   return 'amber';
 }
 
-export default function ModernAdminDashboard({ error }: ModernAdminDashboardProps) {
+export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAdminDashboardProps) {
   const { user } = useAuth();
   const { organization } = useOrganization();
   const [timeFilter, setTimeFilter] = useState<'Last 7 days' | 'Last 30 days' | 'This Month'>('Last 7 days');
@@ -94,8 +247,15 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
   useEffect(() => {
     let mounted = true;
     setLoading(true);
-    examinationService
-      .getAdminDashboard()
+    const load =
+      role === 'student'
+        ? Promise.all([
+            examinationService.getMyStats(),
+            examinationService.listMyResults().catch(() => [] as ExamResult[]),
+          ]).then(([stats, results]) => studentDashboard(stats, results))
+        : examinationService.getAdminDashboard();
+
+    load
       .then((data) => {
         if (mounted) setDash(data);
       })
@@ -108,7 +268,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [role]);
 
   const displayName = user?.firstName
     ? `${user.firstName} ${user.lastName || ''}`.trim()
@@ -166,6 +326,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
   }));
 
   const pageError = error || loadError;
+  const copy = COPY[role];
 
   return (
     <div className="mad-v3-root">
@@ -190,12 +351,12 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                 {displayName} <span className="mad-v3-wave">👏</span>
               </h2>
               <p className="mad-v3-welcome-desc">
-                {`Manage exams, track student performance, and administer ${organization?.name || 'your organization'} — all in one place.`}
+                {copy.welcome(organization?.name || 'your organization')}
               </p>
 
               {/* 4 Feature Pills / Cards inside the Banner */}
               <div className="mad-v3-banner-cards">
-                <Link to="/dashboard/create-test" className="mad-v3-action-card">
+                <Link to={copy.banner[0].href} className="mad-v3-action-card">
                   <div className="mad-v3-action-icon mad-v3-action-icon--blue">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                       <path d="M11 4H4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-7" />
@@ -203,15 +364,15 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                     </svg>
                   </div>
                   <div className="mad-v3-action-info">
-                    <strong>Create Tests</strong>
-                    <small>Build custom assessments</small>
+                    <strong>{copy.banner[0].title}</strong>
+                    <small>{copy.banner[0].hint}</small>
                   </div>
                   <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
                     <path d="M6 3l5 5-5 5" />
                   </svg>
                 </Link>
 
-                <Link to="/dashboard/admin-students" className="mad-v3-action-card">
+                <Link to={copy.banner[1].href} className="mad-v3-action-card">
                   <div className="mad-v3-action-icon mad-v3-action-icon--green">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                       <path d="M17 17v-1.5a3.5 3.5 0 00-3.5-3.5h-7A3.5 3.5 0 003 15.5V17" />
@@ -219,15 +380,15 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                     </svg>
                   </div>
                   <div className="mad-v3-action-info">
-                    <strong>Manage Students</strong>
-                    <small>Track progress &amp; performance</small>
+                    <strong>{copy.banner[1].title}</strong>
+                    <small>{copy.banner[1].hint}</small>
                   </div>
                   <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
                     <path d="M6 3l5 5-5 5" />
                   </svg>
                 </Link>
 
-                <Link to="/dashboard/admin-reviews" className="mad-v3-action-card">
+                <Link to={copy.banner[2].href} className="mad-v3-action-card">
                   <div className="mad-v3-action-icon mad-v3-action-icon--purple">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                       <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0z" />
@@ -235,23 +396,23 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                     </svg>
                   </div>
                   <div className="mad-v3-action-info">
-                    <strong>View Reports</strong>
-                    <small>Get detailed insights</small>
+                    <strong>{copy.banner[2].title}</strong>
+                    <small>{copy.banner[2].hint}</small>
                   </div>
                   <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
                     <path d="M6 3l5 5-5 5" />
                   </svg>
                 </Link>
 
-                <Link to="/dashboard/admin-question-bank" className="mad-v3-action-card">
+                <Link to={copy.banner[3].href} className="mad-v3-action-card">
                   <div className="mad-v3-action-icon mad-v3-action-icon--amber">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
                       <path d="M3 5a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
                     </svg>
                   </div>
                   <div className="mad-v3-action-info">
-                    <strong>Question Bank</strong>
-                    <small>Organize &amp; reuse questions</small>
+                    <strong>{copy.banner[3].title}</strong>
+                    <small>{copy.banner[3].hint}</small>
                   </div>
                   <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
                     <path d="M6 3l5 5-5 5" />
@@ -350,7 +511,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
               <div className="mad-v3-stat-mid">
                 <div className="mad-v3-stat-value-group">
                   <span className="mad-v3-stat-num">{totalTests}</span>
-                  <span className="mad-v3-stat-title">Total Tests</span>
+                  <span className="mad-v3-stat-title">{copy.stats[0]}</span>
                 </div>
                 {/* Blue Sparkline SVG */}
                 <div className="mad-v3-sparkline-box">
@@ -396,7 +557,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
               <div className="mad-v3-stat-mid">
                 <div className="mad-v3-stat-value-group">
                   <span className="mad-v3-stat-num">{totalStudents}</span>
-                  <span className="mad-v3-stat-title">Total Students</span>
+                  <span className="mad-v3-stat-title">{copy.stats[1]}</span>
                 </div>
                 {/* Green Sparkline SVG */}
                 <div className="mad-v3-sparkline-box">
@@ -442,7 +603,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
               <div className="mad-v3-stat-mid">
                 <div className="mad-v3-stat-value-group">
                   <span className="mad-v3-stat-num">{totalAttempts}</span>
-                  <span className="mad-v3-stat-title">Total Attempts</span>
+                  <span className="mad-v3-stat-title">{copy.stats[2]}</span>
                 </div>
                 {/* Purple Sparkline SVG */}
                 <div className="mad-v3-sparkline-box">
@@ -489,7 +650,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
               <div className="mad-v3-stat-mid">
                 <div className="mad-v3-stat-value-group">
                   <span className="mad-v3-stat-num">{avgScore}</span>
-                  <span className="mad-v3-stat-title">Average Score</span>
+                  <span className="mad-v3-stat-title">{copy.stats[3]}</span>
                 </div>
                 {/* Amber Sparkline SVG */}
                 <div className="mad-v3-sparkline-box">
@@ -526,9 +687,9 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                   </svg>
                 </div>
                 <span className="mad-v3-stepper-badge">Workflow Guide</span>
-                <h3 className="mad-v3-stepper-heading">Exam Creation &amp; Delivery Stepper</h3>
+                <h3 className="mad-v3-stepper-heading">{copy.stepperTitle}</h3>
               </div>
-              <span className="mad-v3-stepper-hint">Step-by-step progress from question bank to student assignment</span>
+              <span className="mad-v3-stepper-hint">{copy.stepperHint}</span>
             </div>
 
             {/* Stepper Progression matching mockup */}
@@ -546,8 +707,8 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                   ) : '1'}
                 </div>
                 <div className="mad-v3-step-labels">
-                  <strong className="mad-v3-step-title">Question Bank</strong>
-                  <span className="mad-v3-step-desc">Add questions</span>
+                  <strong className="mad-v3-step-title">{copy.steps[0].title}</strong>
+                  <span className="mad-v3-step-desc">{copy.steps[0].desc}</span>
                 </div>
                 <div className="mad-v3-step-subicon mad-v3-step-subicon--green">
                   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -573,8 +734,8 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                   ) : '2'}
                 </div>
                 <div className="mad-v3-step-labels">
-                  <strong className="mad-v3-step-title">Exam Details</strong>
-                  <span className="mad-v3-step-desc">Name, time, rules</span>
+                  <strong className="mad-v3-step-title">{copy.steps[1].title}</strong>
+                  <span className="mad-v3-step-desc">{copy.steps[1].desc}</span>
                 </div>
                 <div className="mad-v3-step-subicon mad-v3-step-subicon--blue">
                   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -599,8 +760,8 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                   ) : '3'}
                 </div>
                 <div className="mad-v3-step-labels">
-                  <strong className="mad-v3-step-title">Add Questions</strong>
-                  <span className="mad-v3-step-desc">Build the paper</span>
+                  <strong className="mad-v3-step-title">{copy.steps[2].title}</strong>
+                  <span className="mad-v3-step-desc">{copy.steps[2].desc}</span>
                 </div>
                 <div className="mad-v3-step-subicon mad-v3-step-subicon--purple">
                   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -626,8 +787,8 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                   ) : '4'}
                 </div>
                 <div className="mad-v3-step-labels">
-                  <strong className="mad-v3-step-title">Publish</strong>
-                  <span className="mad-v3-step-desc">Make it available</span>
+                  <strong className="mad-v3-step-title">{copy.steps[3].title}</strong>
+                  <span className="mad-v3-step-desc">{copy.steps[3].desc}</span>
                 </div>
                 <div className="mad-v3-step-subicon mad-v3-step-subicon--amber">
                   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -648,8 +809,8 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                   5
                 </div>
                 <div className="mad-v3-step-labels">
-                  <strong className="mad-v3-step-title">Assign</strong>
-                  <span className="mad-v3-step-desc">Students can start</span>
+                  <strong className="mad-v3-step-title">{copy.steps[4].title}</strong>
+                  <span className="mad-v3-step-desc">{copy.steps[4].desc}</span>
                 </div>
                 <div className="mad-v3-step-subicon mad-v3-step-subicon--gray">
                   <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -668,9 +829,9 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                     <path d="M8 15h4M9 17h2M10 2a5 5 0 00-3.54 8.54c.97.96 1.54 2.27 1.54 3.46v1h4v-1c0-1.19.57-2.5 1.54-3.46A5 5 0 0010 2z" />
                   </svg>
                 </div>
-                <span className="mad-v3-footer-msg">Follow the five steps from left to right.</span>
+                <span className="mad-v3-footer-msg">{copy.footer}</span>
               </div>
-              <Link to={STEP_LINKS[activeStep - 1] ?? '/dashboard/create-test'} className="mad-v3-start-btn">
+              <Link to={copy.steps[activeStep - 1]?.href ?? copy.primary.href} className="mad-v3-start-btn">
                 <span>Start Now</span>
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: 6 }}>
                   <path d="M3 8h10M9 4l4 4-4 4" />
@@ -692,9 +853,9 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
             </div>
 
             {/* Primary Action Button */}
-            <Link to="/dashboard/create-test" className="mad-v3-qa-primary-btn">
+            <Link to={copy.primary.href} className="mad-v3-qa-primary-btn">
               <span className="mad-v3-qa-btn-text">
-                <span className="mad-v3-plus">+</span> Create New Test
+                <span className="mad-v3-plus">+</span> {copy.primary.label}
               </span>
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" className="mad-v3-qa-arrow">
                 <path d="M6 3l5 5-5 5" />
@@ -703,7 +864,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
 
             {/* Action Items List */}
             <div className="mad-v3-qa-list">
-              <Link to="/dashboard/admin-question-bank" className="mad-v3-qa-item">
+              <Link to={copy.quick[0].href} className="mad-v3-qa-item">
                 <div className="mad-v3-qa-item-left">
                   <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -711,14 +872,14 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                       <path d="M16 2.5a2.121 2.121 0 013 3L9 15l-4 1 1-4 10-10.5z" />
                     </svg>
                   </div>
-                  <span className="mad-v3-qa-label">Add Question</span>
+                  <span className="mad-v3-qa-label">{copy.quick[0].label}</span>
                 </div>
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
                   <path d="M6 3l5 5-5 5" />
                 </svg>
               </Link>
 
-              <Link to="/dashboard/admin-question-bank" className="mad-v3-qa-item">
+              <Link to={copy.quick[1].href} className="mad-v3-qa-item">
                 <div className="mad-v3-qa-item-left">
                   <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -727,14 +888,14 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                       <line x1="10" y1="5" x2="10" y2="14" />
                     </svg>
                   </div>
-                  <span className="mad-v3-qa-label">Import Questions (CSV)</span>
+                  <span className="mad-v3-qa-label">{copy.quick[1].label}</span>
                 </div>
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
                   <path d="M6 3l5 5-5 5" />
                 </svg>
               </Link>
 
-              <Link to="/dashboard/admin-reviews" className="mad-v3-qa-item">
+              <Link to={copy.quick[2].href} className="mad-v3-qa-item">
                 <div className="mad-v3-qa-item-left">
                   <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
                     <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -742,7 +903,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                       <path d="M10 2v8h8" />
                     </svg>
                   </div>
-                  <span className="mad-v3-qa-label">View Reports</span>
+                  <span className="mad-v3-qa-label">{copy.quick[2].label}</span>
                 </div>
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
                   <path d="M6 3l5 5-5 5" />
@@ -761,7 +922,7 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
                 </svg>
                 <h3 className="mad-v3-act-heading">Recent Activity</h3>
               </div>
-              <Link to="/dashboard/admin-audit" className="mad-v3-viewall-link">
+              <Link to={copy.activityHref} className="mad-v3-viewall-link">
                 <span>View All</span>
                 <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: 4 }}>
                   <path d="M6 3l5 5-5 5" />
@@ -878,9 +1039,9 @@ export default function ModernAdminDashboard({ error }: ModernAdminDashboardProp
               <svg viewBox="0 0 20 20" fill="#F59E0B" width="18" height="18" className="mad-v3-trophy-icon">
                 <path d="M15 3h1a2 2 0 012 2v2a4 4 0 01-4 4h-.2a6.002 6.002 0 01-4.8 2.92V16h2a1 1 0 110 2H8a1 1 0 110-2h2v-2.08A6.002 6.002 0 015.2 11H5a4 4 0 01-4-4V5a2 2 0 012-2h1V2a1 1 0 011-1h10a1 1 0 011 1v1zm1 2h-1v4h.2a2 2 0 001.8-2V5zM4 5H3v2a2 2 0 001.8 2H5V5zm2-2v7a4 4 0 108 0V3H6z" />
               </svg>
-              <h4>Top Performing Students</h4>
+              <h4>{copy.topTitle}</h4>
             </div>
-            <Link to="/dashboard/admin-students" className="mad-v3-viewall-link">
+            <Link to={copy.topHref} className="mad-v3-viewall-link">
               <span>View All</span>
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="12" height="12" style={{ display: 'inline-block', verticalAlign: 'middle', marginLeft: 4 }}>
                 <path d="M6 3l5 5-5 5" />

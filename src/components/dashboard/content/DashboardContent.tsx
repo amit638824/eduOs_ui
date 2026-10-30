@@ -1669,12 +1669,9 @@ export function DashboardSettingsContent() {
     ['super_admin', 'org_admin', 'branch_admin'].includes(r),
   );
   const isStudent = Boolean(user?.roles.includes('student'));
-  // Branding is org-level; never show to students
   const tabs = isAdmin
     ? ['Profile', 'Organization', 'Password', 'Branding']
-    : isStudent
-      ? ['Profile', 'Password']
-      : ['Profile', 'Password', 'Branding'];
+    : ['Profile', 'Password'];
   const [activeTab, setActiveTab] = useState('Profile');
 
   useDashboardLoadingEffect(orgLoading && activeTab === 'Organization');
