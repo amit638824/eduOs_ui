@@ -144,8 +144,13 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 }
 
 .sca-dashboard--collapsed .sca-db-sidebar__brand {
-  padding-left: 16px;
-  padding-right: 16px;
+  justify-content: center;
+  padding: 14px 0;
+}
+
+.sca-dashboard--collapsed .sca-db-sidebar__brand-link {
+  justify-content: center;
+  gap: 0;
 }
 
 .sca-db-sidebar__nav {
@@ -536,22 +541,63 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   z-index: 5;
 }
 
-.sca-dashboard--collapsed .sca-db-sidebar__pinned .sca-db-nav-item {
-  justify-content: center;
-  gap: 0;
-  padding: 14px 0;
-  border-left-width: 3px;
+/* Collapsed rail — clean centered icons, soft scrollbar */
+.sca-dashboard--collapsed .sca-db-sidebar__nav {
+  padding: 8px 0 10px;
+  scrollbar-width: none;
 }
 
+.sca-dashboard--collapsed .sca-db-sidebar__nav:hover {
+  scrollbar-width: thin;
+}
+
+.sca-dashboard--collapsed .sca-db-sidebar__nav::-webkit-scrollbar {
+  width: 0;
+}
+
+.sca-dashboard--collapsed .sca-db-sidebar__nav:hover::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sca-dashboard--collapsed .sca-db-sidebar__group + .sca-db-sidebar__group {
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.sca-dashboard--collapsed .sca-db-sidebar__pinned {
+  padding: 8px 0 10px;
+}
+
+.sca-dashboard--collapsed .sca-db-sidebar__pinned .sca-db-nav-item,
 .sca-dashboard--collapsed .sca-db-nav-item {
   justify-content: center;
+  align-items: center;
   gap: 0;
-  padding: 14px 0;
-  border-left-width: 3px;
+  width: calc(100% - 16px);
+  margin: 2px 8px;
+  padding: 11px 0;
+  border-left-width: 0 !important;
+  border-radius: 10px;
 }
 
-.sca-dashboard--collapsed .sca-db-nav-item--active {
-  border-left-color: var(--db-accent);
+.sca-dashboard--collapsed .sca-db-nav-item--active,
+.sca-dashboard--collapsed .sca-db-nav-item--ancestor-active {
+  border-left-width: 0 !important;
+  background: rgba(59, 130, 246, 0.22) !important;
+  color: #fff !important;
+}
+
+.sca-dashboard--collapsed .sca-db-nav-item i,
+.sca-dashboard--collapsed .sca-db-nav-item .dashboard-nav-icon {
+  margin: 0 auto;
+}
+
+.sca-dashboard--collapsed .sca-db-nav-item__badge,
+.sca-dashboard--collapsed .sca-db-sidebar__sub-chevron,
+.sca-dashboard--collapsed .sca-db-sidebar__chevron,
+.sca-dashboard--collapsed .sca-db-sidebar__count-badge,
+.sca-dashboard--collapsed .sca-db-sidebar__section-meta {
+  display: none !important;
 }
 
 /* ── Main ── */
@@ -2191,6 +2237,82 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 .sca-exam-guide__text small {
   font-size: 0.6875rem;
   color: var(--db-muted);
+}
+
+/* Exam result — fixed viewport with internal scroll for all result data */
+.sca-exam-result-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: calc(100dvh - 200px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+}
+
+.sca-exam-result-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sca-exam-result-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 999px;
+}
+
+/* Test builder panels — sticky header + scrollable body */
+.sca-test-builder-panel {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 220px);
+  min-height: 360px;
+  overflow: hidden;
+}
+
+.sca-test-builder-panel > .org-card-header {
+  flex-shrink: 0;
+}
+
+.sca-test-builder-panel__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+}
+
+.sca-test-builder-panel__body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sca-test-builder-panel__body::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 999px;
+}
+
+.sca-preview-btn {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  min-width: 96px;
+  padding: 0 12px !important;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sca-test-builder-panel__body .org-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #162456 !important;
+  background-image: none !important;
 }
 
 .sca-exam-builder-grid {

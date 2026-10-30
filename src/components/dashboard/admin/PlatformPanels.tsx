@@ -1747,7 +1747,7 @@ export function ReportsPanel() {
                                 <LabelList
                                   dataKey="percentage"
                                   position="top"
-                                  formatter={(v: number) => `${v}%`}
+                                  formatter={(v) => `${v ?? 0}%`}
                                   style={{ fill: '#0f172a', fontSize: 12, fontWeight: 700 }}
                                 />
                               </Bar>
@@ -3634,7 +3634,7 @@ export function TestBuilderPanel() {
       {phase === 'build' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, width: '100%' }}>
           {/* Left Card: Questions in Test */}
-          <div className="org-table-card">
+          <div className="org-table-card sca-test-builder-panel">
             <div className="org-card-header">
               <div className="org-title-group">
                 <div className="org-title-row">
@@ -3657,7 +3657,7 @@ export function TestBuilderPanel() {
               )}
             </div>
 
-            <div style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div className="sca-test-builder-panel__body" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {testQuestions.length === 0 ? (
                 <div className="org-empty-state">
                   <FiLayers className="org-empty-icon" />
@@ -3729,7 +3729,7 @@ export function TestBuilderPanel() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                           <button
                             type="button"
-                            className="org-action-btn org-action-btn--switch"
+                            className="org-action-btn org-action-btn--switch sca-preview-btn"
                             onClick={() => setPreviewQuestionId(tq.question_id)}
                             title="Preview question"
                           >
@@ -3801,7 +3801,7 @@ export function TestBuilderPanel() {
           </div>
 
           {/* Right Card: Question Bank Pool */}
-          <div className="org-table-card">
+          <div className="org-table-card sca-test-builder-panel">
             <div className="org-card-header">
               <div className="org-title-group">
                 <div className="org-title-row">
@@ -3868,7 +3868,7 @@ export function TestBuilderPanel() {
               </div>
             </div>
 
-            <div className="org-table-wrapper">
+            <div className="sca-test-builder-panel__body org-table-wrap">
               <table className="org-table">
                 <thead>
                   <tr>
@@ -3883,8 +3883,8 @@ export function TestBuilderPanel() {
                       />
                     </th>
                     <th>QUESTION</th>
-                    <th>TYPE</th>
-                    <th style={{ textAlign: 'right', width: 100 }}>PREVIEW</th>
+                    <th style={{ width: '14%' }}>TYPE</th>
+                    <th className="edtp-th-actions" style={{ width: '18%' }}>PREVIEW</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -3929,11 +3929,12 @@ export function TestBuilderPanel() {
                             {q.type}
                           </span>
                         </td>
-                        <td style={{ textAlign: 'left' }} onClick={(e) => e.stopPropagation()}>
+                        <td className="org-td-actions" onClick={(e) => e.stopPropagation()}>
                           <button
                             type="button"
-                            className="org-action-btn org-action-btn--switch"
+                            className="org-action-btn org-action-btn--switch sca-preview-btn"
                             onClick={() => setPreviewQuestionId(q.id)}
+                            title="Preview question"
                           >
                             <FiEye />
                             <span>Preview</span>

@@ -129,6 +129,26 @@ export default function DashboardSidebar({
         const isSubOpen = openSubmenus[item.label] ?? false;
 
         if (hasSubItems) {
+          /* Collapsed: flat icon links for each child (parent toggle is useless in rail mode) */
+          if (collapsed) {
+            return item.subItems!.map((sub) => (
+              <li key={sub.href}>
+                <NavLink
+                  to={sub.href}
+                  className={({ isActive }) =>
+                    `sca-db-nav-item${isActive ? ' sca-db-nav-item--active' : ''}`
+                  }
+                  end
+                  title={sub.label}
+                  onClick={onNavigate}
+                >
+                  <DashboardIcon name={item.icon} />
+                  <span className="sca-db-nav-item__label">{sub.label}</span>
+                </NavLink>
+              </li>
+            ));
+          }
+
           return (
             <li key={item.label} className="sca-db-sidebar__item-has-submenu">
               <button
@@ -137,67 +157,62 @@ export default function DashboardSidebar({
                   isItemActive(item) ? ' sca-db-nav-item--ancestor-active' : ''
                 }`}
                 onClick={() => toggleSubmenu(item.label)}
-                title={collapsed ? item.label : undefined}
                 aria-expanded={isSubOpen}
               >
                 <DashboardIcon name={item.icon} />
                 <span className="sca-db-nav-item__label">{item.label}</span>
-                {!collapsed && (
-                  <svg
-                    className={`sca-db-sidebar__sub-chevron${
-                      isSubOpen ? ' sca-db-sidebar__sub-chevron--open' : ''
-                    }`}
-                    width="12"
-                    height="12"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
-                  >
-                    <polyline points="6 9 12 15 18 9" />
-                  </svg>
-                )}
+                <svg
+                  className={`sca-db-sidebar__sub-chevron${
+                    isSubOpen ? ' sca-db-sidebar__sub-chevron--open' : ''
+                  }`}
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
               </button>
 
-              {!collapsed && (
-                <div
-                  className={`sca-db-sidebar__submenu-wrap${
-                    isSubOpen ? ' is-open' : ''
-                  }`}
-                >
-                  <ul className="sca-db-sidebar__submenu">
-                    {item.subItems!.map((sub) => (
-                      <li key={sub.href}>
-                        <NavLink
-                          to={sub.href}
-                          className={({ isActive }) =>
-                            `sca-db-nav-subitem${isActive ? ' sca-db-nav-subitem--active' : ''}`
-                          }
-                          end
-                          onClick={onNavigate}
-                          tabIndex={isSubOpen ? 0 : -1}
-                        >
-                          <span className="sca-db-nav-subitem__label">{sub.label}</span>
-                          {sub.badge && (
-                            <span
-                              className={`sca-db-nav-item__badge${
-                                sub.badgeVariant
-                                  ? ` sca-db-nav-item__badge--${sub.badgeVariant}`
-                                  : ''
-                              }`}
-                            >
-                              {sub.badge}
-                            </span>
-                          )}
-                        </NavLink>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <div
+                className={`sca-db-sidebar__submenu-wrap${
+                  isSubOpen ? ' is-open' : ''
+                }`}
+              >
+                <ul className="sca-db-sidebar__submenu">
+                  {item.subItems!.map((sub) => (
+                    <li key={sub.href}>
+                      <NavLink
+                        to={sub.href}
+                        className={({ isActive }) =>
+                          `sca-db-nav-subitem${isActive ? ' sca-db-nav-subitem--active' : ''}`
+                        }
+                        end
+                        onClick={onNavigate}
+                        tabIndex={isSubOpen ? 0 : -1}
+                      >
+                        <span className="sca-db-nav-subitem__label">{sub.label}</span>
+                        {sub.badge && (
+                          <span
+                            className={`sca-db-nav-item__badge${
+                              sub.badgeVariant
+                                ? ` sca-db-nav-item__badge--${sub.badgeVariant}`
+                                : ''
+                            }`}
+                          >
+                            {sub.badge}
+                          </span>
+                        )}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </li>
           );
         }

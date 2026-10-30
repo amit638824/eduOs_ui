@@ -3452,7 +3452,6 @@ export function ExamResultPage() {
     : isTeacherOnly
       ? '/dashboard/teacher-reviews'
       : '/dashboard/admin-reviews';
-
   useEffect(() => {
     if (!attemptId) return;
 
@@ -3708,7 +3707,15 @@ export function ExamResultPage() {
           <Link
             to={backHref}
             className="org-btn-secondary"
-            style={{ height: 36, padding: '0 16px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6, textDecoration: 'none' }}
+            style={{
+              height: 36,
+              padding: '0 16px',
+              borderRadius: 8,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              textDecoration: 'none',
+            }}
           >
             <FiArrowLeft /> Back to Results
           </Link>
@@ -3716,6 +3723,7 @@ export function ExamResultPage() {
         </div>
       </div>
 
+      <div className="sca-exam-result-scroll">
       {isStudent ? <PracticeInsights /> : null}
 
       {/* Attempts / Policy info bar */}
@@ -4077,17 +4085,7 @@ export function ExamResultPage() {
           )}
         </div>
       </div>
-
-      <div>
-        <Link
-          to={backHref}
-          className="org-btn-secondary"
-          style={{ height: 40, padding: '0 20px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
-        >
-          <FiArrowLeft />
-          <span>Back to Results</span>
-        </Link>
-      </div>
+      </div>{/* /.sca-exam-result-scroll */}
 
       <CertificatePreviewModal
         open={showCertificatePreview}
