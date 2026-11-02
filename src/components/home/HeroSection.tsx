@@ -13,8 +13,6 @@ const fallbackPhrases = [
 export default function HeroSection({ content }: { content?: HomepageContent['hero'] }) {
   const phrases = content?.phrases?.length ? content.phrases : fallbackPhrases;
   const sequence = phrases.flatMap((phrase) => [phrase, 2400] as [string, number]);
-<<<<<<< HEAD
-=======
   const bars = content?.score?.bars?.length
     ? content.score.bars
     : [
@@ -22,7 +20,6 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
         { label: 'Quantitative Aptitude', pct: 86 },
         { label: 'Logical Reasoning', pct: 90 },
       ];
->>>>>>> 80693461bcaeb2b8b8d67b934b610efbb05d7b26
   const trust = content?.trust?.length
     ? content.trust
     : [
@@ -124,8 +121,6 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
                 data-aos-delay="200"
               />
 
-<<<<<<< HEAD
-=======
               <div className="ms-float-score-box eduleb-hover-lift" data-aos="fade-up" data-aos-duration="900" data-aos-delay="350">
                 <div className="eduleb-ms-score-title">{content?.score?.title || 'Student Exam Scorecard'}</div>
                 <div className="d-flex align-items-center gap-3 mb-3">
@@ -148,7 +143,6 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
                 ))}
               </div>
 
->>>>>>> 80693461bcaeb2b8b8d67b934b610efbb05d7b26
               <div className="eduleb-ms-tip-card eduleb-hover-lift" data-aos="fade-up" data-aos-duration="900" data-aos-delay="450">
                 <span className="eduleb-ms-tip-icon">📈</span>
                 <span>{content?.tip || 'AI Analytics: Focus on weak topics to maximize your examination score'}</span>

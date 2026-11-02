@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { Pagination } from '@/components/ui/Pagination';
+import { useServerList } from '@/hooks/useServerList';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import {
   FiPlus,
@@ -763,19 +765,6 @@ type CreateUserForm = {
   enrollmentNo?: string;
 };
 
-type UserRoleTab = 'teachers' | 'students' | 'admin' | 'all';
-
-const isTeacherUser = (roles: string[] = []) =>
-  roles.some((r) => ['teacher', 'faculty', 'examiner', 'evaluator'].includes(r.toLowerCase()));
-
-const isStudentUser = (roles: string[] = []) =>
-  roles.some((r) => ['student', 'learner'].includes(r.toLowerCase()));
-
-const isAdminUser = (roles: string[] = []) =>
-  roles.some((r) =>
-    ['org_admin', 'admin', 'super_admin', 'staff', 'branch_admin'].includes(r.toLowerCase())
-  );
-
 export function UsersManagementPanel({
   lockedRole,
   title,
@@ -818,47 +807,7 @@ export function UsersManagementPanel({
   const { user: authUser } = useAuth();
   const canDeleteUsers =
     isSuperAdmin(authUser?.roles ?? []) || (authUser?.roles.includes('org_admin') ?? false);
-
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tabQuery = (searchParams.get('tab') || '').toLowerCase();
-  const initialRoleTab: UserRoleTab =
-    tabQuery === 'students' || tabQuery === 'student'
-      ? 'students'
-      : tabQuery === 'admin' || tabQuery === 'admins'
-        ? 'admin'
-        : tabQuery === 'all'
-          ? 'all'
-          : 'teachers'; // Default to Teachers tab as requested
-
-  const [activeRoleTab, setActiveRoleTab] = useState<UserRoleTab>(initialRoleTab);
-
-  const counts = useMemo(
-    () => ({
-      teachers: users.filter((u) => isTeacherUser(u.roles as string[])).length,
-      students: users.filter((u) => isStudentUser(u.roles as string[])).length,
-      admin: users.filter((u) => isAdminUser(u.roles as string[])).length,
-      all: users.length,
-    }),
-    [users]
-  );
-
-  const filteredUsers = useMemo(() => {
-    if (lockedRole) return users;
-    if (activeRoleTab === 'teachers') return users.filter((u) => isTeacherUser(u.roles as string[]));
-    if (activeRoleTab === 'students') return users.filter((u) => isStudentUser(u.roles as string[]));
-    if (activeRoleTab === 'admin') return users.filter((u) => isAdminUser(u.roles as string[]));
-    return users;
-  }, [users, lockedRole, activeRoleTab]);
-
-  const defaultRole =
-    lockedRole ??
-    (activeRoleTab === 'teachers'
-      ? 'teacher'
-      : activeRoleTab === 'students'
-        ? 'student'
-        : activeRoleTab === 'admin'
-          ? 'org_admin'
-          : 'student');
+  const defaultRole = lockedRole ?? 'student';
   const {
     register,
     handleSubmit,
@@ -884,20 +833,6 @@ export function UsersManagementPanel({
   const watchedRole = watch('role');
   const showEnrollmentField = lockedRole === 'student' || watchedRole === 'student';
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const res = await platformService.listUsers(1, 100, undefined, lockedRole);
-      setUsers(res.data);
-    } catch (err) {
-      setError(parseApiError(err));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { void load(); }, [lockedRole]);
-
   useEffect(() => {
     if (editingId || !showEnrollmentField) return;
     platformService
@@ -908,26 +843,28 @@ export function UsersManagementPanel({
 
   useDashboardLoadingEffect(loading);
 
+  // Close drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isDrawerOpen) {
+        closeDrawer();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDrawerOpen]);
+
   const resetForm = () => {
     setEditingId(null);
-    const targetRole =
-      lockedRole ??
-      (activeRoleTab === 'teachers'
-        ? 'teacher'
-        : activeRoleTab === 'students'
-          ? 'student'
-          : activeRoleTab === 'admin'
-            ? 'org_admin'
-            : 'student');
     reset({
       email: '',
       password: DEFAULT_SUGGESTED_PASSWORD,
       firstName: '',
       lastName: '',
-      role: targetRole,
+      role: defaultRole,
       enrollmentNo: '',
     });
-    if (targetRole === 'student') {
+    if (defaultRole === 'student' || lockedRole === 'student') {
       platformService
         .previewEnrollmentNumber()
         .then((no) => setValue('enrollmentNo', no))
@@ -1046,17 +983,24 @@ export function UsersManagementPanel({
         : lockedRole === 'staff'
           ? 'Staff'
           : 'User Management');
-  const addLabel = editingId
-    ? 'Update User'
-    : lockedRole === 'teacher'
+
+  const pageSubtitle =
+    lockedRole === 'teacher'
+      ? 'Manage teaching faculty, course instructors, department leaders, and academic staff.'
+      : lockedRole === 'student'
+        ? 'Manage student registrations, academic enrollment numbers, test eligibility, and cohort access.'
+        : lockedRole === 'staff'
+          ? 'Manage institutional staff, examination controllers, proctors, and administrative officers.'
+          : 'Comprehensive platform directory — add, onboard, and manage role permissions across the institution.';
+
+  const addBtnLabel =
+    lockedRole === 'teacher'
       ? 'Add Faculty'
       : lockedRole === 'student'
         ? 'Add Student'
         : lockedRole === 'staff'
           ? 'Add Staff'
-          : !lockedRole && activeRoleTab === 'admin'
-            ? 'Add Admin'
-            : 'Add User';
+          : 'Add User';
 
   const cardSubtitle =
     lockedRole === 'teacher'
@@ -1068,21 +1012,275 @@ export function UsersManagementPanel({
           : 'Directory of all registered institution users, permissions, and roles';
 
   return (
-    <div className="dashboard__content__wraper">
-      <div className="dashboard__section__title">
-        <h4>{heading}</h4>
-        <span className="badge bg-primary">{users.length}</span>
-      </div>
-      {error && <EdtpAlert type="error">{error}</EdtpAlert>}
-      {message && <EdtpAlert type="success">{message}</EdtpAlert>}
+    <div className="org-panel-root">
+      {/* ── Top Bar with Heading, Sub-heading & Add Gradient Button ── */}
+      <div className="org-top-bar">
+        <div className="org-top-text">
+          <h1 className="org-page-title">{heading}</h1>
+          <p className="org-page-desc">{pageSubtitle}</p>
+        </div>
 
-      <div className="edtp-form-card">
-        <h5>{editingId ? 'Edit user' : addLabel}</h5>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="row g-3">
-            <div className="col-md-6 col-lg-3">
-              <EdtpField label="First name">
-                <input className="register__input" placeholder="First name" {...register('firstName')} />
+        <button
+          type="button"
+          className="org-add-btn"
+          onClick={openAddDrawer}
+          id="btnOpenAddUser"
+        >
+          <FiPlus className="org-add-btn-icon" />
+          <span>{addBtnLabel}</span>
+        </button>
+      </div>
+
+      {error && (
+        <div className="mad-alert-error" role="alert">
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* ── Full Width Table Card ── */}
+      <div className="org-table-card">
+        {/* Card Header with Search & Status Filter Pills */}
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">All {heading}</h3>
+              <span className="org-count-badge">
+                {pagination.total} {pagination.total === 1 ? 'Member' : 'Members'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">
+              {cardSubtitle}
+            </p>
+          </div>
+
+          <div className="org-controls-row">
+            {/* Search Box */}
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder={`Search ${heading.toLowerCase()}...`}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                aria-label={`Search ${heading.toLowerCase()}`}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={clearSearch}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+
+            {/* Status Filter Pills */}
+            <div className="org-filter-pills" role="tablist" aria-label="Status filters">
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'all' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('all')}
+              >
+                All{statusFilter === 'all' ? ` (${pagination.total})` : ''}
+              </button>
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'active' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('active')}
+              >
+                Active{statusFilter === 'active' ? ` (${pagination.total})` : ''}
+              </button>
+              <button
+                type="button"
+                className={`org-pill${statusFilter === 'inactive' ? ' is-active' : ''}`}
+                onClick={() => setStatusFilter('inactive')}
+              >
+                Inactive{statusFilter === 'inactive' ? ` (${pagination.total})` : ''}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {users.length === 0 ? (
+          <div className="org-empty-state">
+            <FiUsers className="org-empty-icon" />
+            <p className="org-empty-text">
+              {searchQuery || statusFilter !== 'all'
+                ? 'No members match the current filter.'
+                : `No ${heading.toLowerCase()} found. Click "${addBtnLabel}" to add the first one.`}
+            </p>
+          </div>
+        ) : (
+          <div className="org-table-wrap">
+            <table className="org-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  {lockedRole === 'student' && <th>Enrollment</th>}
+                  {!lockedRole && <th>Roles</th>}
+                  <th>Status</th>
+                  <th className="org-th-actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((u) => {
+                  const isActive = u.status === 'active';
+                  const initials = getUserInitials(u.first_name, u.last_name, u.email);
+                  const primaryRole = (u.roles as string[])[0] || 'student';
+                  return (
+                    <tr key={u.id}>
+                      {/* Name Cell */}
+                      <td>
+                        <div className="org-cell-flex">
+                          <div className="org-avatar-badge">{initials}</div>
+                          <div className="org-name-meta">
+                            <span className="org-name-text">
+                              {u.first_name} {u.last_name}
+                            </span>
+                            {u.enrollment_no && lockedRole !== 'student' && (
+                              <span className="org-sub-meta">
+                                <span className="org-slug-tag">{u.enrollment_no}</span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Email Cell */}
+                      <td>
+                        <span style={{ color: '#475569', fontSize: '0.875rem' }}>{u.email}</span>
+                      </td>
+
+                      {/* Enrollment Cell if Student */}
+                      {lockedRole === 'student' && (
+                        <td>
+                          <span className="org-slug-tag">{u.enrollment_no || '—'}</span>
+                        </td>
+                      )}
+
+                      {/* Role Cell if General */}
+                      {!lockedRole && (
+                        <td>
+                          <span className={`org-role-badge org-role-badge--${primaryRole}`}>
+                            {primaryRole.replace('_', ' ')}
+                          </span>
+                        </td>
+                      )}
+
+                      {/* Status Toggle Switch Cell (NO text badge) */}
+                      <td>
+                        <div className="org-status-cell">
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={isActive}
+                            aria-label={isActive ? 'Deactivate account' : 'Activate account'}
+                            className={`org-ios-switch${isActive ? ' is-active' : ''}`}
+                            onClick={() => void setStatus(u.id, isActive ? 'inactive' : 'active')}
+                          >
+                            <span className="org-ios-thumb" />
+                          </button>
+                        </div>
+                      </td>
+
+                      {/* Actions Cell with Colorful Icons */}
+                      <td>
+                        <div
+                          className="org-actions-cell" style={{ justifyContent: 'flex-start' }}
+                        >
+                          <button
+                            type="button"
+                            className="org-action-btn org-action-btn--edit"
+                            title={`Edit ${u.first_name}`}
+                            aria-label={`Edit ${u.first_name}`}
+                            onClick={() => startEdit(u)}
+                          >
+                            <FiEdit3 />
+                            <span>Edit</span>
+                          </button>
+                          {canDeleteUsers && (
+                            <button
+                              type="button"
+                              className="org-action-btn org-action-btn--danger"
+                              title={`Delete ${u.first_name}`}
+                              aria-label={`Delete ${u.first_name}`}
+                              onClick={() => void removeUser(u.id, `${u.first_name} ${u.last_name}`)}
+                            >
+                              <FiTrash2 />
+                              <span>Delete</span>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <Pagination
+          page={page}
+          limit={limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={loading}
+        />
+      </div>
+
+      {/* ── Side-Drawer Component (UNDER TOPNAV: top 72px) ── */}
+      <div
+        className={`org-drawer-overlay${isDrawerOpen ? ' is-open' : ''}`}
+        onClick={closeDrawer}
+        aria-hidden="true"
+      />
+
+      <aside
+        className={`org-drawer${isDrawerOpen ? ' is-open' : ''}`}
+        aria-label={editingId ? 'Edit user' : addBtnLabel}
+      >
+        <div className="org-drawer-header">
+          <div className="org-drawer-title-wrap">
+            <div className="org-drawer-badge-icon">
+              <FiUser />
+            </div>
+            <div>
+              <h3 className="org-drawer-title">{editingId ? 'Edit User' : addBtnLabel}</h3>
+              <p className="org-drawer-desc">
+                {editingId
+                  ? 'Update user account information and roles.'
+                  : 'Enter details to onboard a new member to the platform.'}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="org-drawer-close-btn"
+            onClick={closeDrawer}
+            aria-label="Close drawer"
+          >
+            <FiX />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          <div className="org-drawer-body">
+            <div className="org-grid-2">
+              <div className="org-form-field">
+                <label className="org-form-label">
+                  First Name <span className="org-required-star">*</span>
+                </label>
+                <input
+                  className="org-form-input"
+                  placeholder="e.g. John"
+                  {...register('firstName')}
+                />
                 <FormError message={errors.firstName?.message} />
               </div>
 
@@ -1182,51 +1380,7 @@ export function UsersManagementPanel({
             </button>
           </div>
         </form>
-      </div>
-
-      <div className="dashboard__table table-responsive">
-        <table>
-          <thead>
-            <tr><th>Name</th><th>Email</th>{lockedRole === 'student' && <th>Enrollment</th>}<th>Roles</th><th>Status</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {users.map((u) => (
-              <tr key={u.id} className={editingId === u.id ? 'edtp-row--editing' : undefined}>
-                <td>{u.first_name} {u.last_name}</td>
-                <td>{u.email}</td>
-                {lockedRole === 'student' && <td>{u.enrollment_no ?? '—'}</td>}
-                <td>{(u.roles as string[]).join(', ')}</td>
-                <td>
-                  <span className={`edtp-badge ${u.status === 'active' ? 'edtp-badge--active' : 'edtp-badge--inactive'}`}>
-                    {formatUserStatus(u.status)}
-                  </span>
-                </td>
-                <td>
-                  <EdtpRowActions>
-                    <EdtpBtn variant="secondary" onClick={() => startEdit(u)}>Edit</EdtpBtn>
-                    {u.status === 'active' ? (
-                      <EdtpBtn variant="danger" onClick={() => void setStatus(u.id, 'inactive')}>Deactivate</EdtpBtn>
-                    ) : (
-                      <EdtpBtn variant="success" onClick={() => void setStatus(u.id, 'active')}>Activate</EdtpBtn>
-                    )}
-                    {canDeleteUsers && (
-                      <EdtpBtn
-                        variant="danger"
-                        onClick={() => void removeUser(u.id, `${u.first_name} ${u.last_name}`)}
-                      >
-                        Delete
-                      </EdtpBtn>
-                    )}
-                  </EdtpRowActions>
-                </td>
-              </tr>
-            ))}
-            {users.length === 0 && (
-              <tr><td colSpan={lockedRole === 'student' ? 6 : 5}>No users found.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      </aside>
     </div>
   );
 }
@@ -1595,10 +1749,29 @@ export function ReportsPanel() {
                               <Legend
                                 verticalAlign="top"
                                 height={28}
-                                payload={[
-                                  { value: 'Correct Answer', type: 'square', color: '#16a34a' },
-                                  { value: 'Incorrect Answer', type: 'square', color: '#ef4444' },
-                                ]}
+                                content={() => (
+                                  <ul
+                                    style={{
+                                      display: 'flex',
+                                      justifyContent: 'center',
+                                      gap: 16,
+                                      margin: 0,
+                                      padding: 0,
+                                      listStyle: 'none',
+                                      fontSize: 12,
+                                      color: '#334155',
+                                    }}
+                                  >
+                                    <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <span style={{ width: 12, height: 12, background: '#16a34a' }} />
+                                      Correct Answer
+                                    </li>
+                                    <li style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <span style={{ width: 12, height: 12, background: '#ef4444' }} />
+                                      Incorrect Answer
+                                    </li>
+                                  </ul>
+                                )}
                               />
                               <Bar dataKey="percentage" name="Selected %" radius={[6, 6, 0, 0]} maxBarSize={56}>
                                 {chartData.map((entry, idx) => (

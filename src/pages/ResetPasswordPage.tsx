@@ -15,17 +15,15 @@ export default function ResetPasswordPage() {
   const [apiError, setApiError] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ResetPasswordFormValues>({
     resolver: yupResolver(resetPasswordSchema),
-    mode: 'onChange',
+    mode: 'onTouched',
     defaultValues: {
       token: tokenFromUrl,
       password: '',
@@ -33,25 +31,11 @@ export default function ResetPasswordPage() {
     },
   });
 
-  const passwordVal = watch('password') || '';
-  const confirmVal = watch('confirmPassword') || '';
-
-  // Suppress warnings on the first 1-4 keystrokes while user is actively typing.
-  // Show warnings only once they type at least 5 letters, OR if they submit the form.
-  const showPasswordError = Boolean(
-    errors.password?.message && (hasSubmitted || passwordVal.length >= 5)
-  );
-
-  const showConfirmError = Boolean(
-    errors.confirmPassword?.message && (hasSubmitted || confirmVal.length >= 4)
-  );
-
   useEffect(() => {
     if (tokenFromUrl) setValue('token', tokenFromUrl);
   }, [tokenFromUrl, setValue]);
 
   const onSubmit = async (values: ResetPasswordFormValues) => {
-    setHasSubmitted(true);
     setApiError('');
     setSubmitting(true);
     try {
@@ -97,10 +81,7 @@ export default function ResetPasswordPage() {
                   </div>
                 )}
 
-                <form
-                  onSubmit={handleSubmit(onSubmit, () => setHasSubmitted(true))}
-                  noValidate
-                >
+                <form onSubmit={handleSubmit(onSubmit)} noValidate>
                   <input type="hidden" {...register('token')} />
                   <FormError message={errors.token?.message} />
 
@@ -108,66 +89,32 @@ export default function ResetPasswordPage() {
                     <label className="form__label" htmlFor="resetPassword">
                       New password
                     </label>
-                    <div className="ms-login-input-wrap ms-login-input-wrap--pass">
-                      <svg
-                        className="ms-input-icon"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#94a3b8"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                      </svg>
-                      <PasswordInput
-                        id="resetPassword"
-                        inputClass="ms-login-input"
-                        placeholder="Enter a new password"
-                        hasError={showPasswordError}
-                        autoComplete="new-password"
-                        disabled={!tokenFromUrl || submitting}
-                        {...register('password')}
-                      />
-                    </div>
-                    <FormError message={showPasswordError ? errors.password?.message : undefined} />
+                    <PasswordInput
+                      id="resetPassword"
+                      inputClass="common__login__input"
+                      placeholder="Enter a new password"
+                      hasError={!!errors.password}
+                      autoComplete="new-password"
+                      disabled={!tokenFromUrl || submitting}
+                      {...register('password')}
+                    />
+                    <FormError message={errors.password?.message} />
                   </div>
 
                   <div className="login__form">
                     <label className="form__label" htmlFor="resetConfirmPassword">
                       Confirm password
                     </label>
-                    <div className="ms-login-input-wrap ms-login-input-wrap--pass">
-                      <svg
-                        className="ms-input-icon"
-                        width="18"
-                        height="18"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#94a3b8"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        aria-hidden="true"
-                      >
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                      </svg>
-                      <PasswordInput
-                        id="resetConfirmPassword"
-                        inputClass="ms-login-input"
-                        placeholder="Re-enter your password"
-                        hasError={showConfirmError}
-                        autoComplete="new-password"
-                        disabled={!tokenFromUrl || submitting}
-                        {...register('confirmPassword')}
-                      />
-                    </div>
-                    <FormError message={showConfirmError ? errors.confirmPassword?.message : undefined} />
+                    <PasswordInput
+                      id="resetConfirmPassword"
+                      inputClass="common__login__input"
+                      placeholder="Re-enter your password"
+                      hasError={!!errors.confirmPassword}
+                      autoComplete="new-password"
+                      disabled={!tokenFromUrl || submitting}
+                      {...register('confirmPassword')}
+                    />
+                    <FormError message={errors.confirmPassword?.message} />
                   </div>
 
                   <div className="login__button">
