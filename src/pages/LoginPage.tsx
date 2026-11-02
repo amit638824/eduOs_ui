@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { PasswordInput, inputClassName } from '@/components/ui/FormField';
@@ -15,6 +15,18 @@ import { loginSchema, type LoginFormValues } from '@/validators/schemas';
 export default function LoginPage() {
   const { login, completeMfaLogin } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const loginAs = searchParams.get('as');
+  const loginTitle = loginAs === 'instructor'
+    ? <>Instructor <span className="ms-highlight-blue">Login</span></>
+    : loginAs === 'teacher'
+      ? <>Become a <span className="ms-highlight-blue">Teacher</span></>
+      : <>Welcome <span className="ms-highlight-blue">Back!</span></>;
+  const loginLead = loginAs === 'instructor'
+    ? 'Sign in to review tests, attempts, and student scores.'
+    : loginAs === 'teacher'
+      ? 'Sign in to apply your faculty account and start creating tests.'
+      : 'Manage your examinations, assessments, and student activities from one centralized dashboard.';
   const remembered = loadRememberedLogin();
   const [apiError, setApiError] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -141,10 +153,10 @@ export default function LoginPage() {
             </div>
 
             <h1 className="ms-login-main-title">
-              Welcome <span className="ms-highlight-blue">Back!</span>
+              {loginTitle}
             </h1>
             <p className="ms-login-lead">
-              Manage your examinations, assessments, and student activities from one centralized dashboard.
+              {loginLead}
             </p>
 
             <ul className="ms-login-features">

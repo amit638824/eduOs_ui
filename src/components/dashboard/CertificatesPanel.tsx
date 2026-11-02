@@ -10,16 +10,11 @@ import { useAuth } from '@/context/AuthContext';
 import { formatDateTime } from '@/utils/dateFormat';
 import { showError, showSuccess, confirmAction } from '@/lib/swal';
 import { downloadCertificateReactPdf } from '@/pdf/downloadCertificate';
-import {
-  CertificatePreviewModal,
-  type CertificateTemplate,
-} from '@/components/dashboard/CertificatePreviewModal';
 import { FiSearch, FiX, FiDownload, FiTrash2, FiExternalLink } from 'react-icons/fi';
 import '@/styles/organizations.css';
 
 export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) {
   const { user } = useAuth();
-  const [selectedCert, setSelectedCert] = useState<Certificate | null>(null);
   const [certBusy, setCertBusy] = useState(false);
   const withLoader = useDashboardLoader();
   const canRevoke =
@@ -67,30 +62,17 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
 
   useDashboardLoadingEffect(loading);
 
-  const download = (cert: Certificate) => {
-    setSelectedCert(cert);
-  };
-
-  const confirmDownload = async (template: CertificateTemplate) => {
-    if (!selectedCert) return;
-
+  const download = async (cert: Certificate) => {
     setCertBusy(true);
-
-    await withLoader(async () => {
-      try {
-        const full = await examinationService
-          .getCertificate(selectedCert.id)
-          .catch(() => selectedCert);
-
-        await downloadCertificateReactPdf(full, template);
-        setSelectedCert(null);
-        showSuccess('Downloaded', 'Certificate PDF saved.');
-      } catch (err) {
-        showError('Download failed', parseApiError(err));
-      } finally {
-        setCertBusy(false);
-      }
-    });
+    try {
+      const full = await examinationService.getCertificate(cert.id).catch(() => cert);
+      await downloadCertificateReactPdf(full, 'classic');
+      showSuccess('Downloaded', `${cert.certificate_no} PDF saved.`);
+    } catch (err) {
+      showError('Download failed', parseApiError(err));
+    } finally {
+      setCertBusy(false);
+    }
   };
 
   const revoke = async (cert: Certificate) => {
@@ -223,11 +205,14 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                   <td style={{ color: '#475569', fontSize: '0.825rem' }}>{formatDateTime(c.issued_at)}</td>
                   <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'inline-flex', gap: 6, justifyContent: 'flex-start', alignItems: 'center' }}>
-                      {mode === 'org' && c.status === 'issued' && (
+                      {c.status === 'issued' && (
                         <button
                           type="button"
                           className="org-action-btn org-action-btn--secondary"
                           onClick={() => void download(c)}
+                          disabled={certBusy}
+                          title="Download this certificate PDF"
+                          aria-label={`Download ${c.certificate_no}`}
                         >
                           <FiDownload style={{ fontSize: 13 }} /> PDF
                         </button>
@@ -266,19 +251,6 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
         />
       </div>
 
-      {mode === 'org' && (
-        <CertificatePreviewModal
-          open={selectedCert !== null}
-          studentName={selectedCert?.student_name || 'Student'}
-          examTitle={selectedCert?.test_title || 'Examination'}
-          percentage={Number(selectedCert?.percentage ?? 0)}
-          onClose={() => setSelectedCert(null)}
-          onConfirm={(template) => {
-            void confirmDownload(template);
-          }}
-          busy={certBusy}
-        />
-      )}
     </div>
   );
 }

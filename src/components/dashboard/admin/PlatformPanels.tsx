@@ -25,7 +25,6 @@ import {
   FiEye,
   FiBell,
   FiInfo,
-  FiArrowLeft,
   FiArrowUp,
   FiArrowDown,
 } from 'react-icons/fi';
@@ -151,7 +150,7 @@ export function NotificationsPanel() {
             id="btnMarkAllRead"
           >
             <FiCheckCircle />
-            <span>Mark all as read ({unread})</span>
+            <span>Read all ({unread})</span>
           </button>
         )}
       </div>
@@ -303,7 +302,9 @@ export function NotificationsPanel() {
                         <span>Mark read</span>
                       </button>
                     ) : (
-                      <span style={{ color: '#94a3b8', fontSize: '0.78rem' }}>—</span>
+                      <span className="org-status-badge org-status-badge--active" style={{ fontSize: '0.72rem' }}>
+                        Read
+                      </span>
                     )}
                   </td>
                 </tr>
@@ -347,6 +348,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
   const [paying, setPaying] = useState(false);
   const [metaLoading, setMetaLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending'>('all');
+  const [pendingCount, setPendingCount] = useState(0);
 
   const {
     items: payments,
@@ -374,6 +376,21 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
     defaultLimit: 10,
   });
   const loading = listLoading || metaLoading;
+
+  useEffect(() => {
+    let cancelled = false;
+    platformService
+      .listPayments(1, 1, undefined, 'pending')
+      .then((result) => {
+        if (!cancelled) setPendingCount(result.pagination.total);
+      })
+      .catch(() => {
+        if (!cancelled) setPendingCount(0);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [payments]);
 
   const loadWallet = async () => {
     setWallet(await platformService.getWallet());
@@ -484,7 +501,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
         {/* Stat Card 2: Pending */}
         <div className="org-stat-card">
           <span className="org-stat-card-val org-stat-card-val--warning">
-            ₹{wallet?.pending != null ? String(wallet.pending) : '0'}
+            {pendingCount}
           </span>
           <span className="org-stat-card-lbl">Pending</span>
         </div>
@@ -610,7 +627,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
                 className={`org-pill${statusFilter === 'pending' ? ' is-active' : ''}`}
                 onClick={() => setStatusFilter('pending')}
               >
-                Pending
+                Pending ({pendingCount})
               </button>
             </div>
           </div>
@@ -3160,7 +3177,17 @@ export function TestBuilderPanel() {
   const [students, setStudents] = useState<Awaited<ReturnType<typeof examinationService.listAssignableStudents>>['data']>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [assignDepartmentId, setAssignDepartmentId] = useState('');
-  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
+  const questionSelectionKey = testId ? `ms-test-builder-questions:${testId}` : '';
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>(() => {
+    if (!testId) return [];
+    try {
+      const raw = sessionStorage.getItem(`ms-test-builder-questions:${testId}`);
+      const parsed = raw ? JSON.parse(raw) as unknown : [];
+      return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === 'string') : [];
+    } catch {
+      return [];
+    }
+  });
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [questionSearch, setQuestionSearch] = useState('');
   const [studentSearch, setStudentSearch] = useState('');
@@ -3178,6 +3205,11 @@ export function TestBuilderPanel() {
   >([]);
   const withLoader = useDashboardLoader();
   const { branches } = useOrganization();
+
+  useEffect(() => {
+    if (!questionSelectionKey) return;
+    sessionStorage.setItem(questionSelectionKey, JSON.stringify(selectedQuestionIds));
+  }, [questionSelectionKey, selectedQuestionIds]);
 
   const loadStudents = async (departmentId?: string) => {
     const sResult = await examinationService.listAssignableStudents(1, 200, departmentId || undefined);
@@ -3561,14 +3593,6 @@ export function TestBuilderPanel() {
             {phase === 'assign' && 'Choose candidate students and assign test access.'}
           </p>
         </div>
-        <Link
-          to={testsListPath}
-          className="org-btn-secondary"
-          style={{ height: 38, padding: '0 16px', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
-        >
-          <FiArrowLeft />
-          <span>Back to Tests</span>
-        </Link>
       </div>
 
       <ExamStepper

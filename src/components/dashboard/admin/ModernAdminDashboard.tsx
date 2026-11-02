@@ -126,6 +126,10 @@ function studentDashboard(stats: StudentStats, results: ExamResult[]): AdminDash
     ? Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length)
     : 0;
   const series = scores.length ? scores.slice(-7) : [averageScore];
+  const chartPoints = (scores.length ? scores : [0]).map((value, index) => ({
+    label: `R${index + 1}`,
+    value,
+  }));
   const recent = [...results].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
@@ -144,7 +148,7 @@ function studentDashboard(stats: StudentStats, results: ExamResult[]): AdminDash
       attempts: [stats.attempts],
       averageScore: series,
     },
-    performance: { last7: [], last30: [], month: [] },
+    performance: { last7: chartPoints.slice(-7), last30: chartPoints, month: chartPoints },
     topStudents: recent.slice(0, 5).map((result) => ({
       id: result.id,
       name: result.test_title || 'Result',
@@ -348,7 +352,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
             <div className="mad-v3-welcome-content">
               <span className="mad-v3-welcome-sub">Welcome back,</span>
               <h2 className="mad-v3-welcome-title">
-                {displayName} <span className="mad-v3-wave">👏</span>
+                {displayName}
               </h2>
               <p className="mad-v3-welcome-desc">
                 {copy.welcome(organization?.name || 'your organization')}

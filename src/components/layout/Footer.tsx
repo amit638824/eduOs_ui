@@ -61,6 +61,12 @@ export default function Footer() {
                   <li>
                     <Link to="/contact">Contact Support</Link>
                   </li>
+                  <li>
+                    <Link to="/login?as=instructor">Instructor Login</Link>
+                  </li>
+                  <li>
+                    <Link to="/login?as=teacher">Become a Teacher</Link>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -70,22 +76,22 @@ export default function Footer() {
                 <h4>Popular Exams</h4>
                 <ul>
                   <li>
-                    <Link to="/exams">Hardware &amp; Network</Link>
+                    <Link to="/exams/hardware-networking">Hardware &amp; Network</Link>
                   </li>
                   <li>
-                    <Link to="/exams">CCC &amp; O Level</Link>
+                    <Link to="/exams/govt-it">CCC &amp; O Level</Link>
                   </li>
                   <li>
-                    <Link to="/exams">Computer Applications</Link>
+                    <Link to="/exams/computer-application">Computer Applications</Link>
                   </li>
                   <li>
-                    <Link to="/exams">Programming &amp; Code</Link>
+                    <Link to="/exams/programming">Programming &amp; Code</Link>
                   </li>
                   <li>
                     <Link to="/exams">Aptitude &amp; Reasoning</Link>
                   </li>
                   <li>
-                    <Link to="/exams">Diploma Assessments</Link>
+                    <Link to="/exams/diploma">Diploma Assessments</Link>
                   </li>
                 </ul>
               </div>
@@ -110,7 +116,9 @@ export default function Footer() {
                 </div>
                 <div className="sf_contact">
                   <span className="ti-email" />
-                  <p>connect@techwagger.com</p>
+                  <p>
+                    <a href="mailto:connect@techwagger.com">connect@techwagger.com</a>
+                  </p>
                 </div>
               </div>
             </div>
@@ -119,12 +127,12 @@ export default function Footer() {
               <div className="single_footer">
                 <h4>Mobile Testing</h4>
                 <p>Attempt mock tests and check scorecards anytime on mobile.</p>
-                <Link to="/exams">
+                <a href="https://play.google.com/store/search?q=mindsprint&c=apps" target="_blank" rel="noreferrer">
                   <img src="/eduleb/img/google-play.jpg" className="foot_img" alt="Google Play" />
-                </Link>
-                <Link to="/exams">
+                </a>
+                <a href="https://apps.apple.com/search?term=mindsprint" target="_blank" rel="noreferrer">
                   <img src="/eduleb/img/app-store.jpg" className="foot_img" alt="App Store" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>

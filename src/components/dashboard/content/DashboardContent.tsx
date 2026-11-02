@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { DashboardCounter, DashboardTableRow } from '@/types/dashboard';
@@ -13,11 +13,11 @@ import { parseApiError } from '@/lib/errors';
 import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
 import { EdtpSelect } from '@/components/ui/CrudUI';
-import { confirmDelete, showError } from '@/lib/swal';
+import { confirmDelete } from '@/lib/swal';
 import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import { useOrgScope } from '@/context/OrgScopeContext';
-import { FiSearch, FiX, FiZap, FiPlay, FiEye } from 'react-icons/fi';
+import { FiSearch, FiX, FiZap, FiEye } from 'react-icons/fi';
 import '@/styles/organizations.css';
 import {
   becomeTeacherSchema,
@@ -363,7 +363,6 @@ export function DashboardQuizAttemptsContent({ title }: { title: string }) {
 
 export function DashboardAssignmentsContent() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const isStudent = user?.roles.includes('student') && !user.roles.some((r) =>
     ['org_admin', 'super_admin', 'staff', 'teacher'].includes(r),
   );
@@ -388,7 +387,6 @@ export function DashboardAssignmentsContent() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [startingId, setStartingId] = useState<string | null>(null);
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
@@ -427,38 +425,6 @@ export function DashboardAssignmentsContent() {
 
   useDashboardLoadingEffect(loading);
 
-  const start = async (testId: string) => {
-    setStartingId(testId);
-    setError('');
-    try {
-      const attempt = await examinationService.startAttempt(testId);
-      navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
-    } catch (err) {
-      const msg = parseApiError(err);
-      setError(msg);
-      showError('Cannot start', msg);
-      examinationService.listMyAssignedTests().then((data) =>
-        setRows(
-          data.map((t) => ({
-            id: t.id,
-            title: t.title,
-            status: t.status,
-            total_marks: t.total_marks ?? undefined,
-            duration_minutes: t.duration_minutes,
-            attempt_status: t.attempt_status,
-            result_percentage: t.result_percentage,
-            result_attempt_id: t.result_attempt_id,
-            attempt_id: t.attempt_id,
-            scheduled_start: t.scheduled_start,
-            scheduled_at: t.scheduled_at,
-          })),
-        ),
-      ).catch(() => undefined);
-    } finally {
-      setStartingId(null);
-    }
-  };
-
   const filteredRows = rows.filter((row) => {
     if (!searchTerm.trim()) return true;
     const q = searchTerm.toLowerCase();
@@ -479,13 +445,9 @@ export function DashboardAssignmentsContent() {
     }
     if (st === 'in_progress' && row.attempt_id) {
       return (
-        <button
-          type="button"
-          className="org-action-btn org-action-btn--switch"
-          onClick={() => navigate(`/dashboard/exam/${row.id}/attempt/${row.attempt_id}`)}
-        >
-          <FiPlay style={{ fontSize: 13 }} /> Resume
-        </button>
+        <Link to="/dashboard/student-enrolled-courses" className="org-action-btn org-action-btn--switch">
+          Resume in My Tests
+        </Link>
       );
     }
     void nowTick;
@@ -495,14 +457,9 @@ export function DashboardAssignmentsContent() {
       return <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>Starts in {formatCountdown(wait)}</span>;
     }
     return (
-      <button
-        type="button"
-        className="org-action-btn org-action-btn--primary"
-        disabled={startingId === row.id}
-        onClick={() => void start(row.id)}
-      >
-        <FiPlay style={{ fontSize: 13 }} /> {startingId === row.id ? 'Starting…' : 'Start'}
-      </button>
+      <Link to="/dashboard/student-enrolled-courses" className="org-action-btn org-action-btn--primary">
+        Open in My Tests
+      </Link>
     );
   };
 
@@ -513,7 +470,7 @@ export function DashboardAssignmentsContent() {
           <h2 className="org-page-title">Assignments</h2>
           <p className="org-page-desc" style={{ margin: 0 }}>
             {isStudent
-              ? 'Tests assigned to you. Start, resume, or view results here.'
+              ? 'Assignment schedule and status. Start or resume the exam from My Tests.'
               : 'Assignment coverage across tests — who is assigned and how many have submitted.'}
           </p>
         </div>

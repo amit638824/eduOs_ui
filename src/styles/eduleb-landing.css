@@ -1656,8 +1656,39 @@ body.eduleb-page .eduleb-verify-page {
 
 body.eduleb-page .eduleb-verify-body {
   flex: 1 1 auto;
-  padding: 12px 0 64px !important;
+  position: relative;
+  z-index: 1;
+  padding: 28px 0 64px !important;
   background: #f9f9f9 !important;
+}
+
+.eduleb-verify-certificate {
+  margin-top: 18px;
+  padding: 22px 18px;
+  border: 2px solid #152559;
+  border-radius: 12px;
+  background: #fff;
+  text-align: center;
+}
+
+.eduleb-verify-certificate__brand {
+  margin: 0 0 6px;
+  font-size: 0.75rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #225ce5;
+  font-weight: 700;
+}
+
+.eduleb-verify-certificate h6 {
+  margin: 0 0 10px;
+  color: #152559;
+  font-size: 1.15rem;
+}
+
+.eduleb-verify-certificate p {
+  margin: 0 0 8px;
+  color: #334155;
 }
 
 body.eduleb-page .eduleb-verify-wrap {

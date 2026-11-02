@@ -1343,3 +1343,7 @@ textarea.org-form-input {
   color: #0f172a;
   flex-shrink: 0;
 }
+
+.org-table th.edtp-th-actions {
+  text-align: center;
+}

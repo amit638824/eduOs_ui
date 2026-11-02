@@ -128,12 +128,29 @@ export function useExamProctoring({
     };
 
 
+    const onScreenshotKey = (event: KeyboardEvent) => {
+      const key = event.key.toLowerCase();
+      const printScreen = key === 'printscreen';
+      const macShot = event.metaKey && event.shiftKey && (key === '3' || key === '4' || key === '5' || key === 's');
+      const winShot = event.metaKey && event.shiftKey && key === 's';
+      if (!printScreen && !macShot && !winShot) return;
+      void logEvent('screenshot_attempt', { key: event.key });
+      onWarning?.('Screenshot attempt detected. This action is recorded.');
+    };
+
+    const onBeforePrint = () => {
+      void logEvent('screenshot_attempt', { via: 'print' });
+      onWarning?.('Print or screenshot attempt detected. This action is recorded.');
+    };
+
     document.addEventListener('visibilitychange', onVisibility);
     window.addEventListener('blur', onBlur);
     document.addEventListener('fullscreenchange', onFullscreenExit);
     document.addEventListener('copy', onCopy);
     document.addEventListener('paste', onPaste);
     document.addEventListener('cut', onCut);
+    document.addEventListener('keyup', onScreenshotKey);
+    window.addEventListener('beforeprint', onBeforePrint);
 
     return () => {
       document.removeEventListener('visibilitychange', onVisibility);
@@ -142,6 +159,8 @@ export function useExamProctoring({
       document.removeEventListener('copy', onCopy);
       document.removeEventListener('paste', onPaste);
       document.removeEventListener('cut', onCut);
+      document.removeEventListener('keyup', onScreenshotKey);
+      window.removeEventListener('beforeprint', onBeforePrint);
     };
   }, [
     enabled,

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { showFlashedToast } from '@/lib/toast';
 
@@ -38,6 +38,14 @@ import { dashboardRouteElements } from '@/pages/dashboard/dashboardRoutes';
 import 'react-toastify/dist/ReactToastify.css';
 import '@/styles/toast.css';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   useEffect(() => {
     showFlashedToast();
@@ -48,6 +56,7 @@ export default function App() {
       <AuthProvider>
         <OrgScopeProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               {/* Certificate page without normal website layout */}
               <Route
@@ -163,4 +172,4 @@ export default function App() {
   );
 }
 
-//..
+//...

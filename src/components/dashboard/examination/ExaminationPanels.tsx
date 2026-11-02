@@ -16,7 +16,6 @@ import { useOrganization } from '@/hooks/useOrganization';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
 import ExamAttemptPlayer from './ExamAttemptPlayer';
-import { PracticeInsights } from './AiBuildPanel';
 import AdminExamGuide, { ExamStepper } from '@/components/dashboard/AdminExamGuide';
 import { FieldHint } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpSelect } from '@/components/ui/CrudUI';
@@ -47,7 +46,6 @@ import {
   FiList,
   FiPlay,
   FiAward,
-  FiArrowLeft,
   FiUser,
 } from 'react-icons/fi';
 
@@ -651,16 +649,6 @@ export function QuestionBankPanel() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <Link
-            to="/dashboard/create-test"
-            className="org-add-btn"
-            style={{ textDecoration: 'none' }}
-          >
-            <span>Next: Create the exam</span>
-            <FiArrowRight />
-          </Link>
-        </div>
       </div>
 
       {/* Progress Stepper - preserved */}
@@ -3447,11 +3435,6 @@ export function ExamResultPage() {
   const isTeacherOnly = roles.includes('teacher') && !isStaffLike;
   const isStudent = roles.includes('student') && !isStaffLike && !roles.includes('teacher');
   const canIssueAsStaff = isStaffLike || isTeacherOnly;
-  const backHref = isStudent
-    ? '/dashboard/student-reviews'
-    : isTeacherOnly
-      ? '/dashboard/teacher-reviews'
-      : '/dashboard/admin-reviews';
   useEffect(() => {
     if (!attemptId) return;
 
@@ -3704,28 +3687,11 @@ export function ExamResultPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <Link
-            to={backHref}
-            className="org-btn-secondary"
-            style={{
-              height: 36,
-              padding: '0 16px',
-              borderRadius: 8,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              textDecoration: 'none',
-            }}
-          >
-            <FiArrowLeft /> Back to Results
-          </Link>
           {renderCertCta()}
         </div>
       </div>
 
       <div className="sca-exam-result-scroll">
-      {isStudent ? <PracticeInsights /> : null}
-
       {/* Attempts / Policy info bar */}
       <div
         style={{
@@ -3803,14 +3769,6 @@ export function ExamResultPage() {
             );
           })()}
 
-          <Link
-            to="/verify-certificate"
-            className="org-btn-outline-primary"
-            style={{ height: 34, padding: '0 12px', fontSize: '0.8rem' }}
-          >
-            <FiCheckCircle />
-            <span>Verify certificate</span>
-          </Link>
         </div>
       </div>
 
@@ -3958,12 +3916,6 @@ export function ExamResultPage() {
         </div>
 
         <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {!showAnswerKey && isStudent ? (
-            <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
-              Answer key is hidden until the instructor releases it.
-            </p>
-          ) : null}
-
           {questions.length === 0 ? (
             <p style={{ color: '#64748b', margin: 0, fontSize: '0.875rem' }}>
               No per-question details available for this attempt.
@@ -4022,7 +3974,7 @@ export function ExamResultPage() {
                     </div>
                   </div>
 
-                  {showAnswerKey && hasOptions ? (
+                  {hasOptions ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                       {opts.map((o) => {
                         const selected = selectedIds.has(o.id);
@@ -4031,7 +3983,7 @@ export function ExamResultPage() {
                         let borderColor = '#e2e8f0';
                         let color = '#334155';
 
-                        if (correct) {
+                        if (showAnswerKey && correct) {
                           bg = '#ecfdf5';
                           borderColor = '#a7f3d0';
                           color = '#065f46';
@@ -4059,9 +4011,8 @@ export function ExamResultPage() {
                           >
                             <span>{getOptionText(o.content)}</span>
                             <span>
-                              {correct ? ' ✓ Correct' : ''}
-                              {selected && !correct ? ' (your answer)' : ''}
-                              {selected && correct ? ' (your answer)' : ''}
+                              {showAnswerKey && correct ? 'Correct answer' : ''}
+                              {selected ? (showAnswerKey && correct ? ' · Your answer' : 'Your answer') : ''}
                             </span>
                           </div>
                         );

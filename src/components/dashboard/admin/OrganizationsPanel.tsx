@@ -190,7 +190,7 @@ export function OrganizationsPanel() {
   const approve = async (org: Organization) => {
     const ok = await confirmAction({
       title: 'Activate organization?',
-      text: `${org.name} and its pending users will become active.`,
+      text: `${org.name} and its suspended teachers and students will become active again.`,
       icon: 'question',
       confirmText: 'Yes, activate!',
       confirmColor: '#16a34a',

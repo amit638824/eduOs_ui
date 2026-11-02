@@ -118,6 +118,20 @@ export default function VerifyCertificatePage() {
                   </div>
                 </dl>
               )}
+              {valid && (
+                <article className="eduleb-verify-certificate">
+                  <p className="eduleb-verify-certificate__brand">Mindsprint</p>
+                  <h6>Certificate of completion</h6>
+                  <p>
+                    This certifies that <strong>{String(result.student_name ?? 'Student')}</strong> completed{' '}
+                    <strong>{String(result.test_title ?? 'the examination')}</strong>
+                    {result.organization ? ` at ${String(result.organization)}` : ''}.
+                  </p>
+                  <p>
+                    Score {Number(result.percentage ?? 0).toFixed(1)}% · {String(result.certificate_no ?? '')}
+                  </p>
+                </article>
+              )}
             </div>
           )}
         </div>

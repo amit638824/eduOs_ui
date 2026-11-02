@@ -238,7 +238,7 @@ export function FlaggedAttemptsPanel() {
                 <th>TEST</th>
                 <th>VIOLATIONS</th>
                 <th>SCORE</th>
-                <th>REVIEW STATUS</th>
+                <th>STATUS</th>
                 <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>
@@ -368,14 +368,6 @@ export function FlaggedAttemptsPanel() {
                               <strong style={{ fontSize: '0.9rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <FiClock /> Proctoring Activity Timeline
                               </strong>
-                              <button
-                                type="button"
-                                className="org-action-btn org-action-btn--secondary"
-                                style={{ height: 26, padding: '0 8px', fontSize: '0.75rem' }}
-                                onClick={() => setExpandedId(null)}
-                              >
-                                Close
-                              </button>
                             </div>
                             {timeline.length === 0 ? (
                               <p style={{ color: '#64748b', margin: 0, fontSize: '0.85rem' }}>

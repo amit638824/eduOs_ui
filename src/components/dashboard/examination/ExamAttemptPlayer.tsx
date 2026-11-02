@@ -385,8 +385,13 @@ export default function ExamAttemptPlayer() {
     event?.stopPropagation?.();
     if (!attemptId || submitting) return;
     flushCurrentAnswer();
-    if (config.fullScreen && !document.fullscreenElement) {
-      await enterFullscreen();
+    if (document.fullscreenElement) {
+      suppressNextFullscreenExit();
+      try {
+        await document.exitFullscreen();
+      } catch {
+        clearFullscreenExitSuppression();
+      }
     }
     const ok = await confirmAction({
       title: 'Submit test?',
@@ -642,7 +647,7 @@ export default function ExamAttemptPlayer() {
                 disabled={submitting}
                 onClick={(event) => void submit(event)}
               >
-                {submitting ? 'Submitting...' : 'Finish Test'}
+                {submitting ? 'Submitting...' : 'Submit Test'}
               </button>
             </div>
           </div>
