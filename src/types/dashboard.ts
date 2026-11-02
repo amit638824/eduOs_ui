@@ -1,4 +1,4 @@
-export type DashboardRole = 'student' | 'teacher' | 'admin';
+﻿export type DashboardRole = 'student' | 'teacher' | 'admin';
 
 export interface DashboardNavItem {
   label: string;

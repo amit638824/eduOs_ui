@@ -6,7 +6,6 @@ import { getDefaultDashboardPath } from '@/utils/dashboardRole';
 export const publicNavigation: NavItem[] = [
   { label: 'Home', href: '/' },
   { label: 'Online Tests', href: '/exams' },
-  { label: 'For Institutes', href: '/schools' },
   { label: 'Pricing', href: '/pricing' },
   { label: 'About', href: '/about' },
 ];

@@ -36,6 +36,23 @@
   color: #b91c1c;
 }
 
+.ms-toast__count {
+  flex: 0 0 auto;
+  min-width: 28px;
+  height: 28px;
+  margin-top: 1px;
+  padding: 0 7px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #12193b;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
 .ms-toast__copy {
   min-width: 0;
 }

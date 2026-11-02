@@ -8,6 +8,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import type { EventClickArg, EventInput } from '@fullcalendar/core';
 
 import { examinationService } from '@/services';
+import '@/styles/organizations.css';
 import type { ExamTest } from '@/types/examination';
 import { parseApiError } from '@/lib/errors';
 
@@ -147,31 +148,21 @@ export default function StudentExamCalendar() {
     : null;
 
   return (
-    <div className="dashboard__content__wraper">
-      {/* Page heading */}
-      <div className="dashboard__section__title">
-        <h4>My Exam Calendar</h4>
-
-        <p>
-          Scheduled exams assigned to your student account
-          appear here automatically.
-        </p>
+    <div className="org-panel-root">
+      <div className="org-top-bar">
+        <div>
+          <h2 className="org-page-title">My Exam Calendar</h2>
+          <p className="org-page-desc">
+            Scheduled exams assigned to your student account appear here automatically.
+          </p>
+        </div>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div
-          className="login__error"
-          style={{ marginBottom: 16 }}
-        >
-          {error}
-        </div>
-      )}
+      {error && <div className="org-error-banner">{error}</div>}
 
-      {/* Loading */}
       {loading ? (
-        <div className="dashboard__content__wraper">
-          <p>Loading calendar...</p>
+        <div className="org-table-card" style={{ padding: 24 }}>
+          <p className="org-page-desc" style={{ margin: 0 }}>Loading calendar...</p>
         </div>
       ) : (
         <div className="student-exam-calendar">

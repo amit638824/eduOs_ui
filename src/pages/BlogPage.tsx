@@ -49,9 +49,14 @@ const posts = [
 export default function BlogPage() {
   return (
     <>
-      <PageBanner title="Our Blog" crumb="Blog" />
+      <PageBanner
+        title="Our Blog"
+        crumb="Blog"
+        tone="soft"
+        subtitle="Expert preparation guides, exam pattern breakdowns, and digital assessment strategies to help you excel."
+      />
 
-      <section id="blog" className="blog_area section-padding">
+      <section id="blog" className="blog_area section-padding eduleb-page-merge">
         <div className="container">
           <div className="row">
             {posts.map((post, index) => (

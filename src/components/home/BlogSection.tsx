@@ -4,23 +4,23 @@ import type { HomepageContent } from '@/types/homepage';
 const fallbackPosts = [
   {
     img: '/eduleb/img/blog/1.jpg',
-    date: 'May 10, 2024',
-    category: 'Education',
-    title: 'Professional Mobile Painting and Sculpting',
+    date: 'Oct 28, 2026',
+    category: 'Exam Prep',
+    title: 'Top Strategies to Crack Computer & IT Certification Exams in First Attempt',
     href: '/blog',
   },
   {
     img: '/eduleb/img/blog/2.jpg',
-    date: 'May 16, 2024',
-    category: 'Education',
-    title: 'Professional Ceramic Moulding for Beginner',
+    date: 'Oct 25, 2026',
+    category: 'Online CBT',
+    title: 'How AI Proctoring & Timed Mock Tests Boost Real Exam Performance',
     href: '/blog',
   },
   {
     img: '/eduleb/img/blog/3.jpg',
-    date: 'May 18, 2024',
-    category: 'Programing',
-    title: 'Education Is About Create Leaders For Tomorrow ',
+    date: 'Oct 20, 2026',
+    category: 'Govt IT',
+    title: 'Complete Guide to CCC & O Level Syllabus, Question Pattern & Mock Papers',
     href: '/blog',
   },
 ];
@@ -31,10 +31,10 @@ export default function BlogSection({ content }: { content?: HomepageContent['bl
     <section id="blog" className="blog_area section-padding">
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up">
-          <h2 data-aos="fade-up" data-aos-delay="100">{content?.title || 'Latest Blog & news'}</h2>
+          <h2 data-aos="fade-up" data-aos-delay="100">{content?.title || 'Latest Examination News & Study Insights'}</h2>
           <p data-aos="fade-up" data-aos-delay="150">
             {content?.description ||
-              'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.'}
+              'Expert preparation guides, exam pattern breakdowns, and digital assessment strategies to help you excel.'}
           </p>
         </div>
         <div className="row">
@@ -47,7 +47,7 @@ export default function BlogSection({ content }: { content?: HomepageContent['bl
             >
               <div className="single_blog eduleb-hover-lift">
                 <div data-aos="zoom-in" data-aos-delay={idx * 120 + 80}>
-                  <img src={post.img} className="img-fluid" alt="image" />
+                  <img src={post.img} className="img-fluid" alt={post.title} />
                 </div>
                 <div className="content_box">
                   <span>

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import { showFlashedToast } from '@/lib/toast';
 
@@ -22,7 +22,6 @@ import EdulebPricingPage from '@/pages/EdulebPricingPage';
 import EdulebNotFoundPage from '@/pages/EdulebNotFoundPage';
 import ExamsPage from '@/pages/ExamsPage';
 import ExamSlugPage from '@/pages/ExamSlugPage';
-import SchoolsPage from '@/pages/SchoolsPage';
 import HelpPage from '@/pages/HelpPage';
 import PrivacyPage from '@/pages/PrivacyPage';
 import BlogPage from '@/pages/BlogPage';
@@ -39,6 +38,14 @@ import { dashboardRouteElements } from '@/pages/dashboard/dashboardRoutes';
 import 'react-toastify/dist/ReactToastify.css';
 import '@/styles/toast.css';
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
+
 export default function App() {
   useEffect(() => {
     showFlashedToast();
@@ -49,6 +56,7 @@ export default function App() {
       <AuthProvider>
         <OrgScopeProvider>
           <BrowserRouter>
+            <ScrollToTop />
             <Routes>
               {/* Certificate page without normal website layout */}
               <Route
@@ -94,7 +102,7 @@ export default function App() {
                   element={<ExamSlugPage />}
                 />
 
-                <Route path="/schools" element={<SchoolsPage />} />
+                <Route path="/schools" element={<Navigate to="/" replace />} />
 
                 <Route path="/help" element={<HelpPage />} />
 
@@ -164,4 +172,4 @@ export default function App() {
   );
 }
 
-//.
+//...

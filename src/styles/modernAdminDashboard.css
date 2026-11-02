@@ -1242,69 +1242,6 @@ i[class*="icon"],
   color: var(--db-text, #0f172a);
 }
 
-/* ══════════════════════════════════════════════════════════════════
-   Top Bar Fixed Styles (Search & Rahul Sharma User Profile)
-   ══════════════════════════════════════════════════════════════════ */
-.sca-db-search {
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 24px !important;
-  padding: 6px 14px 6px 16px !important;
-  width: 320px !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
-  transition: all 0.2s ease !important;
-}
-
-.sca-db-search:focus-within {
-  background: #ffffff !important;
-  border-color: #2563eb !important;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
-}
-
-.sca-db-search i {
-  color: #94a3b8 !important;
-  font-size: 1rem !important;
-  flex-shrink: 0 !important;
-}
-
-.sca-db-search input {
-  border: none !important;
-  outline: none !important;
-  background: transparent !important;
-  width: 100% !important;
-  font-size: 0.84rem !important;
-  font-weight: 400 !important;
-  color: #0f172a !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  box-shadow: none !important;
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.sca-db-search input::placeholder {
-  color: #94a3b8 !important;
-  font-family: 'Roboto', sans-serif !important;
-}
-
-.sca-db-search-kbd {
-  font-size: 0.6875rem !important;
-  color: #94a3b8 !important;
-  background: #ffffff !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 6px !important;
-  padding: 2px 7px !important;
-  font-weight: 600 !important;
-  white-space: nowrap !important;
-  flex-shrink: 0 !important;
-  line-height: 1.2 !important;
-  font-family: 'Roboto', sans-serif !important;
-}
-
 /* User Profile in Top Bar */
 .sca-db-user {
   display: flex !important;
@@ -1396,21 +1333,6 @@ i[class*="icon"],
   background: #0f172a;
   border-color: rgba(255, 255, 255, 0.15);
   color: #f8fafc;
-}
-
-.sca-dashboard--dark .sca-db-search {
-  background: #0f172a !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
-}
-
-.sca-dashboard--dark .sca-db-search input {
-  color: #f8fafc !important;
-}
-
-.sca-dashboard--dark .sca-db-search-kbd {
-  background: #1e293b !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  color: #94a3b8 !important;
 }
 
 .sca-dashboard--dark .sca-db-user {

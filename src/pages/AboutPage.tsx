@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import PageBanner from '@/components/eduleb/PageBanner';
 import JourneySection from '@/components/home/JourneySection';
 import AboutSection from '@/components/home/AboutSection';
 import CounterSection from '@/components/home/CounterSection';
@@ -8,8 +7,9 @@ import TestimonialsSection from '@/components/home/TestimonialsSection';
 export default function AboutPage() {
   return (
     <>
-      <PageBanner title="About" crumb="About" />
-      <JourneySection />
+      <div className="eduleb-about-flow">
+        <JourneySection />
+      </div>
       <AboutSection />
 
       <section
@@ -53,11 +53,11 @@ export default function AboutPage() {
                 }}
               >
                 <div className="single_ins_content">
-                  <h4>Build Your Career</h4>
-                  <h1>Become an Instructor</h1>
-                  <p>Learn at your own pace, move the between multiple courses.</p>
-                  <Link className="btn_one" to="/instructor-page">
-                    Apply now <i className="ti-arrow-top-right" />
+                  <h4>For Educators</h4>
+                  <h1>Create &amp; Conduct Exams</h1>
+                  <p>Design question banks, schedule batches, and auto-evaluate student performances.</p>
+                  <Link className="btn_one" to="/pricing">
+                    View Pricing <i className="ti-arrow-top-right" />
                   </Link>
                 </div>
               </div>
@@ -72,11 +72,11 @@ export default function AboutPage() {
                 }}
               >
                 <div className="single_ins_content">
-                  <h4>Build Your Career</h4>
-                  <h1>Get Free Courses</h1>
-                  <p>Learn at your own pace, move the between multiple courses.</p>
-                  <Link className="btn_one" to="/contact">
-                    Contact now <i className="ti-arrow-top-right" />
+                  <h4>For Candidates</h4>
+                  <h1>Practice Free Mock Tests</h1>
+                  <p>Attempt timed test papers with instant scorecard, ranking, and weak topic insights.</p>
+                  <Link className="btn_one" to="/exams">
+                    Start Test Now <i className="ti-arrow-top-right" />
                   </Link>
                 </div>
               </div>

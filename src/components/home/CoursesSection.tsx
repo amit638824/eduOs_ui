@@ -4,51 +4,51 @@ import type { HomepageContent } from '@/types/homepage';
 const fallbackCourses = [
   {
     img: '/eduleb/img/course/1.png',
-    tag: 'Education',
-    title: 'Complete User fundamentals beginners to advanced',
-    lessons: '12 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - 99$',
+    tag: 'Govt IT',
+    title: 'CCC (Course on Computer Concepts) Comprehensive Mock Exam',
+    lessons: '100 Questions',
+    duration: '90 Mins',
+    price: 'Free Practice',
   },
   {
     img: '/eduleb/img/course/2.png',
-    tag: 'UI/UX',
-    title: 'Advanced Android 12 & Kotlin Development Course',
-    lessons: '41 Course',
-    duration: '3 Hrs 32 Min',
-    price: 'Course Fee - 49$',
+    tag: 'Hardware',
+    title: 'PC Hardware & Network Engineering Certification Exam',
+    lessons: '80 Questions',
+    duration: '60 Mins',
+    price: 'Free Practice',
   },
   {
     img: '/eduleb/img/course/3.png',
-    tag: 'Lifestyle',
-    title: 'Complete HTML, CSS and Javascript Course',
-    lessons: '32 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - Free',
+    tag: 'Govt IT',
+    title: 'O Level (M1-R5) Information Technology Tools Practice Paper',
+    lessons: '100 Questions',
+    duration: '120 Mins',
+    price: 'Free Practice',
   },
   {
     img: '/eduleb/img/course/4.png',
-    tag: 'Science',
-    title: 'IOS and Swift Complete iOS Application Development',
-    lessons: '19 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - 59$',
+    tag: 'Software',
+    title: 'Advanced Computer Applications & Office Automation Test',
+    lessons: '60 Questions',
+    duration: '45 Mins',
+    price: 'Free Practice',
   },
   {
     img: '/eduleb/img/course/5.png',
-    tag: 'Modern',
-    title: 'Learn graphics design with a best IT Trainer',
-    lessons: '22 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - 79$',
+    tag: 'Coding',
+    title: 'Python Programming & Problem Solving Skill Assessment',
+    lessons: '50 Questions',
+    duration: '60 Mins',
+    price: '₹49.00',
   },
   {
     img: '/eduleb/img/course/6.png',
-    tag: 'Marketing',
-    title: 'Complete data science for your next business',
-    lessons: '11 Course',
-    duration: '2 Hrs 32 Min',
-    price: 'Course Fee - 39$',
+    tag: 'Aptitude',
+    title: 'Quantitative Aptitude & Logical Reasoning Mock Challenge',
+    lessons: '75 Questions',
+    duration: '75 Mins',
+    price: 'Free Practice',
   },
 ];
 
@@ -61,14 +61,14 @@ export default function CoursesSection({ content }: { content?: HomepageContent[
           <div className="col-lg-8 col-sm-6 col-xs-12" data-aos="fade-right">
             <div className="section-title mb-0">
               <h2 data-aos="fade-up" data-aos-delay="100">
-                {content?.title || 'Join with more than 80,000+ Courses & Learning creators.'}
+                {content?.title || 'Featured Online Mock Tests & Practice Examinations'}
               </h2>
             </div>
           </div>
           <div className="col-lg-4 col-sm-6 col-xs-12" data-aos="fade-left" data-aos-delay="150">
             <div className="cour_btn text-lg-end">
-              <Link to={content?.cta.href || '/exams'} className="btn_one">
-                {content?.cta.label || 'View all Courses'} <i className="ti-arrow-top-right" />
+              <Link to={content?.cta?.href || '/exams'} className="btn_one">
+                {content?.cta?.label || 'View All Tests'} <i className="ti-arrow-top-right" />
               </Link>
             </div>
           </div>
@@ -83,7 +83,7 @@ export default function CoursesSection({ content }: { content?: HomepageContent[
             >
               <div className="single_course eduleb-hover-lift">
                 <div className="single_c_img" data-aos="zoom-in" data-aos-delay={(index % 3) * 120 + 80}>
-                  <img src={course.img} className="img-fluid" alt="course-image" />
+                  <img src={course.img} className="img-fluid" alt={course.title} />
                   <span>{course.tag}</span>
                 </div>
                 <div className="my-2" style={{ color: '#f59e0b' }}>

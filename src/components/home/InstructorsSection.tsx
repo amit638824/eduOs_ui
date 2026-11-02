@@ -3,31 +3,31 @@ import type { HomepageContent } from '@/types/homepage';
 const fallbackInstructors = [
   {
     img: '/eduleb/img/team/team1.jpg',
-    name: 'Bilkis Vabi',
-    role: 'Web designer',
-    courses: '04 Course',
-    students: '27 Student',
+    name: 'Prof. Rajesh Sharma',
+    role: 'Head of IT & Computer Examinations',
+    courses: '45+ Tests',
+    students: '12,500+ Assessed',
   },
   {
     img: '/eduleb/img/team/team2.jpg',
-    name: 'Mood Wasim',
-    role: 'TemplateMonster company',
-    courses: '06 Course',
-    students: '41 Student',
+    name: 'Dr. Priya Verma',
+    role: 'Aptitude & Competitive Exam Specialist',
+    courses: '60+ Tests',
+    students: '18,200+ Assessed',
   },
   {
     img: '/eduleb/img/team/team3.jpg',
-    name: 'Shyinn tim',
-    role: 'Codecanyou',
-    courses: '13 Course',
-    students: '31 Student',
+    name: 'Er. Amit Srivastava',
+    role: 'Software & Coding Assessment Lead',
+    courses: '35+ Tests',
+    students: '9,800+ Assessed',
   },
   {
     img: '/eduleb/img/team/team4.jpg',
-    name: 'Shorif shorifa',
-    role: 'Tsc chottor',
-    courses: '07 Course',
-    students: '24 Student',
+    name: 'Sunita Mishra',
+    role: 'Govt IT & NIELIT Certification Mentor',
+    courses: '50+ Tests',
+    students: '15,000+ Assessed',
   },
 ];
 
@@ -37,10 +37,10 @@ export default function InstructorsSection({ content }: { content?: HomepageCont
     <section className="team_area section-padding">
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up">
-          <h2 data-aos="fade-up" data-aos-delay="100">{content?.title || 'Meet our Instructors'}</h2>
+          <h2 data-aos="fade-up" data-aos-delay="100">{content?.title || 'Our Examination Faculty & Assessment Experts'}</h2>
           <p data-aos="fade-up" data-aos-delay="150">
             {content?.description ||
-              'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.'}
+              'Our question papers and mock tests are designed, peer-reviewed, and verified by certified educators and industry leaders.'}
           </p>
         </div>
         <div className="row">

@@ -1,10 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import StudentExamCalendar from '@/components/dashboard/examination/StudentExamCalendar';
 
 import ModernAdminDashboard from '@/components/dashboard/admin/ModernAdminDashboard';
-import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { QuestionBankPanel, TestsListPanel,
   StudentTestsPanel,
   AttemptsListPanel,
@@ -16,8 +12,6 @@ import { QuestionBankPanel, TestsListPanel,
 } from '@/components/dashboard/examination/ExaminationPanels';
 import { AiBuildPanel } from '@/components/dashboard/examination/AiBuildPanel';
 import {
-  DashboardCounters,
-  DashboardFeedbackTable,
   DashboardProfileContent,
   DashboardMessageContent,
   DashboardWishlistContent,
@@ -28,125 +22,13 @@ import {
   DashboardSettingsContent,
 } from '@/components/dashboard/content/DashboardContent';
 import { useOrganization } from '@/hooks/useOrganization';
-import { examinationService } from '@/services';
-import type { ExamResult, OrgAnalytics, StudentStats } from '@/types/examination';
-import type { DashboardTableRow } from '@/types/dashboard';
-import { feedbackRows } from '@/data/dashboardData';
 
 export function StudentDashboardHome() {
-  const [stats, setStats] = useState<StudentStats | null>(null);
-  const [recentResults, setRecentResults] = useState<ExamResult[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      examinationService.getMyStats().catch(() => null),
-      examinationService.listMyResults().catch(() => [] as ExamResult[]),
-    ])
-      .then(([s, results]) => {
-        setStats(s);
-        setRecentResults((results ?? []).slice(0, 5));
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  useDashboardLoadingEffect(loading);
-
-  const feedbackRows: DashboardTableRow[] = recentResults.map((r) => ({
-    name: r.test_title || 'Test',
-    enrolled: `${Number(r.percentage).toFixed(1)}% · ${r.total_score}/${r.max_score}`,
-    rating: Math.max(1, Math.min(5, Math.round(Number(r.percentage) / 20))),
-  }));
-
-  return (
-    <>
-      <DashboardPageHeader
-        badge="Student Portal"
-        title="Dashboard"
-        subtitle="Quick access to your tests, assignments, results and certificates."
-      />
-      <div className="dashboard__content__wraper">
-        <div className="dashboard__section__title">
-          <h4>Quick Actions</h4>
-        </div>
-        <div className="edtp-quick-actions">
-          <Link to="/dashboard/student-enrolled-courses" className="edtp-quick-action">
-            <i className="icofont-book-alt" />
-            My Tests
-          </Link>
-          <Link to="/dashboard/student-assignments" className="edtp-quick-action">
-            <i className="icofont-tasks-alt" />
-            Assignments
-          </Link>
-          <Link to="/dashboard/student-my-quiz-attempts" className="edtp-quick-action">
-            <i className="icofont-ui-clock" />
-            Attempts
-          </Link>
-          <Link to="/dashboard/student-reviews" className="edtp-quick-action">
-            <i className="icofont-chart-histogram" />
-            Results
-          </Link>
-          <Link to="/dashboard/student-certificates" className="edtp-quick-action">
-            <i className="icofont-certificate-alt-1" />
-            Certificates
-          </Link>
-          <Link to="/dashboard/student-wishlist" className="edtp-quick-action">
-            <i className="icofont-wallet" />
-            Wallet
-          </Link>
-        </div>
-      </div>
-      <DashboardCounters
-        title="Summary"
-        counters={[
-          { value: String(stats?.assigned_tests ?? '—'), label: 'Assigned Tests', icon: '/img/counter/counter__1.png' },
-          { value: String(stats?.in_progress ?? '—'), label: 'In Progress', icon: '/img/counter/counter__2.png' },
-          { value: String(stats?.results ?? '—'), label: 'Results', icon: '/img/counter/counter__3.png' },
-          { value: String(stats?.certificates_count ?? '—'), label: 'Certificates', icon: '/img/counter/counter__1.png' },
-        ]}
-      />
-      <DashboardFeedbackTable
-        title="Recent Results"
-        rows={feedbackRows}
-        seeMoreHref="/dashboard/student-reviews"
-      />
-    </>
-  );
+  return <ModernAdminDashboard role="student" />;
 }
 
 export function TeacherDashboardHome() {
-  const [stats, setStats] = useState<OrgAnalytics | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    examinationService
-      .getAnalyticsOverview()
-      .then(setStats)
-      .catch(() => setStats(null))
-      .finally(() => setLoading(false));
-  }, []);
-
-  useDashboardLoadingEffect(loading);
-
-  return (
-    <>
-      <DashboardPageHeader
-        badge="Teacher Portal"
-        title="Dashboard"
-        subtitle="Manage question bank, create tests and review student attempts."
-      />
-      <DashboardCounters
-        counters={[
-          { value: String(stats?.tests ?? '—'), label: 'Tests', icon: '/img/counter/counter__1.png' },
-          { value: String(stats?.questions ?? '—'), label: 'Questions', icon: '/img/counter/counter__2.png' },
-          { value: String(stats?.attempts ?? '—'), label: 'Attempts', icon: '/img/counter/counter__3.png' },
-        ]}
-      />
-      <DashboardFeedbackTable title="Top Performing Tests" rows={feedbackRows} />
-    </>
-  );
+  return <ModernAdminDashboard role="teacher" />;
 }
 
 export function AdminDashboardHome() {

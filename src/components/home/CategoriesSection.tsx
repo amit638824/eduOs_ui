@@ -2,18 +2,18 @@ import { Link } from 'react-router-dom';
 import type { HomepageContent } from '@/types/homepage';
 
 const fallbackCategories = [
-  { img: '/eduleb/img/e1.png', label: 'Digital Marketing' },
-  { img: '/eduleb/img/e2.png', label: 'UI/UX Design' },
-  { img: '/eduleb/img/e3.png', label: '3D Visual Design' },
-  { img: '/eduleb/img/e4.png', label: 'Content Marketing' },
-  { img: '/eduleb/img/e5.png', label: 'Photography' },
-  { img: '/eduleb/img/e6.png', label: 'Photo Lifestyle' },
-  { img: '/eduleb/img/e7.png', label: 'Art & Design' },
-  { img: '/eduleb/img/e8.png', label: 'Finance & Banking' },
-  { img: '/eduleb/img/e9.png', label: 'Graphic Design' },
-  { img: '/eduleb/img/e2.png', label: 'Interior Design' },
-  { img: '/eduleb/img/e3.png', label: '3D Visual Design' },
-  { img: '/eduleb/img/e7.png', label: 'Art & Design' },
+  { img: '/eduleb/img/e1.png', label: 'Hardware & Networking' },
+  { img: '/eduleb/img/e8.png', label: 'CCC & O Level (Govt IT)' },
+  { img: '/eduleb/img/e2.png', label: 'Computer Applications' },
+  { img: '/eduleb/img/e9.png', label: 'Programming & Coding' },
+  { img: '/eduleb/img/e4.png', label: 'Quantitative Aptitude' },
+  { img: '/eduleb/img/e5.png', label: 'Logical Reasoning' },
+  { img: '/eduleb/img/e7.png', label: 'Diploma & Semester Exams' },
+  { img: '/eduleb/img/e6.png', label: 'Cyber Security & IT Tools' },
+  { img: '/eduleb/img/e3.png', label: 'Database & SQL Tests' },
+  { img: '/eduleb/img/e2.png', label: 'Cloud & Web Technologies' },
+  { img: '/eduleb/img/e8.png', label: 'Corporate Skill Screening' },
+  { img: '/eduleb/img/e7.png', label: 'General English & Verbal' },
 ];
 
 export default function CategoriesSection({ content }: { content?: HomepageContent['categories'] }) {
@@ -29,10 +29,10 @@ export default function CategoriesSection({ content }: { content?: HomepageConte
     >
       <div className="container">
         <div className="section-title text-center" data-aos="fade-up">
-          <h2 data-aos="fade-up" data-aos-delay="100">{content?.title || 'Find out by popular Categories'}</h2>
+          <h2 data-aos="fade-up" data-aos-delay="100">{content?.title || 'Explore Tests by Examination Category'}</h2>
           <p data-aos="fade-up" data-aos-delay="150">
             {content?.description ||
-              'We offer a brand new approach to the most basic learning paradigms. Choose from a wide range of learning options and gain new skills! Our school is know.'}
+              'Practice with targeted question sets across IT certifications, government exams, university diplomas, and competitive aptitude.'}
           </p>
         </div>
         <div className="row">
@@ -47,7 +47,7 @@ export default function CategoriesSection({ content }: { content?: HomepageConte
                     data-aos-delay={(i % 6) * 70}
                   >
                     <Link to="/exams">
-                      <img src={cat.img} alt="category-image" /> {cat.label}
+                      <img src={cat.img} alt={cat.label} /> {cat.label}
                     </Link>
                   </li>
                 ))}

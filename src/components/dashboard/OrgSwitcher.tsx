@@ -92,47 +92,47 @@ export default function OrgSwitcher() {
         </span>
       )}
 
-      {open && (
-        <ul
-          id={listId}
-          className="sca-db-org-switcher__menu"
-          role="listbox"
-          aria-labelledby={`${listId}-label`}
-        >
-          {organizations.length === 0 ? (
-            <li className="sca-db-org-switcher__empty" role="presentation">
-              {loading ? 'Loading…' : 'No organizations'}
-            </li>
-          ) : (
-            organizations.map((org) => {
-              const selected = org.id === value;
-              return (
-                <li key={org.id} role="presentation">
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={selected}
-                    className={`sca-db-org-switcher__option${selected ? ' is-selected' : ''}`}
-                    onClick={() => {
-                      setSelectedOrgId(org.id);
-                      setOpen(false);
-                    }}
+      <ul
+        id={listId}
+        className={`sca-db-org-switcher__menu${open ? ' is-open' : ''}`}
+        role="listbox"
+        aria-labelledby={`${listId}-label`}
+        aria-hidden={!open}
+      >
+        {organizations.length === 0 ? (
+          <li className="sca-db-org-switcher__empty" role="presentation">
+            {loading ? 'Loading…' : 'No organizations'}
+          </li>
+        ) : (
+          organizations.map((org) => {
+            const selected = org.id === value;
+            return (
+              <li key={org.id} role="presentation">
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  className={`sca-db-org-switcher__option${selected ? ' is-selected' : ''}`}
+                  tabIndex={open ? 0 : -1}
+                  onClick={() => {
+                    setSelectedOrgId(org.id);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="sca-db-org-switcher__option-name">{org.name}</span>
+                  <span
+                    className={`sca-db-org-switcher__option-badge ${
+                      org.isActive ? 'is-active' : 'is-pending'
+                    }`}
                   >
-                    <span className="sca-db-org-switcher__option-name">{org.name}</span>
-                    <span
-                      className={`sca-db-org-switcher__option-badge ${
-                        org.isActive ? 'is-active' : 'is-pending'
-                      }`}
-                    >
-                      {org.isActive ? 'Active' : 'Pending'}
-                    </span>
-                  </button>
-                </li>
-              );
-            })
-          )}
-        </ul>
-      )}
+                    {org.isActive ? 'Active' : 'Pending'}
+                  </span>
+                </button>
+              </li>
+            );
+          })
+        )}
+      </ul>
     </div>
   );
 }

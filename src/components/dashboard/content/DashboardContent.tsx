@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { DashboardCounter, DashboardTableRow } from '@/types/dashboard';
@@ -12,12 +12,13 @@ import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
 import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
-import { EdtpSelect, EdtpBtn } from '@/components/ui/CrudUI';
-import { confirmDelete, showError } from '@/lib/swal';
+import { EdtpSelect } from '@/components/ui/CrudUI';
+import { confirmDelete } from '@/lib/swal';
 import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
-import DashboardPageHeader from '@/components/dashboard/DashboardPageHeader';
 import { useOrgScope } from '@/context/OrgScopeContext';
+import { FiSearch, FiX, FiZap, FiEye } from 'react-icons/fi';
+import '@/styles/organizations.css';
 import {
   becomeTeacherSchema,
   createTestSchema,
@@ -362,7 +363,6 @@ export function DashboardQuizAttemptsContent({ title }: { title: string }) {
 
 export function DashboardAssignmentsContent() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const isStudent = user?.roles.includes('student') && !user.roles.some((r) =>
     ['org_admin', 'super_admin', 'staff', 'teacher'].includes(r),
   );
@@ -386,7 +386,7 @@ export function DashboardAssignmentsContent() {
   >([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [startingId, setStartingId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
@@ -425,156 +425,185 @@ export function DashboardAssignmentsContent() {
 
   useDashboardLoadingEffect(loading);
 
-  const start = async (testId: string) => {
-    setStartingId(testId);
-    setError('');
-    try {
-      const attempt = await examinationService.startAttempt(testId);
-      navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
-    } catch (err) {
-      const msg = parseApiError(err);
-      setError(msg);
-      showError('Cannot start', msg);
-      examinationService.listMyAssignedTests().then((data) =>
-        setRows(
-          data.map((t) => ({
-            id: t.id,
-            title: t.title,
-            status: t.status,
-            total_marks: t.total_marks ?? undefined,
-            duration_minutes: t.duration_minutes,
-            attempt_status: t.attempt_status,
-            result_percentage: t.result_percentage,
-            result_attempt_id: t.result_attempt_id,
-            attempt_id: t.attempt_id,
-            scheduled_start: t.scheduled_start,
-            scheduled_at: t.scheduled_at,
-          })),
-        ),
-      ).catch(() => undefined);
-    } finally {
-      setStartingId(null);
-    }
-  };
+  const filteredRows = rows.filter((row) => {
+    if (!searchTerm.trim()) return true;
+    const q = searchTerm.toLowerCase();
+    return row.title.toLowerCase().includes(q) || (row.status && row.status.toLowerCase().includes(q));
+  });
 
   const renderStudentAction = (row: (typeof rows)[number]) => {
     const st = row.attempt_status;
     if (st === 'submitted' || st === 'auto_submitted') {
       const resultId = row.result_attempt_id ?? row.attempt_id;
       return resultId ? (
-        <Link to={`/dashboard/exam-result/${resultId}`} className="dashboard__small__btn__2">
-          View Result
+        <Link to={`/dashboard/exam-result/${resultId}`} className="org-action-btn org-action-btn--edit">
+          <FiEye style={{ fontSize: 13 }} /> Result
         </Link>
       ) : (
-        <span className="text-muted">Completed</span>
+        <span className="org-status-badge org-status-badge--active">Completed</span>
       );
     }
     if (st === 'in_progress' && row.attempt_id) {
       return (
-        <EdtpBtn
-          variant="primary"
-          size="sm"
-          onClick={() => navigate(`/dashboard/exam/${row.id}/attempt/${row.attempt_id}`)}
-        >
-          Resume
-        </EdtpBtn>
+        <Link to="/dashboard/student-enrolled-courses" className="org-action-btn org-action-btn--switch">
+          Resume in My Tests
+        </Link>
       );
     }
     void nowTick;
     const startAt = row.scheduled_start ?? row.scheduled_at;
     const wait = startAt ? msUntil(startAt) : null;
     if (wait != null && wait > 0) {
-      return <span className="text-muted">Starts in {formatCountdown(wait)}</span>;
+      return <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>Starts in {formatCountdown(wait)}</span>;
     }
     return (
-      <EdtpBtn
-        variant="primary"
-        size="sm"
-        disabled={startingId === row.id}
-        onClick={() => void start(row.id)}
-      >
-        {startingId === row.id ? 'Starting…' : 'Start'}
-      </EdtpBtn>
+      <Link to="/dashboard/student-enrolled-courses" className="org-action-btn org-action-btn--primary">
+        Open in My Tests
+      </Link>
     );
   };
 
   return (
-    <>
-      <DashboardPageHeader
-        badge="Exams"
-        title="Assignments"
-        subtitle={
-          isStudent
-            ? 'Tests assigned to you. Start, resume, or view results here.'
-            : 'Assignment coverage across tests — who is assigned and how many have submitted.'
-        }
-      />
-      <div className="dashboard__content__wraper">
-        {error && <p className="login__error sp_bottom_15">{error}</p>}
-        <div className="dashboard__table table-responsive">
-          <table>
+    <div className="org-panel-page">
+      <div className="org-page-header">
+        <div className="org-page-header-left">
+          <h2 className="org-page-title">Assignments</h2>
+          <p className="org-page-desc" style={{ margin: 0 }}>
+            {isStudent
+              ? 'Assignment schedule and status. Start or resume the exam from My Tests.'
+              : 'Assignment coverage across tests — who is assigned and how many have submitted.'}
+          </p>
+        </div>
+      </div>
+
+      {error && <div className="org-error-banner">{error}</div>}
+
+      <div className="org-table-card">
+        <div className="org-card-header">
+          <div className="org-title-group">
+            <div className="org-title-row">
+              <h3 className="org-card-title">All Assignments</h3>
+              <span className="org-count-badge">
+                {filteredRows.length} {filteredRows.length === 1 ? 'Test' : 'Tests'}
+              </span>
+            </div>
+            <p className="org-card-subtitle">
+              {isStudent
+                ? 'Your assigned tests and assessment progress'
+                : 'Manage student assignment links and examine submission volume'}
+            </p>
+          </div>
+
+          <div className="org-controls-row">
+            <div className="org-search-box">
+              <FiSearch className="org-search-icon" />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search assignments…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={() => setSearchTerm('')}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="org-table-wrap">
+          <table className="org-table">
             <thead>
               <tr>
-                <th>Assignment / Test</th>
-                <th>Marks</th>
+                <th>ASSIGNMENT / TEST</th>
+                <th>MARKS</th>
                 {isStudent ? (
                   <>
-                    <th>Status</th>
-                    <th>Progress</th>
+                    <th>STATUS</th>
+                    <th>PROGRESS</th>
                   </>
                 ) : (
                   <>
-                    <th>Assigned</th>
-                    <th>Submitted</th>
-                    <th>Attempts</th>
+                    <th>ASSIGNED</th>
+                    <th>SUBMITTED</th>
+                    <th>ATTEMPTS</th>
                   </>
                 )}
-                <th />
+                <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
+              {filteredRows.map((row) => (
                 <tr key={row.id}>
                   <td>
-                    <strong>{row.title}</strong>
+                    <strong style={{ color: '#0f172a', fontWeight: 600 }}>{row.title}</strong>
                     {row.status && (
-                      <p className="mb-0 text-muted" style={{ fontSize: '0.8125rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', marginTop: 2 }}>
                         {row.status}
                         {row.duration_minutes ? ` · ${row.duration_minutes} min` : ''}
-                      </p>
+                      </span>
                     )}
                   </td>
-                  <td>{row.total_marks ?? '—'}</td>
+                  <td style={{ color: '#475569', fontWeight: 500 }}>{row.total_marks ?? '—'}</td>
                   {isStudent ? (
                     <>
-                      <td>{row.attempt_status?.replace('_', ' ') ?? 'Not started'}</td>
                       <td>
-                        {row.result_percentage != null
-                          ? `${Number(row.result_percentage).toFixed(1)}%`
-                          : '—'}
+                        <span
+                          className={`org-status-badge ${
+                            row.attempt_status === 'submitted' || row.attempt_status === 'auto_submitted'
+                              ? 'org-status-badge--active'
+                              : row.attempt_status === 'in_progress'
+                                ? 'org-status-badge--pending'
+                                : 'org-status-badge--inactive'
+                          }`}
+                        >
+                          {row.attempt_status?.replace('_', ' ') ?? 'Not started'}
+                        </span>
                       </td>
-                      <td>{renderStudentAction(row)}</td>
+                      <td>
+                        {row.result_percentage != null ? (
+                          <span style={{ fontWeight: 600, color: '#059669' }}>
+                            {Number(row.result_percentage).toFixed(1)}%
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
+                          {renderStudentAction(row)}
+                        </div>
+                      </td>
                     </>
                   ) : (
                     <>
-                      <td>{row.assigned_count ?? 0}</td>
-                      <td>{row.submitted_count ?? 0}</td>
-                      <td>{row.attempt_count ?? 0}</td>
-                      <td>
-                        <Link
-                          to={`/dashboard/test-builder/${row.id}`}
-                          className="dashboard__small__btn__2"
-                        >
-                          Manage
-                        </Link>
+                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.assigned_count ?? 0}</td>
+                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.submitted_count ?? 0}</td>
+                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.attempt_count ?? 0}</td>
+                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
+                          <Link
+                            to={`/dashboard/test-builder/${row.id}`}
+                            className="org-action-btn org-action-btn--switch"
+                          >
+                            <FiZap style={{ fontSize: 13 }} /> Manage
+                          </Link>
+                        </div>
                       </td>
                     </>
                   )}
                 </tr>
               ))}
-              {rows.length === 0 && (
+              {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={isStudent ? 5 : 6}>
+                  <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
                     {isStudent
                       ? 'No tests assigned yet.'
                       : 'No tests found. Create and assign a test from Test Builder.'}
@@ -585,7 +614,7 @@ export function DashboardAssignmentsContent() {
           </table>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -777,45 +806,54 @@ function OrganizationSettingsForm({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-xl-6 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="orgName">Organization Name</label>
-              <input
-                id="orgName"
-                type="text"
-                className={inputClassName('', !!errors.name)}
-                {...register('name')}
-              />
-              <FormError message={errors.name?.message} />
-            </div>
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
         </div>
-        <div className="col-xl-6 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="orgSlug">Slug</label>
-              <input
-                id="orgSlug"
-                type="text"
-                className={inputClassName('', !!errors.slug)}
-                {...register('slug')}
-              />
-              <FormError message={errors.slug?.message} />
-            </div>
-          </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
         </div>
-        <div className="col-xl-12">
-          <div className="dashboard__form__button">
-            <button type="submit" className="default__button" disabled={!organization}>
-              Save Organization
-            </button>
-          </div>
+      )}
+      <div className="org-grid-2" style={{ gap: '16px' }}>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="orgName">
+            Organization Name <span className="org-required-star">*</span>
+          </label>
+          <input
+            id="orgName"
+            type="text"
+            className="org-form-input"
+            placeholder="e.g. Acme Academy"
+            {...register('name')}
+          />
+          <FormError message={errors.name?.message} />
         </div>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="orgSlug">
+            Organization Slug <span className="org-required-star">*</span>
+          </label>
+          <input
+            id="orgSlug"
+            type="text"
+            className="org-form-input"
+            placeholder="e.g. acme-academy"
+            {...register('slug')}
+          />
+          <FormError message={errors.slug?.message} />
+        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
+        <button
+          type="submit"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          disabled={!organization}
+        >
+          Save Organization
+        </button>
       </div>
     </form>
   );
@@ -858,22 +896,38 @@ function AutoIssueCertificatesForm() {
   };
 
   return (
-    <div className="sp_top_30">
-      <h5 className="sp_bottom_15">Certificates</h5>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <label className="d-flex align-items-center gap-2" style={{ cursor: 'pointer' }}>
-        <input
-          type="checkbox"
-          checked={enabled}
+    <div style={{ borderTop: '1px solid var(--db-border, #e2e8f0)', paddingTop: '24px' }}>
+      <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 12px', color: '#0f172a' }}>
+        Certificates Automation
+      </h4>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
+        </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
+        </div>
+      )}
+      <div className="org-toggle-card">
+        <div className="org-toggle-info">
+          <span className="org-toggle-title">Auto-issue certificates when a student passes</span>
+          <span className="org-toggle-desc">
+            When enabled, submitting a passing attempt issues an official certificate automatically.
+          </span>
+        </div>
+        <button
+          type="button"
+          role="switch"
+          aria-checked={enabled}
+          className={`org-ios-switch${enabled ? ' is-active' : ''}`}
           disabled={loading}
-          onChange={(e) => void save(e.target.checked)}
-        />
-        <span>Auto-issue certificates when a student passes</span>
-      </label>
-      <p className="text-muted mb-0 sp_top_10" style={{ fontSize: '0.8125rem' }}>
-        When enabled, submitting a passing attempt issues a certificate automatically.
-      </p>
+          onClick={() => void save(!enabled)}
+        >
+          <span className="org-ios-thumb" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -933,40 +987,97 @@ function CertificateBrandingForm() {
   };
 
   return (
-    <div className="sp_top_30">
-      <h5 className="sp_bottom_15">Certificate branding</h5>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-md-6 sp_bottom_15">
-          <label>Logo URL</label>
-          <input className="register__input" value={logoUrl} onChange={(e) => setLogoUrl(e.target.value)} placeholder="https://…" />
+    <div style={{ borderTop: '1px solid var(--db-border, #e2e8f0)', paddingTop: '24px' }}>
+      <h4 style={{ fontSize: '1rem', fontWeight: 700, margin: '0 0 16px', color: '#0f172a' }}>
+        Certificate Branding
+      </h4>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
         </div>
-        <div className="col-md-3 sp_bottom_15">
-          <label>Primary color</label>
-          <input className="register__input" type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} />
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
         </div>
-        <div className="col-md-3 sp_bottom_15">
-          <label>Accent color</label>
-          <input className="register__input" type="color" value={accentColor} onChange={(e) => setAccentColor(e.target.value)} />
+      )}
+      <div className="org-grid-2" style={{ gap: '16px' }}>
+        <div className="org-form-field" style={{ gridColumn: 'span 2' }}>
+          <label className="org-form-label" htmlFor="logoUrl">Logo URL</label>
+          <input
+            id="logoUrl"
+            className="org-form-input"
+            value={logoUrl}
+            onChange={(e) => setLogoUrl(e.target.value)}
+            placeholder="https://example.com/logo.png"
+          />
         </div>
-        <div className="col-md-6 sp_bottom_15">
-          <label>Seal text</label>
-          <input className="register__input" value={sealText} onChange={(e) => setSealText(e.target.value)} />
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="primaryColor">Primary Color</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              id="primaryColor"
+              type="color"
+              style={{ width: '42px', height: '36px', padding: '2px', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer' }}
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+            />
+            <input
+              className="org-form-input"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+            />
+          </div>
         </div>
-        <div className="col-md-6 sp_bottom_15">
-          <label>Template</label>
-          <EdtpSelect value={templateId} onChange={(e) => setTemplateId(e.target.value as typeof templateId)}>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="accentColor">Accent Color</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input
+              id="accentColor"
+              type="color"
+              style={{ width: '42px', height: '36px', padding: '2px', border: '1px solid #cbd5e1', borderRadius: '8px', cursor: 'pointer' }}
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+            />
+            <input
+              className="org-form-input"
+              value={accentColor}
+              onChange={(e) => setAccentColor(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="sealText">Seal Text</label>
+          <input
+            id="sealText"
+            className="org-form-input"
+            value={sealText}
+            onChange={(e) => setSealText(e.target.value)}
+          />
+        </div>
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="templateId">Template Style</label>
+          <EdtpSelect
+            id="templateId"
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value as typeof templateId)}
+          >
             <option value="classic">Classic</option>
             <option value="modern">Modern</option>
             <option value="minimal">Minimal</option>
           </EdtpSelect>
         </div>
-        <div className="col-12">
-          <button type="button" className="default__button" onClick={() => void save()} disabled={loading}>
-            Save branding
-          </button>
-        </div>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
+        <button
+          type="button"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          onClick={() => void save()}
+          disabled={loading}
+        >
+          Save Branding
+        </button>
       </div>
     </div>
   );
@@ -1001,62 +1112,69 @@ function PasswordChangeForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
-        <div className="col-xl-12 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="currentPass">Current Password</label>
-              <PasswordInput
-                id="currentPass"
-                hasError={!!errors.currentPassword}
-                autoComplete="current-password"
-                className="register__input"
-                {...register('currentPassword')}
-              />
-              <FormError message={errors.currentPassword?.message} />
-            </div>
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
         </div>
-        <div className="col-xl-12 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="newPass">New Password</label>
-              <PasswordInput
-                id="newPass"
-                hasError={!!errors.newPassword}
-                autoComplete="new-password"
-                className="register__input"
-                {...register('newPassword')}
-              />
-              <FormError message={errors.newPassword?.message} />
-            </div>
-          </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
         </div>
-        <div className="col-xl-12 sp_bottom_20">
-          <div className="dashboard__form__wraper">
-            <div className="dashboard__form__input">
-              <label htmlFor="confirmPass">Confirm Password</label>
-              <PasswordInput
-                id="confirmPass"
-                hasError={!!errors.confirmPassword}
-                autoComplete="new-password"
-                className="register__input"
-                {...register('confirmPassword')}
-              />
-              <FormError message={errors.confirmPassword?.message} />
-            </div>
-          </div>
+      )}
+      <div className="org-grid-2" style={{ gap: '16px', width: '100%' }}>
+        <div className="org-form-field" style={{ gridColumn: '1 / -1' }}>
+          <label className="org-form-label" htmlFor="currentPass">
+            Current Password <span className="org-required-star">*</span>
+          </label>
+          <PasswordInput
+            id="currentPass"
+            hasError={!!errors.currentPassword}
+            autoComplete="current-password"
+            className="org-form-input"
+            {...register('currentPassword')}
+          />
+          <FormError message={errors.currentPassword?.message} />
         </div>
-        <div className="col-xl-12">
-          <div className="dashboard__form__button">
-            <button type="submit" className="default__button">
-              Update Password
-            </button>
-          </div>
+
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="newPass">
+            New Password <span className="org-required-star">*</span>
+          </label>
+          <PasswordInput
+            id="newPass"
+            hasError={!!errors.newPassword}
+            autoComplete="new-password"
+            className="org-form-input"
+            {...register('newPassword')}
+          />
+          <FormError message={errors.newPassword?.message} />
         </div>
+
+        <div className="org-form-field">
+          <label className="org-form-label" htmlFor="confirmPass">
+            Confirm Password <span className="org-required-star">*</span>
+          </label>
+          <PasswordInput
+            id="confirmPass"
+            hasError={!!errors.confirmPassword}
+            autoComplete="new-password"
+            className="org-form-input"
+            {...register('confirmPassword')}
+          />
+          <FormError message={errors.confirmPassword?.message} />
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
+        <button
+          type="submit"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+        >
+          Update Password
+        </button>
       </div>
     </form>
   );
@@ -1143,40 +1261,74 @@ function SocialLinksForm() {
   ] as const;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate>
-      {apiError && <p className="login__error sp_bottom_15">{apiError}</p>}
-      {message && <p className="form-success sp_bottom_15">{message}</p>}
-      <div className="row">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+      {apiError && (
+        <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{apiError}</span>
+        </div>
+      )}
+      {message && (
+        <div className="mad-alert-success" role="alert" style={{ marginBottom: '16px' }}>
+          <span>{message}</span>
+        </div>
+      )}
+      <div className="org-grid-2" style={{ gap: '16px', width: '100%' }}>
         {fields.map((field) => (
-          <div key={field.id} className="col-xl-6 sp_bottom_20">
-            <div className="dashboard__form__wraper">
-              <div className="dashboard__form__input">
-                <label htmlFor={field.id}>{field.label} URL</label>
-                <input
-                  id={field.id}
-                  type="url"
-                  placeholder={`https://${field.id}.com/...`}
-                  className={inputClassName('', !!errors[field.id])}
-                  {...register(field.id)}
-                />
-                <FormError message={errors[field.id]?.message} />
-              </div>
-            </div>
+          <div key={field.id} className="org-form-field">
+            <label className="org-form-label" htmlFor={field.id}>
+              {field.label} URL
+            </label>
+            <input
+              id={field.id}
+              type="url"
+              placeholder={`https://${field.id}.com/...`}
+              className="org-form-input"
+              {...register(field.id)}
+            />
+            <FormError message={errors[field.id]?.message} />
           </div>
         ))}
-        <div className="col-xl-12">
-          <div className="dashboard__form__button d-flex flex-wrap gap-2">
-            <button type="submit" className="default__button">
-              Save Branding Links
-            </button>
-            <button type="button" className="dashboard__small__btn__2" onClick={resetForm}>
-              Clear Form
-            </button>
-            <button type="button" className="dashboard__small__btn__2" onClick={() => void clearSaved()}>
-              Delete Saved Links
-            </button>
-          </div>
-        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          gap: '12px',
+          marginTop: '24px',
+          flexWrap: 'wrap',
+          width: '100%',
+        }}
+      >
+        <button
+          type="submit"
+          className="org-add-btn"
+          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+        >
+          Save Branding Links
+        </button>
+        <button
+          type="button"
+          onClick={resetForm}
+          className="org-drawer-cancel"
+          style={{ width: 'auto', padding: '9px 20px', borderRadius: '10px' }}
+        >
+          Clear Form
+        </button>
+        <button
+          type="button"
+          onClick={() => void clearSaved()}
+          className="org-action-btn org-action-btn--danger"
+          style={{
+            height: '38px',
+            padding: '0 18px',
+            borderRadius: '10px',
+            fontSize: '0.825rem',
+          }}
+        >
+          Delete Saved Links
+        </button>
       </div>
     </form>
   );
@@ -1474,12 +1626,9 @@ export function DashboardSettingsContent() {
     ['super_admin', 'org_admin', 'branch_admin'].includes(r),
   );
   const isStudent = Boolean(user?.roles.includes('student'));
-  // Branding is org-level; never show to students
   const tabs = isAdmin
     ? ['Profile', 'Organization', 'Password', 'Branding']
-    : isStudent
-      ? ['Profile', 'Password']
-      : ['Profile', 'Password', 'Branding'];
+    : ['Profile', 'Password'];
   const [activeTab, setActiveTab] = useState('Profile');
 
   useDashboardLoadingEffect(orgLoading && activeTab === 'Organization');
@@ -1487,32 +1636,66 @@ export function DashboardSettingsContent() {
   if (!user) return null;
 
   return (
-    <>
-      <DashboardPageHeader
-        badge="Account"
-        title="Settings"
-        subtitle={
-          isStudent
-            ? 'Manage your profile and password.'
-            : 'Manage organization profile, branding, password and preferences for the selected tenant.'
-        }
-      />
-      <div className="dashboard__content__wraper">
-        <DashboardTabButtons tabs={tabs} active={activeTab} onChange={setActiveTab} />
+    <div className="org-panel-root">
+      {/* ── Top Bar: Page Title + Subtitle matching all other panels ── */}
+      <div className="org-top-bar">
+        <div className="org-top-text">
+          <h1 className="org-page-title">Settings</h1>
+          <p className="org-page-desc">
+            {isStudent
+              ? 'Manage your personal profile and account security settings.'
+              : 'Manage organization profile, branding, password and preferences for the selected tenant.'}
+          </p>
+        </div>
+      </div>
+
+      {/* ── Settings Table Card with Modern Navigation Tabs ── */}
+      <div className="org-table-card" style={{ padding: '24px 28px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            borderBottom: '1px solid var(--db-border, #e2e8f0)',
+            paddingBottom: '16px',
+            marginBottom: '24px',
+          }}
+        >
+          <div className="org-filter-pills" style={{ padding: '4px', gap: '6px' }}>
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`org-pill ${activeTab === tab ? 'is-active' : ''}`}
+                style={{
+                  padding: '7px 18px',
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div>
           {activeTab === 'Profile' && <ProfileSettingsApiForm />}
           {activeTab === 'Organization' && isAdmin && (
-            <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
               <OrganizationSettingsForm organization={organization} onSaved={refresh} />
               <AutoIssueCertificatesForm />
               <CertificateBrandingForm />
-            </>
+            </div>
           )}
           {activeTab === 'Password' && <PasswordChangeForm />}
           {activeTab === 'Branding' && !isStudent && <SocialLinksForm />}
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

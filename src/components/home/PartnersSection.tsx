@@ -18,7 +18,7 @@ export default function PartnersSection({ content }: { content?: HomepageContent
           <div className="col-lg-4 col-sm-4 col-xs-12" data-aos="fade-right" data-aos-delay="100">
             <div className="partner_title">
               <h3>
-                {content?.title || 'Helping 86,000+ global companies take the gloves off'}
+                {content?.title || 'Trusted by Leading Educational Institutes, Academies & Coaching Centers'}
               </h3>
             </div>
           </div>

@@ -3,6 +3,7 @@ import type { ApiUser, LoginInput, RegisterInput } from '@/types/api';
 import { tokenStorage } from '@/lib/storage';
 import { setSelectedOrganizationId } from '@/lib/orgScope';
 import * as authService from '@/services/auth.service';
+import { connectRealtime, disconnectRealtime } from '@/lib/realtime';
 
 interface AuthContextValue {
   user: ApiUser | null;
@@ -39,6 +40,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch(() => setUser(null))
       .finally(() => setLoading(false));
   }, [refreshUser]);
+
+  useEffect(() => {
+    if (user) connectRealtime();
+    else disconnectRealtime();
+  }, [user?.id]);
 
   const login = useCallback(async (input: LoginInput) => {
     const result = await authService.login(input);

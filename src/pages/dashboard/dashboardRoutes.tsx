@@ -24,6 +24,7 @@ import { OrganizationsPanel } from '@/components/dashboard/admin/OrganizationsPa
 import { FlaggedAttemptsPanel } from '@/components/dashboard/examination/FlaggedAttemptsPanel';
 import {
   StudentDashboardHome,
+  TeacherDashboardHome,
   AdminDashboardHome,
   DashboardProfileContent,
   DashboardAssignmentsContent,
@@ -96,7 +97,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/question-bank" element={<Navigate to="/dashboard/admin-question-bank" replace />} />
 
     {/* Teacher */}
-    <Route path="/dashboard/teacher-dashboard" element={dash('teacher', <AdminDashboardHome />)} />
+    <Route path="/dashboard/teacher-dashboard" element={dash('teacher', <TeacherDashboardHome />)} />
     <Route path="/dashboard/teacher-profile" element={dash('teacher', <DashboardProfileContent />)} />
     <Route path="/dashboard/teacher-message" element={dash('teacher', <NotificationsPanel />)} />
     <Route path="/dashboard/teacher-course" element={dash('teacher', <TestsListPanel title="My Tests" />)} />

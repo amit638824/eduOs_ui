@@ -6,6 +6,13 @@ import { organizationService } from '@/services';
 import type { Branch, Organization } from '@/types/api';
 import { isSuperAdmin } from '@/utils/dashboardRole';
 
+function canReadOrganization(roles: string[] | undefined): boolean {
+  if (!roles?.length) return false;
+  return roles.some((role) =>
+    ['super_admin', 'org_admin', 'staff', 'branch_admin', 'teacher'].includes(role),
+  );
+}
+
 interface UseOrganizationResult {
   organization: Organization | null;
   branches: Branch[];
@@ -65,12 +72,16 @@ export function useOrganization(): UseOrganizationResult {
         return;
       }
 
-      if (user.organizationId) {
+      if (user.organizationId && canReadOrganization(user.roles)) {
         const org = await organizationService.getOrganization(user.organizationId);
         setOrganization(org);
         setOrganizations([org]);
         const branchList = await organizationService.listBranches(user.organizationId, 1, 20);
         setBranches(branchList.data);
+      } else {
+        setOrganization(null);
+        setOrganizations([]);
+        setBranches([]);
       }
     } catch (err) {
       setError(parseApiError(err));

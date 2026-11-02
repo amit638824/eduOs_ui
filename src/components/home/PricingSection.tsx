@@ -42,7 +42,7 @@ export default function PricingSection() {
       ],
       popular: false,
       cta: 'Contact Sales',
-      href: '/schools',
+      href: '/contact',
     },
   ];
 
