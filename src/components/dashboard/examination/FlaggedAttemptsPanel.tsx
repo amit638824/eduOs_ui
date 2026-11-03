@@ -271,7 +271,9 @@ export function FlaggedAttemptsPanel() {
                                   ? '#fef2f2'
                                   : row.severity === 'medium'
                                     ? '#fffbeb'
-                                    : '#f8fafc',
+                                    : row.severity === 'low'
+                                      ? '#f0fdf4'
+                                      : '#f8fafc',
                               color:
                                 row.severity === 'high'
                                   ? '#dc2626'
@@ -282,7 +284,9 @@ export function FlaggedAttemptsPanel() {
                                   ? '#fecaca'
                                   : row.severity === 'medium'
                                     ? '#fde68a'
-                                    : '#e2e8f0'
+                                    : row.severity === 'low'
+                                      ? '#bbf7d0'
+                                      : '#e2e8f0'
                                 }`,
                               textTransform: 'uppercase',
                               fontWeight: 700,

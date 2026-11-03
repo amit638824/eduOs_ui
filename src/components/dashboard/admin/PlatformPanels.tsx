@@ -33,9 +33,12 @@ import '@/styles/organizations.css';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { examinationService, platformService } from '@/services';
+import { useOrgScope } from '@/context/OrgScopeContext';
+import { notify } from '@/lib/toast';
 import { parseApiError } from '@/lib/errors';
 import { REALTIME_NOTIFICATION_EVENT } from '@/lib/realtime';
 import { FormError, PasswordInput } from '@/components/ui/FormField';
+import { createNameSchema, validatePassword } from '@/validators/schemas';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
@@ -43,7 +46,6 @@ import { ExamStepper } from '@/components/dashboard/AdminExamGuide';
 import { getTestsListPath, isSuperAdmin } from '@/utils/dashboardRole';
 import { confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDate, formatDateTime } from '@/utils/dateFormat';
-import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
 import { getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
 import { ReportInsights } from '@/components/dashboard/examination/AiBuildPanel';
@@ -744,15 +746,20 @@ function getUserInitials(firstName?: string, lastName?: string, email?: string) 
 }
 
 const createUserSchema = yup.object({
-  email: yup.string().email().required(),
+  email: yup.string().email('Please enter a valid email address.').required('Email is required.'),
   password: yup
     .string()
     .transform((v) => (v == null || v === '' ? undefined : v))
     .optional()
-    .min(8, 'Password must be at least 8 characters'),
-  firstName: yup.string().required(),
-  lastName: yup.string().required(),
-  role: yup.mixed<'student' | 'teacher' | 'org_admin' | 'staff'>().oneOf(['student', 'teacher', 'org_admin', 'staff']).required(),
+    .test('password-rules', function (value) {
+      if (!value) return true;
+      const err = validatePassword(value);
+      if (err) return this.createError({ message: err });
+      return true;
+    }),
+  firstName: createNameSchema('First name'),
+  lastName: createNameSchema('Last name'),
+  role: yup.mixed<'student' | 'teacher' | 'org_admin' | 'staff'>().oneOf(['student', 'teacher', 'org_admin', 'staff']).required('Role is required.'),
   enrollmentNo: yup.string().trim().max(50).optional(),
 });
 
@@ -774,7 +781,11 @@ export function UsersManagementPanel({
 } = {}) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  type UserFilterTab = 'all' | 'teachers' | 'students' | 'active' | 'inactive';
+  const [filterTab, setFilterTab] = useState<UserFilterTab>('all');
+
+  const { selectedOrg } = useOrgScope();
+  const isOrgSuspended = Boolean(selectedOrg && !selectedOrg.isActive);
 
   const {
     items: users,
@@ -791,15 +802,15 @@ export function UsersManagementPanel({
     onLimitChange,
     refresh,
   } = useServerList({
-    fetcher: ({ page: p, limit: l, search }) =>
-      platformService.listUsers(
-        p,
-        l,
-        search || undefined,
-        lockedRole,
-        statusFilter === 'all' ? undefined : statusFilter,
-      ),
-    deps: [lockedRole, statusFilter],
+    fetcher: ({ page: p, limit: l, search }) => {
+      const role =
+        filterTab === 'teachers' ? 'teacher' : filterTab === 'students' ? 'student' : lockedRole;
+      const status =
+        filterTab === 'active' ? 'active' : filterTab === 'inactive' ? 'inactive' : undefined;
+
+      return platformService.listUsers(p, l, search || undefined, role, status);
+    },
+    deps: [lockedRole, filterTab, selectedOrg?.id, selectedOrg?.isActive],
     defaultLimit: 10,
   });
 
@@ -821,9 +832,10 @@ export function UsersManagementPanel({
     // yup InferType + optional password conflicts with RHF Resolver generics
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: yupResolver(createUserSchema) as any,
+    mode: 'onTouched',
     defaultValues: {
       email: '',
-      password: DEFAULT_SUGGESTED_PASSWORD,
+      password: '',
       firstName: '',
       lastName: '',
       role: defaultRole,
@@ -831,7 +843,10 @@ export function UsersManagementPanel({
     },
   });
   const watchedRole = watch('role');
-  const showEnrollmentField = lockedRole === 'student' || watchedRole === 'student';
+  const showEnrollmentField =
+    lockedRole === 'student' ||
+    (!lockedRole && filterTab === 'students') ||
+    watchedRole === 'student';
 
   useEffect(() => {
     if (editingId || !showEnrollmentField) return;
@@ -856,15 +871,16 @@ export function UsersManagementPanel({
 
   const resetForm = () => {
     setEditingId(null);
+    const initialRole = lockedRole ?? (filterTab === 'teachers' ? 'teacher' : 'student');
     reset({
       email: '',
-      password: DEFAULT_SUGGESTED_PASSWORD,
+      password: '',
       firstName: '',
       lastName: '',
-      role: defaultRole,
+      role: initialRole,
       enrollmentNo: '',
     });
-    if (defaultRole === 'student' || lockedRole === 'student') {
+    if (initialRole === 'student' || lockedRole === 'student') {
       platformService
         .previewEnrollmentNumber()
         .then((no) => setValue('enrollmentNo', no))
@@ -904,9 +920,12 @@ export function UsersManagementPanel({
 
   const onSubmit = async (values: CreateUserForm) => {
     setError('');
-    if (!editingId && (!values.password || values.password.length < 8)) {
-      setFormError('password', { message: 'Password must be at least 8 characters' });
-      return;
+    if (!editingId) {
+      const pwdError = validatePassword(values.password);
+      if (pwdError) {
+        setFormError('password', { message: pwdError });
+        return;
+      }
     }
     await withLoader(async () => {
       try {
@@ -937,6 +956,7 @@ export function UsersManagementPanel({
       }
     });
   };
+
 
   const setStatus = async (userId: string, status: 'active' | 'inactive') => {
     setError('');
@@ -1037,6 +1057,7 @@ export function UsersManagementPanel({
         </div>
       )}
 
+
       {/* ── Full Width Table Card ── */}
       <div className="org-table-card">
         {/* Card Header with Search & Status Filter Pills */}
@@ -1077,28 +1098,46 @@ export function UsersManagementPanel({
               )}
             </div>
 
-            {/* Status Filter Pills */}
-            <div className="org-filter-pills" role="tablist" aria-label="Status filters">
+            {/* Filter Pills: All, Teachers, Students, Active, Inactive */}
+            <div className="org-filter-pills" role="tablist" aria-label="User filters">
               <button
                 type="button"
-                className={`org-pill${statusFilter === 'all' ? ' is-active' : ''}`}
-                onClick={() => setStatusFilter('all')}
+                className={`org-pill${filterTab === 'all' ? ' is-active' : ''}`}
+                onClick={() => setFilterTab('all')}
               >
-                All{statusFilter === 'all' ? ` (${pagination.total})` : ''}
+                All{filterTab === 'all' ? ` (${pagination.total})` : ''}
+              </button>
+              {!lockedRole && (
+                <>
+                  <button
+                    type="button"
+                    className={`org-pill${filterTab === 'teachers' ? ' is-active' : ''}`}
+                    onClick={() => setFilterTab('teachers')}
+                  >
+                    Teachers{filterTab === 'teachers' ? ` (${pagination.total})` : ''}
+                  </button>
+                  <button
+                    type="button"
+                    className={`org-pill${filterTab === 'students' ? ' is-active' : ''}`}
+                    onClick={() => setFilterTab('students')}
+                  >
+                    Students{filterTab === 'students' ? ` (${pagination.total})` : ''}
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                className={`org-pill${filterTab === 'active' ? ' is-active' : ''}`}
+                onClick={() => setFilterTab('active')}
+              >
+                Active{filterTab === 'active' ? ` (${pagination.total})` : ''}
               </button>
               <button
                 type="button"
-                className={`org-pill${statusFilter === 'active' ? ' is-active' : ''}`}
-                onClick={() => setStatusFilter('active')}
+                className={`org-pill${filterTab === 'inactive' ? ' is-active' : ''}`}
+                onClick={() => setFilterTab('inactive')}
               >
-                Active{statusFilter === 'active' ? ` (${pagination.total})` : ''}
-              </button>
-              <button
-                type="button"
-                className={`org-pill${statusFilter === 'inactive' ? ' is-active' : ''}`}
-                onClick={() => setStatusFilter('inactive')}
-              >
-                Inactive{statusFilter === 'inactive' ? ` (${pagination.total})` : ''}
+                Inactive{filterTab === 'inactive' ? ` (${pagination.total})` : ''}
               </button>
             </div>
           </div>
@@ -1108,7 +1147,7 @@ export function UsersManagementPanel({
           <div className="org-empty-state">
             <FiUsers className="org-empty-icon" />
             <p className="org-empty-text">
-              {searchQuery || statusFilter !== 'all'
+              {searchQuery || filterTab !== 'all'
                 ? 'No members match the current filter.'
                 : `No ${heading.toLowerCase()} found. Click "${addBtnLabel}" to add the first one.`}
             </p>
@@ -1128,7 +1167,7 @@ export function UsersManagementPanel({
               </thead>
               <tbody>
                 {users.map((u) => {
-                  const isActive = u.status === 'active';
+                  const isActive = !isOrgSuspended && u.status === 'active';
                   const initials = getUserInitials(u.first_name, u.last_name, u.email);
                   const primaryRole = (u.roles as string[])[0] || 'student';
                   return (
@@ -1178,9 +1217,29 @@ export function UsersManagementPanel({
                             type="button"
                             role="switch"
                             aria-checked={isActive}
-                            aria-label={isActive ? 'Deactivate account' : 'Activate account'}
+                            aria-label={
+                              isOrgSuspended
+                                ? `Organization ${selectedOrg?.name || ''} is suspended`
+                                : isActive
+                                  ? 'Deactivate account'
+                                  : 'Activate account'
+                            }
+                            title={
+                              isOrgSuspended
+                                ? `Organization "${selectedOrg?.name || ''}" is suspended. Unsuspend the organization to activate its members.`
+                                : undefined
+                            }
                             className={`org-ios-switch${isActive ? ' is-active' : ''}`}
-                            onClick={() => void setStatus(u.id, isActive ? 'inactive' : 'active')}
+                            style={isOrgSuspended ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+                            onClick={() => {
+                              if (isOrgSuspended) {
+                                notify.warning(
+                                  `Cannot activate ${u.first_name}: Organization "${selectedOrg?.name || 'this organization'}" is currently suspended. Unsuspend the organization first.`,
+                                );
+                                return;
+                              }
+                              void setStatus(u.id, isActive ? 'inactive' : 'active');
+                            }}
                           >
                             <span className="org-ios-thumb" />
                           </button>
@@ -1351,19 +1410,19 @@ export function UsersManagementPanel({
                 <Controller
                   name="password"
                   control={control}
-                  defaultValue={DEFAULT_SUGGESTED_PASSWORD}
+                  defaultValue=""
                   render={({ field }) => (
                     <PasswordInput
                       {...field}
                       className="org-form-input"
-                      defaultVisible
                       hasError={Boolean(errors.password)}
                       autoComplete="new-password"
+                      placeholder="Enter user password"
                     />
                   )}
                 />
                 <span className="org-form-hint">
-                  Suggested: {DEFAULT_SUGGESTED_PASSWORD} — user can change after login.
+                  Must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character.
                 </span>
                 <FormError message={errors.password?.message} />
               </div>

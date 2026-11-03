@@ -19,7 +19,7 @@ import { setSelectedOrganizationId } from '@/lib/orgScope';
 import { confirmAction, confirmDelete, showSuccess } from '@/lib/swal';
 import type { Organization } from '@/types/api';
 import { FormError, PasswordInput } from '@/components/ui/FormField';
-import { DEFAULT_SUGGESTED_PASSWORD } from '@/utils/defaultPassword';
+import { validateName, validatePassword } from '@/validators/schemas';
 import { formatDate } from '@/utils/dateFormat';
 import '@/styles/organizations.css';
 
@@ -80,9 +80,11 @@ export function OrganizationsPanel() {
   // Form Fields
   const [name, setName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
-  const [adminFirstName, setAdminFirstName] = useState('Organization');
-  const [adminLastName, setAdminLastName] = useState('Admin');
-  const [adminPassword, setAdminPassword] = useState(DEFAULT_SUGGESTED_PASSWORD);
+  const [adminFirstName, setAdminFirstName] = useState('');
+  const [adminLastName, setAdminLastName] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [firstNameError, setFirstNameError] = useState('');
+  const [lastNameError, setLastNameError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [activateNow, setActivateNow] = useState(true);
 
@@ -103,9 +105,11 @@ export function OrganizationsPanel() {
     setEditingId(null);
     setName('');
     setContactEmail('');
-    setAdminFirstName('Organization');
-    setAdminLastName('Admin');
-    setAdminPassword(DEFAULT_SUGGESTED_PASSWORD);
+    setAdminFirstName('');
+    setAdminLastName('');
+    setAdminPassword('');
+    setFirstNameError('');
+    setLastNameError('');
     setPasswordError('');
     setActivateNow(true);
     setDrawerError('');
@@ -119,6 +123,8 @@ export function OrganizationsPanel() {
       typeof org.settings?.contactEmail === 'string' ? org.settings.contactEmail : '',
     );
     setActivateNow(org.isActive);
+    setFirstNameError('');
+    setLastNameError('');
     setPasswordError('');
     setDrawerError('');
     setIsDrawerOpen(true);
@@ -126,10 +132,18 @@ export function OrganizationsPanel() {
 
   const closeDrawer = () => {
     setIsDrawerOpen(false);
+    setFirstNameError('');
+    setLastNameError('');
+    setPasswordError('');
     setDrawerError('');
   };
 
   const save = async () => {
+    setFirstNameError('');
+    setLastNameError('');
+    setPasswordError('');
+    setDrawerError('');
+
     const nextSlug = slugify(name);
     if (!name.trim() || !nextSlug) {
       setDrawerError('Organization name is required.');
@@ -139,12 +153,23 @@ export function OrganizationsPanel() {
       setDrawerError('Login email is required — org admin credentials will be emailed there.');
       return;
     }
-    if (!editingId && adminPassword.trim().length < 8) {
-      setPasswordError('Password must be at least 8 characters.');
-      return;
+    if (!editingId) {
+      const fnErr = validateName(adminFirstName, 'Admin first name');
+      if (fnErr) {
+        setFirstNameError(fnErr);
+        return;
+      }
+      const lnErr = validateName(adminLastName, 'Admin last name');
+      if (lnErr) {
+        setLastNameError(lnErr);
+        return;
+      }
+      const pwdErr = validatePassword(adminPassword);
+      if (pwdErr) {
+        setPasswordError(pwdErr);
+        return;
+      }
     }
-    setPasswordError('');
-    setDrawerError('');
     await withLoader(async () => {
       try {
         const contact = contactEmail.trim();
@@ -166,9 +191,9 @@ export function OrganizationsPanel() {
             name: name.trim(),
             slug: nextSlug,
             contactEmail: contact,
-            adminFirstName: adminFirstName.trim() || 'Organization',
-            adminLastName: adminLastName.trim() || 'Admin',
-            adminPassword: adminPassword.trim() || DEFAULT_SUGGESTED_PASSWORD,
+            adminFirstName: adminFirstName.trim(),
+            adminLastName: adminLastName.trim(),
+            adminPassword: adminPassword.trim(),
             isActive: activateNow,
           });
           const emailedTo =
@@ -199,11 +224,12 @@ export function OrganizationsPanel() {
     setError('');
     try {
       await withLoader(async () => {
-        await organizationService.verifyOrganization(org.id);
+        await organizationService.updateOrganization(org.id, { isActive: true });
+        await organizationService.verifyOrganization(org.id).catch(() => undefined);
         await refresh();
         await refreshOrganizations();
       });
-      showSuccess('Activated!', `${org.name} can now access the platform.`);
+      showSuccess('Activated!', `${org.name} has been activated. All its teachers and students are now active.`);
     } catch (err) {
       setError(parseApiError(err));
     }
@@ -581,27 +607,35 @@ export function OrganizationsPanel() {
               <div className="org-grid-2">
                 <div className="org-form-field">
                   <label className="org-form-label" htmlFor="drawerAdminFirst">
-                    Admin First Name
+                    Admin First Name <span className="org-required-star">*</span>
                   </label>
                   <input
                     id="drawerAdminFirst"
                     className="org-form-input"
                     value={adminFirstName}
-                    onChange={(e) => setAdminFirstName(e.target.value)}
-                    placeholder="Organization"
+                    onChange={(e) => {
+                      setAdminFirstName(e.target.value);
+                      if (firstNameError) setFirstNameError('');
+                    }}
+                    placeholder="e.g. John"
                   />
+                  <FormError message={firstNameError} />
                 </div>
                 <div className="org-form-field">
                   <label className="org-form-label" htmlFor="drawerAdminLast">
-                    Admin Last Name
+                    Admin Last Name <span className="org-required-star">*</span>
                   </label>
                   <input
                     id="drawerAdminLast"
                     className="org-form-input"
                     value={adminLastName}
-                    onChange={(e) => setAdminLastName(e.target.value)}
-                    placeholder="Admin"
+                    onChange={(e) => {
+                      setAdminLastName(e.target.value);
+                      if (lastNameError) setLastNameError('');
+                    }}
+                    placeholder="e.g. Doe"
                   />
+                  <FormError message={lastNameError} />
                 </div>
               </div>
 
@@ -613,16 +647,16 @@ export function OrganizationsPanel() {
                   id="drawerAdminPassword"
                   className="org-form-input"
                   value={adminPassword}
-                  defaultVisible
                   onChange={(e) => {
                     setAdminPassword(e.target.value);
                     if (passwordError) setPasswordError('');
                   }}
                   hasError={Boolean(passwordError)}
                   autoComplete="new-password"
+                  placeholder="Enter admin password"
                 />
                 <span className="org-form-hint">
-                  Suggested: {DEFAULT_SUGGESTED_PASSWORD} — edit if needed.
+                  Must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character.
                 </span>
                 <FormError message={passwordError} />
               </div>

@@ -9,6 +9,56 @@ const durationMinutesField = yup
     return parsed != null && parsed >= 1;
   });
 
+export function validateName(value: string | undefined | null, label: string = 'Name'): string | null {
+  const trimmed = (value ?? '').trim();
+  if (!trimmed) return `${label} is required.`;
+  if (/^[0-9]/.test(trimmed)) return `${label} cannot start with a number.`;
+  if (!/^[A-Za-z]/.test(trimmed)) return `${label} must start with a letter.`;
+  if (trimmed.length < 2) return `${label} must be at least 2 characters.`;
+  if (trimmed.length > 50) return `${label} cannot exceed 50 characters.`;
+  if (!/^[A-Za-z][A-Za-z\s'-]*$/.test(trimmed)) {
+    return `${label} can only contain letters, spaces, hyphens, and apostrophes.`;
+  }
+  return null;
+}
+
+export function validatePassword(password: string | undefined | null): string | null {
+  const p = password ?? '';
+  if (!p) return 'Password is required.';
+  if (p.length < 8) return 'Password must be at least 8 characters.';
+  if (p.length > 128) return 'Password cannot exceed 128 characters.';
+  if (!/[A-Z]/.test(p)) return 'Password must include at least one uppercase letter.';
+  if (!/[a-z]/.test(p)) return 'Password must include at least one lowercase letter.';
+  if (!/[0-9]/.test(p)) return 'Password must include at least one number.';
+  if (!/[^A-Za-z0-9]/.test(p)) return 'Password must include at least one special character.';
+  return null;
+}
+
+export const createNameSchema = (label: string = 'Name') =>
+  yup
+    .string()
+    .trim()
+    .required(`${label} is required.`)
+    .test(
+      'not-start-with-number',
+      `${label} cannot start with a number.`,
+      (value) => !value || !/^[0-9]/.test(value.trim())
+    )
+    .test(
+      'start-with-letter',
+      `${label} must start with a letter.`,
+      (value) => !value || /^[A-Za-z]/.test(value.trim())
+    )
+    .min(2, `${label} must be at least 2 characters.`)
+    .max(50, `${label} cannot exceed 50 characters.`)
+    .matches(
+      /^[A-Za-z][A-Za-z\s'-]*$/,
+      `${label} can only contain letters, spaces, hyphens, and apostrophes.`
+    );
+
+export const firstNameSchema = createNameSchema('First name');
+export const lastNameSchema = createNameSchema('Last name');
+
 export const passwordSchema = yup
   .string()
   .required('Please enter a password.')
@@ -37,8 +87,8 @@ export const loginSchema = yup.object({
 });
 
 export const registerSchema = yup.object({
-  firstName: yup.string().required('First name is required').trim().max(100, 'Max 100 characters'),
-  lastName: yup.string().required('Last name is required').trim().max(100, 'Max 100 characters'),
+  firstName: firstNameSchema,
+  lastName: lastNameSchema,
   email: yup.string().required('Email is required').email('Enter a valid email').max(255),
   phone: yup
     .string()
@@ -182,8 +232,8 @@ export const createTestVideoSchema = yup.object({
 });
 
 export const becomeTeacherSchema = yup.object({
-  firstName: yup.string().required('First name is required').trim().max(100),
-  lastName: yup.string().required('Last name is required').trim().max(100),
+  firstName: firstNameSchema,
+  lastName: lastNameSchema,
   email: yup.string().required('Email is required').email('Enter a valid email'),
   phone: yup
     .string()
