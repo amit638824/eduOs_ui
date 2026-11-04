@@ -59,6 +59,29 @@ export const createNameSchema = (label: string = 'Name') =>
 export const firstNameSchema = createNameSchema('First name');
 export const lastNameSchema = createNameSchema('Last name');
 
+export const optionalNameSchema = (label: string = 'Name') =>
+  yup
+    .string()
+    .trim()
+    .transform((v) => (v == null || v === '' ? undefined : v))
+    .optional()
+    .test(
+      'not-start-with-number',
+      `${label} cannot start with a number.`,
+      (value) => !value || !/^[0-9]/.test(value.trim())
+    )
+    .test(
+      'start-with-letter',
+      `${label} must start with a letter.`,
+      (value) => !value || /^[A-Za-z]/.test(value.trim())
+    )
+    .min(2, `${label} must be at least 2 characters.`)
+    .max(50, `${label} cannot exceed 50 characters.`)
+    .matches(
+      /^[A-Za-z][A-Za-z\s'-]*$/,
+      `${label} can only contain letters, spaces, hyphens, and apostrophes.`
+    );
+
 export const passwordSchema = yup
   .string()
   .required('Please enter a password.')

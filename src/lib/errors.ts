@@ -18,8 +18,17 @@ export class ApiError extends Error {
 /** Exact `message` string from an API JSON body. */
 export function readApiMessage(payload: unknown): string {
   if (!payload || typeof payload !== 'object') return '';
-  const message = (payload as { message?: unknown }).message;
-  return typeof message === 'string' ? message.trim() : '';
+  const data = payload as { message?: unknown; error?: unknown };
+  if (Array.isArray(data.message)) {
+    return data.message.map(String).join('; ');
+  }
+  if (typeof data.message === 'string' && data.message.trim()) {
+    return data.message.trim();
+  }
+  if (typeof data.error === 'string' && data.error.trim()) {
+    return data.error.trim();
+  }
+  return '';
 }
 
 /** The API `message` only. Empty when the response has no message. */

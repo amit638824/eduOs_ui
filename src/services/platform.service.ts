@@ -35,6 +35,10 @@ export interface PlatformUser {
   status: string;
   roles: string[];
   enrollment_no?: string | null;
+  department_id?: string | null;
+  branch_id?: string | null;
+  department_name?: string | null;
+  branch_name?: string | null;
   created_at: string;
 }
 
@@ -150,7 +154,7 @@ export async function verifyRazorpayPayment(input: {
 
 export async function listUsers(
   page = 1,
-  limit = 10,
+  limit = 20,
   search?: string,
   role?: string,
   status?: string,
@@ -178,13 +182,13 @@ export async function createUser(input: {
   email: string;
   password: string;
   firstName: string;
-  lastName: string;
+  lastName?: string;
   phone?: string;
   role: 'student' | 'teacher' | 'org_admin' | 'staff';
   enrollmentNo?: string;
 }) {
   const { data } = await api.post<ApiResponse<PlatformUser>>(`${base}/users`, input);
-  return data.data;
+  return (data as any)?.data ?? data;
 }
 
 export async function updateUser(
@@ -197,8 +201,18 @@ export async function updateUser(
     enrollmentNo?: string;
   },
 ) {
-  const { data } = await api.patch<ApiResponse<PlatformUser>>(`${base}/users/${userId}`, input);
-  return data.data;
+  const { data } = await api.patch<ApiResponse<PlatformUser>>(`${base}/users/${userId}`, payloadSafe(input));
+  return (data as any)?.data ?? data;
+}
+
+function payloadSafe(input: Record<string, unknown>) {
+  const clean: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(input)) {
+    if (v !== undefined && k !== 'departmentId' && k !== 'department_id' && k !== 'branchId' && k !== 'branch_id') {
+      clean[k] = v;
+    }
+  }
+  return clean;
 }
 
 export async function deleteUser(userId: string) {

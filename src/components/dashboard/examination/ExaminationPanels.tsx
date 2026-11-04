@@ -41,6 +41,7 @@ import {
   FiZap,
   FiTrash2,
   FiHelpCircle,
+  FiInfo,
   FiArrowRight,
   FiCheckCircle,
   FiList,
@@ -1356,6 +1357,7 @@ export function TestsListPanel({ title }: { title: string }) {
   useDashboardLoadingEffect(loading);
 
   const startEdit = (t: ExamTest) => {
+    setError('');
     setEditingId(t.id);
     setEditTitle(t.title);
     setEditDuration(String(t.duration_minutes ?? 60));
@@ -1389,6 +1391,11 @@ export function TestsListPanel({ title }: { title: string }) {
       setError('Passing marks must be 0 or more.');
       return;
     }
+    const current = tests.find((x) => x.id === editingId);
+    if (current?.total_marks != null && current.total_marks > 0 && passing >= current.total_marks) {
+      setError(`Passing marks (${passing}) cannot be greater than or equal to total marks (${current.total_marks}).`);
+      return;
+    }
     const maxTabs = Number(editMaxTabSwitches);
     if (!Number.isInteger(maxTabs) || maxTabs < 0) {
       setError('Max tab switches must be 0 or more.');
@@ -1397,7 +1404,6 @@ export function TestsListPanel({ title }: { title: string }) {
     setError('');
     await withLoader(async () => {
       try {
-        const current = tests.find((x) => x.id === editingId);
         const prevConfig = (current?.config ?? {}) as Record<string, unknown>;
         await examinationService.updateTest(editingId, {
           title: editTitle.trim(),
@@ -1621,25 +1627,43 @@ export function TestsListPanel({ title }: { title: string }) {
         />
       </div>
 
-      {editingId && (
-        <>
-          <div className="org-drawer-overlay" onClick={() => setEditingId(null)} />
-          <div className="org-drawer">
-            <div className="org-drawer-header">
-              <div>
-                <h3 className="org-drawer-title">Edit Test Details</h3>
-                <p className="org-drawer-subtitle">Update duration, scoring, and examination security rules</p>
-              </div>
-              <button
-                type="button"
-                className="org-drawer-close"
-                onClick={() => setEditingId(null)}
-                aria-label="Close drawer"
-              >
-                <FiX />
-              </button>
+      {/* ── Side Drawer for Editing Test Details ── */}
+      <div
+        className={`org-drawer-overlay ${editingId ? 'is-open' : ''}`}
+        onClick={() => setEditingId(null)}
+        aria-hidden="true"
+      />
+      <div
+        className={`org-drawer ${editingId ? 'is-open' : ''}`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drawerEditTestTitle"
+      >
+        <div className="org-drawer-header">
+          <div className="org-drawer-title-wrap">
+            <div className="org-drawer-badge-icon">
+              <FiEdit3 />
             </div>
+            <div>
+              <h3 className="org-drawer-title" id="drawerEditTestTitle">Edit Test Details</h3>
+              <p className="org-drawer-desc">Update duration, scoring, and examination security rules</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="org-drawer-close-btn"
+            onClick={() => setEditingId(null)}
+            aria-label="Close drawer"
+          >
+            <FiX />
+          </button>
+        </div>
             <div className="org-drawer-body">
+              {error && (
+                <div style={{ marginBottom: 16, padding: '10px 14px', borderRadius: 8, background: '#fef2f2', border: '1px solid #fecaca', color: '#b91c1c', fontSize: '0.85rem' }}>
+                  {error}
+                </div>
+              )}
               <div className="org-form-field">
                 <label className="org-form-label">Test Title</label>
                 <input
@@ -1663,7 +1687,12 @@ export function TestsListPanel({ title }: { title: string }) {
                   />
                 </div>
                 <div className="org-form-field">
-                  <label className="org-form-label">Passing marks</label>
+                  <label className="org-form-label">
+                    Passing marks {(() => {
+                      const t = tests.find((x) => x.id === editingId);
+                      return t?.total_marks != null && t.total_marks > 0 ? `(Total marks: ${t.total_marks})` : '';
+                    })()}
+                  </label>
                   <input
                     className="org-form-input"
                     type="number"
@@ -1671,6 +1700,14 @@ export function TestsListPanel({ title }: { title: string }) {
                     value={editPassingMarks}
                     onChange={(e) => setEditPassingMarks(e.target.value)}
                   />
+                  {(() => {
+                    const t = tests.find((x) => x.id === editingId);
+                    return t?.total_marks != null && t.total_marks > 0 ? (
+                      <span className="org-form-hint">
+                        Must be strictly less than total marks (${t.total_marks}).
+                      </span>
+                    ) : null;
+                  })()}
                 </div>
               </div>
 
@@ -1778,22 +1815,21 @@ export function TestsListPanel({ title }: { title: string }) {
             <div className="org-drawer-footer">
               <button
                 type="button"
-                className="org-drawer-btn-cancel"
+                className="org-drawer-cancel"
                 onClick={() => setEditingId(null)}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="org-add-btn"
+                className="org-drawer-submit"
                 onClick={() => void saveEdit()}
               >
-                <FiCheckCircle /> Save Changes
+                Save Changes
               </button>
             </div>
           </div>
-        </>
-      )}
+      <div style={{ display: 'none' }}></div>
     </div>
   );
 }
@@ -2945,9 +2981,6 @@ export function CreateTestPanel() {
         <div className="org-top-bar">
           <div>
             <h2 className="org-page-title">Create Test</h2>
-            <p className="org-page-desc">
-              Step 2: Fill Details, then Scoring, then Rules. Your typing is kept in this browser until you save.
-            </p>
           </div>
           <Link
             to={getTestsListPath(user?.roles ?? [])}
@@ -2955,6 +2988,46 @@ export function CreateTestPanel() {
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}
           >
             <FiList /> Edit saved tests
+          </Link>
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            borderLeft: '4px solid #3b82f6',
+            borderRadius: 10,
+            padding: '12px 18px',
+            marginBottom: 20,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '1 1 300px' }}>
+            <FiInfo style={{ color: '#2563eb', fontSize: '1.25rem', flexShrink: 0 }} />
+            <span style={{ fontSize: '0.875rem', color: '#1e3a8a', lineHeight: 1.5 }}>
+              <strong>Prerequisite:</strong> To create a test, please first go to the Question Bank tab to add your subjects, topics, and questions.
+            </span>
+          </div>
+          <Link
+            to="/dashboard/admin-question-bank"
+            className="org-btn-outline-primary"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              fontSize: '0.8125rem',
+              padding: '6px 14px',
+              textDecoration: 'none',
+              background: '#ffffff',
+              flexShrink: 0,
+            }}
+          >
+            <span>Go to Question Bank</span>
+            <FiArrowRight />
           </Link>
         </div>
 
@@ -3114,6 +3187,9 @@ export function CreateTestPanel() {
                       className={inputClassName('org-form-input', !!errors.passingMarks)}
                       {...register('passingMarks')}
                     />
+                    <span className="org-form-hint">
+                      Total marks of questions added in the next step must exceed this value.
+                    </span>
                     <FormError message={errors.passingMarks?.message} />
                   </div>
                   <div className="col-md-6">

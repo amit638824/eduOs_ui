@@ -95,3 +95,13 @@ export async function getBranch(id: string): Promise<Branch> {
   );
   return normalizeBranch(data.data);
 }
+export async function createBranch(
+  organizationId: string,
+  input: { name: string; code?: string; address?: string },
+): Promise<Branch> {
+  const { data } = await api.post<ApiResponse<Record<string, unknown>>>(
+    `/organizations/${organizationId}/branches`,
+    input,
+  );
+  return normalizeBranch(data.data);
+}

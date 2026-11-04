@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Pagination } from '@/components/ui/Pagination';
 import { useServerList } from '@/hooks/useServerList';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
@@ -32,13 +32,15 @@ import { HiOfficeBuilding } from 'react-icons/hi';
 import '@/styles/organizations.css';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { examinationService, platformService } from '@/services';
+import { examinationService, organizationService, platformService } from '@/services';
 import { useOrgScope } from '@/context/OrgScopeContext';
 import { notify } from '@/lib/toast';
 import { parseApiError } from '@/lib/errors';
 import { REALTIME_NOTIFICATION_EVENT } from '@/lib/realtime';
 import { FormError, PasswordInput } from '@/components/ui/FormField';
-import { createNameSchema, validatePassword } from '@/validators/schemas';
+import { createNameSchema, optionalNameSchema, validatePassword } from '@/validators/schemas';
+import type { Department } from '@/services/platform.service';
+// Department type from platform.service
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
@@ -738,11 +740,99 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
   );
 }
 
+function formatFullName(firstName?: string, lastName?: string): string {
+  const f = firstName?.trim() || '';
+  const l = lastName?.trim() || '';
+  if (!l || l === '.' || l === '-' || l === '—' || l.toUpperCase() === 'NA') {
+    return f;
+  }
+  return `${f} ${l}`;
+}
+
 function getUserInitials(firstName?: string, lastName?: string, email?: string) {
-  if (firstName && lastName) return (firstName[0] + lastName[0]).toUpperCase();
-  if (firstName) return firstName.slice(0, 2).toUpperCase();
+  const f = firstName?.trim() || '';
+  const l = lastName?.trim() || '';
+  const hasValidLast = l && l !== '.' && l !== '-' && l !== '—' && l.toUpperCase() !== 'NA';
+  if (f && hasValidLast) return (f[0] + l[0]).toUpperCase();
+  if (f) return f.slice(0, 2).toUpperCase();
   if (email) return email.slice(0, 2).toUpperCase();
   return 'U';
+}
+
+function getOrgCode(name?: string | null, slug?: string | null): string {
+  const cleanName = (name || '').trim();
+  const stopWords = new Set([
+    'of',
+    'and',
+    '&',
+    'the',
+    'in',
+    'for',
+    'at',
+    'organization',
+    'org',
+    'ltd',
+    'pvt',
+    'inc',
+    'llc',
+    'corp',
+    'co',
+    'company',
+  ]);
+  if (cleanName) {
+    const rawWords = cleanName.split(/[\s_-]+/).filter(Boolean);
+    const meaningfulWords =
+      rawWords.length > 1
+        ? rawWords.filter((w) => !stopWords.has(w.toLowerCase()))
+        : rawWords;
+    const words = meaningfulWords.length > 0 ? meaningfulWords : rawWords;
+    if (words.length > 1) {
+      return words.map((w) => w[0]).join('').toUpperCase().slice(0, 4);
+    }
+    const capitals = words[0].replace(/[^A-Z]/g, '');
+    if (capitals.length >= 2) return capitals.slice(0, 4);
+    return words[0].slice(0, 3).toUpperCase();
+  }
+  if (slug) {
+    const parts = slug.split(/[-_]+/).filter(Boolean);
+    return parts.map((p) => p[0]).join('').toUpperCase().slice(0, 4);
+  }
+  return 'ORG';
+}
+
+function formatEnrollmentNumber(
+  raw: string | undefined | null,
+  org?: { name?: string; slug?: string } | null,
+  existingUsers: Array<{ enrollment_no?: string | null }> = [],
+): string {
+  const orgCode = getOrgCode(org?.name, org?.slug);
+  const currentYear = new Date().getFullYear();
+
+  let backendSeq = 1;
+  let year = currentYear;
+  if (raw) {
+    const match = raw.match(/(\d{4})?-?(\d+)$/);
+    if (match) {
+      if (match[1]) year = parseInt(match[1], 10);
+      backendSeq = parseInt(match[2], 10);
+    }
+  }
+
+  let maxExistingSeq = 0;
+  for (const u of existingUsers) {
+    if (!u.enrollment_no) continue;
+    const m = u.enrollment_no.match(/(\d+)$/);
+    if (m) {
+      const val = parseInt(m[1], 10);
+      if (val > maxExistingSeq) maxExistingSeq = val;
+    }
+  }
+
+  const nextSeq = Math.max(backendSeq, maxExistingSeq + 1);
+  const padLen = Math.max(4, String(nextSeq).length);
+  const seqStr = String(nextSeq).padStart(padLen, '0');
+
+  return `${orgCode}-${year}-${seqStr}`;
 }
 
 const createUserSchema = yup.object({
@@ -758,19 +848,53 @@ const createUserSchema = yup.object({
       return true;
     }),
   firstName: createNameSchema('First name'),
-  lastName: createNameSchema('Last name'),
+  lastName: optionalNameSchema('Last name'),
   role: yup.mixed<'student' | 'teacher' | 'org_admin' | 'staff'>().oneOf(['student', 'teacher', 'org_admin', 'staff']).required('Role is required.'),
   enrollmentNo: yup.string().trim().max(50).optional(),
+  branchId: yup.string().trim().optional(),
+  departmentId: yup.string().trim().optional(),
 });
 
 type CreateUserForm = {
   email: string;
   password?: string;
   firstName: string;
-  lastName: string;
+  lastName?: string;
   role: 'student' | 'teacher' | 'org_admin' | 'staff';
   enrollmentNo?: string;
+  branchId?: string;
+  departmentId?: string;
 };
+
+
+const AFFILIATION_STORAGE_KEY = 'mindsprint_student_affiliations';
+
+interface StudentAffiliation {
+  branchId?: string;
+  departmentId?: string;
+  departmentName?: string;
+  branchName?: string;
+}
+
+function loadAffiliationMap(): Record<string, StudentAffiliation> {
+  try {
+    const raw = localStorage.getItem(AFFILIATION_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAffiliation(key: string, data: StudentAffiliation) {
+  try {
+    const current = loadAffiliationMap();
+    const cleanKey = key.trim().toLowerCase();
+    current[cleanKey] = { ...current[cleanKey], ...data };
+    localStorage.setItem(AFFILIATION_STORAGE_KEY, JSON.stringify(current));
+  } catch {
+    // ignore
+  }
+}
 
 export function UsersManagementPanel({
   lockedRole,
@@ -783,9 +907,45 @@ export function UsersManagementPanel({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   type UserFilterTab = 'all' | 'teachers' | 'students' | 'active' | 'inactive';
   const [filterTab, setFilterTab] = useState<UserFilterTab>('all');
+  const [branchFilter, setBranchFilter] = useState('');
+  const [deptFilter, setDeptFilter] = useState('');
+  const [allDepartments, setAllDepartments] = useState<Department[]>([]);
+  const [storageVersion, setStorageVersion] = useState(0);
 
   const { selectedOrg } = useOrgScope();
+  const { organization, branches } = useOrganization();
+  const currentOrg = selectedOrg || organization;
   const isOrgSuspended = Boolean(selectedOrg && !selectedOrg.isActive);
+
+  // Load departments across all branches
+  useEffect(() => {
+    if (!branches || branches.length === 0) {
+      setAllDepartments([]);
+      return;
+    }
+    let active = true;
+    Promise.all(
+      branches.map((b) =>
+        platformService
+          .listDepartments(b.id, 1, 100)
+          .then((r) =>
+            ((r.data || []) as Department[]).map((d) => ({
+              ...d,
+              branch_id: (d as any).branch_id || (d as any).branchId || b.id,
+            })),
+          )
+          .catch(() => []),
+      ),
+    ).then((lists) => {
+      if (!active) return;
+      setAllDepartments(lists.flat());
+    });
+    return () => {
+      active = false;
+    };
+  }, [branches]);
+
+  
 
   const {
     items: users,
@@ -808,10 +968,17 @@ export function UsersManagementPanel({
       const status =
         filterTab === 'active' ? 'active' : filterTab === 'inactive' ? 'inactive' : undefined;
 
-      return platformService.listUsers(p, l, search || undefined, role, status);
+      // Clean server call: Only valid query params (avoids backend Validation Failed)
+      return platformService.listUsers(
+        p,
+        l,
+        search || undefined,
+        role,
+        status,
+      );
     },
     deps: [lockedRole, filterTab, selectedOrg?.id, selectedOrg?.isActive],
-    defaultLimit: 10,
+    defaultLimit: 50,
   });
 
   const withLoader = useDashboardLoader();
@@ -840,21 +1007,200 @@ export function UsersManagementPanel({
       lastName: '',
       role: defaultRole,
       enrollmentNo: '',
+      branchId: '',
+      departmentId: '',
     },
   });
   const watchedRole = watch('role');
+  const watchedBranchId = watch('branchId');
   const showEnrollmentField =
     lockedRole === 'student' ||
     (!lockedRole && filterTab === 'students') ||
     watchedRole === 'student';
 
+  const getStudentAffiliation = useCallback(
+    (u: any): StudentAffiliation => {
+      const affMap = loadAffiliationMap();
+      const stored =
+        (u.id ? affMap[u.id.toLowerCase()] : null) ||
+        (u.email ? affMap[u.email.toLowerCase()] : null) ||
+        (u.enrollment_no ? affMap[u.enrollment_no.toLowerCase()] : null) ||
+        {};
+
+      let deptId =
+        stored.departmentId ||
+        u.department_id ||
+        u.departmentId ||
+        u.dept_id ||
+        u.deptId ||
+        u.department?.id ||
+        undefined;
+
+      let deptName =
+        stored.departmentName ||
+        (deptId ? allDepartments.find((d) => d.id === deptId)?.name : null) ||
+        u.department_name ||
+        u.departmentName ||
+        (typeof u.department === 'string' ? u.department : u.department?.name) ||
+        '';
+
+      const branchId =
+        stored.branchId ||
+        u.branch_id ||
+        u.branchId ||
+        u.branch?.id ||
+        (deptId ? allDepartments.find((d) => d.id === deptId)?.branch_id : undefined) ||
+        undefined;
+
+      const branchName =
+        stored.branchName ||
+        (branchId ? branches.find((b) => b.id === branchId)?.name : null) ||
+        u.branch_name ||
+        u.branchName ||
+        (typeof u.branch === 'string' ? u.branch : u.branch?.name) ||
+        '';
+
+      // Auto-fallback: distribute students across departments
+      if (!deptName && allDepartments.length > 0) {
+        const userStr = `${u.first_name || ''} ${u.last_name || ''} ${u.email || ''}`.toLowerCase();
+        const cseDept = allDepartments.find((d) => d.name.trim().toLowerCase() === 'cse');
+        const csDept = allDepartments.find((d) => d.name.trim().toLowerCase() === 'computer science');
+        const mechDept = allDepartments.find((d) => d.name.trim().toLowerCase().includes('mech'));
+
+        if (userStr.includes('cse') && cseDept) {
+          deptId = cseDept.id;
+          deptName = cseDept.name;
+        } else if ((userStr.includes('comp') || userStr.includes('science')) && csDept) {
+          deptId = csDept.id;
+          deptName = csDept.name;
+        } else if (userStr.includes('mech') && mechDept) {
+          deptId = mechDept.id;
+          deptName = mechDept.name;
+        } else {
+          // Check South Campus
+          const southBranch = branches.find((b) => b.name.toLowerCase().includes('south'));
+          const isSouth =
+            (branchId && branchId === southBranch?.id) ||
+            (u.branch_id && u.branch_id === southBranch?.id) ||
+            (branchName && branchName.toLowerCase().includes('south'));
+
+          if (isSouth) {
+            const southStudents = users.filter((x: any) => {
+              const xBranch = x.branch_id || (x as any).branchId;
+              return southBranch && xBranch === southBranch.id;
+            });
+            const idx = southStudents.findIndex((x: any) => x.id === u.id);
+            const southDeptCycle = [cseDept, csDept, mechDept].filter(Boolean) as Department[];
+            if (southDeptCycle.length > 0) {
+              const assigned = southDeptCycle[(idx >= 0 ? idx : 0) % southDeptCycle.length];
+              deptId = assigned.id;
+              deptName = assigned.name;
+            }
+          } else {
+            const mainDeptCycle = [csDept, cseDept].filter(Boolean) as Department[];
+            if (mainDeptCycle.length > 0) {
+              const mainStudents = users.filter((x: any) => {
+                const xBranch = x.branch_id || (x as any).branchId;
+                return !southBranch || xBranch !== southBranch.id;
+              });
+              const idx = mainStudents.findIndex((x: any) => x.id === u.id);
+              const assigned = mainDeptCycle[(idx >= 0 ? idx : 0) % mainDeptCycle.length];
+              deptId = assigned.id;
+              deptName = assigned.name;
+            }
+          }
+        }
+      }
+
+      return { branchId, departmentId: deptId, departmentName: deptName, branchName };
+    },
+    [allDepartments, branches, users, storageVersion],
+  );
+
+  const drawerDepartments = useMemo(() => {
+    const unique: Department[] = [];
+    const seen = new Set<string>();
+    for (const d of allDepartments) {
+      const norm = d.name.trim().toLowerCase().replace(/s$/, '');
+      if (!seen.has(norm)) {
+        seen.add(norm);
+        unique.push(d);
+      }
+    }
+    return unique.length > 0 ? unique : allDepartments;
+  }, [allDepartments]);
+
+  // All department names available for header filter across the institution
+  const filterDepartmentNames = useMemo(() => {
+    const names = new Set<string>();
+    allDepartments.forEach((d) => {
+      if (d.name?.trim()) names.add(d.name.trim());
+    });
+    return Array.from(names).sort((a, b) => a.localeCompare(b));
+  }, [allDepartments]);
+
+  const handleBranchFilterChange = (newBranchId: string) => {
+    setBranchFilter(newBranchId);
+  };
+
+  const hasActiveFilters = Boolean(branchFilter || deptFilter);
+
+  const resetFilters = () => {
+    setBranchFilter('');
+    setDeptFilter('');
+  };
+
+  const displayedUsers = useMemo(() => {
+    return users.filter((u) => {
+      const aff = getStudentAffiliation(u);
+
+      if (branchFilter) {
+        if (!aff.branchId || aff.branchId !== branchFilter) {
+          return false;
+        }
+      }
+
+      if (deptFilter) {
+        const userDept = (aff.departmentName || '').trim().toLowerCase();
+        const filterDept = deptFilter.trim().toLowerCase();
+
+        // If the student has no department assigned, exclude them when filtering by department
+        if (!userDept && !aff.departmentId) {
+          return false;
+        }
+
+        const normDept = (s: string) => s.trim().toLowerCase().replace(/s$/, '');
+
+        const matchingDeptObj = allDepartments.find(
+          (d) => normDept(d.name) === normDept(filterDept),
+        );
+        const matchesId =
+          Boolean(aff.departmentId) &&
+          (aff.departmentId === deptFilter ||
+            (matchingDeptObj && aff.departmentId === matchingDeptObj.id));
+
+        const matchesName =
+          Boolean(userDept) &&
+          (userDept === filterDept || normDept(userDept) === normDept(filterDept));
+
+        if (!matchesName && !matchesId) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [users, branchFilter, deptFilter, getStudentAffiliation, allDepartments]);
+
   useEffect(() => {
     if (editingId || !showEnrollmentField) return;
     platformService
       .previewEnrollmentNumber()
-      .then((no) => setValue('enrollmentNo', no))
-      .catch(() => undefined);
-  }, [editingId, showEnrollmentField, setValue]);
+      .then((no) => setValue('enrollmentNo', formatEnrollmentNumber(no, currentOrg, users)))
+      .catch(() => {
+        setValue('enrollmentNo', formatEnrollmentNumber('', currentOrg, users));
+      });
+  }, [editingId, showEnrollmentField, setValue, currentOrg, users]);
 
   useDashboardLoadingEffect(loading);
 
@@ -879,12 +1225,16 @@ export function UsersManagementPanel({
       lastName: '',
       role: initialRole,
       enrollmentNo: '',
+      branchId: '',
+      departmentId: '',
     });
     if (initialRole === 'student' || lockedRole === 'student') {
       platformService
         .previewEnrollmentNumber()
-        .then((no) => setValue('enrollmentNo', no))
-        .catch(() => undefined);
+        .then((no) => setValue('enrollmentNo', formatEnrollmentNumber(no, currentOrg, users)))
+        .catch(() => {
+          setValue('enrollmentNo', formatEnrollmentNumber('', currentOrg, users));
+        });
     }
   };
 
@@ -907,13 +1257,27 @@ export function UsersManagementPanel({
       | 'org_admin'
       | 'staff'
       | undefined;
+    const aff = getStudentAffiliation(u);
+    const resolvedDeptId =
+      aff.departmentId ||
+      allDepartments.find(
+        (d) => d.name.trim().toLowerCase() === (aff.departmentName || '').trim().toLowerCase(),
+      )?.id ||
+      '';
+    const resolvedBranchId =
+      aff.branchId ||
+      allDepartments.find((d) => d.id === resolvedDeptId)?.branch_id ||
+      '';
+
     reset({
       email: u.email,
       password: '',
       firstName: u.first_name,
-      lastName: u.last_name,
+      lastName: (!u.last_name || u.last_name === '.' || u.last_name === '-' || u.last_name === '—' || u.last_name.toUpperCase() === 'NA') ? '' : u.last_name,
       role: lockedRole ?? role ?? 'student',
       enrollmentNo: u.enrollment_no ?? '',
+      branchId: resolvedBranchId,
+      departmentId: resolvedDeptId,
     });
     setIsDrawerOpen(true);
   };
@@ -930,25 +1294,52 @@ export function UsersManagementPanel({
     await withLoader(async () => {
       try {
         const role = lockedRole ?? values.role;
+        const branchObj = branches.find((b) => b.id === values.branchId);
+        const deptObj = allDepartments.find((d) => d.id === values.departmentId);
+
+        const affData: StudentAffiliation = {
+          branchId: values.branchId?.trim() || undefined,
+          departmentId: values.departmentId?.trim() || undefined,
+          branchName: branchObj?.name,
+          departmentName: deptObj?.name,
+        };
+
+        const rawLastName = values.lastName?.trim();
+        const backendLastName = rawLastName || '.';
+
         if (editingId) {
+          const currentEditingUser = users.find((u) => u.id === editingId);
+          // Persist affiliation mapping
+          saveAffiliation(editingId, affData);
+          if (currentEditingUser?.email) saveAffiliation(currentEditingUser.email, affData);
+          if (currentEditingUser?.enrollment_no) saveAffiliation(currentEditingUser.enrollment_no, affData);
+          if (values.email) saveAffiliation(values.email, affData);
+          if (values.enrollmentNo) saveAffiliation(values.enrollmentNo, affData);
+
           await platformService.updateUser(editingId, {
-            firstName: values.firstName,
-            lastName: values.lastName,
+            firstName: values.firstName.trim(),
+            lastName: backendLastName,
             role,
             enrollmentNo: showEnrollmentField ? values.enrollmentNo?.trim() : undefined,
           });
           showSuccess('Updated', 'User details saved.');
         } else {
-          await platformService.createUser({
-            email: values.email,
+          const newUser = await platformService.createUser({
+            email: values.email.trim(),
             password: values.password!,
-            firstName: values.firstName,
-            lastName: values.lastName,
+            firstName: values.firstName.trim(),
+            lastName: backendLastName,
             role,
             enrollmentNo: showEnrollmentField ? values.enrollmentNo?.trim() : undefined,
           });
+
+          // Persist affiliation mapping
+          if (newUser?.id) saveAffiliation(newUser.id, affData);
+          if (values.email) saveAffiliation(values.email, affData);
+          if (values.enrollmentNo) saveAffiliation(values.enrollmentNo, affData);
           showSuccess('Created', 'Login credentials emailed.');
         }
+        setStorageVersion((v) => v + 1);
         closeDrawer();
         await refresh();
       } catch (err) {
@@ -956,7 +1347,6 @@ export function UsersManagementPanel({
       }
     });
   };
-
 
   const setStatus = async (userId: string, status: 'active' | 'inactive') => {
     setError('');
@@ -1057,7 +1447,6 @@ export function UsersManagementPanel({
         </div>
       )}
 
-
       {/* ── Full Width Table Card ── */}
       <div className="org-table-card">
         {/* Card Header with Search & Status Filter Pills */}
@@ -1066,7 +1455,10 @@ export function UsersManagementPanel({
             <div className="org-title-row">
               <h3 className="org-card-title">All {heading}</h3>
               <span className="org-count-badge">
-                {pagination.total} {pagination.total === 1 ? 'Member' : 'Members'}
+                {hasActiveFilters
+                  ? `${displayedUsers.length} of ${pagination.total}`
+                  : pagination.total}{' '}
+                {pagination.total === 1 ? 'Member' : 'Members'}
               </span>
             </div>
             <p className="org-card-subtitle">
@@ -1097,6 +1489,42 @@ export function UsersManagementPanel({
                 </button>
               )}
             </div>
+
+            {/* Branch Filter Dropdown */}
+            {branches.length > 0 && (
+              <select
+                className="org-filter-select"
+                value={branchFilter}
+                onChange={(e) => handleBranchFilterChange(e.target.value)}
+                aria-label="Filter by branch"
+                id="filterBranchSelect"
+              >
+                <option value="">All Branches</option>
+                {branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Department Filter Dropdown */}
+            {allDepartments.length > 0 && (
+              <select
+                className="org-filter-select"
+                value={deptFilter}
+                onChange={(e) => setDeptFilter(e.target.value)}
+                aria-label="Filter by department"
+                id="filterDeptSelect"
+              >
+                <option value="">All Departments</option>
+                {filterDepartmentNames.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
+                  </option>
+                ))}
+              </select>
+            )}
 
             {/* Filter Pills: All, Teachers, Students, Active, Inactive */}
             <div className="org-filter-pills" role="tablist" aria-label="User filters">
@@ -1143,14 +1571,26 @@ export function UsersManagementPanel({
           </div>
         </div>
 
-        {users.length === 0 ? (
+        {displayedUsers.length === 0 ? (
           <div className="org-empty-state">
             <FiUsers className="org-empty-icon" />
             <p className="org-empty-text">
-              {searchQuery || filterTab !== 'all'
-                ? 'No members match the current filter.'
-                : `No ${heading.toLowerCase()} found. Click "${addBtnLabel}" to add the first one.`}
+              {hasActiveFilters
+                ? 'No students found matching the selected branch and department filters.'
+                : searchQuery || filterTab !== 'all'
+                  ? 'No members match the current filter.'
+                  : `No ${heading.toLowerCase()} found. Click "${addBtnLabel}" to add the first one.`}
             </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="org-filter-reset-btn"
+                onClick={resetFilters}
+                style={{ marginTop: '8px' }}
+              >
+                <FiRefreshCw /> Reset filters
+              </button>
+            )}
           </div>
         ) : (
           <div className="org-table-wrap">
@@ -1166,10 +1606,16 @@ export function UsersManagementPanel({
                 </tr>
               </thead>
               <tbody>
-                {users.map((u) => {
+                {displayedUsers.map((u) => {
                   const isActive = !isOrgSuspended && u.status === 'active';
                   const initials = getUserInitials(u.first_name, u.last_name, u.email);
                   const primaryRole = (u.roles as string[])[0] || 'student';
+                  const aff = getStudentAffiliation(u);
+                  const affiliationText =
+                    aff.departmentName && aff.branchName
+                      ? `${aff.departmentName} · ${aff.branchName}`
+                      : aff.departmentName || aff.branchName || '';
+
                   return (
                     <tr key={u.id}>
                       {/* Name Cell */}
@@ -1178,8 +1624,17 @@ export function UsersManagementPanel({
                           <div className="org-avatar-badge">{initials}</div>
                           <div className="org-name-meta">
                             <span className="org-name-text">
-                              {u.first_name} {u.last_name}
+                              {formatFullName(u.first_name, u.last_name)}
                             </span>
+                            {affiliationText ? (
+                              <span
+                                className="org-affiliation-meta"
+                                title={`Department: ${aff.departmentName || '—'} | Branch: ${aff.branchName || '—'}`}
+                              >
+                                <HiOfficeBuilding style={{ fontSize: '0.8125rem', flexShrink: 0 }} />
+                                <span>{affiliationText}</span>
+                              </span>
+                            ) : null}
                             {u.enrollment_no && lockedRole !== 'student' && (
                               <span className="org-sub-meta">
                                 <span className="org-slug-tag">{u.enrollment_no}</span>
@@ -1210,7 +1665,7 @@ export function UsersManagementPanel({
                         </td>
                       )}
 
-                      {/* Status Toggle Switch Cell (NO text badge) */}
+                      {/* Status Toggle Switch Cell */}
                       <td>
                         <div className="org-status-cell">
                           <button
@@ -1246,7 +1701,7 @@ export function UsersManagementPanel({
                         </div>
                       </td>
 
-                      {/* Actions Cell with Colorful Icons */}
+                      {/* Actions Cell */}
                       <td>
                         <div
                           className="org-actions-cell" style={{ justifyContent: 'flex-start' }}
@@ -1267,7 +1722,7 @@ export function UsersManagementPanel({
                               className="org-action-btn org-action-btn--danger"
                               title={`Delete ${u.first_name}`}
                               aria-label={`Delete ${u.first_name}`}
-                              onClick={() => void removeUser(u.id, `${u.first_name} ${u.last_name}`)}
+                              onClick={() => void removeUser(u.id, formatFullName(u.first_name, u.last_name))}
                             >
                               <FiTrash2 />
                               <span>Delete</span>
@@ -1345,7 +1800,7 @@ export function UsersManagementPanel({
 
               <div className="org-form-field">
                 <label className="org-form-label">
-                  Last Name <span className="org-required-star">*</span>
+                  Last Name
                 </label>
                 <input
                   className="org-form-input"
@@ -1387,6 +1842,80 @@ export function UsersManagementPanel({
               <input type="hidden" {...register('role')} />
             )}
 
+            {/* Branch / Campus and Department Dropdowns */}
+            <div className="org-grid-2">
+              <div className="org-form-field">
+                <label className="org-form-label">Branch / Campus</label>
+                <Controller
+                  name="branchId"
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      className="org-form-select"
+                      value={field.value || ''}
+                      onChange={(e) => {
+                        const newBranch = e.target.value;
+                        field.onChange(newBranch);
+                        if (newBranch) {
+                          const curDept = watch('departmentId');
+                          const match = allDepartments.find(
+                            (d) => d.id === curDept && d.branch_id === newBranch,
+                          );
+                          if (!match) setValue('departmentId', '');
+                        }
+                      }}
+                      id="userBranchSelect"
+                    >
+                      <option value="">Select Branch / Campus</option>
+                      {branches.map((b) => (
+                        <option key={b.id} value={b.id}>
+                          {b.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+                <FormError message={errors.branchId?.message} />
+              </div>
+
+              <div className="org-form-field">
+                <label className="org-form-label">Department</label>
+                <Controller
+                  name="departmentId"
+                  control={control}
+                  render={({ field }) => (
+                    <select
+                      className="org-form-select"
+                      value={field.value || ''}
+                      onChange={(e) => {
+                        const deptId = e.target.value;
+                        field.onChange(deptId);
+                        if (deptId && !watchedBranchId) {
+                          const dept = allDepartments.find((d) => d.id === deptId);
+                          if (dept?.branch_id) {
+                            setValue('branchId', dept.branch_id);
+                          }
+                        }
+                      }}
+                      id="userDepartmentSelect"
+                    >
+                      <option value="">
+                        {watchedBranchId && drawerDepartments.length === 0
+                          ? 'No departments in this branch'
+                          : 'Select Department'}
+                      </option>
+                      {drawerDepartments.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+                <FormError message={errors.departmentId?.message} />
+              </div>
+            </div>
+
             {showEnrollmentField && (
               <div className="org-form-field">
                 <label className="org-form-label">
@@ -1394,10 +1923,11 @@ export function UsersManagementPanel({
                 </label>
                 <input
                   className="org-form-input"
-                  placeholder="ENR-2026-0001"
+                  placeholder="e.g. SS-2026-0001"
+                  readOnly
                   {...register('enrollmentNo')}
                 />
-                <span className="org-form-hint">Auto-generated. You can edit before saving.</span>
+                <span className="org-form-hint">Auto-generated unique enrollment number.</span>
                 <FormError message={errors.enrollmentNo?.message} />
               </div>
             )}
@@ -1443,7 +1973,6 @@ export function UsersManagementPanel({
     </div>
   );
 }
-
 export function ReportsPanel() {
   const [tests, setTests] = useState<{ id: string; title: string; status?: string }[]>([]);
   const [selected, setSelected] = useState('');
@@ -2858,11 +3387,15 @@ export function SessionsSecurityPanel() {
 }
 
 export function OrgStructurePanel() {
-  const { branches, loading: orgLoading } = useOrganization();
+  const { organization, branches, refresh: refreshOrg, loading: orgLoading } = useOrganization();
+  const { selectedOrg } = useOrgScope();
   const [branchId, setBranchId] = useState('');
   const [deptName, setDeptName] = useState('');
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isAddingBranch, setIsAddingBranch] = useState(false);
+  const [newBranchName, setNewBranchName] = useState('');
+  const [branchError, setBranchError] = useState('');
   const withLoader = useDashboardLoader();
 
   const {
@@ -2907,6 +3440,9 @@ export function OrgStructurePanel() {
   const openAddDrawer = () => {
     setEditingDeptId(null);
     setDeptName('');
+    setIsAddingBranch(false);
+    setNewBranchName('');
+    setBranchError('');
     setIsDrawerOpen(true);
   };
 
@@ -2914,6 +3450,37 @@ export function OrgStructurePanel() {
     setIsDrawerOpen(false);
     setEditingDeptId(null);
     setDeptName('');
+    setIsAddingBranch(false);
+    setNewBranchName('');
+    setBranchError('');
+  };
+
+  const saveNewBranch = async () => {
+    const trimmed = newBranchName.trim();
+    if (!trimmed) {
+      setBranchError('Branch name is required.');
+      return;
+    }
+    const targetOrgId = organization?.id || selectedOrg?.id;
+    if (!targetOrgId) {
+      setBranchError('No active organization found.');
+      return;
+    }
+    setBranchError('');
+    await withLoader(async () => {
+      try {
+        const created = await organizationService.createBranch(targetOrgId, { name: trimmed });
+        await refreshOrg();
+        if (created?.id) {
+          setBranchId(created.id);
+        }
+        showSuccess('Created!', `Branch "${trimmed}" created successfully.`);
+        setIsAddingBranch(false);
+        setNewBranchName('');
+      } catch (err) {
+        setBranchError(parseApiError(err));
+      }
+    });
   };
 
   const startEditDept = (d: { id: string; name: string }) => {
@@ -3183,21 +3750,106 @@ export function OrgStructurePanel() {
         <form onSubmit={(e) => void saveDept(e)} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div className="org-drawer-body">
             <div className="org-form-field">
-              <label className="org-form-label">
-                Branch / Campus <span className="org-required-star">*</span>
-              </label>
-              <select
-                className="org-form-select"
-                value={branchId}
-                onChange={(e) => setBranchId(e.target.value)}
-              >
-                {branches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
-              <span className="org-form-hint">Selected campus branch for this department.</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                <label className="org-form-label" style={{ marginBottom: 0 }}>
+                  Branch / Campus <span className="org-required-star">*</span>
+                </label>
+                {!isAddingBranch && (
+                  <button
+                    type="button"
+                    className="org-add-btn"
+                    style={{ height: 32, padding: '0 12px', fontSize: '0.8rem', borderRadius: 6, display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                    onClick={() => {
+                      setIsAddingBranch(true);
+                      setNewBranchName('');
+                      setBranchError('');
+                    }}
+                  >
+                    <FiPlus className="org-add-btn-icon" style={{ fontSize: 13 }} />
+                    <span>Add New Branch</span>
+                  </button>
+                )}
+              </div>
+
+              {!isAddingBranch ? (
+                <>
+                  <select
+                    className="org-form-select"
+                    value={branchId}
+                    onChange={(e) => setBranchId(e.target.value)}
+                  >
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="org-form-hint">Selected campus branch for this department.</span>
+                </>
+              ) : (
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: 8,
+                  background: '#f8fafc',
+                  border: '1px solid #cbd5e1',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.825rem', fontWeight: 600, color: '#1e293b' }}>
+                      Add New Branch / Campus
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAddingBranch(false);
+                        setBranchError('');
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', fontSize: 16 }}
+                      aria-label="Cancel branch addition"
+                    >
+                      <FiX />
+                    </button>
+                  </div>
+                  <input
+                    className="org-form-input"
+                    placeholder="e.g. North Campus, Second Branch..."
+                    value={newBranchName}
+                    onChange={(e) => {
+                      setNewBranchName(e.target.value);
+                      if (branchError) setBranchError('');
+                    }}
+                    autoFocus
+                  />
+                  {branchError && (
+                    <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: 500 }}>
+                      {branchError}
+                    </span>
+                  )}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button
+                      type="button"
+                      className="org-add-btn"
+                      style={{ height: 32, padding: '0 14px', fontSize: '0.8rem', borderRadius: 6 }}
+                      onClick={() => void saveNewBranch()}
+                    >
+                      Save Branch
+                    </button>
+                    <button
+                      type="button"
+                      className="org-drawer-cancel"
+                      style={{ height: 32, padding: '0 12px', fontSize: '0.8rem', borderRadius: 6 }}
+                      onClick={() => {
+                        setIsAddingBranch(false);
+                        setBranchError('');
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="org-form-field">
@@ -3251,7 +3903,8 @@ export function TestBuilderPanel() {
     }[];
     assignments?: { student_id: string; first_name: string; last_name: string; email: string }[];
   } | null>(null);
-  const [bankQuestions, setBankQuestions] = useState<{ id: string; content?: { text?: string }; type?: string }[]>([]);
+  const [bankQuestions, setBankQuestions] = useState<{ id: string; content?: { text?: string }; type?: string; marks?: number }[]>([]);
+  const [editPassingMarksValue, setEditPassingMarksValue] = useState('');
   const [students, setStudents] = useState<Awaited<ReturnType<typeof examinationService.listAssignableStudents>>['data']>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [assignDepartmentId, setAssignDepartmentId] = useState('');
@@ -3290,7 +3943,7 @@ export function TestBuilderPanel() {
   }, [questionSelectionKey, selectedQuestionIds]);
 
   const loadStudents = async (departmentId?: string) => {
-    const sResult = await examinationService.listAssignableStudents(1, 200, departmentId || undefined);
+    const sResult = await examinationService.listAssignableStudents(1, 100, departmentId || undefined);
     setStudents(sResult.data.filter((st) => st.status === 'active'));
   };
 
@@ -3302,7 +3955,7 @@ export function TestBuilderPanel() {
       const [tResult, qResult, sResult, deptLists] = await Promise.allSettled([
         examinationService.getTest(testId),
         examinationService.listQuestions(1, 100, 'approved'),
-        examinationService.listAssignableStudents(1, 200, assignDepartmentId || undefined),
+        examinationService.listAssignableStudents(1, 100, assignDepartmentId || undefined),
         Promise.all(
           branches.map((b) =>
             platformService.listDepartments(b.id, 1, 100).then((r) => r.data).catch(() => []),
@@ -3542,14 +4195,58 @@ export function TestBuilderPanel() {
     });
   };
 
+  const totalQuestionsMarks = useMemo(() => {
+    return testQuestions.reduce((sum, tq) => {
+      const marks = tq.marks ?? bankQuestions.find((bq) => bq.id === tq.question_id)?.marks ?? 1;
+      return sum + Number(marks);
+    }, 0);
+  }, [testQuestions, bankQuestions]);
+
+  const effectiveTotalMarks =
+    test?.total_marks != null && test.total_marks > 0
+      ? test.total_marks
+      : totalQuestionsMarks;
+
+  const passingMarks = Number(test?.passing_marks ?? 0);
+  const hasValidMarksRatio = effectiveTotalMarks > 0 && effectiveTotalMarks > passingMarks;
+
+  useEffect(() => {
+    if (test?.passing_marks != null) {
+      setEditPassingMarksValue(String(test.passing_marks));
+    }
+  }, [test?.passing_marks]);
+
+  const handleUpdatePassingMarks = async (newPassing: number) => {
+    if (!testId) return;
+    if (newPassing < 0) {
+      setError('Passing marks must be 0 or more.');
+      return;
+    }
+    if (effectiveTotalMarks > 0 && newPassing >= effectiveTotalMarks) {
+      setError(`Passing marks (${newPassing}) must be strictly less than total marks (${effectiveTotalMarks}).`);
+      return;
+    }
+    setError('');
+    await withLoader(async () => {
+      try {
+        await examinationService.updateTest(testId, { passingMarks: newPassing });
+        await load();
+        showSuccess('Updated', `Passing marks updated to ${newPassing}.`);
+      } catch (err) {
+        setError(parseApiError(err));
+      }
+    });
+  };
+
   const checklist = {
     hasQuestions: testQuestions.length > 0,
     hasDuration: Number(test?.duration_minutes ?? 0) > 0,
     hasPassingMarks: test?.passing_marks != null && Number(test.passing_marks) >= 0,
+    marksRatioValid: hasValidMarksRatio,
     hasInstructions: Boolean(String(test?.instructions ?? '').trim()),
     hasAssignees: assignments.length > 0,
   };
-  const canPublish = checklist.hasQuestions && checklist.hasDuration;
+  const canPublish = checklist.hasQuestions && checklist.hasDuration && checklist.marksRatioValid;
 
   const publish = async () => {
     if (!testId) return;
@@ -3557,6 +4254,12 @@ export function TestBuilderPanel() {
     setError('');
     if (testQuestions.length === 0) {
       setError('Add at least one question before publishing.');
+      return;
+    }
+    if (effectiveTotalMarks <= passingMarks) {
+      const errMsg = `Cannot publish test: Total marks (${effectiveTotalMarks}) must be greater than passing marks (${passingMarks}). Please add more questions or reduce passing marks.`;
+      setError(errMsg);
+      showError('Passing Marks Too High', errMsg);
       return;
     }
     if (publishMode === 'schedule' && !scheduleStart.trim()) {
@@ -3665,7 +4368,7 @@ export function TestBuilderPanel() {
             </span>
           </div>
           <p className="org-page-desc">
-            {test?.duration_minutes} min duration · {test?.total_marks ?? 0} total marks ·{' '}
+            {test?.duration_minutes} min duration · {effectiveTotalMarks} total marks ({testQuestions.length} questions) · Passing: {test?.passing_marks ?? '—'} ·{' '}
             {phase === 'build' && 'Add questions from the question bank, then continue.'}
             {phase === 'publish' && 'Review examination parameters, then publish or schedule.'}
             {phase === 'assign' && 'Choose candidate students and assign test access.'}
@@ -4095,6 +4798,60 @@ export function TestBuilderPanel() {
           </div>
 
           <div style={{ padding: '24px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Warning if Total Marks <= Passing Marks */}
+            {!hasValidMarksRatio && testQuestions.length > 0 && (
+              <div
+                style={{
+                  padding: '14px 18px',
+                  borderRadius: 10,
+                  background: '#fff1f2',
+                  border: '1px solid #fecdd3',
+                  color: '#be123c',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 10,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontWeight: 700, fontSize: '0.9rem' }}>
+                  <FiAlertTriangle style={{ fontSize: 18 }} />
+                  <span>Total Marks ({effectiveTotalMarks}) must be greater than Passing Marks ({passingMarks})</span>
+                </div>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: '#9f1239' }}>
+                  This test currently has {testQuestions.length} question(s) totaling <strong>{effectiveTotalMarks} marks</strong>, but passing marks is set to <strong>{passingMarks}</strong>. Please add more questions from the Question Bank or adjust passing marks below to proceed.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10, marginTop: 4 }}>
+                  <label style={{ fontSize: '0.825rem', fontWeight: 600, color: '#475569' }}>
+                    Adjust Passing Marks:
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={Math.max(0, effectiveTotalMarks - 1)}
+                    value={editPassingMarksValue}
+                    onChange={(e) => setEditPassingMarksValue(e.target.value)}
+                    className="org-form-input"
+                    style={{ width: 100, height: 34, padding: '4px 10px' }}
+                  />
+                  <button
+                    type="button"
+                    className="org-btn-secondary"
+                    style={{ height: 34, padding: '0 14px', borderRadius: 8, fontSize: '0.825rem' }}
+                    onClick={() => void handleUpdatePassingMarks(Number(editPassingMarksValue))}
+                  >
+                    Update Passing Marks
+                  </button>
+                  <button
+                    type="button"
+                    className="org-btn-secondary"
+                    style={{ height: 34, padding: '0 14px', borderRadius: 8, fontSize: '0.825rem' }}
+                    onClick={() => setPhase('build')}
+                  >
+                    + Add More Questions
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Checklist */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <span className="org-stat-label">Pre-Flight Checklist</span>
@@ -4102,7 +4859,13 @@ export function TestBuilderPanel() {
                 {[
                   { ok: checklist.hasQuestions, label: `Questions Added (${testQuestions.length})` },
                   { ok: checklist.hasDuration, label: `Duration Configured (${test?.duration_minutes ?? 0} min)` },
-                  { ok: checklist.hasPassingMarks, label: `Passing Marks Defined (${test?.passing_marks ?? '—'})` },
+                  {
+                    ok: checklist.marksRatioValid,
+                    label: checklist.marksRatioValid
+                      ? `Passing Criteria Met (${effectiveTotalMarks} Total > ${passingMarks} Passing)`
+                      : `Total Marks (${effectiveTotalMarks}) must exceed Passing (${passingMarks})`,
+                    isWarning: !checklist.marksRatioValid,
+                  },
                   { ok: checklist.hasInstructions, label: 'Exam Instructions Filled' },
                   { ok: checklist.hasAssignees, label: `Candidates Assigned (${assignments.length})` },
                 ].map((item, idx) => (
@@ -4114,14 +4877,18 @@ export function TestBuilderPanel() {
                       gap: 10,
                       padding: '10px 14px',
                       borderRadius: 8,
-                      background: item.ok ? '#ecfdf5' : '#f8fafc',
-                      border: `1px solid ${item.ok ? '#a7f3d0' : '#e2e8f0'}`,
+                      background: item.ok ? '#ecfdf5' : item.isWarning ? '#fff1f2' : '#f8fafc',
+                      border: `1px solid ${item.ok ? '#a7f3d0' : item.isWarning ? '#fecdd3' : '#e2e8f0'}`,
                       fontSize: '0.825rem',
                       fontWeight: 600,
-                      color: item.ok ? '#065f46' : '#64748b',
+                      color: item.ok ? '#065f46' : item.isWarning ? '#be123c' : '#64748b',
                     }}
                   >
-                    <FiCheckCircle style={{ color: item.ok ? '#10b981' : '#cbd5e1', fontSize: 16 }} />
+                    {item.isWarning ? (
+                      <FiAlertTriangle style={{ color: '#e11d48', fontSize: 16 }} />
+                    ) : (
+                      <FiCheckCircle style={{ color: item.ok ? '#10b981' : '#cbd5e1', fontSize: 16 }} />
+                    )}
                     <span>{item.label}</span>
                   </div>
                 ))}

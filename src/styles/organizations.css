@@ -1347,3 +1347,113 @@ textarea.org-form-input {
 .org-table th.edtp-th-actions {
   text-align: center;
 }
+
+/* Branch & Department Filters in Table Header */
+.org-filter-select {
+  height: 34px;
+  padding: 0 28px 0 10px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--db-text, #1e293b);
+  background: var(--db-card-bg, #ffffff);
+  border: 1px solid var(--db-border, #cbd5e1);
+  border-radius: 8px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  transition: all 0.15s ease;
+  min-width: 140px;
+}
+
+.org-filter-select:focus {
+  border-color: #225ce5;
+  box-shadow: 0 0 0 3px rgba(34, 92, 229, 0.12);
+}
+
+.org-filter-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 34px;
+  padding: 0 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.org-filter-reset-btn:hover {
+  color: #ef4444;
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.org-affiliation-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.sca-dashboard--dark .org-filter-select {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.sca-dashboard--dark .org-filter-reset-btn {
+  background: #1e293b;
+  border-color: #475569;
+  color: #94a3b8;
+}
+
+.sca-dashboard--dark .org-filter-reset-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: #ef4444;
+}
+
+.sca-dashboard--dark .org-affiliation-meta {
+  color: #94a3b8;
+}
+
+
+.org-btn-assign-dept {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+  padding: 1px 7px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.org-btn-assign-dept:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
+.sca-dashboard--dark .org-btn-assign-dept {
+  background: rgba(37, 99, 235, 0.2);
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+.sca-dashboard--dark .org-btn-assign-dept:hover {
+  background: #2563eb;
+  color: #ffffff;
+}
