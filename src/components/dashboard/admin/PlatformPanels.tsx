@@ -40,6 +40,7 @@ import { REALTIME_NOTIFICATION_EVENT } from '@/lib/realtime';
 import { FormError, PasswordInput } from '@/components/ui/FormField';
 import { createNameSchema, optionalNameSchema, validatePassword } from '@/validators/schemas';
 import type { Department } from '@/services/platform.service';
+import type { Question } from '@/types/examination';
 // Department type from platform.service
 import { useOrganization } from '@/hooks/useOrganization';
 import { useAuth } from '@/context/AuthContext';
@@ -3903,7 +3904,8 @@ export function TestBuilderPanel() {
     }[];
     assignments?: { student_id: string; first_name: string; last_name: string; email: string }[];
   } | null>(null);
-  const [bankQuestions, setBankQuestions] = useState<{ id: string; content?: { text?: string }; type?: string; marks?: number }[]>([]);
+  const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
+  const [filterByTestScope, setFilterByTestScope] = useState(true);
   const [editPassingMarksValue, setEditPassingMarksValue] = useState('');
   const [students, setStudents] = useState<Awaited<ReturnType<typeof examinationService.listAssignableStudents>>['data']>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
@@ -4045,13 +4047,110 @@ export function TestBuilderPanel() {
   const sSearch = studentSearch.trim().toLowerCase();
   const aSearch = assignedSearch.trim().toLowerCase();
 
-  const availableQuestions = bankQuestions
-    .filter((q) => !testQuestions.some((tq) => tq.question_id === q.id))
-    .filter((q) => {
-      if (!qSearch) return true;
-      const text = getQuestionText(q.content, '').toLowerCase();
-      return text.includes(qSearch) || (q.type ?? '').toLowerCase().includes(qSearch);
-    });
+  const testConfig = (test?.config ?? {}) as Record<string, unknown>;
+  const targetDeptId = (testConfig.departmentId as string) || (test as any)?.department_id || (test as any)?.departmentId;
+  const targetDeptName = (testConfig.departmentName as string) || (test as any)?.department_name || (test as any)?.departmentName;
+  const targetSubjId = (testConfig.subjectId as string) || (test as any)?.subject_id || (test as any)?.subjectId;
+  const targetSubjName = (testConfig.subjectName as string) || (test as any)?.subject_name || (test as any)?.subjectName;
+  const targetTopicId = (testConfig.topicId as string) || (test as any)?.topic_id || (test as any)?.topicId;
+  const targetTopicName = (testConfig.topicName as string) || (test as any)?.topic_name || (test as any)?.topicName;
+
+  const hasScopeFilter = Boolean(
+    targetTopicId || targetTopicName || targetSubjId || targetSubjName || targetDeptId || targetDeptName,
+  );
+
+  const availableQuestions = useMemo(() => {
+    return bankQuestions
+      .filter((q) => !testQuestions.some((tq) => tq.question_id === q.id))
+      .filter((q) => {
+        if (!filterByTestScope || !hasScopeFilter) return true;
+
+        // 1. Topic filter (highest specificity)
+        if (targetTopicId || targetTopicName) {
+          const matchTopicId = targetTopicId && q.topic_id && q.topic_id === targetTopicId;
+          const matchTopicName =
+            targetTopicName &&
+            q.topic_name &&
+            q.topic_name.toLowerCase().trim() === String(targetTopicName).toLowerCase().trim();
+          if (matchTopicId || matchTopicName) return true;
+          return false;
+        }
+
+        // 2. Subject filter
+        if (targetSubjId || targetSubjName) {
+          const matchSubjId = targetSubjId && q.subject_id && q.subject_id === targetSubjId;
+          const matchSubjName =
+            targetSubjName &&
+            q.subject_name &&
+            q.subject_name.toLowerCase().trim() === String(targetSubjName).toLowerCase().trim();
+          if (matchSubjId || matchSubjName) return true;
+          return false;
+        }
+
+        // 3. Department filter
+        if (targetDeptId || targetDeptName) {
+          const matchDeptId = targetDeptId && q.department_id && q.department_id === targetDeptId;
+          const matchDeptName =
+            targetDeptName &&
+            q.department_name &&
+            (q.department_name.toLowerCase().trim() === String(targetDeptName).toLowerCase().trim() ||
+              q.department_name.toLowerCase().trim().replace(/s$/, '') ===
+                String(targetDeptName).toLowerCase().trim().replace(/s$/, ''));
+          if (matchDeptId || matchDeptName) return true;
+          return false;
+        }
+
+        return true;
+      })
+      .filter((q) => {
+        if (!qSearch) return true;
+        const text = getQuestionText(q.content, '').toLowerCase();
+        return text.includes(qSearch) || (q.type ?? '').toLowerCase().includes(qSearch);
+      });
+  }, [
+    bankQuestions,
+    testQuestions,
+    filterByTestScope,
+    hasScopeFilter,
+    targetTopicId,
+    targetTopicName,
+    targetSubjId,
+    targetSubjName,
+    targetDeptId,
+    targetDeptName,
+    qSearch,
+  ]);
+
+  const selectedMarks = useMemo(() => {
+    return selectedQuestionIds.reduce((sum, id) => {
+      const q = bankQuestions.find((bq) => bq.id === id);
+      return sum + (q?.marks ?? 1);
+    }, 0);
+  }, [selectedQuestionIds, bankQuestions]);
+
+  const stagedQuestions = useMemo(() => {
+    return selectedQuestionIds
+      .map((id) => bankQuestions.find((bq) => bq.id === id))
+      .filter((q): q is Question => Boolean(q));
+  }, [selectedQuestionIds, bankQuestions]);
+
+  const totalQuestionsMarks = useMemo(() => {
+    return testQuestions.reduce((sum, tq) => {
+      const marks = tq.marks ?? bankQuestions.find((bq) => bq.id === tq.question_id)?.marks ?? 1;
+      return sum + Number(marks);
+    }, 0);
+  }, [testQuestions, bankQuestions]);
+
+  const effectiveTotalMarks =
+    test?.total_marks != null && test.total_marks > 0
+      ? test.total_marks
+      : totalQuestionsMarks;
+
+  const passingMarks = Number(test?.passing_marks ?? 0);
+  const hasValidMarksRatio = effectiveTotalMarks > 0 && effectiveTotalMarks > passingMarks;
+
+  const prospectiveTotalMarks = effectiveTotalMarks + selectedMarks;
+  const isPassingCriteriaMet = prospectiveTotalMarks > passingMarks;
 
   const unassignedStudents = students
     .filter((s) => !assignedIds.has(s.student_id))
@@ -4124,6 +4223,17 @@ export function TestBuilderPanel() {
       await load();
       return;
     }
+
+    // Validation: Total marks of questions must be strictly greater than passing marks
+    if (passingMarks > 0 && prospectiveTotalMarks <= passingMarks) {
+      const needed = passingMarks + 1 - prospectiveTotalMarks;
+      await showError(
+        'Add More Questions',
+        `Total marks (${prospectiveTotalMarks}) must be strictly greater than passing marks (${passingMarks}). Please select at least ${needed} more mark(s) of questions before submitting.`,
+      );
+      return;
+    }
+
     await withLoader(async () => {
       try {
         let added = 0;
@@ -4142,9 +4252,9 @@ export function TestBuilderPanel() {
           setMessage(
             failures.length
               ? `${added} question(s) added. ${failures.length} skipped.`
-              : `${added} question(s) added. Review and publish when ready.`,
+              : `${added} question(s) successfully added to examination paper.`,
           );
-          setPhase('publish');
+          // Stay on build phase so newly added questions are visible in the left panel!
         } else {
           setError(failures[0] ?? 'Could not add questions to this test.');
         }
@@ -4194,21 +4304,6 @@ export function TestBuilderPanel() {
       }
     });
   };
-
-  const totalQuestionsMarks = useMemo(() => {
-    return testQuestions.reduce((sum, tq) => {
-      const marks = tq.marks ?? bankQuestions.find((bq) => bq.id === tq.question_id)?.marks ?? 1;
-      return sum + Number(marks);
-    }, 0);
-  }, [testQuestions, bankQuestions]);
-
-  const effectiveTotalMarks =
-    test?.total_marks != null && test.total_marks > 0
-      ? test.total_marks
-      : totalQuestionsMarks;
-
-  const passingMarks = Number(test?.passing_marks ?? 0);
-  const hasValidMarksRatio = effectiveTotalMarks > 0 && effectiveTotalMarks > passingMarks;
 
   useEffect(() => {
     if (test?.passing_marks != null) {
@@ -4463,7 +4558,142 @@ export function TestBuilderPanel() {
             </div>
 
             <div className="sca-test-builder-panel__body" style={{ padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {testQuestions.length === 0 ? (
+              {/* Live Passing Criteria Status Bar */}
+              {passingMarks > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '10px 14px',
+                    borderRadius: 8,
+                    background: isPassingCriteriaMet ? '#ecfdf5' : '#fff1f2',
+                    border: `1px solid ${isPassingCriteriaMet ? '#a7f3d0' : '#fecdd3'}`,
+                    color: isPassingCriteriaMet ? '#065f46' : '#9f1239',
+                    fontSize: '0.825rem',
+                    fontWeight: 600,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {isPassingCriteriaMet ? (
+                      <FiCheckCircle style={{ color: '#10b981', fontSize: 16 }} />
+                    ) : (
+                      <FiAlertTriangle style={{ color: '#e11d48', fontSize: 16 }} />
+                    )}
+                    <span>
+                      Total Marks: <strong>{prospectiveTotalMarks}</strong> &nbsp;|&nbsp; Passing: <strong>{passingMarks}</strong>
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.775rem' }}>
+                    {isPassingCriteriaMet
+                      ? '✓ Criteria Met (Total > Passing)'
+                      : `Need at least ${passingMarks + 1 - prospectiveTotalMarks} more mark(s)`}
+                  </span>
+                </div>
+              )}
+
+              {/* Staged Questions currently ticked on right */}
+              {stagedQuestions.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1d4ed8', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                      Selected to Add ({stagedQuestions.length} selected · {selectedMarks} marks)
+                    </span>
+                    <button
+                      type="button"
+                      className="org-pill"
+                      style={{ cursor: 'pointer', background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe', fontSize: '0.72rem', padding: '2px 8px' }}
+                      onClick={() => setSelectedQuestionIds([])}
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                  {stagedQuestions.map((sq, i) => {
+                    const label = getQuestionText(sq.content);
+                    return (
+                      <div
+                        key={sq.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px 12px',
+                          borderRadius: 8,
+                          background: '#f0fdf4',
+                          border: '1px solid #bbf7d0',
+                          gap: 10,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0, flex: 1 }}>
+                          <span
+                            style={{
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                              background: '#16a34a',
+                              color: '#fff',
+                              fontSize: '0.7rem',
+                              fontWeight: 700,
+                              flexShrink: 0,
+                            }}
+                          >
+                            +{i + 1}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: '0.825rem',
+                              color: '#0f172a',
+                              fontWeight: 500,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                            }}
+                          >
+                            {label}
+                          </span>
+                          <span
+                            style={{
+                              padding: '1px 6px',
+                              borderRadius: 4,
+                              background: '#e0e7ff',
+                              color: '#3730a3',
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {sq.type}
+                          </span>
+                          <span
+                            style={{
+                              padding: '1px 6px',
+                              borderRadius: 4,
+                              background: '#dcfce7',
+                              color: '#15803d',
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {sq.marks ?? 1} mark{(sq.marks ?? 1) === 1 ? '' : 's'}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          className="org-icon-btn org-icon-btn--delete"
+                          onClick={() => toggleQuestion(sq.id)}
+                          title="Unselect question"
+                          style={{ width: 26, height: 26, minWidth: 26 }}
+                        >
+                          <FiX style={{ fontSize: 13 }} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {testQuestions.length === 0 && stagedQuestions.length === 0 ? (
                 <div className="org-empty-state">
                   <FiLayers className="org-empty-icon" />
                   <p className="org-empty-title">No questions added yet</p>
@@ -4471,8 +4701,11 @@ export function TestBuilderPanel() {
                     Pick questions from the Question Bank on the right and submit.
                   </p>
                 </div>
-              ) : (
+              ) : testQuestions.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Questions on Exam Paper ({testQuestions.length} questions · {effectiveTotalMarks} marks)
+                  </span>
                   {testQuestions.map((tq, i) => {
                     const label = getQuestionText(tq.content);
                     return (
@@ -4577,7 +4810,7 @@ export function TestBuilderPanel() {
                     );
                   })}
                 </div>
-              )}
+              ) : null}
 
               {hardQuestions.length > 0 && (
                 <div
@@ -4673,6 +4906,39 @@ export function TestBuilderPanel() {
               </div>
             </div>
 
+            {hasScopeFilter && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '8px 16px',
+                  background: '#eff6ff',
+                  borderBottom: '1px solid #bfdbfe',
+                  fontSize: '0.8rem',
+                  color: '#1e40af',
+                }}
+              >
+                <div>
+                  Scoped to: <strong>{[targetDeptName, targetSubjName, targetTopicName].filter(Boolean).join(' → ')}</strong>
+                </div>
+                <button
+                  type="button"
+                  className="org-pill"
+                  style={{
+                    cursor: 'pointer',
+                    background: filterByTestScope ? '#ffffff' : '#2563eb',
+                    color: filterByTestScope ? '#2563eb' : '#ffffff',
+                    border: '1px solid #2563eb',
+                    fontSize: '0.75rem',
+                    padding: '2px 8px',
+                  }}
+                  onClick={() => setFilterByTestScope((v) => !v)}
+                >
+                  {filterByTestScope ? 'Show All Bank Questions' : 'Filter by Test Scope'}
+                </button>
+              </div>
+            )}
             <div className="sca-test-builder-panel__body org-table-wrap">
               <table className="org-table">
                 <thead>

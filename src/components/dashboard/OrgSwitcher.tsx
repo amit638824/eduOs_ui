@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { useOrgScope } from '@/context/OrgScopeContext';
+import { useOrganization } from '@/hooks/useOrganization';
 
 /** Superadmin-only org switcher — scopes Users / Exams / Results to selected org */
 export default function OrgSwitcher() {
@@ -11,6 +12,7 @@ export default function OrgSwitcher() {
     setSelectedOrgId,
     loading,
   } = useOrgScope();
+  const { organization: directOrg } = useOrganization();
   const listId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -50,7 +52,28 @@ export default function OrgSwitcher() {
     setSelectedOrgId(organizations[0].id);
   }, [isSuperAdmin, loading, organizations, selectedOrgId, setSelectedOrgId]);
 
-  if (!isSuperAdmin) return null;
+  if (!isSuperAdmin) {
+    const nonAdminOrgName = directOrg?.name || (currentName !== 'No organizations' ? currentName : null);
+    if (!nonAdminOrgName || nonAdminOrgName === 'Loading…') return null;
+
+    return (
+      <div className="sca-db-org-switcher" title="Active Organization">
+        <span className="sca-db-org-switcher__icon" aria-hidden>
+          <i className="icofont-building-alt" />
+        </span>
+        <div className="sca-db-org-switcher__control">
+          <span className="sca-db-org-switcher__label">Organization</span>
+          <span
+            className="sca-db-org-switcher__value"
+            style={{ fontWeight: 600, padding: '2px 0', fontSize: '0.85rem' }}
+          >
+            {nonAdminOrgName}
+          </span>
+        </div>
+        <span className="sca-db-org-switcher__status is-active">Active</span>
+      </div>
+    );
+  }
 
   const disabled = loading && organizations.length === 0;
 

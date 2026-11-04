@@ -1,0 +1,4 @@
+QUESTION,OPTION_A,OPTION_B,OPTION_C,OPTION_D,CORRECT_ANSWER,MARKS,DIFFICULTY,EXPLANATION
+"Which law states that for every action there is an equal and opposite reaction?",Newton's First Law,Newton's Second Law,Newton's Third Law,Law of Gravitation,C,1,2,"Newton's Third Law"
+"The SI unit of force is:",Joule,Pascal,Newton,Watt,C,1,1,"Force is measured in Newtons (N)"
+"What type of quantity is magnetic flux?",Scalar,Vector,Tensor,Dimensionless,A,1,2,"Magnetic flux is a scalar quantity"

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, useMemo, type ReactNode } from 'react';
 import { Pagination } from '@/components/ui/Pagination';
 import { useServerList } from '@/hooks/useServerList';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { examinationService, platformService } from '@/services';
 import type { QuestionImportSummary } from '@/services/examination.service';
+import type { Department } from '@/services/platform.service';
 import { parseApiError } from '@/lib/errors';
 import { FormError, inputClassName } from '@/components/ui/FormField';
 import { createTestApiSchema, type CreateTestApiFormValues } from '@/validators/schemas';
@@ -24,6 +25,7 @@ import { formatDateTime } from '@/utils/dateFormat';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
 import { getOptionText, getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
+import { BulkImportCsvModal } from './BulkImportCsvModal';
 import {
   CertificatePreviewModal,
   type CertificateTemplate,
@@ -43,6 +45,7 @@ import {
   FiHelpCircle,
   FiInfo,
   FiArrowRight,
+  FiRefreshCw,
   FiCheckCircle,
   FiList,
   FiPlay,
@@ -130,11 +133,26 @@ export function QuestionBankPanel() {
   } = useServerList<Question>({
     fetcher: ({ page: p, limit: l, search }) =>
       examinationService.listQuestions(p, l, undefined, search || undefined),
-    defaultLimit: 10,
+    defaultLimit: 50,
   });
+
+  // Master data for filters & drawer
+  const [allDepartments, setAllDepartments] = useState<Department[]>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [subjects, setSubjects] = useState<{ id: string; name: string }[]>([]);
   const [topics, setTopics] = useState<{ id: string; name: string }[]>([]);
+
+  // 4 Filter states
+  const [branchFilter, setBranchFilter] = useState('');
+  const [deptFilter, setDeptFilter] = useState('');
+  const [subjFilter, setSubjFilter] = useState('');
+  const [topicFilter, setTopicFilter] = useState('');
+
+  // Dropdown options for filters
+  const [filterSubjects, setFilterSubjects] = useState<{ id: string; name: string }[]>([]);
+  const [filterTopics, setFilterTopics] = useState<{ id: string; name: string }[]>([]);
+  const [filterSubjectsLoading, setFilterSubjectsLoading] = useState(false);
+  const [filterTopicsLoading, setFilterTopicsLoading] = useState(false);
 
   const [departmentId, setDepartmentId] = useState(() => loadQbPrefs().departmentId ?? '');
   const [subjectId, setSubjectId] = useState(() => loadQbPrefs().subjectId ?? '');
@@ -146,6 +164,8 @@ export function QuestionBankPanel() {
   const [showAddTopic, setShowAddTopic] = useState(false);
 
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [addedCount, setAddedCount] = useState(0);
+  const [justAddedMsg, setJustAddedMsg] = useState<string | null>(null);
   const [subjectsLoading, setSubjectsLoading] = useState(false);
   const [topicsLoading, setTopicsLoading] = useState(false);
   const [deptsLoading, setDeptsLoading] = useState(false);
@@ -165,18 +185,29 @@ export function QuestionBankPanel() {
   const [importSummary, setImportSummary] = useState<QuestionImportSummary | null>(null);
   const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
   const csvFileRef = useRef<HTMLInputElement>(null);
+  const drawerBodyRef = useRef<HTMLDivElement>(null);
+  const questionTextareaRef = useRef<HTMLTextAreaElement>(null);
   const withLoader = useDashboardLoader();
 
   const openAddDrawer = () => {
     resetQuestionFields();
+    if (deptFilter) setDepartmentId(deptFilter);
+    if (subjFilter) setSubjectId(subjFilter);
+    if (topicFilter) setTopicId(topicFilter);
     setError('');
     setMessage('');
+    setJustAddedMsg(null);
+    setAddedCount(0);
     setIsDrawerOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const closeDrawer = () => {
     setIsDrawerOpen(false);
+    setJustAddedMsg(null);
+    setAddedCount(0);
     if (editingId) resetQuestionFields();
   };
 
@@ -205,27 +236,241 @@ export function QuestionBankPanel() {
     saveQbPrefs({ optionCount });
   }, [optionCount]);
 
+  // Load all departments across all branches for multi-campus support
   useEffect(() => {
-    const branchId = branches[0]?.id;
-    if (!branchId) return;
+    if (!branches || branches.length === 0) {
+      setAllDepartments([]);
+      setDepartments([]);
+      return;
+    }
+    let active = true;
     setDeptsLoading(true);
-    platformService
-      .listDepartments(branchId, 1, 50)
-      .then((r) => {
-        const list = r.data.map((d) => ({ id: d.id, name: d.name }));
-        setDepartments(list);
+    Promise.all(
+      branches.map((b) =>
+        platformService
+          .listDepartments(b.id, 1, 100)
+          .then((r) =>
+            ((r.data || []) as Department[]).map((d) => ({
+              ...d,
+              branch_id: (d as any).branch_id || (d as any).branchId || b.id,
+            })),
+          )
+          .catch(() => []),
+      ),
+    )
+      .then((lists) => {
+        if (!active) return;
+        const flat = lists.flat();
+        setAllDepartments(flat);
+        const mapped = flat.map((d) => ({ id: d.id, name: d.name }));
+        setDepartments(mapped);
         setDepartmentId((current) => {
-          if (current && list.some((d) => d.id === current)) return current;
+          if (current && mapped.some((d) => d.id === current)) return current;
           const prefs = loadQbPrefs();
-          if (prefs.departmentId && list.some((d) => d.id === prefs.departmentId)) {
+          if (prefs.departmentId && mapped.some((d) => d.id === prefs.departmentId)) {
             return prefs.departmentId;
           }
           return current;
         });
       })
       .catch((err) => setError(parseApiError(err)))
-      .finally(() => setDeptsLoading(false));
+      .finally(() => {
+        if (active) setDeptsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, [branches, hierarchyTick]);
+
+  // Load subjects when deptFilter changes
+  useEffect(() => {
+    if (!deptFilter) {
+      setFilterSubjects([]);
+      setFilterSubjectsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setFilterSubjectsLoading(true);
+    examinationService
+      .listSubjects(1, 100, deptFilter)
+      .then((r) => {
+        if (cancelled) return;
+        setFilterSubjects(r.data.map((s) => ({ id: s.id, name: s.name })));
+      })
+      .catch(() => {
+        if (!cancelled) setFilterSubjects([]);
+      })
+      .finally(() => {
+        if (!cancelled) setFilterSubjectsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [deptFilter]);
+
+  // Load topics when subjFilter changes
+  useEffect(() => {
+    if (!subjFilter) {
+      setFilterTopics([]);
+      setFilterTopicsLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setFilterTopicsLoading(true);
+    examinationService
+      .listTopicsForSubject(subjFilter)
+      .then((list) => {
+        if (cancelled) return;
+        setFilterTopics(list.map((t) => ({ id: t.id, name: t.name })));
+      })
+      .catch(() => {
+        if (!cancelled) setFilterTopics([]);
+      })
+      .finally(() => {
+        if (!cancelled) setFilterTopicsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [subjFilter]);
+
+  const handleBranchFilterChange = (bId: string) => {
+    setBranchFilter(bId);
+    if (bId && deptFilter) {
+      const match = allDepartments.find((d) => d.id === deptFilter && d.branch_id === bId);
+      if (!match) {
+        setDeptFilter('');
+        setSubjFilter('');
+        setTopicFilter('');
+      }
+    }
+  };
+
+  const handleDeptFilterChange = (dId: string) => {
+    setDeptFilter(dId);
+    setSubjFilter('');
+    setTopicFilter('');
+    if (dId && !branchFilter) {
+      const match = allDepartments.find((d) => d.id === dId);
+      if (match?.branch_id) {
+        setBranchFilter(match.branch_id);
+      }
+    }
+  };
+
+  const handleSubjFilterChange = (sId: string) => {
+    setSubjFilter(sId);
+    setTopicFilter('');
+  };
+
+  const resetFilters = () => {
+    setBranchFilter('');
+    setDeptFilter('');
+    setSubjFilter('');
+    setTopicFilter('');
+    setQuestionSearch('');
+  };
+
+  const hasActiveFilters = Boolean(
+    branchFilter || deptFilter || subjFilter || topicFilter || questionSearch,
+  );
+
+  const availableFilterDepts = useMemo(() => {
+    if (!branchFilter) {
+      const seen = new Set<string>();
+      return allDepartments.filter((d) => {
+        const key = d.name.toLowerCase().trim();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    return allDepartments.filter((d) => d.branch_id === branchFilter);
+  }, [allDepartments, branchFilter]);
+
+  // Cascading filtered questions
+  const filteredQuestions = useMemo(() => {
+    return questions.filter((q) => {
+      if (branchFilter) {
+        const qDeptId = q.department_id;
+        const qDeptName = (q.department_name || '').toLowerCase().trim();
+        const dept = allDepartments.find(
+          (d) =>
+            (qDeptId && d.id === qDeptId) ||
+            (qDeptName && d.name.toLowerCase().trim() === qDeptName),
+        );
+        if (!dept || dept.branch_id !== branchFilter) {
+          return false;
+        }
+      }
+
+      if (deptFilter) {
+        const qDeptId = q.department_id;
+        const qDeptName = (q.department_name || '').toLowerCase().trim();
+        const selectedDept = allDepartments.find((d) => d.id === deptFilter);
+        const selectedDeptName = (selectedDept?.name || '').toLowerCase().trim();
+
+        const matchId = qDeptId && qDeptId === deptFilter;
+        const matchName =
+          selectedDeptName &&
+          qDeptName &&
+          (qDeptName === selectedDeptName ||
+            qDeptName.replace(/s$/, '') === selectedDeptName.replace(/s$/, ''));
+        if (!matchId && !matchName) return false;
+      }
+
+      if (subjFilter) {
+        const qSubjId = q.subject_id;
+        const qSubjName = (q.subject_name || '').toLowerCase().trim();
+        const selectedSubj = filterSubjects.find((s) => s.id === subjFilter);
+        const selectedSubjName = (selectedSubj?.name || '').toLowerCase().trim();
+
+        const matchId = qSubjId && qSubjId === subjFilter;
+        const matchName = selectedSubjName && qSubjName && qSubjName === selectedSubjName;
+        if (!matchId && !matchName) return false;
+      }
+
+      if (topicFilter) {
+        const qTopicId = q.topic_id;
+        const qTopicName = (q.topic_name || '').toLowerCase().trim();
+        const selectedTopic = filterTopics.find((t) => t.id === topicFilter);
+        const selectedTopicName = (selectedTopic?.name || '').toLowerCase().trim();
+
+        const matchId = qTopicId && qTopicId === topicFilter;
+        const matchName = selectedTopicName && qTopicName && qTopicName === selectedTopicName;
+        if (!matchId && !matchName) return false;
+      }
+
+      if (questionSearch.trim()) {
+        const term = questionSearch.toLowerCase().trim();
+        const text = getQuestionText(q.content).toLowerCase();
+        const dept = (q.department_name || '').toLowerCase();
+        const subj = (q.subject_name || '').toLowerCase();
+        const topic = (q.topic_name || '').toLowerCase();
+        if (
+          !text.includes(term) &&
+          !dept.includes(term) &&
+          !subj.includes(term) &&
+          !topic.includes(term)
+        ) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [
+    questions,
+    branchFilter,
+    deptFilter,
+    subjFilter,
+    topicFilter,
+    questionSearch,
+    allDepartments,
+    filterSubjects,
+    filterTopics,
+  ]);
 
   useEffect(() => {
     if (!departmentId) {
@@ -591,7 +836,14 @@ export function QuestionBankPanel() {
           }
           setNewQ('');
           clearOptionInputs();
-          setIsDrawerOpen(false);
+          setAddedCount((c) => c + 1);
+          setJustAddedMsg('Question added successfully!');
+          // Smoothly scroll drawer to top so user instantly sees the success confirmation
+          setTimeout(() => {
+            drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+            questionTextareaRef.current?.focus();
+          }, 30);
+          // Drawer remains open so user can continue adding questions seamlessly
         }
         await loadQuestions();
       } catch (err) {
@@ -636,26 +888,11 @@ export function QuestionBankPanel() {
   };
 
   const allFilteredSelected =
-    questions.length > 0 &&
-    questions.every((q) => selectedDeleteIds.includes(q.id));
+    filteredQuestions.length > 0 &&
+    filteredQuestions.every((q) => selectedDeleteIds.includes(q.id));
 
   return (
     <div className="org-panel-root">
-      {/* ── Top Bar: Page Title + Progress + Next Action ── */}
-      <div className="org-top-bar">
-        <div className="org-top-text">
-          <h1 className="org-page-title">Question Bank</h1>
-          <p className="org-page-desc">
-            Department → subject → topic stay selected after each add. Edit or delete anytime from the list.
-          </p>
-        </div>
-
-      </div>
-
-      {/* Progress Stepper - preserved */}
-      <div style={{ margin: '14px 0 20px' }}>
-        <AdminExamGuide activeStep={1} compact />
-      </div>
 
       {error && (
         <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
@@ -706,7 +943,9 @@ export function QuestionBankPanel() {
             <div className="org-title-row">
               <h3 className="org-card-title">Questions Library</h3>
               <span className="org-count-badge">
-                {pagination.total} {pagination.total === 1 ? 'Question' : 'Questions'}
+                {hasActiveFilters
+                  ? `${filteredQuestions.length} of ${pagination.total} Questions`
+                  : `${pagination.total} ${pagination.total === 1 ? 'Question' : 'Questions'}`}
               </span>
             </div>
             <p className="org-card-subtitle">Manage, curate and organize verified examination questions bank</p>
@@ -760,8 +999,7 @@ export function QuestionBankPanel() {
               type="button"
               className="org-drawer-cancel"
               style={{ width: 'auto', padding: '6px 14px', fontSize: '0.8rem', gap: '6px' }}
-              disabled={importingCsv}
-              onClick={() => csvFileRef.current?.click()}
+              onClick={() => setIsBulkImportModalOpen(true)}
               title="Bulk import questions from CSV"
             >
               <FiUpload />
@@ -793,12 +1031,121 @@ export function QuestionBankPanel() {
           </div>
         </div>
 
+        {/* ── 4-Tier Cascading Filter Toolbar (Branch -> Department -> Subject -> Topic) ── */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 10,
+            padding: '12px 20px',
+            background: '#f8fafc',
+            borderBottom: '1px solid #e2e8f0',
+          }}
+        >
+          {/* 1. Branch / Campus Filter */}
+          <div style={{ flex: '1 1 160px', minWidth: 150 }}>
+            <select
+              className="org-form-select"
+              style={{ height: 38, fontSize: '0.8125rem' }}
+              value={branchFilter}
+              onChange={(e) => handleBranchFilterChange(e.target.value)}
+            >
+              <option value="">All Branches / Campuses</option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 2. Department Filter */}
+          <div style={{ flex: '1 1 180px', minWidth: 170 }}>
+            <select
+              className="org-form-select"
+              style={{ height: 38, fontSize: '0.8125rem' }}
+              value={deptFilter}
+              onChange={(e) => handleDeptFilterChange(e.target.value)}
+            >
+              <option value="">All Departments</option>
+              {availableFilterDepts.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 3. Subject Filter */}
+          <div style={{ flex: '1 1 180px', minWidth: 170 }}>
+            <select
+              className="org-form-select"
+              style={{ height: 38, fontSize: '0.8125rem' }}
+              value={subjFilter}
+              onChange={(e) => handleSubjFilterChange(e.target.value)}
+              disabled={filterSubjectsLoading}
+            >
+              <option value="">
+                {filterSubjectsLoading ? 'Loading subjects…' : 'All Subjects'}
+              </option>
+              {filterSubjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 4. Topic Filter */}
+          <div style={{ flex: '1 1 180px', minWidth: 170 }}>
+            <select
+              className="org-form-select"
+              style={{ height: 38, fontSize: '0.8125rem' }}
+              value={topicFilter}
+              onChange={(e) => setTopicFilter(e.target.value)}
+              disabled={filterTopicsLoading}
+            >
+              <option value="">
+                {filterTopicsLoading ? 'Loading topics…' : 'All Topics'}
+              </option>
+              {filterTopics.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Reset Filters button */}
+          {hasActiveFilters && (
+            <button
+              type="button"
+              className="org-drawer-cancel"
+              style={{
+                height: 38,
+                padding: '0 14px',
+                fontSize: '0.8125rem',
+                gap: 6,
+                display: 'inline-flex',
+                alignItems: 'center',
+                whiteSpace: 'nowrap',
+              }}
+              onClick={resetFilters}
+              title="Reset all filters"
+            >
+              <FiRefreshCw style={{ fontSize: 13 }} />
+              <span>Reset filters</span>
+            </button>
+          )}
+        </div>
+
         {/* Continuous Gradient Table */}
         <div className="table-responsive" style={{ overflowX: 'auto' }}>
           <table className="org-table">
             <thead>
               <tr>
-                <th style={{ width: 44, textAlign: 'center' }}>
+                <th className="org-table-check">
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -806,12 +1153,12 @@ export function QuestionBankPanel() {
                     onChange={() => {
                       if (allFilteredSelected) {
                         setSelectedDeleteIds((prev) =>
-                          prev.filter((id) => !questions.some((q) => q.id === id)),
+                          prev.filter((id) => !filteredQuestions.some((q) => q.id === id)),
                         );
                       } else {
                         setSelectedDeleteIds((prev) => {
                           const next = new Set(prev);
-                          questions.forEach((q) => next.add(q.id));
+                          filteredQuestions.forEach((q) => next.add(q.id));
                           return [...next];
                         });
                       }
@@ -829,11 +1176,11 @@ export function QuestionBankPanel() {
               </tr>
             </thead>
             <tbody>
-              {questions.map((q) => {
+              {filteredQuestions.map((q) => {
                 const label = getQuestionText(q.content);
                 return (
                   <tr key={q.id} className={editingId === q.id ? 'edtp-row--editing' : undefined}>
-                    <td style={{ textAlign: 'center' }}>
+                    <td className="org-table-check">
                       <input
                         type="checkbox"
                         className="form-check-input"
@@ -917,10 +1264,36 @@ export function QuestionBankPanel() {
                   </tr>
                 );
               })}
-              {questions.length === 0 && (
+              {filteredQuestions.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '36px 20px', color: '#64748b' }}>
-                    No questions found. Click <strong>+ Add Question</strong> above or import questions from CSV.
+                  <td colSpan={8}>
+                    <div className="org-empty-state" style={{ padding: '36px 16px', textAlign: 'center' }}>
+                      <FiHelpCircle className="org-empty-icon" />
+                      <p className="org-empty-title">No questions found</p>
+                      <p className="org-empty-desc">
+                        {hasActiveFilters
+                          ? 'No questions match the selected branch, department, subject, or topic filters.'
+                          : 'No questions found. Click + Add Question above or import questions from CSV.'}
+                      </p>
+                      {hasActiveFilters && (
+                        <button
+                          type="button"
+                          className="org-drawer-cancel"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            margin: '8px auto 0',
+                            padding: '6px 14px',
+                            fontSize: '0.8125rem',
+                          }}
+                          onClick={resetFilters}
+                        >
+                          <FiRefreshCw style={{ fontSize: 13 }} />
+                          <span>Reset filters</span>
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )}
@@ -979,7 +1352,33 @@ export function QuestionBankPanel() {
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}
         >
-          <div className="org-drawer-body">
+          <div className="org-drawer-body" ref={drawerBodyRef}>
+            {justAddedMsg && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  background: '#ecfdf5',
+                  border: '1px solid #a7f3d0',
+                  borderLeft: '4px solid #10b981',
+                  borderRadius: 8,
+                  padding: '12px 16px',
+                  marginBottom: '16px',
+                }}
+              >
+                <FiCheckCircle style={{ color: '#059669', fontSize: '1.25rem', flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#065f46' }}>
+                    {justAddedMsg} {addedCount > 1 ? `(${addedCount} questions added in this batch)` : ''}
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#047857', marginTop: 2 }}>
+                    Continue adding more questions below, or click <strong>Done</strong> when finished.
+                  </div>
+                </div>
+              </div>
+            )}
+
             {error && (
               <div className="mad-alert-error" role="alert" style={{ marginBottom: '12px' }}>
                 <span>{error}</span>
@@ -1215,6 +1614,7 @@ export function QuestionBankPanel() {
                 Question Text <span className="org-required-star">*</span>
               </label>
               <textarea
+                ref={questionTextareaRef}
                 className="org-form-input"
                 rows={3}
                 placeholder="Enter the complete question text..."
@@ -1292,15 +1692,19 @@ export function QuestionBankPanel() {
           </div>
 
           <div className="org-drawer-footer">
-            <button type="button" className="org-drawer-cancel" onClick={closeDrawer}>
-              Cancel
+            <button
+              type="button"
+              className={editingId ? 'org-drawer-cancel' : 'org-drawer-submit'}
+              onClick={closeDrawer}
+            >
+              {editingId ? 'Cancel' : 'Done'}
             </button>
             <button
               type="submit"
               className="org-drawer-submit"
               disabled={!topicId}
             >
-              {editingId ? 'Update Question' : 'Add Question'}
+              {editingId ? 'Update Question' : 'Add Another Question'}
             </button>
           </div>
         </form>
@@ -1309,6 +1713,21 @@ export function QuestionBankPanel() {
       <QuestionPreviewModal
         questionId={previewQuestionId}
         onClose={() => setPreviewQuestionId(null)}
+      />
+
+      <BulkImportCsvModal
+        isOpen={isBulkImportModalOpen}
+        onClose={() => setIsBulkImportModalOpen(false)}
+        departments={departments}
+        onImportSuccess={(summary) => {
+          setImportSummary(summary);
+          setHierarchyTick((n) => n + 1);
+          void loadQuestions();
+          showSuccess(
+            'Bulk import complete',
+            `${summary.created} added, ${summary.skipped} skipped, ${summary.errors} errors`,
+          );
+        }}
       />
     </div>
   );
