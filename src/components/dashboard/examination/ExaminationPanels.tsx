@@ -77,9 +77,6 @@ const QB_PREFS_KEY = 'edutech.questionBank.hierarchy';
 type McqOptionCount = 2 | 3 | 4 | 5;
 
 type QbPrefs = {
-  departmentId?: string;
-  subjectId?: string;
-  topicId?: string;
   marksPerQuestion?: number;
   optionCount?: McqOptionCount;
 };
@@ -154,9 +151,9 @@ export function QuestionBankPanel() {
   const [filterSubjectsLoading, setFilterSubjectsLoading] = useState(false);
   const [filterTopicsLoading, setFilterTopicsLoading] = useState(false);
 
-  const [departmentId, setDepartmentId] = useState(() => loadQbPrefs().departmentId ?? '');
-  const [subjectId, setSubjectId] = useState(() => loadQbPrefs().subjectId ?? '');
-  const [topicId, setTopicId] = useState(() => loadQbPrefs().topicId ?? '');
+  const [departmentId, setDepartmentId] = useState('');
+  const [subjectId, setSubjectId] = useState('');
+  const [topicId, setTopicId] = useState('');
 
   const [newSubjectName, setNewSubjectName] = useState('');
   const [newTopicName, setNewTopicName] = useState('');
@@ -193,9 +190,11 @@ export function QuestionBankPanel() {
 
   const openAddDrawer = () => {
     resetQuestionFields();
-    if (deptFilter) setDepartmentId(deptFilter);
-    if (subjFilter) setSubjectId(subjFilter);
-    if (topicFilter) setTopicId(topicFilter);
+    setDepartmentId('');
+    setSubjectId('');
+    setTopicId('');
+    setSubjects([]);
+    setTopics([]);
     setError('');
     setMessage('');
     setJustAddedMsg(null);
@@ -208,7 +207,12 @@ export function QuestionBankPanel() {
     setIsDrawerOpen(false);
     setJustAddedMsg(null);
     setAddedCount(0);
-    if (editingId) resetQuestionFields();
+    setDepartmentId('');
+    setSubjectId('');
+    setTopicId('');
+    setSubjects([]);
+    setTopics([]);
+    resetQuestionFields();
   };
 
   useEffect(() => {
@@ -220,10 +224,6 @@ export function QuestionBankPanel() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isDrawerOpen]);
-
-  useEffect(() => {
-    saveQbPrefs({ departmentId, subjectId, topicId });
-  }, [departmentId, subjectId, topicId]);
 
   useEffect(() => {
     const marks = parseMarksInput(marksInput);
@@ -266,11 +266,7 @@ export function QuestionBankPanel() {
         setDepartments(mapped);
         setDepartmentId((current) => {
           if (current && mapped.some((d) => d.id === current)) return current;
-          const prefs = loadQbPrefs();
-          if (prefs.departmentId && mapped.some((d) => d.id === prefs.departmentId)) {
-            return prefs.departmentId;
-          }
-          return current;
+          return '';
         });
       })
       .catch((err) => setError(parseApiError(err)))
@@ -307,7 +303,7 @@ export function QuestionBankPanel() {
     return () => {
       cancelled = true;
     };
-  }, [deptFilter]);
+  }, [deptFilter, hierarchyTick]);
 
   // Load topics when subjFilter changes
   useEffect(() => {
@@ -333,7 +329,7 @@ export function QuestionBankPanel() {
     return () => {
       cancelled = true;
     };
-  }, [subjFilter]);
+  }, [subjFilter, hierarchyTick]);
 
   const handleBranchFilterChange = (bId: string) => {
     setBranchFilter(bId);
@@ -488,8 +484,6 @@ export function QuestionBankPanel() {
         setSubjects(list);
         setSubjectId((current) => {
           if (current && list.some((s) => s.id === current)) return current;
-          const prefs = loadQbPrefs();
-          if (prefs.subjectId && list.some((s) => s.id === prefs.subjectId)) return prefs.subjectId;
           return '';
         });
       })
@@ -520,8 +514,6 @@ export function QuestionBankPanel() {
         setTopics(mapped);
         setTopicId((current) => {
           if (current && mapped.some((t) => t.id === current)) return current;
-          const prefs = loadQbPrefs();
-          if (prefs.topicId && mapped.some((t) => t.id === prefs.topicId)) return prefs.topicId;
           return '';
         });
       })
@@ -614,6 +606,7 @@ export function QuestionBankPanel() {
         setNewSubjectName('');
         setShowAddSubject(false);
         setMessage(`Subject "${created.name}" added.`);
+        setHierarchyTick((n) => n + 1);
       } catch (err) {
         setError(parseApiError(err));
       }
@@ -633,6 +626,7 @@ export function QuestionBankPanel() {
         setNewTopicName('');
         setShowAddTopic(false);
         setMessage(`Topic "${created.name}" added.`);
+        setHierarchyTick((n) => n + 1);
       } catch (err) {
         setError(parseApiError(err));
       }
@@ -787,8 +781,7 @@ export function QuestionBankPanel() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitQuestionForm = async (andAnother: boolean = false) => {
     setMessage('');
     setError('');
     if (!departmentId || !subjectId || !topicId) {
@@ -824,8 +817,8 @@ export function QuestionBankPanel() {
         if (editingId) {
           await examinationService.updateQuestion(editingId, payload);
           setMessage('Question updated.');
-          resetQuestionFields();
-          setIsDrawerOpen(false);
+          showSuccess('Question updated', 'Question has been updated successfully.');
+          closeDrawer();
         } else {
           const created = await examinationService.createQuestion(payload);
           try {
@@ -834,22 +827,30 @@ export function QuestionBankPanel() {
           } catch {
             setMessage('Question created (pending approval).');
           }
-          setNewQ('');
-          clearOptionInputs();
-          setAddedCount((c) => c + 1);
-          setJustAddedMsg('Question added successfully!');
-          // Smoothly scroll drawer to top so user instantly sees the success confirmation
-          setTimeout(() => {
-            drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
-            questionTextareaRef.current?.focus();
-          }, 30);
-          // Drawer remains open so user can continue adding questions seamlessly
+          if (andAnother) {
+            setNewQ('');
+            clearOptionInputs();
+            setAddedCount((c) => c + 1);
+            setJustAddedMsg('Question added successfully! You can add another question below.');
+            setTimeout(() => {
+              drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+              questionTextareaRef.current?.focus();
+            }, 30);
+          } else {
+            showSuccess('Question created', 'Question added to library successfully.');
+            closeDrawer();
+          }
         }
         await loadQuestions();
       } catch (err) {
         setError(parseApiError(err));
       }
     });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await submitQuestionForm(false);
   };
 
   const improveQuestion = async (id: string) => {
@@ -1373,7 +1374,7 @@ export function QuestionBankPanel() {
                     {justAddedMsg} {addedCount > 1 ? `(${addedCount} questions added in this batch)` : ''}
                   </div>
                   <div style={{ fontSize: '0.8rem', color: '#047857', marginTop: 2 }}>
-                    Continue adding more questions below, or click <strong>Done</strong> when finished.
+                    Question saved. Continue adding more questions below, or click <strong>Cancel</strong> to close.
                   </div>
                 </div>
               </div>
@@ -1692,20 +1693,34 @@ export function QuestionBankPanel() {
           </div>
 
           <div className="org-drawer-footer">
-            <button
-              type="button"
-              className={editingId ? 'org-drawer-cancel' : 'org-drawer-submit'}
-              onClick={closeDrawer}
-            >
-              {editingId ? 'Cancel' : 'Done'}
-            </button>
-            <button
-              type="submit"
-              className="org-drawer-submit"
-              disabled={!topicId}
-            >
-              {editingId ? 'Update Question' : 'Add Another Question'}
-            </button>
+            {!editingId ? (
+              <>
+                <button
+                  type="button"
+                  className="org-drawer-submit"
+                  disabled={!topicId}
+                  onClick={() => void submitQuestionForm(true)}
+                >
+                  Save & Add Another
+                </button>
+                <button
+                  type="submit"
+                  className="org-drawer-submit"
+                  disabled={!topicId}
+                >
+                  Save Question
+                </button>
+              </>
+            ) : (
+              <button
+                type="submit"
+                className="org-drawer-submit"
+                style={{ gridColumn: '1 / -1' }}
+                disabled={!topicId}
+              >
+                Update Question
+              </button>
+            )}
           </div>
         </form>
       </div>

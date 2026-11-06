@@ -114,7 +114,7 @@ export default function ExamAttemptPlayer() {
 
     const timeoutId = window.setTimeout(() => {
       setWarning('');
-    }, 3000);
+    }, 5000);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -371,15 +371,33 @@ export default function ExamAttemptPlayer() {
     }
   };
 
-  const restoreFullscreen = async () => {
+  const restoreFullscreen = useCallback(async () => {
     if (!config.fullScreen || document.fullscreenElement) return true;
     const entered = await enterFullscreen();
     if (entered) {
       setIsFullscreenExited(false);
-      setWarning('');
+      // Keep warning banner visible for student awareness
     }
     return entered;
-  };
+  }, [config.fullScreen, enterFullscreen]);
+
+  // If student exits fullscreen, any click anywhere on the page immediately restores fullscreen
+  useEffect(() => {
+    if (!examStarted || !config.fullScreen || submitting) return;
+
+    const handleGlobalClick = () => {
+      // Don't interfere if submission confirmation dialog is currently open
+      if (submitting || document.querySelector('.swal2-container')) return;
+      if (!document.fullscreenElement) {
+        void restoreFullscreen();
+      }
+    };
+
+    window.addEventListener('click', handleGlobalClick, true);
+    return () => {
+      window.removeEventListener('click', handleGlobalClick, true);
+    };
+  }, [examStarted, config.fullScreen, submitting, restoreFullscreen]);
 
   const submit = async (event?: { stopPropagation?: () => void }) => {
     event?.stopPropagation?.();
@@ -503,9 +521,7 @@ export default function ExamAttemptPlayer() {
   return (
     <div
       className="exam-player-overlay"
-      onClick={(event) => {
-        const target = event.target as HTMLElement | null;
-        if (target?.closest('button, a, input, textarea, select, label')) return;
+      onClick={() => {
         if (!config.fullScreen || document.fullscreenElement || submitting) return;
         void restoreFullscreen();
       }}
@@ -614,7 +630,7 @@ export default function ExamAttemptPlayer() {
           )}
           </div>
 
-          <div className="exam-nav-actions" onClick={(event) => event.stopPropagation()}>
+          <div className="exam-nav-actions">
             <div className="exam-nav-actions__start">
               <button
                 type="button"

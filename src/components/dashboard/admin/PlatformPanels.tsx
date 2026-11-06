@@ -22,11 +22,10 @@ import {
   FiCopy,
   FiCheck,
   FiDownload,
+  FiUpload,
   FiEye,
   FiBell,
   FiInfo,
-  FiArrowUp,
-  FiArrowDown,
 } from 'react-icons/fi';
 import { HiOfficeBuilding } from 'react-icons/hi';
 import '@/styles/organizations.css';
@@ -52,6 +51,8 @@ import { formatDate, formatDateTime } from '@/utils/dateFormat';
 import { getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
 import { ReportInsights } from '@/components/dashboard/examination/AiBuildPanel';
+import { AddQuestionDrawer } from '@/components/dashboard/examination/AddQuestionDrawer';
+import { BulkImportCsvModal } from '@/components/dashboard/examination/BulkImportCsvModal';
 import * as yup from 'yup';
 import {
   BarChart,
@@ -3869,7 +3870,8 @@ export function TestBuilderPanel() {
     assignments?: { student_id: string; first_name: string; last_name: string; email: string }[];
   } | null>(null);
   const [bankQuestions, setBankQuestions] = useState<Question[]>([]);
-  const [filterByTestScope, setFilterByTestScope] = useState(true);
+  const [filterByTestScope] = useState(true);
+  const [recentlyRemovedIds, setRecentlyRemovedIds] = useState<string[]>([]);
   const [editPassingMarksValue, setEditPassingMarksValue] = useState('');
   const [students, setStudents] = useState<Awaited<ReturnType<typeof examinationService.listAssignableStudents>>['data']>([]);
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
@@ -3897,9 +3899,13 @@ export function TestBuilderPanel() {
   const [scheduleStart, setScheduleStart] = useState('');
   const [scheduleEnd, setScheduleEnd] = useState('');
   const [previewQuestionId, setPreviewQuestionId] = useState<string | null>(null);
+  const [isAddQuestionDrawerOpen, setIsAddQuestionDrawerOpen] = useState(false);
+  const [isBulkImportModalOpen, setIsBulkImportModalOpen] = useState(false);
   const [hardQuestions, setHardQuestions] = useState<
     { question_id: string; text: string; correct_pct: number | null; answered_count: number }[]
   >([]);
+
+
   const withLoader = useDashboardLoader();
   const { branches } = useOrganization();
 
@@ -4027,9 +4033,12 @@ export function TestBuilderPanel() {
     return bankQuestions
       .filter((q) => !testQuestions.some((tq) => tq.question_id === q.id))
       .filter((q) => {
+        // Any question recently removed from the test paper is always visible on the right!
+        if (recentlyRemovedIds.includes(q.id)) return true;
+
         if (!filterByTestScope || !hasScopeFilter) return true;
 
-        // 1. Topic filter (highest specificity)
+        // 1. Topic filter
         if (targetTopicId || targetTopicName) {
           const matchTopicId = targetTopicId && q.topic_id && q.topic_id === targetTopicId;
           const matchTopicName =
@@ -4037,30 +4046,31 @@ export function TestBuilderPanel() {
             q.topic_name &&
             q.topic_name.toLowerCase().trim() === String(targetTopicName).toLowerCase().trim();
           if (matchTopicId || matchTopicName) return true;
-          return false;
         }
 
         // 2. Subject filter
         if (targetSubjId || targetSubjName) {
-          const matchSubjId = targetSubjId && q.subject_id && q.subject_id === targetSubjId;
+          const matchSubjId = targetSubjId && (q as any).subject_id && (q as any).subject_id === targetSubjId;
           const matchSubjName =
             targetSubjName &&
-            q.subject_name &&
-            q.subject_name.toLowerCase().trim() === String(targetSubjName).toLowerCase().trim();
+            (q as any).subject_name &&
+            (q as any).subject_name.toLowerCase().trim() === String(targetSubjName).toLowerCase().trim();
           if (matchSubjId || matchSubjName) return true;
-          return false;
         }
 
         // 3. Department filter
         if (targetDeptId || targetDeptName) {
-          const matchDeptId = targetDeptId && q.department_id && q.department_id === targetDeptId;
+          const matchDeptId = targetDeptId && (q as any).department_id && (q as any).department_id === targetDeptId;
           const matchDeptName =
             targetDeptName &&
-            q.department_name &&
-            (q.department_name.toLowerCase().trim() === String(targetDeptName).toLowerCase().trim() ||
-              q.department_name.toLowerCase().trim().replace(/s$/, '') ===
+            (q as any).department_name &&
+            ((q as any).department_name.toLowerCase().trim() === String(targetDeptName).toLowerCase().trim() ||
+              (q as any).department_name.toLowerCase().trim().replace(/s$/, '') ===
                 String(targetDeptName).toLowerCase().trim().replace(/s$/, ''));
           if (matchDeptId || matchDeptName) return true;
+        }
+
+        if (targetTopicId || targetSubjId || targetDeptId) {
           return false;
         }
 
@@ -4074,6 +4084,7 @@ export function TestBuilderPanel() {
   }, [
     bankQuestions,
     testQuestions,
+    recentlyRemovedIds,
     filterByTestScope,
     hasScopeFilter,
     targetTopicId,
@@ -4218,7 +4229,7 @@ export function TestBuilderPanel() {
               ? `${added} question(s) added. ${failures.length} skipped.`
               : `${added} question(s) successfully added to examination paper.`,
           );
-          // Stay on build phase so newly added questions are visible in the left panel!
+          setPhase('publish');
         } else {
           setError(failures[0] ?? 'Could not add questions to this test.');
         }
@@ -4229,19 +4240,13 @@ export function TestBuilderPanel() {
     });
   };
 
-  const removeQuestion = async (questionId: string) => {
+  const removeQuestionInstantly = async (questionId: string) => {
     if (!testId) return;
-    const ok = await confirmDelete({
-      title: 'Remove question?',
-      text: 'This question will be removed from the test.',
-      confirmText: 'Yes, remove',
-    });
-    if (!ok) return;
     setError('');
+    setRecentlyRemovedIds((prev) => Array.from(new Set([...prev, questionId])));
     await withLoader(async () => {
       try {
         await examinationService.removeQuestionFromTest(testId, questionId);
-        setMessage('Question removed from test.');
         await load();
       } catch (err) {
         setError(parseApiError(err));
@@ -4249,25 +4254,9 @@ export function TestBuilderPanel() {
     });
   };
 
-  const moveQuestion = async (questionId: string, direction: -1 | 1) => {
-    if (!testId) return;
-    const ids = testQuestions.map((q) => q.question_id);
-    const idx = ids.indexOf(questionId);
-    const swapWith = idx + direction;
-    if (idx < 0 || swapWith < 0 || swapWith >= ids.length) return;
-    const next = [...ids];
-    [next[idx], next[swapWith]] = [next[swapWith], next[idx]];
-    setError('');
-    await withLoader(async () => {
-      try {
-        const updated = await examinationService.reorderTestQuestions(testId, next);
-        setTest(updated as typeof test);
-        setMessage('Question order updated.');
-      } catch (err) {
-        setError(parseApiError(err));
-      }
-    });
-  };
+
+
+
 
   useEffect(() => {
     if (test?.passing_marks != null) {
@@ -4471,7 +4460,7 @@ export function TestBuilderPanel() {
       >
         <FiInfo style={{ fontSize: 16, flexShrink: 0, color: '#2563eb' }} />
         <span>
-          {phase === 'build' && 'Tick the questions, press Submit Selected, then continue to Publish.'}
+          {phase === 'build' && 'Tick the questions, then press Submit to review and publish the examination.'}
           {phase === 'publish' && 'Check the checklist. Publish live immediately or schedule for a specific date and time.'}
           {phase === 'assign' && 'Choose the students, then press Assign Selected. They will see this exam in My Tests.'}
         </span>
@@ -4687,6 +4676,42 @@ export function TestBuilderPanel() {
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: 1 }}>
+                          {!isPublished && (
+                            <button
+                              type="button"
+                              onClick={() => void removeQuestionInstantly(tq.question_id)}
+                              title="Remove from test paper"
+                              aria-label="Remove from test paper"
+                              style={{
+                                width: 24,
+                                height: 24,
+                                minWidth: 24,
+                                borderRadius: 5,
+                                border: '1.5px solid #cbd5e1',
+                                background: '#ffffff',
+                                color: '#64748b',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                padding: 0,
+                                transition: 'all 0.15s ease',
+                                flexShrink: 0,
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = '#ef4444';
+                                e.currentTarget.style.color = '#ef4444';
+                                e.currentTarget.style.background = '#fef2f2';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = '#cbd5e1';
+                                e.currentTarget.style.color = '#64748b';
+                                e.currentTarget.style.background = '#ffffff';
+                              }}
+                            >
+                              <FiX style={{ fontSize: 13, strokeWidth: 2.5 }} />
+                            </button>
+                          )}
                           <span
                             style={{
                               padding: '2px 8px',
@@ -4734,41 +4759,10 @@ export function TestBuilderPanel() {
                             className="org-action-btn org-action-btn--switch sca-preview-btn"
                             onClick={() => setPreviewQuestionId(tq.question_id)}
                             title="Preview question"
+                            aria-label="Preview question"
                           >
                             <FiEye />
-                            <span>Preview</span>
                           </button>
-                          {!isPublished && (
-                            <>
-                              <button
-                                type="button"
-                                className="org-icon-btn org-icon-btn--switch"
-                                disabled={i === 0}
-                                onClick={() => void moveQuestion(tq.question_id, -1)}
-                                title="Move up"
-                              >
-                                <FiArrowUp />
-                              </button>
-                              <button
-                                type="button"
-                                className="org-icon-btn org-icon-btn--switch"
-                                disabled={i === testQuestions.length - 1}
-                                onClick={() => void moveQuestion(tq.question_id, 1)}
-                                title="Move down"
-                              >
-                                <FiArrowDown />
-                              </button>
-                              <button
-                                type="button"
-                                className="org-action-btn org-action-btn--danger"
-                                onClick={() => void removeQuestion(tq.question_id)}
-                                title="Remove question"
-                              >
-                                <FiTrash2 />
-                                <span>Remove</span>
-                              </button>
-                            </>
-                          )}
                         </div>
                       </div>
                     );
@@ -4804,27 +4798,53 @@ export function TestBuilderPanel() {
 
           {/* Right Card: Question Bank Pool */}
           <div className="org-table-card sca-test-builder-panel">
-            <div className="org-card-header">
-              <div className="org-title-group">
-                <div className="org-title-row">
-                  <h3 className="org-card-title">Add from Question Bank</h3>
-                  <span className="org-count-badge">
-                    {availableQuestions.length} Available
-                  </span>
-                  {selectedQuestionIds.length > 0 && (
-                    <span
-                      className="org-count-badge"
-                      style={{ background: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' }}
-                    >
-                      {selectedQuestionIds.length} Selected
+            <div className="org-card-header" style={{ alignItems: 'flex-start', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', flexWrap: 'wrap', gap: 12 }}>
+                <div className="org-title-group">
+                  <div className="org-title-row">
+                    <h3 className="org-card-title">Add from Question Bank</h3>
+                    <span className="org-count-badge">
+                      {availableQuestions.length} Available
                     </span>
-                  )}
+                    {selectedQuestionIds.length > 0 && (
+                      <span
+                        className="org-count-badge"
+                        style={{ background: '#ecfdf5', color: '#059669', borderColor: '#a7f3d0' }}
+                      >
+                        {selectedQuestionIds.length} Selected
+                      </span>
+                    )}
+                  </div>
+                  <p className="org-card-subtitle">Tick questions and submit into this exam paper</p>
                 </div>
-                <p className="org-card-subtitle">Tick questions and submit into this exam paper</p>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    className="org-drawer-cancel"
+                    style={{ width: 'auto', padding: '6px 14px', fontSize: '0.8rem', gap: 6, height: 36 }}
+                    onClick={() => setIsBulkImportModalOpen(true)}
+                    title="Bulk import questions from CSV"
+                  >
+                    <FiUpload />
+                    <span>Bulk Import CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="org-add-btn"
+                    style={{ height: 36, padding: '0 16px', width: 'auto', minWidth: 'auto' }}
+                    onClick={() => setIsAddQuestionDrawerOpen(true)}
+                    title="Add new question to question bank"
+                  >
+                    <FiPlus className="org-add-btn-icon" />
+                    <span>Add Question</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="org-controls-row">
-                <div className="org-search-box">
+              <div className="org-controls-row" style={{ width: '100%', justifyContent: 'space-between', marginTop: 4 }}>
+                <div className="org-search-box" style={{ flex: '1 1 200px' }}>
                   <FiSearch className="org-search-icon" />
                   <input
                     type="text"
@@ -4845,8 +4865,8 @@ export function TestBuilderPanel() {
                   )}
                 </div>
 
-                {availableQuestions.length > 0 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {availableQuestions.length > 0 && (
                     <button
                       type="button"
                       className="org-btn-secondary"
@@ -4855,54 +4875,22 @@ export function TestBuilderPanel() {
                     >
                       {allQuestionsSelected ? 'Clear All' : 'Select All'}
                     </button>
-                    <button
-                      type="button"
-                      className="org-add-btn"
-                      style={{ height: 36, padding: '0 16px' }}
-                      disabled={selectedQuestionIds.length === 0}
-                      onClick={() => void submitSelectedQuestions()}
-                    >
-                      <FiCheckCircle />
-                      <span>Submit ({selectedQuestionIds.length})</span>
-                    </button>
-                  </div>
-                )}
+                  )}
+                  <button
+                    type="button"
+                    className="org-add-btn"
+                    style={{ height: 36, padding: '0 16px', width: 'auto', minWidth: 'auto' }}
+                    disabled={selectedQuestionIds.length === 0}
+                    onClick={() => void submitSelectedQuestions()}
+                  >
+                    <FiCheckCircle />
+                    <span>Submit ({selectedQuestionIds.length})</span>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {hasScopeFilter && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '8px 16px',
-                  background: '#eff6ff',
-                  borderBottom: '1px solid #bfdbfe',
-                  fontSize: '0.8rem',
-                  color: '#1e40af',
-                }}
-              >
-                <div>
-                  Scoped to: <strong>{[targetDeptName, targetSubjName, targetTopicName].filter(Boolean).join(' → ')}</strong>
-                </div>
-                <button
-                  type="button"
-                  className="org-pill"
-                  style={{
-                    cursor: 'pointer',
-                    background: filterByTestScope ? '#ffffff' : '#2563eb',
-                    color: filterByTestScope ? '#2563eb' : '#ffffff',
-                    border: '1px solid #2563eb',
-                    fontSize: '0.75rem',
-                    padding: '2px 8px',
-                  }}
-                  onClick={() => setFilterByTestScope((v) => !v)}
-                >
-                  {filterByTestScope ? 'Show All Bank Questions' : 'Filter by Test Scope'}
-                </button>
-              </div>
-            )}
+
             <div className="sca-test-builder-panel__body org-table-wrap">
               <table className="org-table">
                 <thead>
@@ -4970,9 +4958,9 @@ export function TestBuilderPanel() {
                             className="org-action-btn org-action-btn--switch sca-preview-btn"
                             onClick={() => setPreviewQuestionId(q.id)}
                             title="Preview question"
+                            aria-label="Preview question"
                           >
                             <FiEye />
-                            <span>Preview</span>
                           </button>
                         </td>
                       </tr>
@@ -5479,6 +5467,86 @@ export function TestBuilderPanel() {
       <QuestionPreviewModal
         questionId={previewQuestionId}
         onClose={() => setPreviewQuestionId(null)}
+      />
+
+      <AddQuestionDrawer
+        isOpen={isAddQuestionDrawerOpen}
+        onClose={() => setIsAddQuestionDrawerOpen(false)}
+        initialDepartmentId={targetDeptId}
+        initialDepartmentName={targetDeptName}
+        initialSubjectId={targetSubjId}
+        initialSubjectName={targetSubjName}
+        initialTopicId={targetTopicId}
+        initialTopicName={targetTopicName}
+        isScopeLocked={Boolean(targetDeptId)}
+        departments={departments}
+        onSuccess={async (newQuestionId) => {
+          setIsAddQuestionDrawerOpen(false);
+          if (newQuestionId && testId) {
+            try {
+              await examinationService.addQuestionToTest(testId, newQuestionId);
+            } catch (err) {
+              console.error('Failed to auto-add question to test:', err);
+            }
+          }
+          await load();
+        }}
+      />
+
+      <BulkImportCsvModal
+        isOpen={isBulkImportModalOpen}
+        onClose={() => setIsBulkImportModalOpen(false)}
+        departments={departments}
+        initialDepartmentId={targetDeptId}
+        initialDepartmentName={targetDeptName}
+        initialSubjectId={targetSubjId}
+        initialSubjectName={targetSubjName}
+        initialTopicId={targetTopicId}
+        initialTopicName={targetTopicName}
+        isScopeLocked={Boolean(targetDeptId)}
+        onImportSuccess={async (summary) => {
+          setIsBulkImportModalOpen(false);
+          if (summary.created <= 0) {
+            await load();
+            return;
+          }
+
+          await withLoader(async () => {
+            try {
+              const qResult = await examinationService.listQuestions(1, Math.max(100, summary.created + 20), 'approved');
+              setBankQuestions(qResult.data);
+
+              if (testId) {
+                // Add ONLY the questions that were newly imported from the CSV (newest items first)
+                const newlyImported = qResult.data.slice(0, summary.created);
+
+                let addedCount = 0;
+                for (const q of newlyImported) {
+                  try {
+                    await examinationService.addQuestionToTest(testId, q.id);
+                    addedCount += 1;
+                  } catch (err) {
+                    console.error('Failed to auto-add question to test:', err);
+                  }
+                }
+                await load();
+                showSuccess(
+                  'Questions Imported & Added to Test',
+                  `${addedCount} question(s) successfully added to Test Questions.`,
+                );
+              } else {
+                await load();
+                showSuccess(
+                  'Bulk import complete',
+                  `${summary.created} added, ${summary.skipped} skipped, ${summary.errors} errors`,
+                );
+              }
+            } catch (err) {
+              setError(parseApiError(err));
+              await load();
+            }
+          });
+        }}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import {
   FiAlertCircle,
   FiFileText,
   FiLayers,
+  FiLock,
 } from 'react-icons/fi';
 
 interface DepartmentOption {
@@ -32,6 +33,13 @@ interface BulkImportCsvModalProps {
   onClose: () => void;
   departments: DepartmentOption[];
   onImportSuccess: (summary: QuestionImportSummary) => void;
+  initialDepartmentId?: string;
+  initialDepartmentName?: string;
+  initialSubjectId?: string;
+  initialSubjectName?: string;
+  initialTopicId?: string;
+  initialTopicName?: string;
+  isScopeLocked?: boolean;
 }
 
 /**
@@ -101,11 +109,18 @@ export function BulkImportCsvModal({
   onClose,
   departments,
   onImportSuccess,
+  initialDepartmentId,
+  initialDepartmentName,
+  initialSubjectId,
+  initialSubjectName,
+  initialTopicId,
+  initialTopicName,
+  isScopeLocked = false,
 }: BulkImportCsvModalProps) {
-  // Always start with clean/unselected state
-  const [departmentId, setDepartmentId] = useState('');
-  const [subjectId, setSubjectId] = useState('');
-  const [topicId, setTopicId] = useState('');
+  // Initialize with initial scope if provided
+  const [departmentId, setDepartmentId] = useState(initialDepartmentId || '');
+  const [subjectId, setSubjectId] = useState(initialSubjectId || '');
+  const [topicId, setTopicId] = useState(initialTopicId || '');
 
   const [subjects, setSubjects] = useState<SubjectOption[]>([]);
   const [topics, setTopics] = useState<TopicOption[]>([]);
@@ -123,9 +138,9 @@ export function BulkImportCsvModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const resetForm = () => {
-    setDepartmentId('');
-    setSubjectId('');
-    setTopicId('');
+    setDepartmentId(initialDepartmentId || '');
+    setSubjectId(initialSubjectId || '');
+    setTopicId(initialTopicId || '');
     setSubjects([]);
     setTopics([]);
     setSelectedFile(null);
@@ -139,10 +154,10 @@ export function BulkImportCsvModal({
     }
   };
 
-  // Reset form to blank slate whenever modal is opened or closed
+  // Reset form whenever modal is opened or closed
   useEffect(() => {
     resetForm();
-  }, [isOpen]);
+  }, [isOpen, initialDepartmentId, initialSubjectId, initialTopicId]);
 
   const handleClose = () => {
     if (isImporting) return;
@@ -167,9 +182,13 @@ export function BulkImportCsvModal({
         if (cancelled) return;
         const list = res.data.map((s) => ({ id: s.id, name: s.name }));
         setSubjects(list);
-        setSubjectId('');
-        setTopics([]);
-        setTopicId('');
+        if (initialSubjectId && list.some((s) => s.id === initialSubjectId)) {
+          setSubjectId(initialSubjectId);
+        } else if (!isScopeLocked) {
+          setSubjectId('');
+          setTopics([]);
+          setTopicId('');
+        }
       })
       .catch(() => {
         if (!cancelled) setSubjects([]);
@@ -180,7 +199,7 @@ export function BulkImportCsvModal({
     return () => {
       cancelled = true;
     };
-  }, [departmentId]);
+  }, [departmentId, initialSubjectId, isScopeLocked]);
 
   // Load topics when subject changes
   useEffect(() => {
@@ -197,7 +216,11 @@ export function BulkImportCsvModal({
         if (cancelled) return;
         const mapped = list.map((t) => ({ id: t.id, name: t.name }));
         setTopics(mapped);
-        setTopicId('');
+        if (initialTopicId && mapped.some((t) => t.id === initialTopicId)) {
+          setTopicId(initialTopicId);
+        } else if (!isScopeLocked) {
+          setTopicId('');
+        }
       })
       .catch(() => {
         if (!cancelled) setTopics([]);
@@ -208,7 +231,7 @@ export function BulkImportCsvModal({
     return () => {
       cancelled = true;
     };
-  }, [subjectId]);
+  }, [subjectId, initialTopicId, isScopeLocked]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -265,9 +288,12 @@ export function BulkImportCsvModal({
     }
   };
 
-  const selectedDeptName = departments.find((d) => d.id === departmentId)?.name || '';
-  const selectedSubjName = subjects.find((s) => s.id === subjectId)?.name || '';
-  const selectedTopicName = topics.find((t) => t.id === topicId)?.name || '';
+  const selectedDeptName =
+    departments.find((d) => d.id === departmentId)?.name || initialDepartmentName || '';
+  const selectedSubjName =
+    subjects.find((s) => s.id === subjectId)?.name || initialSubjectName || '';
+  const selectedTopicName =
+    topics.find((t) => t.id === topicId)?.name || initialTopicName || '';
 
   const handleImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -306,6 +332,24 @@ export function BulkImportCsvModal({
     const diffIdx = findCol('difficulty', 'diff');
     const expIdx = findCol('explanation', 'explain', 'solution', 'hint');
 
+    const deptColIdx = findCol('department', 'dept');
+    const subjColIdx = findCol('subject', 'subj');
+    const chapColIdx = findCol('chapter', 'chap');
+    const topicColIdx = findCol('topic');
+
+    if (!selectedDeptName && deptColIdx === -1) {
+      setApiError('Department is missing or could not be resolved. Please select a Department.');
+      return;
+    }
+    if (!selectedSubjName && subjColIdx === -1) {
+      setApiError('Subject is missing or could not be resolved. Please select a Subject.');
+      return;
+    }
+    if (!selectedTopicName && topicColIdx === -1) {
+      setApiError('Topic is missing or could not be resolved. Please select a Topic.');
+      return;
+    }
+
     if (qIdx === -1) {
       setApiError('CSV must contain a "QUESTION" column header.');
       return;
@@ -342,6 +386,11 @@ export function BulkImportCsvModal({
       const questionText = r[qIdx] || '';
       if (!questionText.trim()) continue;
 
+      const rowDept = (deptColIdx !== -1 && r[deptColIdx] ? r[deptColIdx].trim() : '') || selectedDeptName;
+      const rowSubj = (subjColIdx !== -1 && r[subjColIdx] ? r[subjColIdx].trim() : '') || selectedSubjName;
+      const rowChap = (chapColIdx !== -1 && r[chapColIdx] ? r[chapColIdx].trim() : '') || selectedTopicName || 'General';
+      const rowTopic = (topicColIdx !== -1 && r[topicColIdx] ? r[topicColIdx].trim() : '') || selectedTopicName;
+
       let type = typeIdx !== -1 && r[typeIdx] ? r[typeIdx].toLowerCase().trim() : 'mcq';
       if (!['mcq', 'msq', 'true_false', 'fill_blank', 'numerical', 'integer'].includes(type)) {
         type = 'mcq';
@@ -367,10 +416,10 @@ export function BulkImportCsvModal({
       const explanation = expIdx !== -1 ? r[expIdx] || '' : '';
 
       const fullRow = [
-        selectedDeptName,
-        selectedSubjName,
-        selectedTopicName, // CHAPTER
-        selectedTopicName, // TOPIC
+        rowDept,
+        rowSubj,
+        rowChap,
+        rowTopic,
         type,
         questionText,
         optA,
@@ -397,6 +446,11 @@ export function BulkImportCsvModal({
     try {
       const summary = await examinationService.importQuestionsFromCsv(finalCsv);
       setImportSummary(summary);
+      if (summary.created === 0 && summary.errors > 0) {
+        const firstErr = summary.rows.find((r) => r.status === 'error')?.reason || 'Failed to import question rows.';
+        setApiError(`Import failed (${summary.errors} errors): ${firstErr}`);
+        return;
+      }
       onImportSuccess(summary);
       if (summary.errors === 0) {
         // Auto close and reset after 1.2s on complete success
@@ -573,14 +627,45 @@ export function BulkImportCsvModal({
                 padding: '16px',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <FiLayers style={{ color: '#2563eb', fontSize: 16 }} />
-                <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
-                  1. Target Hierarchy Scope
-                </span>
-                <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                  (Every question in CSV will be imported here)
-                </span>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: 12,
+                  flexWrap: 'wrap',
+                  gap: 8,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <FiLayers style={{ color: '#2563eb', fontSize: 16 }} />
+                  <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                    1. Target Hierarchy Scope
+                  </span>
+                  {!isScopeLocked && (
+                    <span style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                      (Every question in CSV will be imported here)
+                    </span>
+                  )}
+                </div>
+                {isScopeLocked && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 5,
+                      fontSize: '0.74rem',
+                      fontWeight: 600,
+                      padding: '3px 9px',
+                      borderRadius: 6,
+                      background: '#eff6ff',
+                      color: '#1d4ed8',
+                      border: '1px solid #bfdbfe',
+                    }}
+                  >
+                    <FiLock style={{ fontSize: '0.75rem' }} /> Locked to Exam Paper Scope
+                  </span>
+                )}
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
@@ -593,12 +678,25 @@ export function BulkImportCsvModal({
                     className="org-form-input"
                     value={departmentId}
                     onChange={(e) => {
+                      if (isScopeLocked) return;
                       setDepartmentId(e.target.value);
                       setSubjectId('');
                       setTopicId('');
                     }}
+                    disabled={isScopeLocked}
                     required
-                    style={{ height: 38, fontSize: '0.85rem' }}
+                    style={{
+                      height: 38,
+                      fontSize: '0.85rem',
+                      ...(isScopeLocked
+                        ? {
+                            background: '#f1f5f9',
+                            color: '#475569',
+                            cursor: 'not-allowed',
+                            borderColor: '#cbd5e1',
+                          }
+                        : {}),
+                    }}
                   >
                     <option value="">Select department</option>
                     {departments.map((d) => (
@@ -606,6 +704,9 @@ export function BulkImportCsvModal({
                         {d.name}
                       </option>
                     ))}
+                    {initialDepartmentId && initialDepartmentName && !departments.some((d) => d.id === initialDepartmentId) && (
+                      <option value={initialDepartmentId}>{initialDepartmentName}</option>
+                    )}
                   </select>
                 </div>
 
@@ -618,12 +719,24 @@ export function BulkImportCsvModal({
                     className="org-form-input"
                     value={subjectId}
                     onChange={(e) => {
+                      if (isScopeLocked) return;
                       setSubjectId(e.target.value);
                       setTopicId('');
                     }}
-                    disabled={!departmentId || subjectsLoading}
+                    disabled={isScopeLocked || !departmentId || subjectsLoading}
                     required
-                    style={{ height: 38, fontSize: '0.85rem' }}
+                    style={{
+                      height: 38,
+                      fontSize: '0.85rem',
+                      ...(isScopeLocked
+                        ? {
+                            background: '#f1f5f9',
+                            color: '#475569',
+                            cursor: 'not-allowed',
+                            borderColor: '#cbd5e1',
+                          }
+                        : {}),
+                    }}
                   >
                     <option value="">
                       {subjectsLoading ? 'Loading subjects…' : 'Select subject'}
@@ -633,6 +746,9 @@ export function BulkImportCsvModal({
                         {s.name}
                       </option>
                     ))}
+                    {initialSubjectId && initialSubjectName && !subjects.some((s) => s.id === initialSubjectId) && (
+                      <option value={initialSubjectId}>{initialSubjectName}</option>
+                    )}
                   </select>
                 </div>
 
@@ -644,10 +760,24 @@ export function BulkImportCsvModal({
                   <select
                     className="org-form-input"
                     value={topicId}
-                    onChange={(e) => setTopicId(e.target.value)}
-                    disabled={!subjectId || topicsLoading}
+                    onChange={(e) => {
+                      if (isScopeLocked) return;
+                      setTopicId(e.target.value);
+                    }}
+                    disabled={isScopeLocked || !subjectId || topicsLoading}
                     required
-                    style={{ height: 38, fontSize: '0.85rem' }}
+                    style={{
+                      height: 38,
+                      fontSize: '0.85rem',
+                      ...(isScopeLocked
+                        ? {
+                            background: '#f1f5f9',
+                            color: '#475569',
+                            cursor: 'not-allowed',
+                            borderColor: '#cbd5e1',
+                          }
+                        : {}),
+                    }}
                   >
                     <option value="">
                       {topicsLoading ? 'Loading topics…' : 'Select topic'}
@@ -657,6 +787,9 @@ export function BulkImportCsvModal({
                         {t.name}
                       </option>
                     ))}
+                    {initialTopicId && initialTopicName && !topics.some((t) => t.id === initialTopicId) && (
+                      <option value={initialTopicId}>{initialTopicName}</option>
+                    )}
                   </select>
                 </div>
               </div>
