@@ -211,10 +211,10 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                           className="org-action-btn org-action-btn--secondary"
                           onClick={() => void download(c)}
                           disabled={certBusy}
-                          title="Download this certificate PDF"
+                          title="Download certificate PDF"
                           aria-label={`Download ${c.certificate_no}`}
                         >
-                          <FiDownload style={{ fontSize: 13 }} /> PDF
+                          <FiDownload style={{ fontSize: 14 }} />
                         </button>
                       )}
                       {canRevoke && c.status === 'issued' && (
@@ -222,8 +222,10 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                           type="button"
                           className="org-action-btn org-action-btn--danger"
                           onClick={() => void revoke(c)}
+                          title="Revoke certificate"
+                          aria-label="Revoke certificate"
                         >
-                          <FiTrash2 style={{ fontSize: 13 }} /> Revoke
+                          <FiTrash2 style={{ fontSize: 14 }} />
                         </button>
                       )}
                     </div>

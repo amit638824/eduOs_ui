@@ -12,7 +12,7 @@ import { FormError, inputClassName } from '@/components/ui/FormField';
 import { createTestApiSchema, type CreateTestApiFormValues } from '@/validators/schemas';
 import type { ExamResult, ExamTest, Question, TestAttempt } from '@/types/examination';
 import { useAuth } from '@/context/AuthContext';
-import { getTestsListPath } from '@/utils/dashboardRole';
+import { getTestsListPath, getDefaultDashboardPath } from '@/utils/dashboardRole';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
@@ -1985,8 +1985,9 @@ export function TestsListPanel({ title }: { title: string }) {
                           to={`/dashboard/test-builder/${t.id}?step=build`}
                           className="org-action-btn org-action-btn--switch"
                           title="Continue setup"
+                          aria-label="Continue setup"
                         >
-                          <FiPlay style={{ fontSize: 13 }} /> Setup
+                          <FiPlay style={{ fontSize: 14 }} />
                         </Link>
                       )}
                       {(t.status === 'scheduled' || t.status === 'live') && (
@@ -1994,8 +1995,9 @@ export function TestsListPanel({ title }: { title: string }) {
                           to={`/dashboard/test-builder/${t.id}?step=assign`}
                           className="org-action-btn org-action-btn--switch"
                           title="Assign students"
+                          aria-label="Assign students"
                         >
-                          <FiZap style={{ fontSize: 13 }} /> Assign
+                          <FiZap style={{ fontSize: 14 }} />
                         </Link>
                       )}
                       <button
@@ -2003,19 +2005,21 @@ export function TestsListPanel({ title }: { title: string }) {
                         className="org-action-btn org-action-btn--edit"
                         disabled={t.status === 'completed'}
                         title={t.status === 'completed' ? 'Completed tests cannot be edited' : 'Edit test details'}
+                        aria-label="Edit test details"
                         onClick={() => {
                           if (t.status !== 'completed') startEdit(t);
                         }}
                       >
-                        <FiEdit3 style={{ fontSize: 13 }} /> Edit
+                        <FiEdit3 style={{ fontSize: 14 }} />
                       </button>
                       <button
                         type="button"
                         className="org-action-btn org-action-btn--danger"
                         onClick={() => void remove(t.id, t.title)}
                         title="Delete test"
+                        aria-label="Delete test"
                       >
-                        <FiTrash2 style={{ fontSize: 13 }} /> Delete
+                        <FiTrash2 style={{ fontSize: 14 }} />
                       </button>
                     </div>
                   </td>
@@ -2931,16 +2935,20 @@ export function AttemptsListPanel({
                             type="button"
                             className="org-action-btn org-action-btn--switch"
                             onClick={() => navigate(`/dashboard/exam/${a.test_id}/attempt/${a.id}`)}
+                            title="Resume attempt"
+                            aria-label="Resume attempt"
                           >
-                            <FiPlay style={{ fontSize: 13 }} /> Resume
+                            <FiPlay style={{ fontSize: 14 }} />
                           </button>
                         )}
                         {(a.status === 'submitted' || a.status === 'auto_submitted') && (
                           <Link
                             to={`/dashboard/exam-result/${a.id}`}
                             className="org-action-btn org-action-btn--edit"
+                            title="View result"
+                            aria-label="View result"
                           >
-                            <FiEye style={{ fontSize: 13 }} /> Result
+                            <FiEye style={{ fontSize: 14 }} />
                           </Link>
                         )}
                       </div>
@@ -3088,8 +3096,10 @@ export function ResultsPanel() {
                       <Link
                         to={`/dashboard/exam-result/${r.attempt_id}`}
                         className="org-action-btn org-action-btn--edit"
+                        title="View result"
+                        aria-label="View result"
                       >
-                        <FiEye style={{ fontSize: 13 }} /> View
+                        <FiEye style={{ fontSize: 14 }} />
                       </Link>
                     </div>
                   </td>
@@ -4568,6 +4578,8 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
   const withLoader = useDashboardLoader();
+  const isFirstTimeSession = typeof window !== 'undefined' && sessionStorage.getItem('first_time_login') === 'true';
+  const dashboardPath = user ? getDefaultDashboardPath(user.roles) : '/dashboard';
   const {
     register,
     handleSubmit,
@@ -4593,6 +4605,10 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
           phone: values.phone,
         });
         await refreshUser();
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('first_time_login');
+          if (user?.id) localStorage.setItem(`onboarded_${user.id}`, 'true');
+        }
         setMessage('Profile updated successfully.');
         onSuccess?.();
       } catch (err) {
@@ -4605,6 +4621,30 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+      {isFirstTimeSession && !user.phone && (
+        <div
+          style={{
+            background: 'var(--db-accent-soft, rgba(59, 130, 246, 0.08))',
+            border: '1px solid var(--db-border, #e2e8f0)',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontSize: '0.875rem',
+            color: 'var(--db-text, #1e293b)',
+          }}
+        >
+          <span style={{ fontSize: '1.25rem' }}>👋</span>
+          <div>
+            <strong>Welcome, {user.firstName || 'there'}!</strong>
+            <p style={{ margin: 0, color: 'var(--db-muted, #64748b)', fontSize: '0.8125rem' }}>
+              Please enter your phone number to complete your profile setup.
+            </p>
+          </div>
+        </div>
+      )}
       {apiError && (
         <div className="mad-alert-error" role="alert" style={{ marginBottom: '16px' }}>
           <span>{apiError}</span>
@@ -4671,7 +4711,7 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '24px', width: '100%', flexWrap: 'wrap' }}>
         <button
           type="submit"
           className="org-add-btn"
@@ -4679,6 +4719,21 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
         >
           Update Profile
         </button>
+        {(user.phone || isFirstTimeSession) && (
+          <Link
+            to={dashboardPath}
+            className="org-drawer-cancel"
+            style={{ padding: '8px 20px', fontSize: '0.85rem', borderRadius: '10px', textDecoration: 'none' }}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                sessionStorage.removeItem('first_time_login');
+                if (user?.id) localStorage.setItem(`onboarded_${user.id}`, 'true');
+              }
+            }}
+          >
+            Continue to Dashboard →
+          </Link>
+        )}
       </div>
     </form>
   );

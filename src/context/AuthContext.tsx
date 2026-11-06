@@ -3,6 +3,7 @@ import type { ApiUser, LoginInput, RegisterInput } from '@/types/api';
 import { tokenStorage } from '@/lib/storage';
 import { setSelectedOrganizationId } from '@/lib/orgScope';
 import * as authService from '@/services/auth.service';
+import { getSettingsPathForRoles } from '@/utils/dashboardRole';
 import { connectRealtime, disconnectRealtime } from '@/lib/realtime';
 
 interface AuthContextValue {
@@ -54,6 +55,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSelectedOrganizationId(null);
     persistTokens(result.tokens.accessToken, result.tokens.refreshToken);
     setUser(result.user);
+    const isAlreadyOnboarded = localStorage.getItem(`onboarded_${result.user.id}`) === 'true';
+    const isFirstTime = Boolean(
+      (result.user.isFirstLogin && !isAlreadyOnboarded) ||
+      (!result.user.phone && !isAlreadyOnboarded && result.user.roles.includes('org_admin'))
+    );
+    if (isFirstTime) {
+      sessionStorage.setItem('first_time_login', 'true');
+      localStorage.setItem(`onboarded_${result.user.id}`, 'true');
+      return getSettingsPathForRoles(result.user.roles);
+    }
+    sessionStorage.removeItem('first_time_login');
     return authService.getDashboardPathForRoles(result.user.roles);
   }, []);
 
@@ -62,6 +74,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSelectedOrganizationId(null);
     persistTokens(result.tokens.accessToken, result.tokens.refreshToken);
     setUser(result.user);
+    const isAlreadyOnboarded = localStorage.getItem(`onboarded_${result.user.id}`) === 'true';
+    const isFirstTime = Boolean(
+      (result.user.isFirstLogin && !isAlreadyOnboarded) ||
+      (!result.user.phone && !isAlreadyOnboarded && result.user.roles.includes('org_admin'))
+    );
+    if (isFirstTime) {
+      sessionStorage.setItem('first_time_login', 'true');
+      localStorage.setItem(`onboarded_${result.user.id}`, 'true');
+      return getSettingsPathForRoles(result.user.roles);
+    }
+    sessionStorage.removeItem('first_time_login');
     return authService.getDashboardPathForRoles(result.user.roles);
   }, []);
 

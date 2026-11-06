@@ -48,6 +48,7 @@
 .org-add-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 7px 16px;
   border-radius: 10px;
@@ -61,6 +62,9 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none !important;
   flex-shrink: 0;
+  width: 175px;
+  min-width: 175px;
+  box-sizing: border-box;
 }
 
 .org-add-btn:hover {
@@ -337,7 +341,9 @@
   border: 1px solid var(--db-border, #e2e8f0);
   border-radius: 8px;
   padding: 5px 12px;
-  min-width: 240px;
+  width: 175px;
+  min-width: 175px;
+  box-sizing: border-box;
   transition: all 0.15s ease;
 }
 
@@ -459,7 +465,8 @@
 .org-th-actions,
 .org-table thead th.edtp-th-actions,
 .org-table thead th.org-th-actions {
-  width: 26%;
+  width: auto;
+  min-width: 120px;
   text-align: left !important;
   padding-left: 16px !important;
   padding-right: 16px !important;
@@ -469,7 +476,8 @@
 .org-td-actions,
 .org-table tbody td.org-td-actions,
 .org-table tbody td.edtp-td-actions {
-  width: 26%;
+  width: auto;
+  min-width: 120px;
   text-align: left !important;
   overflow: visible !important;
 }
@@ -765,20 +773,27 @@
   align-items: center;
   justify-content: center;
   gap: 5px;
-  height: 30px;
-  padding: 0 10px;
-  border-radius: 7px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  padding: 0;
+  border-radius: 8px;
   font-size: 0.78rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none !important;
   white-space: nowrap;
-  flex-shrink: 1;
-  min-width: 0;
+  flex-shrink: 0;
   border: 1px solid transparent;
   line-height: 1;
   box-sizing: border-box;
+}
+
+.org-action-btn:has(span) {
+  width: auto;
+  min-width: 0;
+  padding: 0 10px;
 }
 
 .org-action-btn--primary,
@@ -845,9 +860,9 @@
 }
 
 .org-action-btn svg {
-  width: 14px;
-  height: 14px;
-  font-size: 14px;
+  width: 15px;
+  height: 15px;
+  font-size: 15px;
   flex-shrink: 0;
 }
 

@@ -592,8 +592,10 @@ export function DashboardAssignmentsContent() {
                           <Link
                             to={`/dashboard/test-builder/${row.id}`}
                             className="org-action-btn org-action-btn--switch"
+                            title="Manage test"
+                            aria-label="Manage test"
                           >
-                            <FiZap style={{ fontSize: 13 }} /> Manage
+                            <FiZap style={{ fontSize: 14 }} />
                           </Link>
                         </div>
                       </td>

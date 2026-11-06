@@ -152,6 +152,11 @@ export function buildDashboardNavigation(
               icon: 'shield',
             },
             {
+              label: 'Departments',
+              href: `${base}/admin-org`,
+              icon: 'course',
+            },
+            {
               label: 'Teachers',
               href: `${base}/admin-faculty`,
               icon: 'user',
@@ -160,11 +165,6 @@ export function buildDashboardNavigation(
               label: 'Students',
               href: `${base}/admin-students`,
               icon: 'users',
-            },
-            {
-              label: 'Departments',
-              href: `${base}/admin-org`,
-              icon: 'course',
             },
             {
               label: 'Users',
@@ -186,6 +186,11 @@ export function buildDashboardNavigation(
               icon: 'monitor',
             },
             {
+              label: 'Question Bank',
+              href: `${base}/admin-question-bank`,
+              icon: 'quiz',
+            },
+            {
               label: 'Create Test',
               href: `${base}/create-test`,
               icon: 'plus',
@@ -196,11 +201,6 @@ export function buildDashboardNavigation(
               icon: 'spark',
               badge: 'AI',
               badgeVariant: 'purple',
-            },
-            {
-              label: 'Question Bank',
-              href: `${base}/admin-question-bank`,
-              icon: 'quiz',
             },
             {
               label: 'Assignments',
@@ -317,14 +317,14 @@ export function buildDashboardNavigation(
           defaultOpen: true,
           items: [
             {
-              label: 'Students',
-              href: `${base}/admin-students`,
-              icon: 'users',
-            },
-            {
               label: 'Departments',
               href: `${base}/admin-org`,
               icon: 'course',
+            },
+            {
+              label: 'Students',
+              href: `${base}/admin-students`,
+              icon: 'users',
             },
           ],
         },
@@ -341,6 +341,11 @@ export function buildDashboardNavigation(
               icon: 'monitor',
             },
             {
+              label: 'Question Bank',
+              href: `${base}/admin-question-bank`,
+              icon: 'quiz',
+            },
+            {
               label: 'Create Test',
               href: `${base}/create-test`,
               icon: 'plus',
@@ -351,11 +356,6 @@ export function buildDashboardNavigation(
               icon: 'spark',
               badge: 'AI',
               badgeVariant: 'purple',
-            },
-            {
-              label: 'Question Bank',
-              href: `${base}/admin-question-bank`,
-              icon: 'quiz',
             },
             {
               label: 'Assignments',
@@ -456,6 +456,11 @@ export function buildDashboardNavigation(
         defaultOpen: true,
         items: [
           {
+            label: 'Departments',
+            href: `${base}/admin-org`,
+            icon: 'course',
+          },
+          {
             label: 'Teachers',
             href: `${base}/admin-faculty`,
             icon: 'user',
@@ -464,11 +469,6 @@ export function buildDashboardNavigation(
             label: 'Students',
             href: `${base}/admin-students`,
             icon: 'users',
-          },
-          {
-            label: 'Departments',
-            href: `${base}/admin-org`,
-            icon: 'course',
           },
         ],
       },
@@ -485,6 +485,11 @@ export function buildDashboardNavigation(
             icon: 'monitor',
           },
           {
+            label: 'Question Bank',
+            href: `${base}/admin-question-bank`,
+            icon: 'quiz',
+          },
+          {
             label: 'Create Test',
             href: `${base}/create-test`,
             icon: 'plus',
@@ -495,11 +500,6 @@ export function buildDashboardNavigation(
             icon: 'spark',
             badge: 'AI',
             badgeVariant: 'purple',
-          },
-          {
-            label: 'Question Bank',
-            href: `${base}/admin-question-bank`,
-            icon: 'quiz',
           },
           {
             label: 'Assignments',
@@ -605,6 +605,11 @@ export function buildDashboardNavigation(
             icon: 'monitor',
           },
           {
+            label: 'Question Bank',
+            href: `${base}/admin-question-bank`,
+            icon: 'quiz',
+          },
+          {
             label: 'Create Test',
             href: `${base}/create-test`,
             icon: 'plus',
@@ -615,11 +620,6 @@ export function buildDashboardNavigation(
             icon: 'spark',
             badge: 'AI',
             badgeVariant: 'purple',
-          },
-          {
-            label: 'Question Bank',
-            href: `${base}/admin-question-bank`,
-            icon: 'quiz',
           },
           {
             label: 'Assignments',

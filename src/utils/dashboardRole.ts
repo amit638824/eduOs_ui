@@ -74,3 +74,10 @@ export function getTestsListPath(apiRoles: string[]): string {
   if (role === 'teacher') return '/dashboard/teacher-course';
   return '/dashboard/student-enrolled-courses';
 }
+
+export function getSettingsPathForRoles(apiRoles: string[]): string {
+  const role = resolveLayoutRole(apiRoles);
+  if (role === 'admin') return '/dashboard/admin-settings';
+  if (role === 'teacher') return '/dashboard/teacher-settings';
+  return '/dashboard/student-settings';
+}

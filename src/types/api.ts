@@ -26,6 +26,7 @@ export interface ApiUser {
   lastLoginAt?: string | null;
   createdAt?: string;
   roles: ApiRole[];
+  isFirstLogin?: boolean;
 }
 
 export interface AuthTokens {

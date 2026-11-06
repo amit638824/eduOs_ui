@@ -37,7 +37,7 @@ import { useOrgScope } from '@/context/OrgScopeContext';
 import { notify } from '@/lib/toast';
 import { parseApiError } from '@/lib/errors';
 import { REALTIME_NOTIFICATION_EVENT } from '@/lib/realtime';
-import { FormError, PasswordInput } from '@/components/ui/FormField';
+import { FormError } from '@/components/ui/FormField';
 import { createNameSchema, optionalNameSchema, validatePassword } from '@/validators/schemas';
 import type { Department } from '@/services/platform.service';
 import type { Question } from '@/types/examination';
@@ -995,7 +995,6 @@ export function UsersManagementPanel({
     watch,
     control,
     formState: { errors },
-    setError: setFormError,
   } = useForm<CreateUserForm>({
     // yup InferType + optional password conflicts with RHF Resolver generics
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1285,13 +1284,6 @@ export function UsersManagementPanel({
 
   const onSubmit = async (values: CreateUserForm) => {
     setError('');
-    if (!editingId) {
-      const pwdError = validatePassword(values.password);
-      if (pwdError) {
-        setFormError('password', { message: pwdError });
-        return;
-      }
-    }
     await withLoader(async () => {
       try {
         const role = lockedRole ?? values.role;
@@ -1327,7 +1319,7 @@ export function UsersManagementPanel({
         } else {
           const newUser = await platformService.createUser({
             email: values.email.trim(),
-            password: values.password!,
+            password: values.password || undefined,
             firstName: values.firstName.trim(),
             lastName: backendLastName,
             role,
@@ -1715,7 +1707,6 @@ export function UsersManagementPanel({
                             onClick={() => startEdit(u)}
                           >
                             <FiEdit3 />
-                            <span>Edit</span>
                           </button>
                           {canDeleteUsers && (
                             <button
@@ -1726,7 +1717,6 @@ export function UsersManagementPanel({
                               onClick={() => void removeUser(u.id, formatFullName(u.first_name, u.last_name))}
                             >
                               <FiTrash2 />
-                              <span>Delete</span>
                             </button>
                           )}
                         </div>
@@ -1933,31 +1923,7 @@ export function UsersManagementPanel({
               </div>
             )}
 
-            {!editingId && (
-              <div className="org-form-field">
-                <label className="org-form-label">
-                  Password <span className="org-required-star">*</span>
-                </label>
-                <Controller
-                  name="password"
-                  control={control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <PasswordInput
-                      {...field}
-                      className="org-form-input"
-                      hasError={Boolean(errors.password)}
-                      autoComplete="new-password"
-                      placeholder="Enter user password"
-                    />
-                  )}
-                />
-                <span className="org-form-hint">
-                  Must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character.
-                </span>
-                <FormError message={errors.password?.message} />
-              </div>
-            )}
+
           </div>
 
           {/* Drawer Footer (Cancel & Submit 50-50 width) */}
@@ -1966,7 +1932,7 @@ export function UsersManagementPanel({
               Cancel
             </button>
             <button type="submit" className="org-drawer-submit">
-              {editingId ? 'Save Changes' : 'Create & Email Login'}
+              {editingId ? 'Save Changes' : 'Create'}
             </button>
           </div>
         </form>
@@ -3680,7 +3646,6 @@ export function OrgStructurePanel() {
                           onClick={() => startEditDept(d)}
                         >
                           <FiEdit3 />
-                          <span>Edit</span>
                         </button>
                         <button
                           type="button"
@@ -3690,7 +3655,6 @@ export function OrgStructurePanel() {
                           onClick={() => void deleteDept(d.id, d.name)}
                         >
                           <FiTrash2 />
-                          <span>Delete</span>
                         </button>
                       </div>
                     </td>
@@ -3874,7 +3838,7 @@ export function OrgStructurePanel() {
               Cancel
             </button>
             <button type="submit" className="org-drawer-submit">
-              {editingDeptId ? 'Save Changes' : 'Create Department'}
+              {editingDeptId ? 'Save Changes' : 'Create'}
             </button>
           </div>
         </form>

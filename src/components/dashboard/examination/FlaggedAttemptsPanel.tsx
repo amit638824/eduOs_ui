@@ -329,16 +329,18 @@ export function FlaggedAttemptsPanel() {
                             className="org-action-btn org-action-btn--secondary"
                             onClick={() => void openTimeline(row.id)}
                             title="Inspect violations timeline"
+                            aria-label="Inspect violations timeline"
                           >
-                            <FiClock style={{ fontSize: 13 }} /> Timeline
+                            <FiClock style={{ fontSize: 14 }} />
                           </button>
                           {row.result_attempt_id ? (
                             <Link
                               to={`/dashboard/exam-result/${row.result_attempt_id}`}
                               className="org-action-btn org-action-btn--switch"
                               title="View exam result"
+                              aria-label="View exam result"
                             >
-                              <FiEye style={{ fontSize: 13 }} /> Result
+                              <FiEye style={{ fontSize: 14 }} />
                             </Link>
                           ) : null}
                           {row.proctoring_review_status !== 'reviewed' && (
@@ -347,8 +349,9 @@ export function FlaggedAttemptsPanel() {
                               className="org-action-btn org-action-btn--edit"
                               onClick={() => void review(row.id, 'reviewed')}
                               title="Mark as reviewed and verified"
+                              aria-label="Mark as reviewed and verified"
                             >
-                              <FiCheckCircle style={{ fontSize: 13 }} /> Reviewed
+                              <FiCheckCircle style={{ fontSize: 14 }} />
                             </button>
                           )}
                           {row.proctoring_review_status !== 'dismissed' && (
@@ -357,8 +360,9 @@ export function FlaggedAttemptsPanel() {
                               className="org-action-btn org-action-btn--danger"
                               onClick={() => void review(row.id, 'dismissed')}
                               title="Dismiss flag"
+                              aria-label="Dismiss flag"
                             >
-                              <FiX style={{ fontSize: 13 }} /> Dismiss
+                              <FiX style={{ fontSize: 14 }} />
                             </button>
                           )}
                         </div>

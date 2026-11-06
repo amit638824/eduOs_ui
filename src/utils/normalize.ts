@@ -21,6 +21,7 @@ export function normalizeUser(raw: Record<string, unknown>): ApiUser {
     lastLoginAt: (raw.lastLoginAt as string | null) ?? (raw.last_login_at as string | null) ?? null,
     createdAt: (raw.createdAt as string | undefined) ?? (raw.created_at as string | undefined),
     roles: (raw.roles as ApiRole[]) ?? [],
+    isFirstLogin: Boolean(raw.isFirstLogin ?? raw.is_first_login),
   };
 }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import Breadcrumb from '@/components/ui/Breadcrumb';
@@ -11,7 +12,9 @@ import { resetPasswordSchema, type ResetPasswordFormValues } from '@/validators/
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const tokenFromUrl = searchParams.get('token')?.trim() ?? '';
+  const emailFromUrl = searchParams.get('email')?.trim() ?? '';
   const [apiError, setApiError] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -40,8 +43,29 @@ export default function ResetPasswordPage() {
     setSubmitting(true);
     try {
       await authService.resetPassword(values.token, values.password);
-      setMessage('Your password has been reset. Redirecting to login…');
-      window.setTimeout(() => navigate('/login'), 1800);
+
+      // If email was provided in the setup link, automatically log in and route to Settings!
+      if (emailFromUrl) {
+        setMessage('Password set successfully! Logging in to your portal…');
+        try {
+          const result = await login({
+            email: emailFromUrl,
+            password: values.password,
+          });
+          if (typeof result === 'string') {
+            window.setTimeout(() => navigate(result), 700);
+            return;
+          }
+        } catch {
+          // If auto-login fails, fall back to login redirect
+        }
+      }
+
+      setMessage('Your password has been set. Redirecting to login…');
+      const loginUrl = emailFromUrl
+        ? `/login?email=${encodeURIComponent(emailFromUrl)}`
+        : '/login';
+      window.setTimeout(() => navigate(loginUrl), 1500);
     } catch (err) {
       setApiError(parseApiError(err));
     } finally {
@@ -123,7 +147,7 @@ export default function ResetPasswordPage() {
                       className="default__button auth-submit-btn"
                       disabled={!tokenFromUrl || submitting}
                     >
-                      {submitting ? 'Saving…' : 'Reset password'}
+                      {submitting ? 'Saving…' : 'Set Password & Continue'}
                     </button>
                   </div>
                 </form>

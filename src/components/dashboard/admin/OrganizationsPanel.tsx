@@ -18,8 +18,8 @@ import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/Dashboa
 import { setSelectedOrganizationId } from '@/lib/orgScope';
 import { confirmAction, confirmDelete, showSuccess } from '@/lib/swal';
 import type { Organization } from '@/types/api';
-import { FormError, PasswordInput } from '@/components/ui/FormField';
-import { validateName, validatePassword } from '@/validators/schemas';
+import { FormError } from '@/components/ui/FormField';
+import { validateName } from '@/validators/schemas';
 import { formatDate } from '@/utils/dateFormat';
 import '@/styles/organizations.css';
 
@@ -82,10 +82,8 @@ export function OrganizationsPanel() {
   const [contactEmail, setContactEmail] = useState('');
   const [adminFirstName, setAdminFirstName] = useState('');
   const [adminLastName, setAdminLastName] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
   const [firstNameError, setFirstNameError] = useState('');
   const [lastNameError, setLastNameError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
   const [activateNow, setActivateNow] = useState(true);
 
   useDashboardLoadingEffect(loading);
@@ -107,10 +105,8 @@ export function OrganizationsPanel() {
     setContactEmail('');
     setAdminFirstName('');
     setAdminLastName('');
-    setAdminPassword('');
     setFirstNameError('');
     setLastNameError('');
-    setPasswordError('');
     setActivateNow(true);
     setDrawerError('');
     setIsDrawerOpen(true);
@@ -125,7 +121,6 @@ export function OrganizationsPanel() {
     setActivateNow(org.isActive);
     setFirstNameError('');
     setLastNameError('');
-    setPasswordError('');
     setDrawerError('');
     setIsDrawerOpen(true);
   };
@@ -134,14 +129,12 @@ export function OrganizationsPanel() {
     setIsDrawerOpen(false);
     setFirstNameError('');
     setLastNameError('');
-    setPasswordError('');
     setDrawerError('');
   };
 
   const save = async () => {
     setFirstNameError('');
     setLastNameError('');
-    setPasswordError('');
     setDrawerError('');
 
     const nextSlug = slugify(name);
@@ -154,20 +147,17 @@ export function OrganizationsPanel() {
       return;
     }
     if (!editingId) {
-      const fnErr = validateName(adminFirstName, 'Admin first name');
+      const fnErr = validateName(adminFirstName, 'First name');
       if (fnErr) {
         setFirstNameError(fnErr);
         return;
       }
-      const lnErr = validateName(adminLastName, 'Admin last name');
-      if (lnErr) {
-        setLastNameError(lnErr);
-        return;
-      }
-      const pwdErr = validatePassword(adminPassword);
-      if (pwdErr) {
-        setPasswordError(pwdErr);
-        return;
+      if (adminLastName.trim()) {
+        const lnErr = validateName(adminLastName, 'Last name');
+        if (lnErr) {
+          setLastNameError(lnErr);
+          return;
+        }
       }
     }
     await withLoader(async () => {
@@ -192,15 +182,14 @@ export function OrganizationsPanel() {
             slug: nextSlug,
             contactEmail: contact,
             adminFirstName: adminFirstName.trim(),
-            adminLastName: adminLastName.trim(),
-            adminPassword: adminPassword.trim(),
+            adminLastName: adminLastName.trim() || '.',
             isActive: activateNow,
           });
           const emailedTo =
             (created as { adminEmail?: string | null }).adminEmail ?? contact;
           showSuccess(
             'Created!',
-            `Organization created. Login details sent to ${emailedTo}.`,
+            `Organization created. An email to set password has been sent to the organization (${emailedTo}).`,
           );
         }
         closeDrawer();
@@ -416,12 +405,15 @@ export function OrganizationsPanel() {
                         </div>
                         <div className="org-name-meta">
                           <span className="org-name-text">{org.name}</span>
-                          <span className="org-sub-meta">
-                            <span className="org-slug-tag">@{org.slug}</span>
-                            {typeof org.settings?.contactEmail === 'string' && org.settings.contactEmail ? (
-                              <span>· {org.settings.contactEmail}</span>
-                            ) : null}
-                          </span>
+                          {typeof org.settings?.contactEmail === 'string' && org.settings.contactEmail ? (
+                            <span
+                              className="org-sub-meta"
+                              title={org.settings.contactEmail}
+                              style={{ color: '#64748b', fontSize: '0.8rem' }}
+                            >
+                              {org.settings.contactEmail}
+                            </span>
+                          ) : null}
                         </div>
                       </div>
                     </td>
@@ -469,7 +461,6 @@ export function OrganizationsPanel() {
                           onClick={() => manageData(org)}
                         >
                           <FiLogIn />
-                          <span>Switch</span>
                         </button>
 
                         {/* 2. Edit Organization Icon (Green) */}
@@ -481,7 +472,6 @@ export function OrganizationsPanel() {
                           onClick={() => openEditDrawer(org)}
                         >
                           <FiEdit3 />
-                          <span>Edit</span>
                         </button>
 
                         {/* 3. Delete Organization Icon (Red) */}
@@ -493,7 +483,6 @@ export function OrganizationsPanel() {
                           onClick={() => void remove(org)}
                         >
                           <FiTrash2 />
-                          <span>Delete</span>
                         </button>
                       </div>
                     </td>
@@ -597,7 +586,7 @@ export function OrganizationsPanel() {
             <span className="org-form-hint">
               {editingId
                 ? 'Used for superadmin communication and notifications.'
-                : 'Org admin will use this email to log in.'}
+                : 'Org admin will use this email to log in and receive the password setup link.'}
             </span>
           </div>
 
@@ -607,7 +596,7 @@ export function OrganizationsPanel() {
               <div className="org-grid-2">
                 <div className="org-form-field">
                   <label className="org-form-label" htmlFor="drawerAdminFirst">
-                    Admin First Name <span className="org-required-star">*</span>
+                    First Name <span className="org-required-star">*</span>
                   </label>
                   <input
                     id="drawerAdminFirst"
@@ -623,7 +612,7 @@ export function OrganizationsPanel() {
                 </div>
                 <div className="org-form-field">
                   <label className="org-form-label" htmlFor="drawerAdminLast">
-                    Admin Last Name <span className="org-required-star">*</span>
+                    Last Name
                   </label>
                   <input
                     id="drawerAdminLast"
@@ -639,27 +628,7 @@ export function OrganizationsPanel() {
                 </div>
               </div>
 
-              <div className="org-form-field">
-                <label className="org-form-label" htmlFor="drawerAdminPassword">
-                  Admin Password <span className="org-required-star">*</span>
-                </label>
-                <PasswordInput
-                  id="drawerAdminPassword"
-                  className="org-form-input"
-                  value={adminPassword}
-                  onChange={(e) => {
-                    setAdminPassword(e.target.value);
-                    if (passwordError) setPasswordError('');
-                  }}
-                  hasError={Boolean(passwordError)}
-                  autoComplete="new-password"
-                  placeholder="Enter admin password"
-                />
-                <span className="org-form-hint">
-                  Must be at least 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character.
-                </span>
-                <FormError message={passwordError} />
-              </div>
+
             </>
           )}
 
@@ -698,7 +667,7 @@ export function OrganizationsPanel() {
             onClick={() => void save()}
             id="btnSubmitOrgDrawer"
           >
-            {editingId ? 'Save Changes' : 'Create & Email Login'}
+            {editingId ? 'Save Changes' : 'Create'}
           </button>
         </div>
       </aside>

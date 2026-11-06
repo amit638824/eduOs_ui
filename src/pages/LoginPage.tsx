@@ -17,6 +17,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const loginAs = searchParams.get('as');
+  const emailFromUrl = searchParams.get('email')?.trim() ?? '';
   const loginTitle = loginAs === 'instructor'
     ? <>Instructor <span className="ms-highlight-blue">Login</span></>
     : loginAs === 'teacher'
@@ -44,8 +45,8 @@ export default function LoginPage() {
     mode: 'onTouched',
     reValidateMode: 'onChange',
     defaultValues: {
-      loginId: remembered?.loginId ?? '',
-      password: remembered?.password ?? '',
+      loginId: emailFromUrl || remembered?.loginId || '',
+      password: remembered?.password || '',
     },
   });
 
@@ -55,12 +56,16 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
+    if (emailFromUrl) {
+      resetLogin({ loginId: emailFromUrl, password: '' });
+      return;
+    }
     const saved = loadRememberedLogin();
     if (saved) {
       setRememberMe(true);
       resetLogin({ loginId: saved.loginId, password: saved.password });
     }
-  }, [resetLogin]);
+  }, [emailFromUrl, resetLogin]);
 
   const onLogin = async (values: LoginFormValues) => {
     setApiError('');
@@ -80,7 +85,18 @@ export default function LoginPage() {
         return;
       }
       if (typeof result === 'string') {
-        navigate(result);
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+        const isSettingsRedirect = Boolean(redirectParam && redirectParam.includes('-settings'));
+        const isRoleMismatched = Boolean(
+          redirectParam && (
+            (redirectParam.includes('admin-') && !result.includes('admin-')) ||
+            (redirectParam.includes('teacher-') && !result.includes('teacher-')) ||
+            (redirectParam.includes('student-') && !result.includes('student-'))
+          )
+        );
+        const shouldUseRedirect = Boolean(redirectParam && !isSettingsRedirect && !isRoleMismatched);
+        const destination = shouldUseRedirect && redirectParam ? redirectParam : result;
+        navigate(destination);
       }
     } catch (err) {
       setApiError(parseApiError(err));
@@ -95,7 +111,9 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       const path = await completeMfaLogin(mfaToken, mfaCode);
-      navigate(path);
+      const redirectParam = new URLSearchParams(window.location.search).get('redirect');
+      const shouldUseRedirect = redirectParam && !(redirectParam.includes('admin-') && path.includes('teacher-'));
+      navigate(shouldUseRedirect ? redirectParam : path);
     } catch (err) {
       setApiError(parseApiError(err));
     } finally {
