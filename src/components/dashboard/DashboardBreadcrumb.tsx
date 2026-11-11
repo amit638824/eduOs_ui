@@ -5,7 +5,7 @@ const LABELS: Record<string, string> = {
   'student-dashboard': 'Student',
   'teacher-dashboard': 'Teacher',
   'admin-dashboard': 'Admin',
-  'student-enrolled-courses': 'My Tests',
+  'student-enrolled-courses': 'Tests',
   'student-my-quiz-attempts': 'Attempts',
   'student-reviews': 'Results',
   'student-assignments': 'Assignments',

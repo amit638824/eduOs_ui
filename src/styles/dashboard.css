@@ -539,6 +539,8 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   background: var(--db-sidebar-bg);
   padding: 10px 0 12px;
   z-index: 5;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Collapsed rail — clean centered icons, soft scrollbar */
@@ -2251,17 +2253,12 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   color: var(--db-muted);
 }
 
-/* Exam result — fixed viewport with internal scroll for all result data */
+/* Exam result — naturally scrolls to display all metrics, questions, and options */
 .sca-exam-result-scroll {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  max-height: calc(100dvh - 200px);
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-right: 4px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.45) transparent;
+  width: 100%;
 }
 
 .sca-exam-result-scroll::-webkit-scrollbar {

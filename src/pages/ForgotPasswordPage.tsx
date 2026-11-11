@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import Breadcrumb from '@/components/ui/Breadcrumb';
 import { FormError, inputClassName } from '@/components/ui/FormField';
 import { parseApiError } from '@/lib/errors';
 import * as authService from '@/services/auth.service';
@@ -45,9 +44,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <>
-      <Breadcrumb title="Forgot Password" />
-      <div className="loginarea auth-page-section">
+    <div className="loginarea auth-page-section">
         <div className="container">
           <div className="row justify-content-center">
             <div className="col-xl-5 col-lg-6 col-md-8" data-aos="fade-up">
@@ -110,6 +107,5 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
       </div>
-    </>
   );
 }

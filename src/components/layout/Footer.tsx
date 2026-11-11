@@ -102,11 +102,11 @@ export default function Footer() {
                 <h4>Contact Info</h4>
                 <div className="sf_contact">
                   <span className="ti-map" />
-                  <p>L-3/141, Vinay Khand, Gomti Nagar, Lucknow, Uttar Pradesh – 226010, India</p>
+                  <p><a href="https://www.google.com/maps/search/?api=1&query=L-3%2F141%2C+Vinay+Khand%2C+Gomti+Nagar%2C+Lucknow%2C+Uttar+Pradesh+%E2%80%93+226010%2C+India" target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "none" }}>L-3/141, Vinay Khand, Gomti Nagar, Lucknow, Uttar Pradesh – 226010, India</a></p>
                 </div>
                 <div className="sf_contact">
                   <span className="ti-mobile" />
-                  <p> +91 8840 622 729</p>
+                  <p><a href="tel:+918840622729" style={{ color: "inherit", textDecoration: "none" }}>+91 8840 622 729</a></p>
                 </div>
                 <div className="sf_contact">
                   <span className="ti-mobile" />

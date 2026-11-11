@@ -3,8 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import Breadcrumb from '@/components/ui/Breadcrumb';
-import { FormError, PasswordInput } from '@/components/ui/FormField';
+import { FormError, PasswordInput, PasswordRequirementsChecklist } from '@/components/ui/FormField';
 import { parseApiError } from '@/lib/errors';
 import * as authService from '@/services/auth.service';
 import { resetPasswordSchema, type ResetPasswordFormValues } from '@/validators/schemas';
@@ -23,16 +22,19 @@ export default function ResetPasswordPage() {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
   } = useForm<ResetPasswordFormValues>({
     resolver: yupResolver(resetPasswordSchema),
-    mode: 'onTouched',
+    mode: 'onChange',
     defaultValues: {
       token: tokenFromUrl,
       password: '',
       confirmPassword: '',
     },
   });
+
+  const passwordValue = watch('password') || '';
 
   useEffect(() => {
     if (tokenFromUrl) setValue('token', tokenFromUrl);
@@ -67,16 +69,19 @@ export default function ResetPasswordPage() {
         : '/login';
       window.setTimeout(() => navigate(loginUrl), 1500);
     } catch (err) {
-      setApiError(parseApiError(err));
+      const rawErr = parseApiError(err);
+      if (/already (been )?used|previously used|already used|same as (old|current)|reuse|cannot use/i.test(rawErr)) {
+        setApiError('This password has already been used. Please use another password.');
+      } else {
+        setApiError(rawErr || 'Failed to reset password.');
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <>
-      <Breadcrumb title="Reset Password" />
-      <div className="loginarea auth-page-section">
+    <div className="loginarea auth-page-section">
         <div className="container">
           <div className="row justify-content-center">
             <div className="col-xl-5 col-lg-6 col-md-8" data-aos="fade-up">
@@ -122,6 +127,7 @@ export default function ResetPasswordPage() {
                       disabled={!tokenFromUrl || submitting}
                       {...register('password')}
                     />
+                    <PasswordRequirementsChecklist password={passwordValue} />
                     <FormError message={errors.password?.message} />
                   </div>
 
@@ -160,6 +166,5 @@ export default function ResetPasswordPage() {
           </div>
         </div>
       </div>
-    </>
   );
 }

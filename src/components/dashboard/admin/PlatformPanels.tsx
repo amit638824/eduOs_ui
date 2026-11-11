@@ -138,14 +138,55 @@ export function NotificationsPanel() {
     });
   }, [items, filter]);
 
+  const examAlertsCount = useMemo(() => {
+    return items.filter((n) => /exam|test|score|assessment|submission/i.test(n.title + ' ' + (n.body || ''))).length;
+  }, [items]);
+
   return (
     <div className="org-panel-page">
       <div className="org-page-header">
         <div className="org-page-header-left">
-          <h2 className="org-page-title">Notifications</h2>
-          <p className="org-page-desc">
-            Updates for your account, assigned tests, exam submissions and results.
-          </p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 12,
+                backgroundColor: '#ede9fe',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#6366f1',
+                fontSize: 22,
+                flexShrink: 0,
+              }}
+            >
+              <FiBell style={{ fill: '#6366f1' }} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h2 className="org-page-title mb-0" style={{ fontSize: '24px', fontWeight: 700, color: '#0f172a' }}>
+                  Notifications
+                </h2>
+                <span
+                  style={{
+                    backgroundColor: '#e2e8f0',
+                    color: '#334155',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    padding: '2px 8px',
+                    borderRadius: 12,
+                    lineHeight: '1.2',
+                  }}
+                >
+                  {pagination.total}
+                </span>
+              </div>
+              <p className="org-page-desc mt-1" style={{ color: '#64748b', fontSize: '14px', marginBottom: 0 }}>
+                Stay updated with your account activities, exam alerts and important updates.
+              </p>
+            </div>
+          </div>
         </div>
 
         {unread > 0 && (
@@ -154,83 +195,227 @@ export function NotificationsPanel() {
             className="org-add-btn"
             onClick={markAll}
             id="btnMarkAllRead"
+            style={{
+              background: '#ffffff',
+              color: '#0f172a',
+              border: '1px solid #cbd5e1',
+              borderRadius: 8,
+              padding: '8px 16px',
+              fontSize: '13px',
+              fontWeight: 600,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+              cursor: 'pointer',
+            }}
           >
-            <FiCheckCircle />
-            <span>Read all ({unread})</span>
+            <FiCheck style={{ color: '#2563eb', strokeWidth: 2.5 }} />
+            <span>Mark all as read ({unread})</span>
           </button>
         )}
       </div>
 
       {error && <div className="org-error-banner">{error}</div>}
 
-      <div className="org-table-card">
-        <div className="org-card-header">
-          <div className="org-title-group">
-            <div className="org-title-row">
-              <h3 className="org-card-title">All Notifications</h3>
-              <span className="org-count-badge">
-                {pagination.total} {pagination.total === 1 ? 'Alert' : 'Alerts'}
-              </span>
-              {unread > 0 && (
-                <span
-                  className="org-count-badge"
-                  style={{ background: '#fef2f2', color: '#dc2626', borderColor: '#fecaca' }}
-                >
-                  {unread} Unread
-                </span>
-              )}
+      {/* 3 Metric Summary Cards (Matching Preview Image) */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+          gap: '16px',
+          marginTop: 20,
+          marginBottom: 24,
+        }}
+      >
+        {/* Card 1: Total Alerts */}
+        <div
+          style={{
+            background: '#ffffff',
+            borderRadius: 14,
+            padding: '16px 20px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+          }}
+        >
+          <div
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 12,
+              backgroundColor: '#ede9fe',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#6366f1',
+              fontSize: 24,
+              flexShrink: 0,
+            }}
+          >
+            <FiBell style={{ fill: '#6366f1' }} />
+          </div>
+          <div>
+            <div style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', lineHeight: 1.15 }}>
+              {pagination.total}
             </div>
-            <p className="org-card-subtitle">
-              System alerts, examination events, and activity updates
-            </p>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#334155', marginTop: 2 }}>
+              Total Alerts
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8', marginTop: 1 }}>
+              All activities
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Unread */}
+        <div
+          style={{
+            background: '#ffffff',
+            borderRadius: 14,
+            padding: '16px 20px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+          }}
+        >
+          <div
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 12,
+              backgroundColor: '#fef3c7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#d97706',
+              fontSize: 24,
+              flexShrink: 0,
+            }}
+          >
+            <FiAlertTriangle />
+          </div>
+          <div>
+            <div style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', lineHeight: 1.15 }}>
+              {unread}
+            </div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#334155', marginTop: 2 }}>
+              Unread
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8', marginTop: 1 }}>
+              Requires attention
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Exam Alerts */}
+        <div
+          style={{
+            background: '#ffffff',
+            borderRadius: 14,
+            padding: '16px 20px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16,
+          }}
+        >
+          <div
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 12,
+              backgroundColor: '#dcfce7',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#16a34a',
+              fontSize: 24,
+              flexShrink: 0,
+            }}
+          >
+            <FiCheckCircle />
+          </div>
+          <div>
+            <div style={{ fontSize: '26px', fontWeight: 800, color: '#0f172a', lineHeight: 1.15 }}>
+              {examAlertsCount}
+            </div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#334155', marginTop: 2 }}>
+              Exam Alerts
+            </div>
+            <div style={{ fontSize: '12px', fontWeight: 500, color: '#94a3b8', marginTop: 1 }}>
+              Tests &amp; submissions
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="org-table-card sca-notifications-card">
+        {/* Modern Clean Toolbar replacing repetitive titles */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '16px 20px',
+            borderBottom: '1px solid #f1f5f9',
+            flexWrap: 'wrap',
+            gap: 12,
+          }}
+        >
+          {/* Filter pills: All, Unread, Read with live counts */}
+          <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: 4, borderRadius: 10, gap: 4 }}>
+            {[
+              { id: 'all', label: `All (${pagination.total})` },
+              { id: 'unread', label: `Unread (${unread})` },
+              { id: 'read', label: `Read (${Math.max(0, pagination.total - unread)})` },
+            ].map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setFilter(id as 'all' | 'unread' | 'read')}
+                style={{
+                  border: 'none',
+                  background: filter === id ? '#225ce5' : 'transparent',
+                  color: filter === id ? '#ffffff' : '#475569',
+                  fontWeight: filter === id ? 700 : 500,
+                  fontSize: '0.8rem',
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: filter === id ? '0 2px 4px rgba(34, 92, 229, 0.25)' : 'none',
+                }}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
-          <div className="org-controls-row">
-            {/* Filter pills: All, Unread, Read */}
-            <div style={{ display: 'inline-flex', background: '#f1f5f9', padding: 3, borderRadius: 8, gap: 2 }}>
-              {(['all', 'unread', 'read'] as const).map((mode) => (
-                <button
-                  key={mode}
-                  type="button"
-                  onClick={() => setFilter(mode)}
-                  style={{
-                    border: 'none',
-                    background: filter === mode ? '#ffffff' : 'transparent',
-                    color: filter === mode ? '#225ce5' : '#64748b',
-                    fontWeight: filter === mode ? 700 : 500,
-                    fontSize: '0.75rem',
-                    padding: '4px 10px',
-                    borderRadius: 6,
-                    cursor: 'pointer',
-                    boxShadow: filter === mode ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
-                    textTransform: 'capitalize',
-                  }}
-                >
-                  {mode}
-                </button>
-              ))}
-            </div>
-
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search notifications…"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={clearSearch}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
-            </div>
+          <div className="org-search-box" style={{ maxWidth: 320, width: '100%' }}>
+            <FiSearch className="org-search-icon" />
+            <input
+              type="text"
+              className="org-search-input"
+              placeholder="Search notifications…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="org-search-clear"
+                onClick={clearSearch}
+                aria-label="Clear search"
+              >
+                <FiX />
+              </button>
+            )}
           </div>
         </div>
 
@@ -238,11 +423,11 @@ export function NotificationsPanel() {
           <table className="org-table">
             <thead>
               <tr>
-                <th style={{ width: '48%' }}>TITLE &amp; MESSAGE</th>
-                <th style={{ width: '15%' }}>CHANNEL</th>
-                <th style={{ width: '18%' }}>DATE</th>
-                <th style={{ width: '10%' }}>STATUS</th>
-                <th className="edtp-th-actions" style={{ width: '9%' }}>ACTION</th>
+                <th style={{ width: '38%', textTransform: 'none' }}>Title &amp; Message</th>
+                <th style={{ width: '12%', textTransform: 'none' }}>Channel</th>
+                <th style={{ width: '20%', textTransform: 'none', whiteSpace: 'nowrap' }}>Date &amp; Time</th>
+                <th style={{ width: '12%', textTransform: 'none' }}>Status</th>
+                <th className="edtp-th-actions" style={{ width: '18%', minWidth: '130px', textTransform: 'none' }}>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -277,6 +462,7 @@ export function NotificationsPanel() {
                         fontWeight: 600,
                         textTransform: 'uppercase',
                         letterSpacing: '0.03em',
+                        whiteSpace: 'nowrap',
                       }}
                     >
                       {n.channel || 'IN-APP'}
@@ -296,13 +482,22 @@ export function NotificationsPanel() {
                       </span>
                     )}
                   </td>
-                  <td style={{ textAlign: 'left' }}>
+                  <td style={{ textAlign: 'left', minWidth: '130px' }}>
                     {!n.is_read ? (
                       <button
                         type="button"
                         className="org-action-btn org-action-btn--switch"
                         onClick={() => markRead(n.id)}
                         title="Mark as read"
+                        style={{
+                          whiteSpace: 'nowrap',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '5px 12px',
+                          fontSize: '0.75rem',
+                          minWidth: '105px',
+                        }}
                       >
                         <FiCheck />
                         <span>Mark read</span>
@@ -4396,7 +4591,7 @@ export function TestBuilderPanel() {
           <FiLayers className="org-empty-icon" />
           <p className="org-empty-title">No test selected</p>
           <p className="org-empty-desc">
-            Select a draft test from <Link to={testsListPath}>My Tests</Link> to build it.
+            Select a draft test from <Link to={testsListPath}>Tests</Link> to build it.
           </p>
         </div>
       </div>
@@ -4462,7 +4657,7 @@ export function TestBuilderPanel() {
         <span>
           {phase === 'build' && 'Tick the questions, then press Submit to review and publish the examination.'}
           {phase === 'publish' && 'Check the checklist. Publish live immediately or schedule for a specific date and time.'}
-          {phase === 'assign' && 'Choose the students, then press Assign Selected. They will see this exam in My Tests.'}
+          {phase === 'assign' && 'Choose the students, then press Assign Selected. They will see this exam in Tests.'}
         </span>
       </div>
 

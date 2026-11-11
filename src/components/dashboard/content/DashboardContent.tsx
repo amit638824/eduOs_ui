@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState, useMemo } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import type { DashboardCounter, DashboardTableRow } from '@/types/dashboard';
@@ -11,13 +11,14 @@ import { organizationService, platformService, examinationService } from '@/serv
 import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
-import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
+import { FormError, PasswordInput, PasswordRequirementsChecklist, inputClassName } from '@/components/ui/FormField';
 import { EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete } from '@/lib/swal';
+import { notify } from '@/lib/toast';
 import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import { useOrgScope } from '@/context/OrgScopeContext';
-import { FiSearch, FiX, FiZap, FiEye } from 'react-icons/fi';
+import { FiSearch, FiX, FiZap, FiEye, FiPlay, FiCheck, FiClock } from 'react-icons/fi';
 import '@/styles/organizations.css';
 import {
   becomeTeacherSchema,
@@ -363,6 +364,7 @@ export function DashboardQuizAttemptsContent({ title }: { title: string }) {
 
 export function DashboardAssignmentsContent() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isStudent = user?.roles.includes('student') && !user.roles.some((r) =>
     ['org_admin', 'super_admin', 'staff', 'teacher'].includes(r),
   );
@@ -386,7 +388,9 @@ export function DashboardAssignmentsContent() {
   >([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [startingId, setStartingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterTab, setFilterTab] = useState<'all' | 'completed' | 'in_progress' | 'not_started'>('all');
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
@@ -425,28 +429,95 @@ export function DashboardAssignmentsContent() {
 
   useDashboardLoadingEffect(loading);
 
-  const filteredRows = rows.filter((row) => {
-    if (!searchTerm.trim()) return true;
-    const q = searchTerm.toLowerCase();
-    return row.title.toLowerCase().includes(q) || (row.status && row.status.toLowerCase().includes(q));
-  });
+  const counts = useMemo(() => {
+    let completed = 0;
+    let inProgress = 0;
+    let notStarted = 0;
+    for (const r of rows) {
+      const st = r.attempt_status;
+      if (st === 'submitted' || st === 'auto_submitted') {
+        completed++;
+      } else if (st === 'in_progress') {
+        inProgress++;
+      } else {
+        notStarted++;
+      }
+    }
+    return {
+      all: rows.length,
+      completed,
+      in_progress: inProgress,
+      not_started: notStarted,
+    };
+  }, [rows]);
+
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) => {
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const match = row.title.toLowerCase().includes(q) || (row.status && row.status.toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      if (!isStudent) return true;
+      if (filterTab === 'all') return true;
+      const st = row.attempt_status;
+      if (filterTab === 'completed') {
+        return st === 'submitted' || st === 'auto_submitted';
+      }
+      if (filterTab === 'in_progress') {
+        return st === 'in_progress';
+      }
+      if (filterTab === 'not_started') {
+        return !st || (st !== 'submitted' && st !== 'auto_submitted' && st !== 'in_progress');
+      }
+      return true;
+    });
+  }, [rows, searchTerm, isStudent, filterTab]);
+
+  const handleStartTest = async (testId: string) => {
+    try {
+      setStartingId(testId);
+      const attempt = await examinationService.startAttempt(testId);
+      navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
+    } catch (err) {
+      notify.error(parseApiError(err));
+    } finally {
+      setStartingId(null);
+    }
+  };
 
   const renderStudentAction = (row: (typeof rows)[number]) => {
     const st = row.attempt_status;
     if (st === 'submitted' || st === 'auto_submitted') {
       const resultId = row.result_attempt_id ?? row.attempt_id;
       return resultId ? (
-        <Link to={`/dashboard/exam-result/${resultId}`} className="org-action-btn org-action-btn--edit">
-          <FiEye style={{ fontSize: 13 }} /> Result
+        <Link
+          to={`/dashboard/exam-result/${resultId}`}
+          className="edtp-action-pill edtp-action-pill--result"
+          title="View Result"
+        >
+          <FiEye className="edtp-action-pill-icon" />
+          <span>View Result</span>
         </Link>
       ) : (
-        <span className="org-status-badge org-status-badge--active">Completed</span>
+        <span className="edtp-action-pill edtp-action-pill--result edtp-action-pill--disabled">
+          <FiEye className="edtp-action-pill-icon" />
+          <span>Completed</span>
+        </span>
       );
     }
-    if (st === 'in_progress' && row.attempt_id) {
+    if (st === 'in_progress') {
+      const targetUrl = row.attempt_id
+        ? `/dashboard/exam/${row.id}/attempt/${row.attempt_id}`
+        : '/dashboard/student-enrolled-courses';
       return (
-        <Link to="/dashboard/student-enrolled-courses" className="org-action-btn org-action-btn--switch">
-          Resume in My Tests
+        <Link
+          to={targetUrl}
+          className="edtp-action-pill edtp-action-pill--start"
+          title="Resume Test"
+        >
+          <FiPlay className="edtp-action-pill-icon edtp-action-pill-icon--fill" />
+          <span>Resume Test</span>
         </Link>
       );
     }
@@ -454,23 +525,39 @@ export function DashboardAssignmentsContent() {
     const startAt = row.scheduled_start ?? row.scheduled_at;
     const wait = startAt ? msUntil(startAt) : null;
     if (wait != null && wait > 0) {
-      return <span style={{ color: '#64748b', fontSize: '0.8rem', fontWeight: 500 }}>Starts in {formatCountdown(wait)}</span>;
+      return (
+        <span className="edtp-action-pill edtp-action-pill--scheduled" title={startAt ?? undefined}>
+          Starts in {formatCountdown(wait)}
+        </span>
+      );
     }
     return (
-      <Link to="/dashboard/student-enrolled-courses" className="org-action-btn org-action-btn--primary">
-        Open in My Tests
-      </Link>
+      <button
+        type="button"
+        className="edtp-action-pill edtp-action-pill--start"
+        disabled={startingId === row.id}
+        onClick={() => void handleStartTest(row.id)}
+        title="Start Test"
+      >
+        <FiPlay className="edtp-action-pill-icon edtp-action-pill-icon--fill" />
+        <span>{startingId === row.id ? 'Starting…' : 'Start Test'}</span>
+      </button>
     );
   };
 
   return (
     <div className="org-panel-page">
-      <div className="org-page-header">
+      <div className="org-page-header mb-3">
         <div className="org-page-header-left">
-          <h2 className="org-page-title">Assignments</h2>
-          <p className="org-page-desc" style={{ margin: 0 }}>
+          <div className="d-flex align-items-center gap-2">
+            <h2 className="org-page-title mb-0">Assignments</h2>
+            {isStudent && rows.length > 0 && (
+              <span className="org-count-badge">{rows.length}</span>
+            )}
+          </div>
+          <p className="org-page-desc mt-1" style={{ margin: 0 }}>
             {isStudent
-              ? 'Assignment schedule and status. Start or resume the exam from My Tests.'
+              ? 'Track your assignment deadlines, exam progress, and review test evaluations.'
               : 'Assignment coverage across tests — who is assigned and how many have submitted.'}
           </p>
         </div>
@@ -478,24 +565,46 @@ export function DashboardAssignmentsContent() {
 
       {error && <div className="org-error-banner">{error}</div>}
 
-      <div className="org-table-card">
-        <div className="org-card-header">
-          <div className="org-title-group">
-            <div className="org-title-row">
-              <h3 className="org-card-title">All Assignments</h3>
-              <span className="org-count-badge">
-                {filteredRows.length} {filteredRows.length === 1 ? 'Test' : 'Tests'}
-              </span>
-            </div>
-            <p className="org-card-subtitle">
-              {isStudent
-                ? 'Your assigned tests and assessment progress'
-                : 'Manage student assignment links and examine submission volume'}
-            </p>
+      {/* Student Filter Toolbar */}
+      {isStudent && rows.length > 0 && (
+        <div className="sca-assignments-toolbar">
+          <div className="sca-student-tests-filters sca-assignments-filters">
+            <button
+              type="button"
+              className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'all' ? 'sca-student-filter-tab--active' : ''}`}
+              onClick={() => setFilterTab('all')}
+            >
+              <span>All Assignments</span>
+              <span className="sca-student-filter-count">{counts.all}</span>
+            </button>
+            <button
+              type="button"
+              className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'completed' ? 'sca-student-filter-tab--active' : ''}`}
+              onClick={() => setFilterTab('completed')}
+            >
+              <span>Completed</span>
+              <span className="sca-student-filter-count">{counts.completed}</span>
+            </button>
+            <button
+              type="button"
+              className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'in_progress' ? 'sca-student-filter-tab--active' : ''}`}
+              onClick={() => setFilterTab('in_progress')}
+            >
+              <span>In Progress</span>
+              <span className="sca-student-filter-count">{counts.in_progress}</span>
+            </button>
+            <button
+              type="button"
+              className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'not_started' ? 'sca-student-filter-tab--active' : ''}`}
+              onClick={() => setFilterTab('not_started')}
+            >
+              <span>Not Started</span>
+              <span className="sca-student-filter-count">{counts.not_started}</span>
+            </button>
           </div>
 
-          <div className="org-controls-row">
-            <div className="org-search-box">
+          <div className="sca-assignments-search-wrap">
+            <div className="org-search-box sca-assignments-search-box">
               <FiSearch className="org-search-icon" />
               <input
                 type="text"
@@ -517,66 +626,125 @@ export function DashboardAssignmentsContent() {
             </div>
           </div>
         </div>
+      )}
+
+      <div className={`org-table-card ${isStudent ? 'sca-assignments-card' : ''}`}>
+        {!isStudent && (
+          <div className="org-card-header">
+            <div className="org-title-group">
+              <div className="org-title-row">
+                <h3 className="org-card-title">All Assignments</h3>
+                <span className="org-count-badge">
+                  {filteredRows.length} {filteredRows.length === 1 ? 'Test' : 'Tests'}
+                </span>
+              </div>
+              <p className="org-card-subtitle">
+                Manage student assignment links and examine submission volume
+              </p>
+            </div>
+
+            <div className="org-controls-row">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search assignments…"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={() => setSearchTerm('')}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="org-table-wrap">
           <table className="org-table">
             <thead>
               <tr>
-                <th>ASSIGNMENT / TEST</th>
-                <th>MARKS</th>
+                <th>Assignment / Test</th>
+                <th>Marks</th>
                 {isStudent ? (
                   <>
-                    <th>STATUS</th>
-                    <th>PROGRESS</th>
+                    <th>Status</th>
+                    <th>Progress</th>
                   </>
                 ) : (
                   <>
-                    <th>ASSIGNED</th>
-                    <th>SUBMITTED</th>
-                    <th>ATTEMPTS</th>
+                    <th>Assigned</th>
+                    <th>Submitted</th>
+                    <th>Attempts</th>
                   </>
                 )}
-                <th className="edtp-th-actions">ACTIONS</th>
+                <th className="edtp-th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredRows.map((row) => (
                 <tr key={row.id}>
                   <td>
-                    <strong style={{ color: '#0f172a', fontWeight: 600 }}>{row.title}</strong>
+                    <span className="sca-assignment-title">{row.title}</span>
                     {row.status && (
-                      <span style={{ fontSize: '0.8rem', color: '#64748b', display: 'block', marginTop: 2 }}>
+                      <span className="sca-assignment-subtitle">
+                        <span className="sca-live-dot" />
                         {row.status}
                         {row.duration_minutes ? ` · ${row.duration_minutes} min` : ''}
                       </span>
                     )}
                   </td>
-                  <td style={{ color: '#475569', fontWeight: 500 }}>{row.total_marks ?? '—'}</td>
+                  <td>
+                    <span className="sca-assignment-marks">{row.total_marks ?? '—'}</span>
+                  </td>
                   {isStudent ? (
                     <>
                       <td>
-                        <span
-                          className={`org-status-badge ${
-                            row.attempt_status === 'submitted' || row.attempt_status === 'auto_submitted'
-                              ? 'org-status-badge--active'
-                              : row.attempt_status === 'in_progress'
-                                ? 'org-status-badge--pending'
-                                : 'org-status-badge--inactive'
-                          }`}
-                        >
-                          {row.attempt_status?.replace('_', ' ') ?? 'Not started'}
-                        </span>
+                        {row.attempt_status === 'submitted' || row.attempt_status === 'auto_submitted' ? (
+                          <span className="sca-status-pill sca-status-pill--completed">
+                            <FiCheck className="sca-status-icon" />
+                            <span>{row.attempt_status === 'auto_submitted' ? 'Auto Submitted' : 'Submitted'}</span>
+                          </span>
+                        ) : row.attempt_status === 'in_progress' ? (
+                          <span className="sca-status-pill sca-status-pill--in-progress">
+                            <FiClock className="sca-status-icon" />
+                            <span>In Progress</span>
+                          </span>
+                        ) : (
+                          <span className="sca-status-pill sca-status-pill--not-started">
+                            <span>Not Started</span>
+                          </span>
+                        )}
                       </td>
                       <td>
                         {row.result_percentage != null ? (
-                          <span style={{ fontWeight: 600, color: '#059669' }}>
-                            {Number(row.result_percentage).toFixed(1)}%
-                          </span>
+                          <div className="sca-progress-cell">
+                            <span className="sca-progress-pct">
+                              {Number(row.result_percentage).toFixed(1)}%
+                            </span>
+                            <div className="sca-progress-bar-track">
+                              <div
+                                className="sca-progress-bar-fill"
+                                style={{
+                                  width: `${Math.min(100, Math.max(0, Number(row.result_percentage)))}%`,
+                                  backgroundColor: Number(row.result_percentage) >= 40 ? '#10b981' : '#f59e0b',
+                                }}
+                              />
+                            </div>
+                          </div>
                         ) : (
-                          '—'
+                          <span style={{ color: '#94a3b8' }}>—</span>
                         )}
                       </td>
-                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                      <td className="org-td-actions edtp-td-actions" style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
                           {renderStudentAction(row)}
                         </div>
@@ -605,16 +773,44 @@ export function DashboardAssignmentsContent() {
               ))}
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-                    {isStudent
-                      ? 'No tests assigned yet.'
-                      : 'No tests found. Create and assign a test from Test Builder.'}
+                  <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748b' }}>
+                    <div style={{ fontSize: '1rem', fontWeight: 500, marginBottom: 4 }}>
+                      {isStudent
+                        ? (searchTerm || filterTab !== 'all' ? 'No assignments match your search or filter.' : 'No tests assigned yet.')
+                        : 'No tests found. Create and assign a test from Test Builder.'}
+                    </div>
+                    {isStudent && (searchTerm || filterTab !== 'all') && (
+                      <button
+                        type="button"
+                        className="sca-assignments-reset-filter"
+                        onClick={() => { setSearchTerm(''); setFilterTab('all'); }}
+                      >
+                        Reset filters
+                      </button>
+                    )}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
+
+        {isStudent && rows.length > 0 && (
+          <div className="sca-assignments-footer">
+            <span>
+              Showing <strong>{filteredRows.length}</strong> of <strong>{rows.length}</strong> {rows.length === 1 ? 'assignment' : 'assignments'}
+            </span>
+            {filteredRows.length !== rows.length && (
+              <button
+                type="button"
+                className="sca-assignments-reset-filter"
+                onClick={() => { setSearchTerm(''); setFilterTab('all'); }}
+              >
+                View all assignments
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -1085,7 +1281,7 @@ function CertificateBrandingForm() {
   );
 }
 
-function PasswordChangeForm() {
+function PasswordChangeForm({ onCancel }: { onCancel?: () => void } = {}) {
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
   const withLoader = useDashboardLoader();
@@ -1093,24 +1289,48 @@ function PasswordChangeForm() {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<PasswordChangeFormValues>({
     resolver: yupResolver(passwordChangeSchema),
+    mode: 'onChange',
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
   });
+
+  const newPasswordValue = watch('newPassword') || '';
 
   const onSubmit = async (values: PasswordChangeFormValues) => {
     setApiError('');
     setMessage('');
+
+    if (values.newPassword === values.currentPassword) {
+      setApiError('This password has already been used. Please use another password.');
+      return;
+    }
+
     await withLoader(async () => {
       try {
         await authService.changePassword(values.currentPassword, values.newPassword);
-        setMessage('Password updated successfully.');
-        reset();
+        const successMsg = 'Password updated successfully.';
+        setMessage(successMsg);
+        notify.success(successMsg);
+        reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
       } catch (err) {
-        setApiError(parseApiError(err));
+        const rawErr = parseApiError(err);
+        if (/already (been )?used|previously used|already used|same as (old|current)|reuse|cannot use/i.test(rawErr)) {
+          setApiError('This password has already been used. Please use another password.');
+        } else {
+          setApiError(rawErr || 'Failed to update password.');
+        }
       }
     });
+  };
+
+  const handleDontModify = () => {
+    reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setApiError('');
+    setMessage('');
+    onCancel?.();
   };
 
   return (
@@ -1132,6 +1352,7 @@ function PasswordChangeForm() {
           </label>
           <PasswordInput
             id="currentPass"
+            placeholder="Original Password"
             hasError={!!errors.currentPassword}
             autoComplete="current-password"
             className="org-form-input"
@@ -1140,7 +1361,7 @@ function PasswordChangeForm() {
           <FormError message={errors.currentPassword?.message} />
         </div>
 
-        <div className="org-form-field">
+        <div className="org-form-field" style={{ gridColumn: '1 / -1' }}>
           <label className="org-form-label" htmlFor="newPass">
             New Password <span className="org-required-star">*</span>
           </label>
@@ -1151,10 +1372,11 @@ function PasswordChangeForm() {
             className="org-form-input"
             {...register('newPassword')}
           />
+          <PasswordRequirementsChecklist password={newPasswordValue} />
           <FormError message={errors.newPassword?.message} />
         </div>
 
-        <div className="org-form-field">
+        <div className="org-form-field" style={{ gridColumn: '1 / -1' }}>
           <label className="org-form-label" htmlFor="confirmPass">
             Confirm Password <span className="org-required-star">*</span>
           </label>
@@ -1169,13 +1391,47 @@ function PasswordChangeForm() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-start', marginTop: '24px', width: '100%' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          marginTop: '24px',
+          width: '100%',
+          flexWrap: 'wrap',
+        }}
+      >
         <button
           type="submit"
           className="org-add-btn"
-          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          style={{
+            padding: '9px 36px',
+            fontSize: '0.875rem',
+            borderRadius: '10px',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
           Update Password
+        </button>
+        <button
+          type="button"
+          onClick={handleDontModify}
+          className="org-btn-secondary"
+          style={{
+            padding: '9px 24px',
+            fontSize: '0.875rem',
+            borderRadius: '10px',
+            height: 'auto',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            cursor: 'pointer',
+          }}
+        >
+          Don't Modify
         </button>
       </div>
     </form>
@@ -1693,7 +1949,7 @@ export function DashboardSettingsContent() {
               <CertificateBrandingForm />
             </div>
           )}
-          {activeTab === 'Password' && <PasswordChangeForm />}
+          {activeTab === 'Password' && <PasswordChangeForm onCancel={() => setActiveTab('Profile')} />}
           {activeTab === 'Branding' && !isStudent && <SocialLinksForm />}
         </div>
       </div>

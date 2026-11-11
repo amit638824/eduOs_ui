@@ -53,3 +53,6 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     );
   },
 );
+
+export { PasswordRequirementsChecklist } from './PasswordRequirementsChecklist';
+

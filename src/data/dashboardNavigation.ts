@@ -41,7 +41,7 @@ export function buildDashboardProfile(
       stats: [
         {
           icon: 'icofont-book-alt',
-          text: 'My Tests & Enrollment',
+          text: 'Tests & Enrollment',
         },
         {
           icon: 'icofont-certificate-alt-1',
@@ -274,7 +274,7 @@ export function buildDashboardNavigation(
               icon: 'settings',
             },
             {
-              label: 'My Profile',
+              label: 'Profile',
               href: `${base}/admin-profile`,
               icon: 'user',
             },
@@ -414,7 +414,7 @@ export function buildDashboardNavigation(
               icon: 'settings',
             },
             {
-              label: 'My Profile',
+              label: 'Profile',
               href: `${base}/admin-profile`,
               icon: 'user',
             },
@@ -558,7 +558,7 @@ export function buildDashboardNavigation(
             icon: 'settings',
           },
           {
-            label: 'My Profile',
+            label: 'Profile',
             href: `${base}/admin-profile`,
             icon: 'user',
           },
@@ -600,7 +600,7 @@ export function buildDashboardNavigation(
         defaultOpen: true,
         items: [
           {
-            label: 'My Tests',
+            label: 'Tests',
             href: `${base}/teacher-course`,
             icon: 'monitor',
           },
@@ -666,7 +666,7 @@ export function buildDashboardNavigation(
             icon: 'settings',
           },
           {
-            label: 'My Profile',
+            label: 'Profile',
             href: `${base}/teacher-profile`,
             icon: 'user',
           },
@@ -697,13 +697,13 @@ export function buildDashboardNavigation(
         },
 
         {
-          label: 'My Profile',
+          label: 'Profile',
           href: `${base}/student-profile`,
           icon: 'user',
         },
 
         {
-          label: 'My Tests',
+          label: 'Tests',
           href: `${base}/student-enrolled-courses`,
           icon: 'monitor',
         },
@@ -715,7 +715,7 @@ export function buildDashboardNavigation(
         },
 
         {
-          label: 'My Attempts',
+          label: 'Attempts',
           href: `${base}/student-my-quiz-attempts`,
           icon: 'clock',
         },
