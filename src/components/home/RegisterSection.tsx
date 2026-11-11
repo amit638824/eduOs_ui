@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useAuth } from '@/context/AuthContext';
 import { parseApiError } from '@/lib/errors';
-import { FormError, PasswordInput } from '@/components/ui/FormField';
+import { FormError, PasswordInput, PasswordRequirementsChecklist } from '@/components/ui/FormField';
 import { registerSchema, type RegisterFormValues } from '@/validators/schemas';
 
 interface RegisterSectionProps {
@@ -20,11 +20,11 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: yupResolver(registerSchema),
-    mode: 'onTouched',
-    reValidateMode: 'onChange',
+    mode: 'onChange',
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -33,6 +33,8 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
       password: '',
     },
   });
+
+  const passwordValue = watch('password') || '';
 
   const onSubmit = async (values: RegisterFormValues) => {
     setApiError('');
@@ -114,7 +116,8 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
                   <input
                     className="form-control"
                     type="tel"
-                    placeholder="+91 98765 43210"
+                    placeholder="Enter 10-digit number."
+                    maxLength={10}
                     {...register('phone')}
                   />
                   <FormError message={errors.phone?.message} />
@@ -130,6 +133,7 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
                     autoComplete="new-password"
                     {...register('password')}
                   />
+                  <PasswordRequirementsChecklist password={passwordValue} />
                   <FormError message={errors.password?.message} />
                 </div>
 

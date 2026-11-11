@@ -128,13 +128,16 @@ export const newsletterSchema = yup.object({
 
 export const profileSettingsSchema = yup.object({
   firstName: yup.string().required('First name is required').trim().max(100),
-  lastName: yup.string().required('Last name is required').trim().max(100),
+  lastName: yup.string().trim().max(100).optional().default(''),
   email: yup.string().required('Email is required').email('Enter a valid email'),
   phone: yup
     .string()
     .trim()
-    .max(20)
-    .matches(/^[+\d\s()-]*$/, 'Enter a valid phone number')
+    .test('phone-10-digits', 'Enter a valid 10-digit number.', (value) => {
+      if (!value || value.trim() === '') return true;
+      const cleaned = value.replace(/[\s-]/g, '');
+      return /^\d{10}$/.test(cleaned);
+    })
     .optional()
     .default(''),
   bio: yup.string().trim().max(500, 'Bio must be under 500 characters').optional().default(''),
@@ -142,7 +145,10 @@ export const profileSettingsSchema = yup.object({
 
 export const passwordChangeSchema = yup.object({
   currentPassword: yup.string().required('Current password is required'),
-  newPassword: passwordSchema,
+  newPassword: passwordSchema.notOneOf(
+    [yup.ref('currentPassword')],
+    'This password has already been used. Please use another password.'
+  ),
   confirmPassword: yup
     .string()
     .required('Confirm your password')

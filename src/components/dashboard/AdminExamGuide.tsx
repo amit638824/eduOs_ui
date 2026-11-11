@@ -47,6 +47,7 @@ export interface ExamStepperItem {
   step: number;
   title: string;
   desc: string;
+  completed?: boolean;
 }
 
 interface AdminExamGuideProps {
@@ -65,19 +66,19 @@ function stepHref(step: number, testId: string | undefined, testsHref: string): 
 
 export function ExamStepper({
   steps,
-  activeStep,
+  activeStep = 1,
   onStep,
   canOpen,
 }: {
   steps: readonly ExamStepperItem[];
-  activeStep: number;
+  activeStep?: number;
   onStep?: (step: number) => void;
   canOpen?: (step: number) => boolean;
 }) {
   return (
     <ol className="exam-stepper" aria-label="Steps">
       {steps.map((item) => {
-        const done = item.step < activeStep;
+        const done = item.completed !== undefined ? Boolean(item.completed) : item.step < activeStep;
         const active = item.step === activeStep;
         const state = done ? 'done' : active ? 'active' : 'todo';
         const open = canOpen ? canOpen(item.step) : item.step <= activeStep;

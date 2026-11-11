@@ -71,7 +71,7 @@ const COPY: Record<DashboardRole, {
     ],
     banner: [
       { href: '/dashboard/create-test', title: 'Create Tests', hint: 'Build custom assessments' },
-      { href: '/dashboard/teacher-course', title: 'My Tests', hint: 'Review and publish papers' },
+      { href: '/dashboard/teacher-course', title: 'Tests', hint: 'Review and publish papers' },
       { href: '/dashboard/teacher-reviews', title: 'View Reports', hint: 'See student scores' },
       { href: '/dashboard/admin-question-bank', title: 'Question Bank', hint: 'Organize & reuse questions' },
     ],
@@ -86,7 +86,7 @@ const COPY: Record<DashboardRole, {
     topHref: '/dashboard/teacher-reviews',
   },
   student: {
-    welcome: () => 'Your assigned tests, attempts, results and certificates — all in one place.',
+    welcome: () => 'Your assigned tests, attempts, and results — all in one place.',
     stats: ['Assigned Tests', 'In Progress', 'Attempts', 'Average Score'],
     stepperTitle: 'Your Exam Journey',
     stepperHint: 'From assigned test to result and certificate',
@@ -99,15 +99,14 @@ const COPY: Record<DashboardRole, {
       { title: 'Done', desc: 'Keep practicing', href: '/dashboard/student-reviews' },
     ],
     banner: [
-      { href: '/dashboard/student-enrolled-courses', title: 'My Tests', hint: 'Start or resume an exam' },
+      { href: '/dashboard/student-enrolled-courses', title: 'Tests', hint: 'Start or resume an exam' },
       { href: '/dashboard/student-assignments', title: 'Assignments', hint: 'Tests assigned to you' },
       { href: '/dashboard/student-reviews', title: 'Results', hint: 'Scores and rank' },
-      { href: '/dashboard/student-certificates', title: 'Certificates', hint: 'Download your awards' },
     ],
-    primary: { href: '/dashboard/student-enrolled-courses', label: 'Open My Tests' },
+    primary: { href: '/dashboard/student-enrolled-courses', label: 'Open Tests' },
     quick: [
       { href: '/dashboard/student-assignments', label: 'Assignments' },
-      { href: '/dashboard/student-my-quiz-attempts', label: 'My Attempts' },
+      { href: '/dashboard/student-my-quiz-attempts', label: 'Attempts' },
       { href: '/dashboard/student-certificates', label: 'Certificates' },
     ],
     activityHref: '/dashboard/student-my-quiz-attempts',
@@ -408,20 +407,22 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
                   </svg>
                 </Link>
 
-                <Link to={copy.banner[3].href} className="mad-v3-action-card">
-                  <div className="mad-v3-action-icon mad-v3-action-icon--amber">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                      <path d="M3 5a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
+                {copy.banner[3] && (
+                  <Link to={copy.banner[3].href} className="mad-v3-action-card">
+                    <div className="mad-v3-action-icon mad-v3-action-icon--amber">
+                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                        <path d="M3 5a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
+                      </svg>
+                    </div>
+                    <div className="mad-v3-action-info">
+                      <strong>{copy.banner[3].title}</strong>
+                      <small>{copy.banner[3].hint}</small>
+                    </div>
+                    <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                      <path d="M6 3l5 5-5 5" />
                     </svg>
-                  </div>
-                  <div className="mad-v3-action-info">
-                    <strong>{copy.banner[3].title}</strong>
-                    <small>{copy.banner[3].hint}</small>
-                  </div>
-                  <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
-                    <path d="M6 3l5 5-5 5" />
-                  </svg>
-                </Link>
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -847,7 +848,8 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
 
         {/* ── RIGHT MAIN SECTION (28%) ── */}
         <div className="mad-v3-right-col">
-          {/* Quick Actions Card */}
+          {/* Quick Actions Card (Hidden for student role) */}
+          {role !== 'student' && (
           <div className="mad-v3-qa-card">
             <div className="mad-v3-qa-head">
               <svg viewBox="0 0 20 20" fill="#2563EB" width="18" height="18" className="mad-v3-qa-bolt">
@@ -915,6 +917,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
               </Link>
             </div>
           </div>
+          )}
 
           {/* Recent Activity Card (Flex stretched to align bottom with Workflow Guide) */}
           <div className="mad-v3-activity-card">

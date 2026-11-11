@@ -350,7 +350,9 @@ export default function DashboardSidebar({
 
       {pinnedSection && (
         <div className="sca-db-sidebar__pinned">
-          {renderSectionItems(pinnedSection)}
+          <div className="sca-db-sidebar__group sca-db-sidebar__group--pinned">
+            {renderSectionItems(pinnedSection)}
+          </div>
         </div>
       )}
     </aside>

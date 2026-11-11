@@ -100,7 +100,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/teacher-dashboard" element={dash('teacher', <TeacherDashboardHome />)} />
     <Route path="/dashboard/teacher-profile" element={dash('teacher', <DashboardProfileContent />)} />
     <Route path="/dashboard/teacher-message" element={dash('teacher', <NotificationsPanel />)} />
-    <Route path="/dashboard/teacher-course" element={dash('teacher', <TestsListPanel title="My Tests" />)} />
+    <Route path="/dashboard/teacher-course" element={dash('teacher', <TestsListPanel title="Tests" />)} />
     <Route path="/dashboard/teacher-reviews" element={dash('teacher', <ReportsPanel />)} />
     <Route path="/dashboard/teacher-flagged-attempts" element={dash('teacher', <FlaggedAttemptsPanel />)} />
     <Route path="/dashboard/teacher-settings" element={dash('teacher', <DashboardSettingsContent />)} />
@@ -120,7 +120,7 @@ export const dashboardRouteElements = (
     <Route path="/dashboard/student-enrolled-courses" element={dash('student', <StudentTestsPanel />)} />
     <Route path="/dashboard/student-wishlist" element={dash('student', <PaymentsPanel allowTopUp />)} />
     <Route path="/dashboard/student-reviews" element={dash('student', <ResultsPanel />)} />
-    <Route path="/dashboard/student-my-quiz-attempts" element={dash('student', <AttemptsListPanel title="My Attempts" />)} />
+    <Route path="/dashboard/student-my-quiz-attempts" element={dash('student', <AttemptsListPanel title="Attempts" />)} />
     <Route path="/dashboard/student-calendar" element={dash('student', <StudentExamCalendar />)} />
     <Route path="/dashboard/student-assignments" element={dash('student', <DashboardAssignmentsContent />)} />
     <Route path="/dashboard/student-certificates" element={dash('student', <CertificatesPanel mode="mine" />)} />

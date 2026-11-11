@@ -65,10 +65,11 @@ i[class*="icon"],
 /* ── Top 2-Column Grid (Left 72%, Right 28%) ── */
 .mad-v3-top-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
   gap: 20px;
   align-items: stretch; /* Aligns left & right columns so bottoms match perfectly */
   width: 100%;
+  min-width: 0;
 }
 
 .mad-v3-left-col {
@@ -76,6 +77,7 @@ i[class*="icon"],
   flex-direction: column;
   gap: 20px;
   min-width: 0;
+  overflow: hidden; /* Prevents any child from overflowing into the right column */
 }
 
 .mad-v3-right-col {
@@ -86,7 +88,7 @@ i[class*="icon"],
   height: 100%; /* Stretch full height of top grid */
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1240px) {
   .mad-v3-top-grid {
     grid-template-columns: 1fr;
   }
@@ -159,14 +161,15 @@ i[class*="icon"],
   line-height: 1.5;
 }
 
-/* 4 Feature Pills / Action Cards inside Hero */
+/* Action Cards inside Hero — dynamically adapts to 3 or 4 cards cleanly */
 .mad-v3-banner-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
   gap: 12px;
+  width: 100%;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
   .mad-v3-banner-cards {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -266,12 +269,21 @@ i[class*="icon"],
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 14px;
   flex-shrink: 0;
-  min-width: 290px;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1400px) {
+  .mad-v3-welcome-graphic .mad-v3-slogan-box {
+    display: none;
+  }
+  .mad-v3-welcome-graphic .mad-v3-illu-box {
+    width: 130px;
+    height: 105px;
+  }
+}
+
+@media (max-width: 1080px) {
   .mad-v3-welcome-graphic {
     display: none;
   }
@@ -331,13 +343,14 @@ i[class*="icon"],
    ══════════════════════════════════════════════════════════════════ */
 .mad-v3-stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
+  width: 100%;
 }
 
-@media (max-width: 860px) {
+@media (max-width: 1380px) {
   .mad-v3-stats-row {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -880,9 +893,9 @@ i[class*="icon"],
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-around; /* Distributes 4 items evenly down to bottom of workflow guide */
+  justify-content: flex-start;
   min-height: 0;
-  gap: 14px;
+  gap: 16px;
 }
 
 .mad-v3-act-row {

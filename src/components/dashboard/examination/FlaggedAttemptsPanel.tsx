@@ -234,11 +234,11 @@ export function FlaggedAttemptsPanel() {
           <table className="org-table">
             <thead>
               <tr>
-                <th>STUDENT</th>
-                <th>TEST</th>
-                <th>VIOLATIONS</th>
-                <th>SCORE</th>
-                <th>STATUS</th>
+                <th style={{ textTransform: 'none', color: '#ffffff' }}>Student</th>
+                <th style={{ textTransform: 'none', color: '#ffffff' }}>Test</th>
+                <th style={{ textTransform: 'none', color: '#ffffff' }}>Violations</th>
+                <th style={{ textTransform: 'none', color: '#ffffff' }}>Score</th>
+                <th style={{ textTransform: 'none', color: '#ffffff' }}>Status</th>
                 <th className="edtp-th-actions">ACTIONS</th>
               </tr>
             </thead>

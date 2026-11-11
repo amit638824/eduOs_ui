@@ -51,8 +51,8 @@ export function buildAccountLinks(user: ApiUser | null): AccountLink[] {
   const roleSegment = dashboardRoot.includes('admin') ? 'admin' : 'student';
 
   return [
-    { label: 'My Dashboard', href: dashboardRoot },
-    { label: 'My Profile', href: `/dashboard/${roleSegment}-profile` },
+    { label: 'Dashboard', href: dashboardRoot },
+    { label: 'Profile', href: `/dashboard/${roleSegment}-profile` },
     { label: 'Account Settings', href: `/dashboard/${roleSegment}-settings` },
     { label: 'Logout', href: '/login', action: 'logout' },
   ];

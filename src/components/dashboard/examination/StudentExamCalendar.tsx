@@ -151,7 +151,7 @@ export default function StudentExamCalendar() {
     <div className="org-panel-root">
       <div className="org-top-bar">
         <div>
-          <h2 className="org-page-title">My Exam Calendar</h2>
+          <h2 className="org-page-title">Exam Calendar</h2>
           <p className="org-page-desc">
             Scheduled exams assigned to your student account appear here automatically.
           </p>
