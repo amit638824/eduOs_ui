@@ -99,6 +99,7 @@ function DashboardShellInner({
         collapsed={collapsed}
         onLogout={onLogout}
         onNavigate={() => setMobileOpen(false)}
+        onToggleCollapse={handleToggleMenu}
       />
 
       <div className="sca-dashboard__main">
