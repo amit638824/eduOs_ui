@@ -1,4 +1,6 @@
 import api from '@/lib/api';
+import { suppressToast } from '@/lib/toast';
+import { suppressRealtimeNotification } from '@/lib/realtime';
 import type { ApiResponse, PaginatedResponse } from '@/types/api';
 import type {
   AttemptQuestion,
@@ -22,9 +24,10 @@ export async function getAdminDashboard(): Promise<AdminDashboardData> {
   return data.data;
 }
 
-export async function getAnalyticsOverview(): Promise<OrgAnalytics> {
+export async function getAnalyticsOverview(options?: { skipToast?: boolean }): Promise<OrgAnalytics> {
   const { data } = await api.get<ApiResponse<OrgAnalytics>>(
     `${base}/analytics/overview`,
+    options,
   );
 
   return data.data;
@@ -398,9 +401,10 @@ export async function listTests(
   return data;
 }
 
-export async function listMyAssignedTests() {
+export async function listMyAssignedTests(options?: { skipToast?: boolean }) {
   const { data } = await api.get<ApiResponse<ExamTest[]>>(
     `${base}/tests/my`,
+    options,
   );
 
   return data.data;
@@ -603,6 +607,8 @@ export async function listAssignableStudents(
 export async function startAttempt(testId: string) {
   const { data } = await api.post<ApiResponse<TestAttempt>>(
     `${base}/tests/${testId}/start`,
+    {},
+    { skipToast: true },
   );
 
   return data.data;
@@ -634,6 +640,7 @@ export async function saveAnswer(
       answer,
       ...(timeSpentSec != null ? { timeSpentSec } : {}),
     },
+    { skipToast: true },
   );
 
   return data.data;
@@ -653,9 +660,11 @@ export async function submitAttempt(
 ): Promise<SubmitAttemptResult> {
   const { data } = await api.post<
     ApiResponse<SubmitAttemptResult>
-  >(`${base}/attempts/${attemptId}/submit`, {
-    autoSubmit,
-  });
+  >(
+    `${base}/attempts/${attemptId}/submit`,
+    { autoSubmit },
+    { skipToast: true },
+  );
 
   return data.data;
 }
@@ -670,10 +679,11 @@ export async function logProctoringEvent(
       tab_switch_count: number;
       flagged?: boolean;
     }>
-  >(`${base}/attempts/${attemptId}/proctoring`, {
-    event,
-    detail,
-  });
+  >(
+    `${base}/attempts/${attemptId}/proctoring`,
+    { event, detail },
+    { skipToast: true },
+  );
 
   return data.data;
 }
@@ -813,11 +823,13 @@ export async function listAttempts(
   page = 1,
   limit = 10,
   search?: string,
+  options?: { skipToast?: boolean },
 ) {
   const { data } = await api.get<
     PaginatedResponse<TestAttempt>
   >(`${base}/attempts`, {
     params: { page, limit, search: search || undefined },
+    ...options,
   });
 
   return data;
@@ -992,9 +1004,12 @@ export async function updateProfile(input: {
   lastName?: string;
   phone?: string;
 }) {
+  suppressRealtimeNotification(/profile/i, 8000);
+  suppressToast(/profile/i, 8000);
   const { data } = await api.patch<ApiResponse<unknown>>(
     '/users/me',
     input,
+    { skipToast: true },
   );
 
   return data.data;

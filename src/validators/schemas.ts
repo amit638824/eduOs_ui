@@ -127,8 +127,8 @@ export const newsletterSchema = yup.object({
 });
 
 export const profileSettingsSchema = yup.object({
-  firstName: yup.string().required('First name is required').trim().max(100),
-  lastName: yup.string().trim().max(100).optional().default(''),
+  firstName: firstNameSchema,
+  lastName: optionalNameSchema('Last name'),
   email: yup.string().required('Email is required').email('Enter a valid email'),
   phone: yup
     .string()

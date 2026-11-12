@@ -161,7 +161,7 @@ export default function App() {
               closeOnClick
               pauseOnHover
               draggable
-              limit={4}
+              limit={1}
               theme="light"
               toastClassName="ms-toast-wrap"
             />

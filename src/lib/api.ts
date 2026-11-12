@@ -145,10 +145,7 @@ function refreshSession(): Promise<TokenPair> {
 }
 
 api.interceptors.response.use(
-  (response) => {
-    notify.apiSuccess(response);
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const original = error.config as
       | (typeof error.config & { _retry?: boolean })

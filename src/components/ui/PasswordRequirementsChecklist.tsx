@@ -54,11 +54,11 @@ export function PasswordRequirementsChecklist({
     <div
       className={`password-requirements-box ${className}`}
       style={{
-        marginTop: '10px',
-        marginBottom: '10px',
-        padding: '12px 14px',
+        marginTop: '6px',
+        marginBottom: '6px',
+        padding: '7px 11px',
         background: '#f8fafc',
-        borderRadius: '10px',
+        borderRadius: '8px',
         border: '1px solid #e2e8f0',
         boxSizing: 'border-box',
         width: '100%',
@@ -69,12 +69,12 @@ export function PasswordRequirementsChecklist({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: '8px',
+          marginBottom: '4px',
         }}
       >
         <span
           style={{
-            fontSize: '11px',
+            fontSize: '10px',
             fontWeight: 700,
             color: '#475569',
             textTransform: 'uppercase',
@@ -86,7 +86,7 @@ export function PasswordRequirementsChecklist({
         {password && (
           <span
             style={{
-              fontSize: '11px',
+              fontSize: '10px',
               fontWeight: 700,
               color: allMet ? '#16a34a' : '#64748b',
             }}
@@ -99,8 +99,8 @@ export function PasswordRequirementsChecklist({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-          gap: '6px 14px',
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gap: '3px 8px',
         }}
       >
         {rules.map((rule) => (
@@ -109,17 +109,18 @@ export function PasswordRequirementsChecklist({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
-              fontSize: '12px',
+              gap: '6px',
+              fontSize: '11px',
               fontWeight: rule.met ? 600 : 500,
               color: rule.met ? '#16a34a' : '#64748b',
               transition: 'all 0.15s ease',
+              lineHeight: 1.2,
             }}
           >
             <span
               style={{
-                width: 16,
-                height: 16,
+                width: 13,
+                height: 13,
                 borderRadius: '50%',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -127,7 +128,7 @@ export function PasswordRequirementsChecklist({
                 backgroundColor: rule.met ? '#dcfce7' : '#f1f5f9',
                 color: rule.met ? '#16a34a' : '#94a3b8',
                 border: rule.met ? '1.5px solid #22c55e' : '1.5px solid #cbd5e1',
-                fontSize: 10,
+                fontSize: 9,
                 flexShrink: 0,
                 transition: 'all 0.15s ease',
               }}

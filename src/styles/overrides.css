@@ -262,48 +262,67 @@
 /* ── Auth recovery cards (forgot / reset password) ── */
 
 .loginarea__wraper.auth-card {
-  max-width: 480px;
+  max-width: 480px !important;
   margin: 0 auto;
-  padding: 36px 40px 40px;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 14px;
-  background: #fff;
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.08);
+  padding: 28px 34px !important;
+  border: 1px solid rgba(15, 23, 42, 0.08) !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.07) !important;
 }
 
 .loginarea__wraper.auth-card .login__title {
-  font-size: 1.625rem;
-  line-height: 1.3;
-  margin-bottom: 6px;
+  font-size: 1.35rem !important;
+  line-height: 1.25 !important;
+  margin-bottom: 4px !important;
 }
 
 .loginarea__wraper.auth-card .login__description {
-  margin: 0 auto 8px;
-  max-width: 34ch;
+  margin: 0 auto 10px !important;
+  max-width: 36ch;
   color: #64748b;
-  font-size: 0.9375rem;
-  line-height: 1.5;
+  font-size: 0.875rem !important;
+  line-height: 1.4 !important;
 }
 
 .loginarea__wraper.auth-card .login__form {
-  margin-bottom: 18px;
+  margin-top: 10px !important;
+  margin-bottom: 10px !important;
 }
 
 .loginarea__wraper.auth-card .form__label {
   display: block;
-  margin-bottom: 8px;
-  font-size: 0.875rem;
+  margin-bottom: 4px !important;
+  font-size: 0.8125rem !important;
   font-weight: 600;
   color: #1e293b;
 }
 
 .loginarea__wraper.auth-card .common__login__input {
   border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  height: 42px !important;
   background: #fff;
   color: #0f172a;
   box-shadow: none;
+  font-size: 0.875rem !important;
+}
+
+.loginarea__wraper.auth-card .login__button {
+  margin-top: 12px !important;
+}
+
+.loginarea__wraper.auth-card .auth-submit-btn {
+  height: 44px !important;
+  font-size: 0.875rem !important;
+  padding: 0 16px !important;
+}
+
+.loginarea__wraper.auth-card .auth-back-link {
+  margin-top: 10px !important;
+  margin-bottom: 0 !important;
+  font-size: 0.8125rem !important;
 }
 
 .loginarea__wraper.auth-card .common__login__input:focus {
@@ -697,15 +716,17 @@ body.mobile-menu-open .mode_switcher.my_switcher {
 
 /* ── Auth pages: recovery cards (forgot / reset password) ── */
 
+body.eduleb-page .main_wrapper.eduleb-main > .auth-page-section,
 .auth-page-section {
-  padding-top: 140px;
-  padding-bottom: 90px;
-  min-height: calc(100vh - 120px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-  background: #f8fbff;
+  flex: 1 1 auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding-top: 100px !important;
+  padding-bottom: 40px !important;
+  min-height: calc(100vh - 280px) !important;
+  box-sizing: border-box !important;
+  background: #f8fbff !important;
 }
 
 .auth-page-section .container {
@@ -713,17 +734,20 @@ body.mobile-menu-open .mode_switcher.my_switcher {
 }
 
 @media (max-width: 991px) {
+  body.eduleb-page .main_wrapper.eduleb-main > .auth-page-section,
   .auth-page-section {
-    padding-top: 120px;
-    padding-bottom: 70px;
+    padding-top: 90px !important;
+    padding-bottom: 30px !important;
+    min-height: auto !important;
   }
 }
 
 @media (max-width: 767px) {
+  body.eduleb-page .main_wrapper.eduleb-main > .auth-page-section,
   .auth-page-section {
-    padding-top: 105px;
-    padding-bottom: 50px;
-    min-height: auto;
+    padding-top: 85px !important;
+    padding-bottom: 20px !important;
+    min-height: auto !important;
   }
 }
 
@@ -2844,15 +2868,38 @@ body.dark_mode .sca-result-chip strong,
   margin-bottom: 20px !important;
   box-sizing: border-box !important;
   padding: 24px 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 28px !important;
+}
+
+.mad-v3-welcome-banner--student .mad-v3-welcome-content {
+  flex: 1 !important;
+  min-width: 0 !important;
 }
 
 .mad-v3-banner-cards--student {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(210px, 1fr)) !important;
+  grid-template-columns: repeat(3, minmax(200px, 1fr)) !important;
   gap: 16px !important;
   width: 100% !important;
-  max-width: 860px !important;
+  max-width: none !important;
   margin-top: 14px !important;
+}
+
+.mad-v3-welcome-banner--student .mad-v3-welcome-graphic {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  flex-shrink: 0 !important;
+  margin-left: auto !important;
+}
+
+@media (min-width: 1100px) {
+  .mad-v3-welcome-banner--student .mad-v3-welcome-graphic .mad-v3-slogan-box {
+    display: flex !important;
+  }
 }
 
 .mad-v3-banner-cards--student .mad-v3-action-card {
@@ -2912,19 +2959,27 @@ body.dark_mode .sca-result-chip strong,
   flex-shrink: 0 !important;
 }
 
-/* Align Recent Activity nicely in student mode (starting at half-center alongside stat cards) */
+/* Align Recent Activity nicely alongside Workflow Guide */
+.mad-v3-mid-grid .mad-v3-activity-card,
 .mad-v3-top-grid--student .mad-v3-activity-card {
   height: 100% !important;
-  min-height: 280px !important;
+  min-height: 0 !important;
   display: flex !important;
   flex-direction: column !important;
 }
 
+.mad-v3-mid-grid .mad-v3-activity-items,
 .mad-v3-top-grid--student .mad-v3-activity-items {
   flex: 1 !important;
   overflow-y: auto !important;
-  max-height: 280px !important;
+  max-height: 220px !important;
   padding-right: 4px !important;
+}
+
+.mad-v3-banner-row .mad-v3-welcome-banner,
+.mad-v3-banner-row .mad-v3-qa-card {
+  height: 100% !important;
+  box-sizing: border-box !important;
 }
 
 @media (max-width: 1200px) {
@@ -3057,4 +3112,153 @@ body.dark_mode .sca-result-chip strong,
   .sca-db-header__left .sca-db-icon-btn--menu {
     display: none !important;
   }
+}
+
+/* ── Notification status & action badge styles ── */
+.org-status-badge--read {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.sca-dashboard--dark .org-status-badge--read {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #94a3b8 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.org-action-done {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 500;
+  user-select: none;
+}
+
+.org-action-done svg {
+  color: #10b981;
+  stroke-width: 2.5;
+}
+
+.sca-dashboard--dark .org-action-done {
+  color: #64748b;
+}
+
+
+/* ── Student Live & Expired Exam Styles ── */
+.edtp-badge--live {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fca5a5 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+}
+
+.edtp-badge--expired {
+  background: #f1f5f9 !important;
+  color: #b91c1c !important;
+  border: 1px solid #fecaca !important;
+  font-weight: 600 !important;
+}
+
+.sca-student-exam-live-banner--live {
+  background: #fef2f2 !important;
+  border: 1px solid #fca5a5 !important;
+}
+
+.sca-student-exam-live-title {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+}
+
+.sca-student-exam-live-banner--expired {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.sca-student-exam-expired-title {
+  color: #64748b !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+.sca-student-exam-live__dot--red {
+  background: #dc2626 !important;
+  box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7) !important;
+  animation: sca-pulse-live-red 1.8s infinite !important;
+}
+
+@keyframes sca-pulse-live-red {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.sca-student-exam-live__dot--expired {
+  background: #94a3b8 !important;
+}
+
+.sca-student-exam-live-label {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em !important;
+}
+
+.sca-student-exam-expired-label {
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+
+.sca-student-exam-live--expired .edtp-btn:disabled {
+  opacity: 0.55 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  background: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+  color: #64748b !important;
+}
+
+body.dark_mode .edtp-badge--live,
+.sca-dashboard--dark .edtp-badge--live {
+  background: rgba(220, 38, 38, 0.15) !important;
+  color: #f87171 !important;
+  border-color: rgba(248, 113, 113, 0.3) !important;
+}
+
+body.dark_mode .edtp-badge--expired,
+.sca-dashboard--dark .edtp-badge--expired {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+body.dark_mode .sca-student-exam-live-banner--live,
+.sca-dashboard--dark .sca-student-exam-live-banner--live {
+  background: rgba(220, 38, 38, 0.12) !important;
+  border-color: rgba(220, 38, 38, 0.25) !important;
+}
+
+body.dark_mode .sca-student-exam-live-banner--expired,
+.sca-dashboard--dark .sca-student-exam-live-banner--expired {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+body.dark_mode .sca-student-exam-live--expired .edtp-btn:disabled {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #94a3b8 !important;
 }

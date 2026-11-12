@@ -53,6 +53,7 @@ export function OrganizationsPanel() {
     limit,
     searchQuery,
     loading,
+    initialLoading,
     error,
     setError,
     setSearchQuery,
@@ -86,7 +87,7 @@ export function OrganizationsPanel() {
   const [lastNameError, setLastNameError] = useState('');
   const [activateNow, setActivateNow] = useState(true);
 
-  useDashboardLoadingEffect(loading);
+  useDashboardLoadingEffect(initialLoading);
 
   // Close drawer on Escape key
   useEffect(() => {

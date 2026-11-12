@@ -12,7 +12,7 @@ import { FormError, inputClassName } from '@/components/ui/FormField';
 import { createTestApiSchema, type CreateTestApiFormValues } from '@/validators/schemas';
 import type { ExamResult, ExamTest, Question, TestAttempt } from '@/types/examination';
 import { useAuth } from '@/context/AuthContext';
-import { getTestsListPath, getDefaultDashboardPath } from '@/utils/dashboardRole';
+import { getTestsListPath } from '@/utils/dashboardRole';
 import { useOrganization } from '@/hooks/useOrganization';
 import { useDashboardLoader, useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { profileSettingsSchema, type ProfileSettingsFormValues } from '@/validators/schemas';
@@ -126,6 +126,7 @@ export function QuestionBankPanel() {
     limit,
     searchQuery: questionSearch,
     loading,
+    initialLoading,
     error,
     setError,
     setSearchQuery: setQuestionSearch,
@@ -534,7 +535,7 @@ export function QuestionBankPanel() {
     };
   }, [subjectId]);
 
-  useDashboardLoadingEffect(loading);
+  useDashboardLoadingEffect(initialLoading);
 
   const resetQuestionFields = () => {
     setNewQ('');
@@ -1762,6 +1763,7 @@ export function TestsListPanel({ title }: { title: string }) {
     limit,
     searchQuery: searchTerm,
     loading,
+    initialLoading,
     error,
     setError,
     setSearchQuery: setSearchTerm,
@@ -1794,7 +1796,7 @@ export function TestsListPanel({ title }: { title: string }) {
   const [editCertificationEnabled, setEditCertificationEnabled] = useState(true);
   const withLoader = useDashboardLoader();
 
-  useDashboardLoadingEffect(loading);
+  useDashboardLoadingEffect(initialLoading);
 
   const startEdit = (t: ExamTest) => {
     setError('');
@@ -2381,7 +2383,7 @@ export function StudentTestsPanel() {
       .finally(() => setPageLoading(false));
   }, []);
 
-  // Update countdown every second
+  // Update countdown every second and re-evaluate live / expired states automatically
   useEffect(() => {
     const id = window.setInterval(() => {
       setNowTick(Date.now());
@@ -2390,9 +2392,27 @@ export function StudentTestsPanel() {
     return () => window.clearInterval(id);
   }, []);
 
+  // Periodic silent sync every 20 seconds to stay aligned with backend changes without requiring page refresh
+  useEffect(() => {
+    const syncId = window.setInterval(() => {
+      examinationService
+        .listMyAssignedTests({ skipToast: true })
+        .then(setTests)
+        .catch(() => undefined);
+    }, 20000);
+
+    return () => window.clearInterval(syncId);
+  }, []);
+
   useDashboardLoadingEffect(loading || pageLoading);
 
   const start = async (testId: string) => {
+    const targetTest = tests.find((x) => x.id === testId);
+    if (targetTest && isExamExpired(targetTest)) {
+      setError('This test window has ended.');
+      return;
+    }
+
     setLoading(true);
     setStartingId(testId);
     setError('');
@@ -2405,7 +2425,6 @@ export function StudentTestsPanel() {
       const msg = parseApiError(err);
 
       setError(msg);
-      showError('Cannot start', msg);
 
       // Refresh in case the exam became live
       examinationService
@@ -2488,16 +2507,30 @@ export function StudentTestsPanel() {
     ].join(' : ');
   };
 
-  const officialWindowEnded = (t: ExamTest) => {
+    const getScheduledEndTime = (t: ExamTest): number | null => {
+    if (t.scheduled_end) {
+      const endMs = new Date(t.scheduled_end).getTime();
+      if (Number.isFinite(endMs)) return endMs;
+    }
+    const startAt = getScheduledStart(t);
+    if (startAt && t.duration_minutes) {
+      const startMs = new Date(startAt).getTime();
+      if (Number.isFinite(startMs)) {
+        return startMs + Number(t.duration_minutes) * 60 * 1000;
+      }
+    }
+    return null;
+  };
+
+  const isExamExpired = (t: ExamTest) => {
     void nowTick;
-    if (isPracticeExam(t)) return false;
     const st = t.attempt_status;
     if (st === 'submitted' || st === 'auto_submitted' || st === 'in_progress') {
       return false;
     }
-    if (!t.scheduled_end) return false;
-    const end = new Date(t.scheduled_end).getTime();
-    return Number.isFinite(end) && end < Date.now();
+    const endMs = getScheduledEndTime(t);
+    if (endMs == null) return false;
+    return endMs <= Date.now();
   };
 
   const statusMeta = (t: ExamTest) => {
@@ -2520,10 +2553,10 @@ export function StudentTestsPanel() {
       };
     }
 
-    if (officialWindowEnded(t)) {
+    if (isExamExpired(t)) {
       return {
-        label: 'Exam Time Ended',
-        cls: 'edtp-badge--danger',
+        label: 'Expired',
+        cls: 'edtp-badge--expired',
       };
     }
 
@@ -2537,8 +2570,8 @@ export function StudentTestsPanel() {
     }
 
     return {
-      label: 'Live',
-      cls: 'edtp-badge--active',
+      label: 'LIVE',
+      cls: 'edtp-badge--live',
     };
   };
 
@@ -2626,9 +2659,26 @@ export function StudentTestsPanel() {
       );
     }
 
-    if (officialWindowEnded(t)) {
+    /*
+     * Exam expired
+     */
+    if (isExamExpired(t)) {
       return (
-        <span className="edtp-badge edtp-badge--danger">Exam Time Ended</span>
+        <div className="sca-student-exam-live sca-student-exam-live--expired">
+          <div className="sca-student-exam-live__status">
+            <span className="sca-student-exam-live__dot sca-student-exam-live__dot--expired" />
+            <span className="sca-student-exam-expired-label">Expired</span>
+          </div>
+
+          <EdtpBtn
+            variant="secondary"
+            size="md"
+            disabled={true}
+            title="The scheduled exam time has ended."
+          >
+            Start Exam
+          </EdtpBtn>
+        </div>
       );
     }
 
@@ -2636,10 +2686,10 @@ export function StudentTestsPanel() {
      * Exam is live
      */
     return (
-      <div className="sca-student-exam-live">
+      <div className="sca-student-exam-live sca-student-exam-live--active">
         <div className="sca-student-exam-live__status">
-          <span className="sca-student-exam-live__dot" />
-          Exam is Live
+          <span className="sca-student-exam-live__dot sca-student-exam-live__dot--red" />
+          <span className="sca-student-exam-live-label">LIVE</span>
         </div>
 
         <EdtpBtn
@@ -2834,21 +2884,21 @@ export function StudentTestsPanel() {
                       </div>
                     )}
 
-                  {officialWindowEnded(t) && (
-                    <div className="sca-student-exam-live-banner">
-                      <strong className="edtp-badge edtp-badge--danger">
-                        Exam Time Ended
+                  {isExamExpired(t) && (
+                    <div className="sca-student-exam-live-banner sca-student-exam-live-banner--expired">
+                      <span className="sca-student-exam-live__dot sca-student-exam-live__dot--expired" />
+                      <strong className="sca-student-exam-expired-title">
+                        Exam Expired
                       </strong>
                     </div>
                   )}
 
                   {wait == null &&
                     scheduledStart &&
-                    !officialWindowEnded(t) && (
-                      <div className="sca-student-exam-live-banner">
-                        <span className="sca-student-exam-live__dot" />
-
-                        <strong>
+                    !isExamExpired(t) && (
+                      <div className="sca-student-exam-live-banner sca-student-exam-live-banner--live">
+                        <span className="sca-student-exam-live__dot sca-student-exam-live__dot--red" />
+                        <strong className="sca-student-exam-live-title">
                           Exam is Live
                         </strong>
                       </div>
@@ -2912,6 +2962,7 @@ export function AttemptsListPanel({
     limit,
     searchQuery: searchTerm,
     loading,
+    initialLoading,
     error,
     setSearchQuery: setSearchTerm,
     clearSearch,
@@ -2923,7 +2974,7 @@ export function AttemptsListPanel({
     defaultLimit: 10,
   });
 
-  useDashboardLoadingEffect(loading);
+  useDashboardLoadingEffect(initialLoading);
 
   return (
     <div className="org-panel-root">
@@ -4079,7 +4130,6 @@ export function ExamResultPage() {
     } catch (err) {
       const msg = parseApiError(err);
       setError(msg);
-      showError('Cannot start', msg);
     }
   };
 
@@ -4827,15 +4877,16 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
   const { user, refreshUser } = useAuth();
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const withLoader = useDashboardLoader();
   const isFirstTimeSession = typeof window !== 'undefined' && sessionStorage.getItem('first_time_login') === 'true';
-  const dashboardPath = user ? getDefaultDashboardPath(user.roles) : '/dashboard';
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitted },
   } = useForm<ProfileSettingsFormValues>({
-    resolver: yupResolver(profileSettingsSchema),
+    resolver: yupResolver(profileSettingsSchema) as any,
+    mode: 'onChange',
     values: {
       firstName: user?.firstName ?? '',
       lastName: user?.lastName ?? '',
@@ -4845,12 +4896,31 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
     },
   });
 
+  const firstNameRegister = register('firstName');
+  const lastNameRegister = register('lastName');
+  const phoneRegister = register('phone');
+
+  const getErrorMessage = (field: 'firstName' | 'lastName' | 'phone') => {
+    const err = errors[field]?.message;
+    if (!err) return undefined;
+    // Suppress minimum-length / incomplete-input warnings while the user is actively typing in the field,
+    // so they are not interrupted on their first keystroke of valid letters.
+    // Invalid character warnings (numbers, symbols, non-letters) still show up immediately.
+    // Once the user blurs (leaves the field) or submits the form, the min-length error is displayed.
+    if (!isSubmitted && focusedField === field) {
+      if (err.includes('at least 2 characters') || err.includes('10-digit')) {
+        return undefined;
+      }
+    }
+    return err;
+  };
+
   const onSubmit = async (values: ProfileSettingsFormValues) => {
     setApiError('');
     await withLoader(async () => {
       try {
         await examinationService.updateProfile({
-          firstName: values.firstName,
+          firstName: values.firstName.trim(),
           lastName: values.lastName?.trim() || undefined,
           phone: values.phone?.trim() || undefined,
         });
@@ -4870,7 +4940,14 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
   if (!user) return null;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate style={{ width: '100%' }}>
+    <form
+      onSubmit={(e) => {
+        setFocusedField(null);
+        return handleSubmit(onSubmit)(e);
+      }}
+      noValidate
+      style={{ width: '100%' }}
+    >
       {isFirstTimeSession && !user.phone && (
         <div
           style={{
@@ -4912,11 +4989,17 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
           </label>
           <input
             id="firstName"
+            maxLength={50}
             className="org-form-input"
             placeholder="First name"
-            {...register('firstName')}
+            {...firstNameRegister}
+            onFocus={() => setFocusedField('firstName')}
+            onBlur={(e) => {
+              setFocusedField(null);
+              firstNameRegister.onBlur(e);
+            }}
           />
-          <FormError message={errors.firstName?.message} />
+          <FormError message={getErrorMessage('firstName')} />
         </div>
 
         <div className="org-form-field">
@@ -4925,11 +5008,17 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
           </label>
           <input
             id="lastName"
+            maxLength={50}
             className="org-form-input"
             placeholder="Last name"
-            {...register('lastName')}
+            {...lastNameRegister}
+            onFocus={() => setFocusedField('lastName')}
+            onBlur={(e) => {
+              setFocusedField(null);
+              lastNameRegister.onBlur(e);
+            }}
           />
-          <FormError message={errors.lastName?.message} />
+          <FormError message={getErrorMessage('lastName')} />
         </div>
 
         <div className="org-form-field">
@@ -4958,12 +5047,17 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
             maxLength={10}
             className="org-form-input"
             placeholder="Enter 10-digit number."
-            {...register('phone')}
+            {...phoneRegister}
+            onFocus={() => setFocusedField('phone')}
+            onBlur={(e) => {
+              setFocusedField(null);
+              phoneRegister.onBlur(e);
+            }}
             onInput={(e) => {
               e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
             }}
           />
-          <FormError message={errors.phone?.message} />
+          <FormError message={getErrorMessage('phone')} />
         </div>
       </div>
 
@@ -4972,24 +5066,11 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
           type="submit"
           className="org-add-btn"
           style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          onClick={() => setFocusedField(null)}
         >
           Update Profile
         </button>
-        {(user.phone || isFirstTimeSession) && (
-          <Link
-            to={dashboardPath}
-            className="org-drawer-cancel"
-            style={{ padding: '8px 20px', fontSize: '0.85rem', borderRadius: '10px', textDecoration: 'none' }}
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                sessionStorage.removeItem('first_time_login');
-                if (user?.id) localStorage.setItem(`onboarded_${user.id}`, 'true');
-              }
-            }}
-          >
-            Continue to Dashboard →
-          </Link>
-        )}
+        
       </div>
     </form>
   );

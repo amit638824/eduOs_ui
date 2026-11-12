@@ -14,7 +14,6 @@ import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
 import { FormError, PasswordInput, PasswordRequirementsChecklist, inputClassName } from '@/components/ui/FormField';
 import { EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete } from '@/lib/swal';
-import { notify } from '@/lib/toast';
 import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import { useOrgScope } from '@/context/OrgScopeContext';
@@ -534,8 +533,8 @@ export function DashboardAssignmentsContent() {
       setStartingId(testId);
       const attempt = await examinationService.startAttempt(testId);
       navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
-    } catch (err) {
-      notify.error(parseApiError(err));
+    } catch {
+      // Axios interceptor already handles error toast notification
     } finally {
       setStartingId(null);
     }
@@ -1382,7 +1381,6 @@ function PasswordChangeForm({ onCancel }: { onCancel?: () => void } = {}) {
         await authService.changePassword(values.currentPassword, values.newPassword);
         const successMsg = 'Password updated successfully.';
         setMessage(successMsg);
-        notify.success(successMsg);
         reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
       } catch (err) {
         const rawErr = parseApiError(err);

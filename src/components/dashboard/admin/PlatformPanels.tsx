@@ -79,6 +79,7 @@ export function NotificationsPanel() {
     limit,
     searchQuery: searchTerm,
     loading,
+    initialLoading,
     error,
     setSearchQuery: setSearchTerm,
     clearSearch,
@@ -111,7 +112,7 @@ export function NotificationsPanel() {
     return () => window.removeEventListener(REALTIME_NOTIFICATION_EVENT, onRealtime);
   }, [refresh]);
 
-  useDashboardLoadingEffect(loading);
+  useDashboardLoadingEffect(initialLoading);
 
   const markRead = async (id: string) => {
     await withLoader(async () => {
@@ -398,7 +399,7 @@ export function NotificationsPanel() {
           </div>
 
           <div className="org-search-box" style={{ maxWidth: 320, width: '100%' }}>
-            <FiSearch className="org-search-icon" />
+            <FiSearch className="org-search-icon" style={{ opacity: loading && !initialLoading ? 0.4 : 1, transition: 'opacity 0.15s ease' }} />
             <input
               type="text"
               className="org-search-input"
@@ -430,7 +431,7 @@ export function NotificationsPanel() {
                 <th className="edtp-th-actions" style={{ width: '18%', minWidth: '130px', textTransform: 'none' }}>Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody style={{ opacity: loading && !initialLoading ? 0.6 : 1, transition: 'opacity 0.15s ease' }}>
               {filteredItems.map((n) => (
                 <tr key={n.id} style={{ background: n.is_read ? 'transparent' : 'rgba(34, 92, 229, 0.025)' }}>
                   <td>
@@ -473,11 +474,15 @@ export function NotificationsPanel() {
                   </td>
                   <td>
                     {n.is_read ? (
-                      <span className="org-status-badge org-status-badge--active" style={{ fontSize: '0.72rem' }}>
+                      <span className="org-status-badge org-status-badge--read" style={{ fontSize: '0.72rem' }}>
                         Read
                       </span>
                     ) : (
-                      <span className="org-status-badge org-status-badge--inactive" style={{ fontSize: '0.72rem' }}>
+                      <span
+                        className="org-status-badge org-status-badge--inactive"
+                        style={{ fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: 5 }}
+                      >
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#dc2626' }} />
                         Unread
                       </span>
                     )}
@@ -503,8 +508,21 @@ export function NotificationsPanel() {
                         <span>Mark read</span>
                       </button>
                     ) : (
-                      <span className="org-status-badge org-status-badge--active" style={{ fontSize: '0.72rem' }}>
-                        Read
+                      <span
+                        className="org-action-done"
+                        title="Notification read"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          fontSize: '0.78rem',
+                          fontWeight: 500,
+                          color: '#94a3b8',
+                          padding: '4px 6px',
+                        }}
+                      >
+                        <FiCheck style={{ color: '#10b981', strokeWidth: 2.5 }} />
+                        <span>Done</span>
                       </span>
                     )}
                   </td>
@@ -558,6 +576,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
     limit,
     searchQuery,
     loading: listLoading,
+    initialLoading: listInitialLoading,
     error,
     setError,
     setSearchQuery,
@@ -577,6 +596,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
     defaultLimit: 10,
   });
   const loading = listLoading || metaLoading;
+  const initialLoading = listInitialLoading || metaLoading;
 
   useEffect(() => {
     let cancelled = false;
@@ -605,7 +625,7 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
       .finally(() => setMetaLoading(false));
   }, []);
 
-  useDashboardLoadingEffect(loading || paying);
+  useDashboardLoadingEffect(initialLoading || paying);
 
   useEffect(() => {
     if (!allowTopUp || paymentConfig?.gateway !== 'razorpay') return;
@@ -1151,6 +1171,7 @@ export function UsersManagementPanel({
     limit,
     searchQuery,
     loading,
+    initialLoading,
     error,
     setError,
     setSearchQuery,
@@ -1398,7 +1419,7 @@ export function UsersManagementPanel({
       });
   }, [editingId, showEnrollmentField, setValue, currentOrg, users]);
 
-  useDashboardLoadingEffect(loading);
+  useDashboardLoadingEffect(initialLoading);
 
   // Close drawer on Escape key
   useEffect(() => {
@@ -2785,6 +2806,7 @@ export function AuditLogPanel() {
     limit,
     searchQuery,
     loading,
+    initialLoading,
     error,
     setSearchQuery,
     clearSearch,
@@ -2803,7 +2825,7 @@ export function AuditLogPanel() {
     defaultLimit: 10,
   });
 
-  useDashboardLoadingEffect(loading);
+  useDashboardLoadingEffect(initialLoading);
 
   return (
     <div className="org-panel-root">

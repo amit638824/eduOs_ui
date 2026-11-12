@@ -97,13 +97,17 @@ export default function DashboardProfilePage() {
     if (layoutRole === 'student') {
       tasks.push(
         examinationService.getMyStats().then(setStudentStats).catch(() => setStudentStats(null)),
-        examinationService.listAttempts(1, 20).then((r) => setAttempts(r.data)).catch(() => undefined),
+        examinationService.listAttempts(1, 20, undefined, { skipToast: true }).then((r) => setAttempts(r.data)).catch(() => undefined),
+      );
+    } else if (layoutRole === 'teacher') {
+      tasks.push(
+        examinationService.getAnalyticsOverview({ skipToast: true }).then(setOrgStats).catch(() => undefined),
       );
     } else {
       tasks.push(
-        examinationService.getAnalyticsOverview().then(setOrgStats).catch(() => undefined),
+        examinationService.getAnalyticsOverview({ skipToast: true }).then(setOrgStats).catch(() => undefined),
         examinationService.getAdminDashboard().then(setAdminDash).catch(() => undefined),
-        examinationService.listAttempts(1, 8).then((r) => setAttempts(r.data)).catch(() => undefined),
+        examinationService.listAttempts(1, 8, undefined, { skipToast: true }).then((r) => setAttempts(r.data)).catch(() => undefined),
       );
     }
 

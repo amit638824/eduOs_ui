@@ -37,8 +37,10 @@ export function useServerList<T>({
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState('');
   const requestId = useRef(0);
+  const hasLoadedOnce = useRef(false);
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
 
@@ -63,6 +65,9 @@ export function useServerList<T>({
     if (!enabled) return;
     const id = ++requestId.current;
     setLoading(true);
+    if (!hasLoadedOnce.current) {
+      setInitialLoading(true);
+    }
     setError('');
     try {
       const res = await fetcherRef.current({ page, limit, search });
@@ -79,7 +84,11 @@ export function useServerList<T>({
       setPagination({ page, limit, total: 0, totalPages: 0 });
       setError(parseApiError(err));
     } finally {
-      if (id === requestId.current) setLoading(false);
+      if (id === requestId.current) {
+        setLoading(false);
+        hasLoadedOnce.current = true;
+        setInitialLoading(false);
+      }
     }
   }, [enabled, page, limit, search, ...deps]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -116,6 +125,7 @@ export function useServerList<T>({
     searchQuery: searchInput,
     search,
     loading,
+    initialLoading,
     error,
     setError,
     setSearchQuery,
