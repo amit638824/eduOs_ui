@@ -2408,8 +2408,12 @@ export function StudentTestsPanel() {
 
   const start = async (testId: string) => {
     const targetTest = tests.find((x) => x.id === testId);
-    if (targetTest && isExamExpired(targetTest)) {
+    if (targetTest && (isExamExpired(targetTest) || isExamTimeEnded(targetTest))) {
       setError('This test window has ended.');
+      return;
+    }
+    if (targetTest && isExamScheduledForLater(targetTest)) {
+      setError('This exam is scheduled for later and has not started yet.');
       return;
     }
 
@@ -2447,16 +2451,23 @@ export function StudentTestsPanel() {
    * Assignment schedule has priority.
    * If there is no assignment schedule, use test schedule.
    */
-  const getScheduledStart = (t: ExamTest) => {
-    return (
+  const getScheduledStart = (t: ExamTest): string | null => {
+    const cfg = (typeof t.config === 'object' && t.config ? t.config : {}) as Record<string, unknown>;
+    const raw =
       t.effective_scheduled_start ??
       t.scheduled_start ??
+      (t as unknown as Record<string, unknown>).scheduledStart ??
       t.scheduled_at ??
-      null
-    );
+      (t as unknown as Record<string, unknown>).scheduledAt ??
+      (t as unknown as Record<string, unknown>).effectiveScheduledStart ??
+      (t as unknown as Record<string, unknown>).start_time ??
+      (cfg.scheduledStart as string) ??
+      (cfg.scheduled_start as string) ??
+      null;
+    return raw ? String(raw) : null;
   };
 
-  const opensInMs = (t: ExamTest) => {
+  const opensInMs = (t: ExamTest): number | null => {
     // Make React re-render every second.
     void nowTick;
 
@@ -2507,46 +2518,90 @@ export function StudentTestsPanel() {
     ].join(' : ');
   };
 
-    const getScheduledEndTime = (t: ExamTest): number | null => {
-    if (t.scheduled_end) {
-      const endMs = new Date(t.scheduled_end).getTime();
-      if (Number.isFinite(endMs)) return endMs;
+  const isCompleted = (t: ExamTest) => {
+    return t.attempt_status === 'submitted' || t.attempt_status === 'auto_submitted';
+  };
+
+  const getScheduledEndTime = (t: ExamTest): number | null => {
+    let endMs: number | null = null;
+    const cfg = (typeof t.config === 'object' && t.config ? t.config : {}) as Record<string, unknown>;
+    const rawEnd =
+      t.scheduled_end ??
+      (t as unknown as Record<string, unknown>).scheduledEnd ??
+      (cfg.scheduledEnd as string) ??
+      (cfg.scheduled_end as string) ??
+      null;
+    if (rawEnd) {
+      const parsed = new Date(String(rawEnd)).getTime();
+      if (Number.isFinite(parsed)) endMs = parsed;
     }
     const startAt = getScheduledStart(t);
     if (startAt && t.duration_minutes) {
       const startMs = new Date(startAt).getTime();
       if (Number.isFinite(startMs)) {
-        return startMs + Number(t.duration_minutes) * 60 * 1000;
+        const computedEnd = startMs + Number(t.duration_minutes) * 60 * 1000;
+        if (endMs == null || computedEnd < endMs) {
+          endMs = computedEnd;
+        }
       }
     }
-    return null;
+    return endMs;
   };
 
-  const isExamExpired = (t: ExamTest) => {
+  const isExamTimeEnded = (t: ExamTest) => {
     void nowTick;
-    const st = t.attempt_status;
-    if (st === 'submitted' || st === 'auto_submitted' || st === 'in_progress') {
-      return false;
-    }
     const endMs = getScheduledEndTime(t);
     if (endMs == null) return false;
     return endMs <= Date.now();
   };
 
-  const statusMeta = (t: ExamTest) => {
-    const st = t.attempt_status;
+  const isExamExpired = (t: ExamTest) => {
+    void nowTick;
+    if (isCompleted(t) || t.attempt_status === 'in_progress') {
+      return false;
+    }
+    return isExamTimeEnded(t);
+  };
 
-    if (
-      st === 'submitted' ||
-      st === 'auto_submitted'
-    ) {
+  const isExamScheduledForLater = (t: ExamTest): boolean => {
+    if (isCompleted(t) || isExamExpired(t) || t.attempt_status === 'in_progress') {
+      return false;
+    }
+    const wait = opensInMs(t);
+    if (wait != null && wait > 0) {
+      return true;
+    }
+    if (t.status === 'scheduled') {
+      const startAt = getScheduledStart(t);
+      if (startAt) {
+        const startMs = new Date(startAt).getTime();
+        if (Number.isFinite(startMs) && startMs > Date.now()) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const isExamLive = (t: ExamTest): boolean => {
+    void nowTick;
+    if (isCompleted(t)) return false;
+    if (isExamExpired(t)) return false;
+    if (isExamScheduledForLater(t)) return false;
+    return true;
+  };
+
+  const statusMeta = (t: ExamTest) => {
+    if (isCompleted(t)) {
       return {
         label: 'Completed',
         cls: 'edtp-badge--active',
       };
     }
 
-    if (st === 'in_progress') {
+    if (t.attempt_status === 'in_progress') {
       return {
         label: 'In progress',
         cls: 'edtp-badge--role',
@@ -2560,9 +2615,7 @@ export function StudentTestsPanel() {
       };
     }
 
-    const wait = opensInMs(t);
-
-    if (wait != null && wait > 0) {
+    if (isExamScheduledForLater(t)) {
       return {
         label: 'Scheduled',
         cls: 'edtp-badge--role',
@@ -2587,7 +2640,7 @@ export function StudentTestsPanel() {
     ) {
       const resultId =
         t.result_attempt_id ?? t.attempt_id;
-      const canRetest = isPracticeExam(t) && practiceAttemptsRemaining(t) > 0;
+      const canRetest = isPracticeExam(t) && practiceAttemptsRemaining(t) > 0 && !isExamTimeEnded(t);
 
       return (
         <div className="d-flex flex-column gap-2 w-100">
@@ -2638,28 +2691,6 @@ export function StudentTestsPanel() {
     }
 
     /*
-     * Scheduled exam
-     */
-    const wait = opensInMs(t);
-
-    if (wait != null && wait > 0) {
-      return (
-        <div className="sca-student-exam-schedule">
-          <div className="sca-student-exam-schedule__label">
-            Exam starts in
-          </div>
-
-          <div
-            className="sca-student-exam-countdown-large"
-            title={getScheduledStart(t) ?? ''}
-          >
-            {formatExamCountdown(wait)}
-          </div>
-        </div>
-      );
-    }
-
-    /*
      * Exam expired
      */
     if (isExamExpired(t)) {
@@ -2680,6 +2711,13 @@ export function StudentTestsPanel() {
           </EdtpBtn>
         </div>
       );
+    }
+
+    /*
+     * Scheduled exam (not live yet) - countdown is displayed in the card body
+     */
+    if (isExamScheduledForLater(t)) {
+      return null;
     }
 
     /*
@@ -2786,6 +2824,8 @@ export function StudentTestsPanel() {
 
               const wait = opensInMs(t);
 
+              const action = renderAction(t);
+
               const score = t.result_percentage != null ? Number(t.result_percentage) : null;
               let examConfig: Record<string, unknown> = {};
               try {
@@ -2884,7 +2924,7 @@ export function StudentTestsPanel() {
                       </div>
                     )}
 
-                  {isExamExpired(t) && (
+                  {!isCompleted(t) && isExamExpired(t) && (
                     <div className="sca-student-exam-live-banner sca-student-exam-live-banner--expired">
                       <span className="sca-student-exam-live__dot sca-student-exam-live__dot--expired" />
                       <strong className="sca-student-exam-expired-title">
@@ -2893,16 +2933,14 @@ export function StudentTestsPanel() {
                     </div>
                   )}
 
-                  {wait == null &&
-                    scheduledStart &&
-                    !isExamExpired(t) && (
-                      <div className="sca-student-exam-live-banner sca-student-exam-live-banner--live">
-                        <span className="sca-student-exam-live__dot sca-student-exam-live__dot--red" />
-                        <strong className="sca-student-exam-live-title">
-                          Exam is Live
-                        </strong>
-                      </div>
-                    )}
+                  {!isCompleted(t) && isExamLive(t) && (
+                    <div className="sca-student-exam-live-banner sca-student-exam-live-banner--live">
+                      <span className="sca-student-exam-live__dot sca-student-exam-live__dot--red" />
+                      <strong className="sca-student-exam-live-title">
+                        Exam is Live
+                      </strong>
+                    </div>
+                  )}
 
                   <ul className="sca-student-test-card__meta">
                     <li>
@@ -2934,9 +2972,11 @@ export function StudentTestsPanel() {
                     )}
                   </ul>
 
-                  <div className="sca-student-test-card__action">
-                    {renderAction(t)}
-                  </div>
+                  {action && (
+                    <div className="sca-student-test-card__action">
+                      {action}
+                    </div>
+                  )}
                 </article>
               );
             })}
@@ -3470,7 +3510,7 @@ export function CreateTestPanel() {
       allowResume: true,
       releaseAnswers: false,
       maxTabSwitches: '',
-      maxAttempts: '',
+      maxAttempts: '1',
       scoringPolicy: 'latest',
       maxFullscreenExits: '',
       maxCopyPasteAttempts: '',
@@ -3486,6 +3526,13 @@ export function CreateTestPanel() {
   const examType = watch('examType');
   const maxTabSwitches = watch('maxTabSwitches');
   const maxAttempts = watch('maxAttempts');
+
+  // Enforce 1 attempt whenever examType is official
+  useEffect(() => {
+    if (examType === 'official') {
+      setValue('maxAttempts', '1', { shouldValidate: true });
+    }
+  }, [examType, setValue]);
 
   const { user } = useAuth();
 
@@ -3526,10 +3573,12 @@ export function CreateTestPanel() {
     maxTabSwitches != null &&
     !Number.isNaN(Number(maxTabSwitches)) &&
     Number(maxTabSwitches) >= 0 &&
-    maxAttempts !== '' &&
-    maxAttempts != null &&
-    !Number.isNaN(Number(maxAttempts)) &&
-    Number(maxAttempts) >= 1
+    (examType === 'official' || (
+      maxAttempts !== '' &&
+      maxAttempts != null &&
+      !Number.isNaN(Number(maxAttempts)) &&
+      Number(maxAttempts) >= 1
+    ))
   );
 
   const isRulesComplete = Boolean(isScoringComplete && isRulesFieldsFilled);
@@ -3899,6 +3948,7 @@ export function CreateTestPanel() {
                           const type = e.target.value as 'official' | 'practice';
                           if (type === 'official') {
                             setValue('certificationEnabled', true);
+                            setValue('maxAttempts', '1', { shouldValidate: true });
                           } else {
                             setValue('certificationEnabled', false);
                           }
@@ -3993,15 +4043,32 @@ export function CreateTestPanel() {
                   </div>
                   <div className="col-md-4" style={{ marginTop: 12 }}>
                     <label className="org-form-label" htmlFor="maxAttempts">Max attempts</label>
-                    <input
-                      id="maxAttempts"
-                      type="number"
-                      min={1}
-                      placeholder="e.g. 1"
-                      className={inputClassName('org-form-input', !!errors.maxAttempts)}
-                      {...register('maxAttempts')}
-                    />
-                    <small style={{ color: '#64748b', fontSize: '0.75rem' }}>
+                    {examType === 'official' ? (
+                      <>
+                        <input type="hidden" {...register('maxAttempts')} value="1" />
+                        <input
+                          id="maxAttempts"
+                          type="number"
+                          value={1}
+                          disabled
+                          readOnly
+                          className="org-form-input"
+                          style={{ background: 'var(--db-bg, #f1f5f9)', color: '#64748b', cursor: 'not-allowed' }}
+                          title="Official exams allow 1 attempt only."
+                        />
+                      </>
+                    ) : (
+                      <input
+                        id="maxAttempts"
+                        type="number"
+                        min={1}
+                        max={10}
+                        placeholder="e.g. 1"
+                        className={inputClassName('org-form-input', !!errors.maxAttempts)}
+                        {...register('maxAttempts')}
+                      />
+                    )}
+                    <small style={{ color: '#64748b', fontSize: '0.75rem', display: 'block', marginTop: 4 }}>
                       {examType === 'official'
                         ? 'Official exams allow 1 attempt only.'
                         : 'Allowed attempts for this practice exam.'}

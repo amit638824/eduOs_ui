@@ -4511,7 +4511,11 @@ export function TestBuilderPanel() {
     hasInstructions: Boolean(String(test?.instructions ?? '').trim()),
     hasAssignees: assignments.length > 0,
   };
-  const canPublish = checklist.hasQuestions && checklist.hasDuration && checklist.marksRatioValid;
+  const canPublish =
+    checklist.hasQuestions &&
+    checklist.hasDuration &&
+    checklist.marksRatioValid &&
+    (publishMode !== 'schedule' || (Boolean(scheduleStart.trim()) && Boolean(scheduleEnd.trim())));
 
   const publish = async () => {
     if (!testId) return;
@@ -4527,9 +4531,19 @@ export function TestBuilderPanel() {
       showError('Passing Marks Too High', errMsg);
       return;
     }
-    if (publishMode === 'schedule' && !scheduleStart.trim()) {
-      setError('Choose schedule date & time.');
-      return;
+    if (publishMode === 'schedule') {
+      if (!scheduleStart.trim()) {
+        setError('Choose schedule start date & time (Go Live At).');
+        return;
+      }
+      if (!scheduleEnd.trim()) {
+        setError('Choose schedule end date & time (End At).');
+        return;
+      }
+      if (new Date(scheduleEnd).getTime() <= new Date(scheduleStart).getTime()) {
+        setError('End At date & time must be after Go Live At date & time.');
+        return;
+      }
     }
     await withLoader(async () => {
       try {
@@ -5359,7 +5373,7 @@ export function TestBuilderPanel() {
                         />
                       </div>
                       <div className="org-form-field">
-                        <label className="org-form-label">End At (Optional)</label>
+                        <label className="org-form-label">End At</label>
                         <input
                           type="datetime-local"
                           className="org-form-input"

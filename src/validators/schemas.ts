@@ -220,11 +220,19 @@ export const createTestApiSchema = yup.object({
     }),
   maxAttempts: yup
     .string()
-    .required('Max attempts is required')
-    .test('ma', 'Must be at least 1', (v) => {
+    .test('ma', 'Must be at least 1', function (v) {
+      if (this.parent.examType === 'official') return true;
+      if (!v) return false;
       const n = Number(v);
       return Number.isInteger(n) && n >= 1;
-    }),
+    })
+    .test('official-attempts', 'Official exams allow 1 attempt only.', function (v) {
+      if (this.parent.examType === 'official') {
+        return Number(v) === 1 || !v;
+      }
+      return true;
+    })
+    .default('1'),
   scoringPolicy: yup.mixed<'latest' | 'highest'>().oneOf(['latest', 'highest']).default('latest'),
   maxFullscreenExits: yup
     .string()
