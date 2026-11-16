@@ -29,8 +29,14 @@ export async function listOrganizations(
   };
 }
 
-export async function getOrganization(id: string): Promise<Organization> {
-  const { data } = await api.get<ApiResponse<Record<string, unknown>>>(`/organizations/${id}`);
+export async function getOrganization(
+  id: string,
+  options?: { skipToast?: boolean },
+): Promise<Organization> {
+  const { data } = await api.get<ApiResponse<Record<string, unknown>>>(
+    `/organizations/${id}`,
+    options,
+  );
   return normalizeOrganization(data.data);
 }
 
@@ -78,10 +84,15 @@ export async function deleteOrganization(id: string): Promise<void> {
   await api.delete(`/organizations/${id}`);
 }
 
-export async function listBranches(organizationId: string, page = 1, limit = 20) {
+export async function listBranches(
+  organizationId: string,
+  page = 1,
+  limit = 20,
+  options?: { skipToast?: boolean },
+) {
   const { data } = await api.get<PaginatedResponse<Record<string, unknown>>>(
     `/organizations/${organizationId}/branches`,
-    { params: { page, limit } },
+    { params: { page, limit }, ...options },
   );
   return {
     data: data.data.map((row) => normalizeBranch(row)),

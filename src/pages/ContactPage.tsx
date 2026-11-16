@@ -170,6 +170,11 @@ export default function ContactPage() {
         const trimmed = value.trim();
         if (!trimmed) return 'Name is required.';
         if (trimmed.length < 2) return 'Name must be at least 2 characters.';
+        if (trimmed.length > 30) return 'Name cannot exceed 30 characters.';
+        if (!/^[A-Za-z]/.test(trimmed)) return 'Name must start with a letter.';
+        if (!/^[A-Za-z][A-Za-z\s'-]*$/.test(trimmed)) {
+          return 'Name can only contain letters, spaces, hyphens, and apostrophes.';
+        }
         return '';
       }
       case 'email': {
@@ -234,8 +239,8 @@ export default function ContactPage() {
       }
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
-      if (touched[name as keyof typeof touched]) {
-        const err = validateField(name, value);
+      const err = validateField(name, value);
+      if (touched[name as keyof typeof touched] || (name === 'name' && value.trim().length > 30)) {
         setErrors((prev) => ({ ...prev, [name]: err }));
       }
     }
@@ -411,13 +416,14 @@ export default function ContactPage() {
                         value={formData.name}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        className={`form-control eduleb-contact-input ${touched.name && errors.name ? 'is-invalid' : ''}`}
+                        maxLength={50}
+                        className={`form-control eduleb-contact-input ${(touched.name || formData.name.trim().length > 30) && errors.name ? 'is-invalid' : ''}`}
                         placeholder="Name *"
                         required
                         disabled={status === 'loading'}
-                        style={touched.name && errors.name ? { borderColor: '#ef4444' } : {}}
+                        style={(touched.name || formData.name.trim().length > 30) && errors.name ? { borderColor: '#ef4444' } : {}}
                       />
-                      {touched.name && errors.name && (
+                      {(touched.name || formData.name.trim().length > 30) && errors.name && (
                         <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
                           {errors.name}
                         </div>

@@ -134,6 +134,7 @@ export async function listQuestions(
   limit = 10,
   status?: string,
   search?: string,
+  options?: { skipToast?: boolean },
 ) {
   const { data } = await api.get<PaginatedResponse<Question>>(
     `${base}/questions`,
@@ -144,6 +145,7 @@ export async function listQuestions(
         status: status || undefined,
         search: search || undefined,
       },
+      ...options,
     },
   );
 

@@ -135,7 +135,7 @@ export function QuestionBankPanel() {
     refresh: loadQuestions,
   } = useServerList<Question>({
     fetcher: ({ page: p, limit: l, search }) =>
-      examinationService.listQuestions(p, l, undefined, search || undefined),
+      examinationService.listQuestions(p, l, undefined, search || undefined, { skipToast: true }),
     defaultLimit: 50,
   });
 

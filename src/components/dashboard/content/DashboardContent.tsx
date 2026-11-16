@@ -384,36 +384,70 @@ export function DashboardAssignmentsContent() {
       attempt_id?: string | null;
       scheduled_start?: string | null;
       scheduled_at?: string | null;
+      max_attempts?: number;
+      submitted_attempt_count?: number | null;
     }[]
   >([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [startingId, setStartingId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterTab, setFilterTab] = useState<'all' | 'completed' | 'in_progress' | 'not_started'>('all');
+  const [filterTab, setFilterTab] = useState<string>('all');
   const [nowTick, setNowTick] = useState(() => Date.now());
 
   useEffect(() => {
     setLoading(true);
     setError('');
     const load = isStudent
-      ? examinationService.listMyAssignedTests().then((data) =>
+      ? Promise.all([
+          examinationService.listMyAssignedTests(),
+          examinationService.listAttempts(1, 200).catch(() => null),
+        ]).then(([assignedTests, attemptsData]) => {
+          const attemptsMap = new Map<string, number>();
+          const attemptList = attemptsData?.data ?? [];
+          for (const a of attemptList) {
+            if (a.test_id) {
+              attemptsMap.set(a.test_id, (attemptsMap.get(a.test_id) || 0) + 1);
+            }
+          }
+
           setRows(
-            data.map((t) => ({
-              id: t.id,
-              title: t.title,
-              status: t.status,
-              total_marks: t.total_marks ?? undefined,
-              duration_minutes: t.duration_minutes,
-              attempt_status: t.attempt_status,
-              result_percentage: t.result_percentage,
-              result_attempt_id: t.result_attempt_id,
-              attempt_id: t.attempt_id,
-              scheduled_start: t.scheduled_start,
-              scheduled_at: t.scheduled_at,
-            })),
-          ),
-        )
+            assignedTests.map((t) => {
+              const cfg =
+                t.config && typeof t.config === 'object'
+                  ? (t.config as Record<string, unknown>)
+                  : {};
+              const maxAttempts = Number(cfg.maxAttempts ?? 1) || 1;
+              const historyCount = attemptsMap.get(t.id);
+              const submittedCount = Number(t.submitted_attempt_count ?? 0);
+              const statusFallback =
+                t.attempt_status === 'submitted' || t.attempt_status === 'auto_submitted'
+                  ? 1
+                  : t.attempt_status === 'in_progress'
+                    ? 1
+                    : 0;
+              const actualAttempts =
+                historyCount ?? (submittedCount > 0 ? submittedCount : statusFallback);
+
+              return {
+                id: t.id,
+                title: t.title,
+                status: t.status,
+                total_marks: t.total_marks ?? undefined,
+                duration_minutes: t.duration_minutes,
+                attempt_status: t.attempt_status,
+                result_percentage: t.result_percentage,
+                result_attempt_id: t.result_attempt_id,
+                attempt_id: t.attempt_id,
+                scheduled_start: t.scheduled_start,
+                scheduled_at: t.scheduled_at,
+                max_attempts: maxAttempts,
+                submitted_attempt_count: actualAttempts,
+                attempt_count: actualAttempts,
+              };
+            }),
+          );
+        })
       : examinationService.listAssignmentSummaries().then(setRows);
 
     load
@@ -429,7 +463,7 @@ export function DashboardAssignmentsContent() {
 
   useDashboardLoadingEffect(loading);
 
-  const counts = useMemo(() => {
+  const studentCounts = useMemo(() => {
     let completed = 0;
     let inProgress = 0;
     let notStarted = 0;
@@ -451,24 +485,45 @@ export function DashboardAssignmentsContent() {
     };
   }, [rows]);
 
+  const adminCounts = useMemo(() => {
+    let live = 0;
+    let draft = 0;
+    for (const r of rows) {
+      const st = (r.status || '').toLowerCase();
+      if (st === 'live') live++;
+      else if (st === 'draft') draft++;
+    }
+    return {
+      all: rows.length,
+      live,
+      draft,
+    };
+  }, [rows]);
+
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
       if (searchTerm.trim()) {
         const q = searchTerm.toLowerCase();
-        const match = row.title.toLowerCase().includes(q) || (row.status && row.status.toLowerCase().includes(q));
+        const match =
+          row.title.toLowerCase().includes(q) || (row.status && row.status.toLowerCase().includes(q));
         if (!match) return false;
       }
-      if (!isStudent) return true;
       if (filterTab === 'all') return true;
-      const st = row.attempt_status;
-      if (filterTab === 'completed') {
-        return st === 'submitted' || st === 'auto_submitted';
-      }
-      if (filterTab === 'in_progress') {
-        return st === 'in_progress';
-      }
-      if (filterTab === 'not_started') {
-        return !st || (st !== 'submitted' && st !== 'auto_submitted' && st !== 'in_progress');
+      if (isStudent) {
+        const st = row.attempt_status;
+        if (filterTab === 'completed') {
+          return st === 'submitted' || st === 'auto_submitted';
+        }
+        if (filterTab === 'in_progress') {
+          return st === 'in_progress';
+        }
+        if (filterTab === 'not_started') {
+          return !st || (st !== 'submitted' && st !== 'auto_submitted' && st !== 'in_progress');
+        }
+      } else {
+        const st = (row.status || '').toLowerCase();
+        if (filterTab === 'live') return st === 'live';
+        if (filterTab === 'draft') return st === 'draft';
       }
       return true;
     });
@@ -551,7 +606,7 @@ export function DashboardAssignmentsContent() {
         <div className="org-page-header-left">
           <div className="d-flex align-items-center gap-2">
             <h2 className="org-page-title mb-0">Assignments</h2>
-            {isStudent && rows.length > 0 && (
+            {rows.length > 0 && (
               <span className="org-count-badge">{rows.length}</span>
             )}
           </div>
@@ -565,42 +620,73 @@ export function DashboardAssignmentsContent() {
 
       {error && <div className="org-error-banner">{error}</div>}
 
-      {/* Student Filter Toolbar */}
-      {isStudent && rows.length > 0 && (
+      {/* Filter & Search Toolbar */}
+      {rows.length > 0 && (
         <div className="sca-assignments-toolbar">
           <div className="sca-student-tests-filters sca-assignments-filters">
-            <button
-              type="button"
-              className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'all' ? 'sca-student-filter-tab--active' : ''}`}
-              onClick={() => setFilterTab('all')}
-            >
-              <span>All Assignments</span>
-              <span className="sca-student-filter-count">{counts.all}</span>
-            </button>
-            <button
-              type="button"
-              className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'completed' ? 'sca-student-filter-tab--active' : ''}`}
-              onClick={() => setFilterTab('completed')}
-            >
-              <span>Completed</span>
-              <span className="sca-student-filter-count">{counts.completed}</span>
-            </button>
-            <button
-              type="button"
-              className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'in_progress' ? 'sca-student-filter-tab--active' : ''}`}
-              onClick={() => setFilterTab('in_progress')}
-            >
-              <span>In Progress</span>
-              <span className="sca-student-filter-count">{counts.in_progress}</span>
-            </button>
-            <button
-              type="button"
-              className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'not_started' ? 'sca-student-filter-tab--active' : ''}`}
-              onClick={() => setFilterTab('not_started')}
-            >
-              <span>Not Started</span>
-              <span className="sca-student-filter-count">{counts.not_started}</span>
-            </button>
+            {isStudent ? (
+              <>
+                <button
+                  type="button"
+                  className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'all' ? 'sca-student-filter-tab--active' : ''}`}
+                  onClick={() => setFilterTab('all')}
+                >
+                  <span>All Assignments</span>
+                  <span className="sca-student-filter-count">{studentCounts.all}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'completed' ? 'sca-student-filter-tab--active' : ''}`}
+                  onClick={() => setFilterTab('completed')}
+                >
+                  <span>Completed</span>
+                  <span className="sca-student-filter-count">{studentCounts.completed}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'in_progress' ? 'sca-student-filter-tab--active' : ''}`}
+                  onClick={() => setFilterTab('in_progress')}
+                >
+                  <span>In Progress</span>
+                  <span className="sca-student-filter-count">{studentCounts.in_progress}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'not_started' ? 'sca-student-filter-tab--active' : ''}`}
+                  onClick={() => setFilterTab('not_started')}
+                >
+                  <span>Not Started</span>
+                  <span className="sca-student-filter-count">{studentCounts.not_started}</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className={`sca-student-filter-tab sca-assignment-filter-tab ${filterTab === 'all' ? 'sca-student-filter-tab--active' : ''}`}
+                  onClick={() => setFilterTab('all')}
+                >
+                  <span>All Assignments</span>
+                  <span className="sca-student-filter-count">{adminCounts.all}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`sca-student-filter-tab sca-assignment-filter-tab sca-assignment-filter-tab--compact ${filterTab === 'live' ? 'sca-student-filter-tab--active' : ''}`}
+                  onClick={() => setFilterTab('live')}
+                >
+                  <span>Live</span>
+                  <span className="sca-student-filter-count">{adminCounts.live}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`sca-student-filter-tab sca-assignment-filter-tab sca-assignment-filter-tab--compact ${filterTab === 'draft' ? 'sca-student-filter-tab--active' : ''}`}
+                  onClick={() => setFilterTab('draft')}
+                >
+                  <span>Draft</span>
+                  <span className="sca-student-filter-count">{adminCounts.draft}</span>
+                </button>
+              </>
+            )}
           </div>
 
           <div className="sca-assignments-search-wrap">
@@ -628,46 +714,7 @@ export function DashboardAssignmentsContent() {
         </div>
       )}
 
-      <div className={`org-table-card ${isStudent ? 'sca-assignments-card' : ''}`}>
-        {!isStudent && (
-          <div className="org-card-header">
-            <div className="org-title-group">
-              <div className="org-title-row">
-                <h3 className="org-card-title">All Assignments</h3>
-                <span className="org-count-badge">
-                  {filteredRows.length} {filteredRows.length === 1 ? 'Test' : 'Tests'}
-                </span>
-              </div>
-              <p className="org-card-subtitle">
-                Manage student assignment links and examine submission volume
-              </p>
-            </div>
-
-            <div className="org-controls-row">
-              <div className="org-search-box">
-                <FiSearch className="org-search-icon" />
-                <input
-                  type="text"
-                  className="org-search-input"
-                  placeholder="Search assignments…"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                {searchTerm && (
-                  <button
-                    type="button"
-                    className="org-search-clear"
-                    onClick={() => setSearchTerm('')}
-                    aria-label="Clear search"
-                  >
-                    <FiX />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
+      <div className="org-table-card sca-assignments-card">
         <div className="org-table-wrap">
           <table className="org-table">
             <thead>
@@ -676,6 +723,7 @@ export function DashboardAssignmentsContent() {
                 <th>Marks</th>
                 {isStudent ? (
                   <>
+                    <th>Attempts</th>
                     <th>Status</th>
                     <th>Progress</th>
                   </>
@@ -707,6 +755,19 @@ export function DashboardAssignmentsContent() {
                   </td>
                   {isStudent ? (
                     <>
+                      <td>
+                        <span
+                          className="sca-assignment-marks"
+                          title={row.max_attempts ? `${row.attempt_count ?? 0} of ${row.max_attempts} attempts` : undefined}
+                        >
+                          {row.attempt_count ?? 0}
+                          {row.max_attempts && row.max_attempts > 1 ? (
+                            <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 400, marginLeft: 3 }}>
+                              / {row.max_attempts}
+                            </span>
+                          ) : null}
+                        </span>
+                      </td>
                       <td>
                         {row.attempt_status === 'submitted' || row.attempt_status === 'auto_submitted' ? (
                           <span className="sca-status-pill sca-status-pill--completed">
@@ -752,10 +813,16 @@ export function DashboardAssignmentsContent() {
                     </>
                   ) : (
                     <>
-                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.assigned_count ?? 0}</td>
-                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.submitted_count ?? 0}</td>
-                      <td style={{ color: '#475569', fontWeight: 500 }}>{row.attempt_count ?? 0}</td>
-                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
+                      <td>
+                        <span className="sca-assignment-marks">{row.assigned_count ?? 0}</span>
+                      </td>
+                      <td>
+                        <span className="sca-assignment-marks">{row.submitted_count ?? 0}</span>
+                      </td>
+                      <td>
+                        <span className="sca-assignment-marks">{row.attempt_count ?? 0}</span>
+                      </td>
+                      <td className="org-td-actions edtp-td-actions" style={{ textAlign: 'left', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', justifyContent: 'flex-start' }}>
                           <Link
                             to={`/dashboard/test-builder/${row.id}`}
@@ -773,13 +840,15 @@ export function DashboardAssignmentsContent() {
               ))}
               {filteredRows.length === 0 && (
                 <tr>
-                  <td colSpan={isStudent ? 5 : 6} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748b' }}>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748b' }}>
                     <div style={{ fontSize: '1rem', fontWeight: 500, marginBottom: 4 }}>
-                      {isStudent
-                        ? (searchTerm || filterTab !== 'all' ? 'No assignments match your search or filter.' : 'No tests assigned yet.')
-                        : 'No tests found. Create and assign a test from Test Builder.'}
+                      {searchTerm || filterTab !== 'all'
+                        ? 'No assignments match your search or filter.'
+                        : isStudent
+                          ? 'No tests assigned yet.'
+                          : 'No tests found. Create and assign a test from Test Builder.'}
                     </div>
-                    {isStudent && (searchTerm || filterTab !== 'all') && (
+                    {(searchTerm || filterTab !== 'all') && (
                       <button
                         type="button"
                         className="sca-assignments-reset-filter"
@@ -795,7 +864,7 @@ export function DashboardAssignmentsContent() {
           </table>
         </div>
 
-        {isStudent && rows.length > 0 && (
+        {rows.length > 0 && (
           <div className="sca-assignments-footer">
             <span>
               Showing <strong>{filteredRows.length}</strong> of <strong>{rows.length}</strong> {rows.length === 1 ? 'assignment' : 'assignments'}

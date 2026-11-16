@@ -9,6 +9,7 @@ interface DashboardSidebarProps {
   collapsed: boolean;
   onLogout: () => void;
   onNavigate?: () => void;
+  onToggleCollapse?: () => void;
 }
 
 function sectionKeyOf(section: DashboardNavSection, index: number): string {
@@ -20,6 +21,7 @@ export default function DashboardSidebar({
   collapsed,
   onLogout,
   onNavigate,
+  onToggleCollapse,
 }: DashboardSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -264,16 +266,71 @@ export default function DashboardSidebar({
 
   return (
     <aside className="sca-db-sidebar" aria-label="Dashboard navigation">
-      <div className="sca-db-sidebar__brand">
-        <Link
-          to="/dashboard"
-          className="sca-db-sidebar__brand-link"
-          title={brand.name}
-          onClick={onNavigate}
-        >
-          <img src={brand.logo} alt={brand.name} className="sca-db-sidebar__logo" />
-          {!collapsed && <span className="sca-db-sidebar__brand-title">{brand.name}</span>}
-        </Link>
+      <div className={`sca-db-sidebar__brand${collapsed ? ' sca-db-sidebar__brand--collapsed' : ''}`}>
+        {!collapsed ? (
+          <div className="sca-db-sidebar__brand-content">
+            <Link
+              to="/dashboard"
+              className="sca-db-sidebar__brand-link"
+              title={brand.name}
+              onClick={onNavigate}
+            >
+              <img src={brand.logo} alt={brand.name} className="sca-db-sidebar__logo" />
+              <span className="sca-db-sidebar__brand-title">{brand.name}</span>
+            </Link>
+            {onToggleCollapse && (
+              <button
+                type="button"
+                className="sca-db-sidebar__toggle-btn"
+                onClick={onToggleCollapse}
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.75"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  width="20"
+                  height="20"
+                  aria-hidden="true"
+                >
+                  <path d="M4 7h16" />
+                  <path d="M4 12h10" />
+                  <path d="M4 17h14" />
+                </svg>
+              </button>
+            )}
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="sca-db-sidebar__rail-toggle-btn"
+            onClick={onToggleCollapse}
+            aria-label="Expand sidebar"
+            title="Expand sidebar"
+          >
+            <img src={brand.logo} alt={brand.name} className="sca-db-sidebar__logo" />
+            <span className="sca-db-sidebar__rail-icon-overlay" aria-hidden="true">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                width="20"
+                height="20"
+              >
+                <path d="M4 7h16" />
+                <path d="M4 12h10" />
+                <path d="M4 17h14" />
+              </svg>
+            </span>
+          </button>
+        )}
       </div>
 
       <nav className="sca-db-sidebar__nav">

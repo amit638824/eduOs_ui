@@ -63,8 +63,10 @@ export function useOrganization(): UseOrganizationResult {
           listData.find((o) => o.id === selectedOrgId) ?? listData[0] ?? null;
         if (activeOrg) {
           setOrganization(activeOrg);
-          const branchList = await organizationService.listBranches(activeOrg.id, 1, 20);
-          setBranches(branchList.data);
+          const branchList = await organizationService
+            .listBranches(activeOrg.id, 1, 20, { skipToast: true })
+            .catch(() => ({ data: [] }));
+          setBranches(branchList.data ?? []);
         } else {
           setOrganization(null);
           setBranches([]);
@@ -73,11 +75,23 @@ export function useOrganization(): UseOrganizationResult {
       }
 
       if (user.organizationId && canReadOrganization(user.roles)) {
-        const org = await organizationService.getOrganization(user.organizationId);
-        setOrganization(org);
-        setOrganizations([org]);
-        const branchList = await organizationService.listBranches(user.organizationId, 1, 20);
-        setBranches(branchList.data);
+        try {
+          const org = await organizationService.getOrganization(user.organizationId, { skipToast: true });
+          setOrganization(org);
+          setOrganizations([org]);
+        } catch {
+          // Lacks organization:read or endpoint failed — skip silently without toast
+          setOrganization(null);
+          setOrganizations([]);
+        }
+
+        try {
+          const branchList = await organizationService.listBranches(user.organizationId, 1, 20, { skipToast: true });
+          setBranches(branchList.data ?? []);
+        } catch {
+          // Lacks branch:read or endpoint failed — skip silently without toast
+          setBranches([]);
+        }
       } else {
         setOrganization(null);
         setOrganizations([]);

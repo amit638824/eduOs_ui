@@ -331,6 +331,146 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
   const pageError = error || loadError;
   const copy = COPY[role];
 
+  const renderWelcomeBanner = (isStudentFullWidth = false) => (
+    <div className={`mad-v3-welcome-banner ${isStudentFullWidth ? 'mad-v3-welcome-banner--student' : ''}`}>
+      <div className="mad-v3-welcome-content">
+        <span className="mad-v3-welcome-sub">Welcome back,</span>
+        <h2 className="mad-v3-welcome-title">
+          {displayName}
+        </h2>
+        <p className="mad-v3-welcome-desc">
+          {copy.welcome(organization?.name || 'your organization')}
+        </p>
+
+        {/* Feature Pills / Cards inside the Banner */}
+        <div className={`mad-v3-banner-cards ${isStudentFullWidth ? 'mad-v3-banner-cards--student' : ''}`}>
+          <Link to={copy.banner[0].href} className="mad-v3-action-card">
+            <div className="mad-v3-action-icon mad-v3-action-icon--blue">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                <path d="M11 4H4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                <path d="M16 2.5a2.121 2.121 0 013 3L9 15l-4 1 1-4 10-10.5z" />
+              </svg>
+            </div>
+            <div className="mad-v3-action-info">
+              <strong>{copy.banner[0].title}</strong>
+              <small>{copy.banner[0].hint}</small>
+            </div>
+            <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+              <path d="M6 3l5 5-5 5" />
+            </svg>
+          </Link>
+
+          <Link to={copy.banner[1].href} className="mad-v3-action-card">
+            <div className="mad-v3-action-icon mad-v3-action-icon--green">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                <path d="M17 17v-1.5a3.5 3.5 0 00-3.5-3.5h-7A3.5 3.5 0 003 15.5V17" />
+                <circle cx="10" cy="6" r="3.5" />
+              </svg>
+            </div>
+            <div className="mad-v3-action-info">
+              <strong>{copy.banner[1].title}</strong>
+              <small>{copy.banner[1].hint}</small>
+            </div>
+            <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+              <path d="M6 3l5 5-5 5" />
+            </svg>
+          </Link>
+
+          <Link to={copy.banner[2].href} className="mad-v3-action-card">
+            <div className="mad-v3-action-icon mad-v3-action-icon--purple">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0z" />
+                <path d="M10 2v8h8" />
+              </svg>
+            </div>
+            <div className="mad-v3-action-info">
+              <strong>{copy.banner[2].title}</strong>
+              <small>{copy.banner[2].hint}</small>
+            </div>
+            <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+              <path d="M6 3l5 5-5 5" />
+            </svg>
+          </Link>
+
+          {copy.banner[3] && (
+            <Link to={copy.banner[3].href} className="mad-v3-action-card">
+              <div className="mad-v3-action-icon mad-v3-action-icon--amber">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+                  <path d="M3 5a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
+                </svg>
+              </div>
+              <div className="mad-v3-action-info">
+                <strong>{copy.banner[3].title}</strong>
+                <small>{copy.banner[3].hint}</small>
+              </div>
+              <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
+                <path d="M6 3l5 5-5 5" />
+              </svg>
+            </Link>
+          )}
+        </div>
+      </div>
+
+      {/* Illustration Graphic + Hand-drawn slogan (Cleanly Separated, Zero Overlap) */}
+      <div className="mad-v3-welcome-graphic">
+        <div className="mad-v3-illu-box">
+          <svg viewBox="0 0 180 150" fill="none" xmlns="http://www.w3.org/2000/svg" className="mad-v3-illu-svg">
+            <defs>
+              <linearGradient id="v3Glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#EFF6FF" />
+                <stop offset="100%" stopColor="#DBEAFE" />
+              </linearGradient>
+              <linearGradient id="v3CapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#2563EB" />
+                <stop offset="100%" stopColor="#1D4ED8" />
+              </linearGradient>
+              <filter id="v3Shadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1E3A8A" floodOpacity="0.1" />
+              </filter>
+            </defs>
+
+            <circle cx="90" cy="80" r="60" fill="url(#v3Glow)" />
+
+            <g filter="url(#v3Shadow)">
+              <polygon points="30,40 50,30 70,40 50,50" fill="url(#v3CapGrad)" />
+              <path d="M37 44V54C37 60 63 60 63 54V44" fill="#1D4ED8" />
+              <line x1="70" y1="40" x2="70" y2="54" stroke="#F59E0B" strokeWidth="1.5" />
+              <circle cx="70" cy="55" r="1.5" fill="#F59E0B" />
+            </g>
+
+            <g filter="url(#v3Shadow)">
+              <rect x="110" y="32" width="48" height="40" rx="6" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1" />
+              <rect x="118" y="54" width="5" height="12" rx="1.5" fill="#93C5FD" />
+              <rect x="127" y="47" width="5" height="19" rx="1.5" fill="#3B82F6" />
+              <rect x="136" y="40" width="5" height="26" rx="1.5" fill="#1D4ED8" />
+            </g>
+
+            <rect x="35" y="120" width="115" height="5" rx="2.5" fill="#94A3B8" />
+
+            <circle cx="90" cy="78" r="12" fill="#FCD34D" />
+            <path d="M80 76C80 66 90 64 98 65C104 66 105 71 103 76C99 72 96 72 88 73C82 74 80 76 80 76Z" fill="#1E293B" />
+            <path d="M72 120C72 98 85 94 90 94C95 94 108 98 108 120H72Z" fill="#3B82F6" />
+
+            <polygon points="80,120 102,120 99,106 83,106" fill="#0F172A" />
+            <polygon points="82,118 100,118 98,108 84,108" fill="#38BDF8" />
+          </svg>
+        </div>
+
+        <div className="mad-v3-slogan-box">
+          <div className="mad-v3-slogan-lines">
+            <span>Better</span>
+            <span>Education</span>
+            <span>Brighter</span>
+            <span>Future</span>
+          </div>
+          <svg viewBox="0 0 60 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="mad-v3-slogan-underline">
+            <path d="M2 9C18 3 42 12 58 6" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="mad-v3-root">
       {pageError && (
@@ -342,156 +482,15 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
         </div>
       )}
 
-      {/* Top 2-Column Section: Hero Banner + Stats + Stepper on Left, Quick Actions + Recent Activity on Right */}
-      <div className="mad-v3-top-grid">
+      {/* For Student role: Full-width top banner across entire page width */}
+      {role === 'student' && renderWelcomeBanner(true)}
+
+      {/* Top 2-Column Section: Stats + Stepper on Left, Quick Actions + Recent Activity on Right */}
+      <div className={`mad-v3-top-grid ${role === 'student' ? 'mad-v3-top-grid--student' : ''}`}>
         {/* ── LEFT MAIN SECTION (72%) ── */}
         <div className="mad-v3-left-col">
-          {/* 1. Hero Welcome Banner */}
-          <div className="mad-v3-welcome-banner">
-            <div className="mad-v3-welcome-content">
-              <span className="mad-v3-welcome-sub">Welcome back,</span>
-              <h2 className="mad-v3-welcome-title">
-                {displayName}
-              </h2>
-              <p className="mad-v3-welcome-desc">
-                {copy.welcome(organization?.name || 'your organization')}
-              </p>
-
-              {/* 4 Feature Pills / Cards inside the Banner */}
-              <div className="mad-v3-banner-cards">
-                <Link to={copy.banner[0].href} className="mad-v3-action-card">
-                  <div className="mad-v3-action-icon mad-v3-action-icon--blue">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                      <path d="M11 4H4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                      <path d="M16 2.5a2.121 2.121 0 013 3L9 15l-4 1 1-4 10-10.5z" />
-                    </svg>
-                  </div>
-                  <div className="mad-v3-action-info">
-                    <strong>{copy.banner[0].title}</strong>
-                    <small>{copy.banner[0].hint}</small>
-                  </div>
-                  <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
-                    <path d="M6 3l5 5-5 5" />
-                  </svg>
-                </Link>
-
-                <Link to={copy.banner[1].href} className="mad-v3-action-card">
-                  <div className="mad-v3-action-icon mad-v3-action-icon--green">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                      <path d="M17 17v-1.5a3.5 3.5 0 00-3.5-3.5h-7A3.5 3.5 0 003 15.5V17" />
-                      <circle cx="10" cy="6" r="3.5" />
-                    </svg>
-                  </div>
-                  <div className="mad-v3-action-info">
-                    <strong>{copy.banner[1].title}</strong>
-                    <small>{copy.banner[1].hint}</small>
-                  </div>
-                  <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
-                    <path d="M6 3l5 5-5 5" />
-                  </svg>
-                </Link>
-
-                <Link to={copy.banner[2].href} className="mad-v3-action-card">
-                  <div className="mad-v3-action-icon mad-v3-action-icon--purple">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                      <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0z" />
-                      <path d="M10 2v8h8" />
-                    </svg>
-                  </div>
-                  <div className="mad-v3-action-info">
-                    <strong>{copy.banner[2].title}</strong>
-                    <small>{copy.banner[2].hint}</small>
-                  </div>
-                  <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
-                    <path d="M6 3l5 5-5 5" />
-                  </svg>
-                </Link>
-
-                {copy.banner[3] && (
-                  <Link to={copy.banner[3].href} className="mad-v3-action-card">
-                    <div className="mad-v3-action-icon mad-v3-action-icon--amber">
-                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                        <path d="M3 5a2 2 0 012-2h4l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V5z" />
-                      </svg>
-                    </div>
-                    <div className="mad-v3-action-info">
-                      <strong>{copy.banner[3].title}</strong>
-                      <small>{copy.banner[3].hint}</small>
-                    </div>
-                    <svg className="mad-v3-action-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13">
-                      <path d="M6 3l5 5-5 5" />
-                    </svg>
-                  </Link>
-                )}
-              </div>
-            </div>
-
-            {/* Illustration Graphic + Hand-drawn slogan (Cleanly Separated, Zero Overlap) */}
-            <div className="mad-v3-welcome-graphic">
-              {/* Vector Teacher/Student Desk Illustration */}
-              <div className="mad-v3-illu-box">
-                <svg viewBox="0 0 180 150" fill="none" xmlns="http://www.w3.org/2000/svg" className="mad-v3-illu-svg">
-                  <defs>
-                    <linearGradient id="v3Glow" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#EFF6FF" />
-                      <stop offset="100%" stopColor="#DBEAFE" />
-                    </linearGradient>
-                    <linearGradient id="v3CapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#2563EB" />
-                      <stop offset="100%" stopColor="#1D4ED8" />
-                    </linearGradient>
-                    <filter id="v3Shadow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#1E3A8A" floodOpacity="0.1" />
-                    </filter>
-                  </defs>
-
-                  {/* Soft circular aura */}
-                  <circle cx="90" cy="80" r="60" fill="url(#v3Glow)" />
-
-                  {/* Floating Graduation Cap */}
-                  <g filter="url(#v3Shadow)">
-                    <polygon points="30,40 50,30 70,40 50,50" fill="url(#v3CapGrad)" />
-                    <path d="M37 44V54C37 60 63 60 63 54V44" fill="#1D4ED8" />
-                    <line x1="70" y1="40" x2="70" y2="54" stroke="#F59E0B" strokeWidth="1.5" />
-                    <circle cx="70" cy="55" r="1.5" fill="#F59E0B" />
-                  </g>
-
-                  {/* Floating Bar Chart Card */}
-                  <g filter="url(#v3Shadow)">
-                    <rect x="110" y="32" width="48" height="40" rx="6" fill="#FFFFFF" stroke="#E2E8F0" strokeWidth="1" />
-                    <rect x="118" y="54" width="5" height="12" rx="1.5" fill="#93C5FD" />
-                    <rect x="127" y="47" width="5" height="19" rx="1.5" fill="#3B82F6" />
-                    <rect x="136" y="40" width="5" height="26" rx="1.5" fill="#1D4ED8" />
-                  </g>
-
-                  {/* Desk Base */}
-                  <rect x="35" y="120" width="115" height="5" rx="2.5" fill="#94A3B8" />
-
-                  {/* Person */}
-                  <circle cx="90" cy="78" r="12" fill="#FCD34D" />
-                  <path d="M80 76C80 66 90 64 98 65C104 66 105 71 103 76C99 72 96 72 88 73C82 74 80 76 80 76Z" fill="#1E293B" />
-                  <path d="M72 120C72 98 85 94 90 94C95 94 108 98 108 120H72Z" fill="#3B82F6" />
-
-                  {/* Laptop */}
-                  <polygon points="80,120 102,120 99,106 83,106" fill="#0F172A" />
-                  <polygon points="82,118 100,118 98,108 84,108" fill="#38BDF8" />
-                </svg>
-              </div>
-
-              {/* Decorative Handwritten Slogan - Cleanly separated to the right */}
-              <div className="mad-v3-slogan-box">
-                <div className="mad-v3-slogan-lines">
-                  <span>Better</span>
-                  <span>Education</span>
-                  <span>Brighter</span>
-                  <span>Future</span>
-                </div>
-                <svg viewBox="0 0 60 14" fill="none" xmlns="http://www.w3.org/2000/svg" className="mad-v3-slogan-underline">
-                  <path d="M2 9C18 3 42 12 58 6" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-              </div>
-            </div>
-          </div>
+          {/* For Admin/Teacher: Hero Welcome Banner inside left column */}
+          {role !== 'student' && renderWelcomeBanner(false)}
 
           {/* 2. 4 Stat Metric Cards with Sparkline Wave Graphs */}
           <div className="mad-v3-stats-row">
