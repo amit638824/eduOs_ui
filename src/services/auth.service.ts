@@ -1,5 +1,7 @@
 import api from '@/lib/api';
 import { tokenStorage } from '@/lib/storage';
+import { suppressToast } from '@/lib/toast';
+import { suppressRealtimeNotification } from '@/lib/realtime';
 import type { ApiResponse, ApiUser, LoginInput, LoginResponse, RegisterInput } from '@/types/api';
 import { normalizeUser } from '@/utils/normalize';
 import { getDefaultDashboardPath } from '@/utils/dashboardRole';
@@ -19,7 +21,9 @@ export function isMfaLoginResponse(data: LoginApiResponse): data is MfaLoginResp
 export async function login(input: LoginInput): Promise<LoginApiResponse> {
   // Drop stale session so login is a clean credential check
   tokenStorage.clear();
-  const { data } = await api.post<ApiResponse<LoginApiResponse>>('/auth/login', input);
+  const { data } = await api.post<ApiResponse<LoginApiResponse>>('/auth/login', input, {
+    skipToast: true,
+  });
   if (isMfaLoginResponse(data.data)) {
     return data.data;
   }
@@ -30,10 +34,14 @@ export async function login(input: LoginInput): Promise<LoginApiResponse> {
 }
 
 export async function verifyMfaLogin(mfaToken: string, code: string): Promise<LoginResponse> {
-  const { data } = await api.post<ApiResponse<LoginResponse>>('/auth/mfa/verify-login', {
-    mfaToken,
-    code,
-  });
+  const { data } = await api.post<ApiResponse<LoginResponse>>(
+    '/auth/mfa/verify-login',
+    {
+      mfaToken,
+      code,
+    },
+    { skipToast: true },
+  );
   return {
     user: normalizeUser(data.data.user as unknown as Record<string, unknown>),
     tokens: data.data.tokens,
@@ -41,27 +49,43 @@ export async function verifyMfaLogin(mfaToken: string, code: string): Promise<Lo
 }
 
 export async function forgotPassword(email: string) {
-  const { data } = await api.post<ApiResponse<Record<string, unknown>>>('/auth/forgot-password', {
-    email,
-  });
+  const { data } = await api.post<ApiResponse<Record<string, unknown>>>(
+    '/auth/forgot-password',
+    { email },
+    { skipToast: true },
+  );
   return data.data;
 }
 
 export async function resetPassword(token: string, password: string) {
-  const { data } = await api.post<ApiResponse<unknown>>('/auth/reset-password', { token, password });
+  suppressRealtimeNotification(/password/i, 8000);
+  suppressToast(/password/i, 8000);
+  const { data } = await api.post<ApiResponse<unknown>>(
+    '/auth/reset-password',
+    { token, password },
+    { skipToast: true },
+  );
   return data.data;
 }
 
 export async function changePassword(currentPassword: string, newPassword: string) {
-  const { data } = await api.post<ApiResponse<unknown>>('/auth/change-password', {
-    currentPassword,
-    newPassword,
-  });
+  suppressRealtimeNotification(/password/i, 8000);
+  suppressToast(/password/i, 8000);
+  const { data } = await api.post<ApiResponse<unknown>>(
+    '/auth/change-password',
+    {
+      currentPassword,
+      newPassword,
+    },
+    { skipToast: true },
+  );
   return data.data;
 }
 
 export async function register(input: RegisterInput): Promise<LoginResponse> {
-  const { data } = await api.post<ApiResponse<LoginResponse>>('/auth/register', input);
+  const { data } = await api.post<ApiResponse<LoginResponse>>('/auth/register', input, {
+    skipToast: true,
+  });
   return {
     user: normalizeUser(data.data.user as unknown as Record<string, unknown>),
     tokens: data.data.tokens,

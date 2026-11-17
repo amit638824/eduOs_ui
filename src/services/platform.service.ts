@@ -80,12 +80,12 @@ export async function listNotifications(page = 1, limit = 10, search?: string) {
 }
 
 export async function markNotificationRead(id: string) {
-  const { data } = await api.patch<ApiResponse<unknown>>(`${base}/notifications/${id}/read`);
+  const { data } = await api.patch<ApiResponse<unknown>>(`${base}/notifications/${id}/read`, {}, { skipToast: true });
   return data.data;
 }
 
 export async function markAllNotificationsRead() {
-  const { data } = await api.post<ApiResponse<unknown>>(`${base}/notifications/read-all`);
+  const { data } = await api.post<ApiResponse<unknown>>(`${base}/notifications/read-all`, {}, { skipToast: true });
   return data.data;
 }
 
@@ -281,13 +281,14 @@ export async function getSettings(keys?: string[]) {
 }
 
 export async function upsertSetting(key: string, value: unknown) {
-  const { data } = await api.put<ApiResponse<OrgSetting>>(`${base}/settings`, { key, value });
+  const { data } = await api.put<ApiResponse<OrgSetting>>(`${base}/settings`, { key, value }, { skipToast: true });
   return data.data;
 }
 
 export async function deleteSetting(key: string) {
   const { data } = await api.delete<ApiResponse<{ message: string; deleted: boolean }>>(
     `${base}/settings/${encodeURIComponent(key)}`,
+    { skipToast: true },
   );
   return data.data;
 }

@@ -1,0 +1,909 @@
+/* =========================================================
+   CERTIFICATE VERIFICATION & AUTHENTIC CERTIFICATE STYLES
+   ========================================================= */
+
+.eduleb-verify-wrap.ms-verify-container {
+  max-width: 860px !important;
+  margin: 0 auto;
+  padding: 0 16px 60px;
+}
+
+/* ── Verified Button State ── */
+.eduleb-verify-btn.is-verified {
+  background: #10b981 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+  cursor: not-allowed !important;
+  opacity: 0.9 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+/* ── Manager's Layout: Verification Report Card ── */
+.ms-cert-verify-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.08);
+  margin-top: 24px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+
+.ms-cert-verify-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 26px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+
+.ms-cert-verify-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ms-cert-brand-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: #102a43;
+  color: #e8d48b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.ms-cert-brand-title {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #0f172a;
+}
+
+.ms-cert-brand-sub {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+.ms-cert-badge-official {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ── Hero Verified Banner ── */
+.ms-cert-hero {
+  text-align: center;
+  padding: 32px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ms-cert-hero-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #dcfce7;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin-bottom: 14px;
+  box-shadow: 0 0 0 8px rgba(220, 252, 231, 0.6);
+}
+
+.ms-cert-hero-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.ms-cert-hero-sub {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 14px;
+  max-width: 480px;
+}
+
+.ms-cert-hero-pill {
+  display: inline-block;
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+  padding: 4px 14px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Content Sections ── */
+.ms-cert-body {
+  padding: 0 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.ms-cert-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 10px;
+}
+
+/* ── Student Information Box ── */
+.ms-cert-student-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+}
+
+.ms-cert-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ms-cert-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.ms-cert-student-name {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+}
+
+.ms-cert-student-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.ms-cert-student-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.ms-cert-meta-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 3px;
+}
+
+.ms-cert-meta-val {
+  display: block;
+  font-size: 0.925rem;
+  font-weight: 700;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+/* ── Examination Performance Box ── */
+.ms-cert-perf-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.ms-cert-perf-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ms-cert-perf-score {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #16a34a;
+}
+
+.ms-cert-perf-track {
+  width: 100%;
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.ms-cert-perf-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ms-cert-perf-rating {
+  font-size: 0.775rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+/* ── Certificate Details Box ── */
+.ms-cert-details-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.ms-cert-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.ms-cert-copy-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 14px;
+  padding: 2px 4px;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease;
+}
+
+.ms-cert-copy-btn:hover {
+  color: #2563eb;
+}
+
+.ms-cert-status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.ms-cert-status-badge--issued {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.ms-cert-status-badge--revoked {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+/* ── Authenticity Confirmed Banner ── */
+.ms-cert-confirmed-banner {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.ms-cert-confirmed-icon {
+  font-size: 22px;
+  color: #059669;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ms-cert-confirmed-banner strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #065f46;
+  margin-bottom: 2px;
+}
+
+.ms-cert-confirmed-banner p {
+  font-size: 0.825rem;
+  color: #047857;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ── Action Buttons ── */
+.ms-cert-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+@media (max-width: 576px) {
+  .ms-cert-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ms-cert-btn-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: #102a43;
+  color: #ffffff;
+  border: none;
+  font-size: 0.925rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(16, 42, 67, 0.2);
+}
+
+.ms-cert-btn-download:hover:not(:disabled) {
+  background: #0b1f33;
+  transform: translateY(-1px);
+}
+
+.ms-cert-btn-download:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.ms-cert-btn-print {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #1e293b;
+  border: 1.5px solid #cbd5e1;
+  font-size: 0.925rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.ms-cert-btn-print:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+/* ── Card Footer ── */
+.ms-cert-footer {
+  text-align: center;
+  padding: 16px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* =========================================================
+   ORIGINAL ISSUED CERTIFICATE DISPLAY (MATCHING IMAGE 2)
+   ========================================================= */
+
+.ms-authentic-cert-wrap {
+  margin-top: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ms-authentic-cert-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.ms-authentic-cert-section-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px;
+}
+
+.ms-authentic-cert-section-desc {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.ms-cert-btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.ms-cert-btn-sm:hover {
+  background: #f1f5f9;
+}
+
+/* ── The Physical Certificate Frame ── */
+.ms-authentic-cert-canvas {
+  background: #ffffff;
+  border: 2px solid #102a43;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.12);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  padding: 36px 48px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .ms-authentic-cert-canvas {
+    padding: 24px 18px;
+  }
+}
+
+/* ── Four Geometric Double Corners ── */
+.ms-corner-bracket {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-color: #102a43;
+  border-style: solid;
+  pointer-events: none;
+}
+
+.ms-corner-bracket--tl {
+  top: 0;
+  left: 0;
+  border-width: 10px 0 0 10px;
+}
+
+.ms-corner-bracket--tr {
+  top: 0;
+  right: 0;
+  border-width: 10px 10px 0 0;
+}
+
+.ms-corner-bracket--bl {
+  bottom: 0;
+  left: 0;
+  border-width: 0 0 10px 10px;
+}
+
+.ms-corner-bracket--br {
+  bottom: 0;
+  right: 0;
+  border-width: 0 10px 10px 0;
+}
+
+.ms-corner-bracket-gold {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-color: #c9a227;
+  border-style: solid;
+  pointer-events: none;
+}
+
+.ms-corner-bracket-gold--tl {
+  top: 8px;
+  left: 8px;
+  border-width: 4px 0 0 4px;
+}
+
+.ms-corner-bracket-gold--tr {
+  top: 8px;
+  right: 8px;
+  border-width: 4px 4px 0 0;
+}
+
+.ms-corner-bracket-gold--bl {
+  bottom: 8px;
+  left: 8px;
+  border-width: 0 0 4px 4px;
+}
+
+.ms-corner-bracket-gold--br {
+  bottom: 8px;
+  right: 8px;
+  border-width: 0 4px 4px 0;
+}
+
+/* ── Certificate Inner Content ── */
+.ms-authentic-cert-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: center;
+}
+
+.ms-authentic-cert-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-align: left;
+}
+
+.ms-authentic-cert-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ms-authentic-cert-logo-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #102a43;
+  border: 2px solid #c9a227;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+}
+
+.ms-authentic-cert-brand-name {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #102a43;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+}
+
+.ms-authentic-cert-brand-motto {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.1em;
+}
+
+.ms-authentic-cert-slogan {
+  text-align: right;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+}
+
+@media (max-width: 576px) {
+  .ms-authentic-cert-top {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  .ms-authentic-cert-slogan {
+    text-align: center;
+  }
+}
+
+/* ── Title Area ── */
+.ms-authentic-cert-title-area {
+  margin: 6px 0;
+}
+
+.ms-authentic-cert-title {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 2.2rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #102a43;
+  margin: 0 0 8px;
+}
+
+@media (max-width: 576px) {
+  .ms-authentic-cert-title {
+    font-size: 1.6rem;
+  }
+}
+
+.ms-authentic-cert-gold-rule {
+  width: 140px;
+  height: 2px;
+  background: #c9a227;
+  margin: 0 auto 8px;
+}
+
+.ms-authentic-cert-subtitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #c9a227;
+  margin: 0;
+}
+
+/* ── Recipient Area ── */
+.ms-authentic-cert-recipient-area {
+  margin: 8px 0;
+}
+
+.ms-authentic-cert-presented-to {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.15em;
+  margin-bottom: 8px;
+}
+
+.ms-authentic-cert-name {
+  font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 2.3rem;
+  font-weight: 600;
+  color: #102a43;
+  margin: 0 auto;
+  line-height: 1.2;
+}
+
+@media (max-width: 576px) {
+  .ms-authentic-cert-name {
+    font-size: 1.7rem;
+  }
+}
+
+.ms-authentic-cert-name-underline {
+  width: 220px;
+  height: 1px;
+  background: #cbd5e1;
+  margin: 10px auto 0;
+}
+
+/* ── Narrative ── */
+.ms-authentic-cert-narrative {
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: #334155;
+  max-width: 620px;
+  margin: 0 auto;
+}
+
+/* ── Three Pillars ── */
+.ms-authentic-cert-pillars {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 14px 20px;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  margin: 6px 0;
+}
+
+@media (max-width: 576px) {
+  .ms-authentic-cert-pillars {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+.ms-authentic-cert-pillar {
+  text-align: center;
+}
+
+.ms-pillar-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+}
+
+.ms-pillar-val {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #102a43;
+}
+
+/* ── Bottom Section: Seal, Signature, QR ── */
+.ms-authentic-cert-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+}
+
+@media (max-width: 576px) {
+  .ms-authentic-cert-bottom {
+    flex-direction: column;
+    gap: 18px;
+  }
+}
+
+.ms-authentic-cert-seal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ms-seal-outer {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 3px solid #c9a227;
+  background: #102a43;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ms-seal-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 1px dashed #e8d48b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #e8d48b;
+}
+
+.ms-seal-top {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  line-height: 1;
+}
+
+.ms-seal-bottom {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.ms-authentic-cert-sign {
+  text-align: center;
+  min-width: 180px;
+}
+
+.ms-sign-line {
+  width: 140px;
+  height: 1.5px;
+  background: #94a3b8;
+  margin: 0 auto 6px;
+}
+
+.ms-sign-title {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #102a43;
+}
+
+.ms-sign-sub {
+  display: block;
+  font-size: 0.7rem;
+  color: #64748b;
+}
+
+.ms-authentic-cert-qr {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.ms-qr-img {
+  width: 64px;
+  height: 64px;
+  display: block;
+  border-radius: 4px;
+}
+
+.ms-qr-placeholder {
+  width: 64px;
+  height: 64px;
+  background: #e2e8f0;
+  border-radius: 4px;
+}
+
+.ms-qr-label {
+  display: block;
+  font-size: 0.65rem;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* ── Micro-print Footer ── */
+.ms-authentic-cert-footer-text {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 10px;
+  text-align: center;
+}
+
+.ms-footer-caps {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #102a43;
+  margin-bottom: 3px;
+}
+
+.ms-footer-details {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  word-break: break-all;
+}
+
+/* =========================================================
+   PRINT SPECIFIC STYLES
+   ========================================================= */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #authentic-certificate-print-area,
+  #authentic-certificate-print-area * {
+    visibility: visible !important;
+  }
+  #authentic-certificate-print-area {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 30px 40px !important;
+    box-shadow: none !important;
+    border: 2px solid #102a43 !important;
+    box-sizing: border-box !important;
+    background: #ffffff !important;
+  }
+  @page {
+    size: landscape;
+    margin: 0;
+  }
+}

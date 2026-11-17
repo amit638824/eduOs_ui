@@ -471,29 +471,9 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
     </div>
   );
 
-  return (
-    <div className="mad-v3-root">
-      {pageError && (
-        <div className="mad-alert-error" role="alert">
-          <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          <span>{pageError}</span>
-        </div>
-      )}
-
-      {/* For Student role: Full-width top banner across entire page width */}
-      {role === 'student' && renderWelcomeBanner(true)}
-
-      {/* Top 2-Column Section: Stats + Stepper on Left, Quick Actions + Recent Activity on Right */}
-      <div className={`mad-v3-top-grid ${role === 'student' ? 'mad-v3-top-grid--student' : ''}`}>
-        {/* ── LEFT MAIN SECTION (72%) ── */}
-        <div className="mad-v3-left-col">
-          {/* For Admin/Teacher: Hero Welcome Banner inside left column */}
-          {role !== 'student' && renderWelcomeBanner(false)}
-
-          {/* 2. 4 Stat Metric Cards with Sparkline Wave Graphs */}
-          <div className="mad-v3-stats-row">
+  // 2. 4 Stat Metric Cards with Sparkline Wave Graphs
+  const renderStatsRow = () => (
+    <div className="mad-v3-stats-row">
             {/* Card 1: Total Tests */}
             <div className="mad-v3-stat-card">
               <div className="mad-v3-stat-top">
@@ -679,8 +659,109 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
               </div>
             </div>
           </div>
+  );
 
-          {/* 3. Workflow Guide: Exam Creation & Delivery Stepper */}
+  const renderQuickActions = () => (
+    <div className="mad-v3-qa-card">
+            <div className="mad-v3-qa-head">
+              <svg viewBox="0 0 20 20" fill="#2563EB" width="18" height="18" className="mad-v3-qa-bolt">
+                <path d="M11.3 1L4 11h5l-1.3 8L15 9h-5l1.3-8z" />
+              </svg>
+              <h3 className="mad-v3-qa-heading">Quick Actions</h3>
+            </div>
+
+            {/* Primary Action Button */}
+            <Link to={copy.primary.href} className="mad-v3-qa-primary-btn">
+              <span className="mad-v3-qa-btn-text">
+                <span className="mad-v3-plus">+</span> {copy.primary.label}
+              </span>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" className="mad-v3-qa-arrow">
+                <path d="M6 3l5 5-5 5" />
+              </svg>
+            </Link>
+
+            {/* Action Items List */}
+            <div className="mad-v3-qa-list">
+              <Link to={copy.quick[0].href} className="mad-v3-qa-item">
+                <div className="mad-v3-qa-item-left">
+                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <path d="M11 4H4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                      <path d="M16 2.5a2.121 2.121 0 013 3L9 15l-4 1 1-4 10-10.5z" />
+                    </svg>
+                  </div>
+                  <span className="mad-v3-qa-label">{copy.quick[0].label}</span>
+                </div>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
+                  <path d="M6 3l5 5-5 5" />
+                </svg>
+              </Link>
+
+              <Link to={copy.quick[1].href} className="mad-v3-qa-item">
+                <div className="mad-v3-qa-item-left">
+                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <path d="M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                      <polyline points="7,8 10,5 13,8" />
+                      <line x1="10" y1="5" x2="10" y2="14" />
+                    </svg>
+                  </div>
+                  <span className="mad-v3-qa-label">{copy.quick[1].label}</span>
+                </div>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
+                  <path d="M6 3l5 5-5 5" />
+                </svg>
+              </Link>
+
+              <Link to={copy.quick[2].href} className="mad-v3-qa-item">
+                <div className="mad-v3-qa-item-left">
+                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
+                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                      <circle cx="10" cy="10" r="8" />
+                      <path d="M10 2v8h8" />
+                    </svg>
+                  </div>
+                  <span className="mad-v3-qa-label">{copy.quick[2].label}</span>
+                </div>
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
+                  <path d="M6 3l5 5-5 5" />
+                </svg>
+              </Link>
+            </div>
+          </div>
+  );
+
+  return (
+    <div className="mad-v3-root">
+      {pageError && (
+        <div className="mad-alert-error" role="alert">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <span>{pageError}</span>
+        </div>
+      )}
+
+      {/* ── ROW 1: Hero Welcome Banner (Full width for student, Left 72% for admin/teacher) + Quick Actions (Right 28% for admin/teacher) ── */}
+      {role === 'student' ? (
+        renderWelcomeBanner(true)
+      ) : (
+        <div className="mad-v3-top-grid mad-v3-banner-row">
+          <div className="mad-v3-left-col">
+            {renderWelcomeBanner(false)}
+          </div>
+          <div className="mad-v3-right-col">
+            {renderQuickActions()}
+          </div>
+        </div>
+      )}
+
+      {/* ── ROW 2: 4 Stat Metric Cards (Full width 100% across page for ALL roles) ── */}
+      {renderStatsRow()}
+
+      {/* ── ROW 3: Workflow Guide (Left 72%) + Recent Activity (Right 28%) ── */}
+      <div className={`mad-v3-top-grid mad-v3-mid-grid ${role === 'student' ? 'mad-v3-top-grid--student' : ''}`}>
+        <div className="mad-v3-left-col">
           <div className="mad-v3-stepper-card">
             <div className="mad-v3-stepper-head">
               <div className="mad-v3-stepper-title-wrap">
@@ -844,81 +925,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
             </div>
           </div>
         </div>
-
-        {/* ── RIGHT MAIN SECTION (28%) ── */}
         <div className="mad-v3-right-col">
-          {/* Quick Actions Card (Hidden for student role) */}
-          {role !== 'student' && (
-          <div className="mad-v3-qa-card">
-            <div className="mad-v3-qa-head">
-              <svg viewBox="0 0 20 20" fill="#2563EB" width="18" height="18" className="mad-v3-qa-bolt">
-                <path d="M11.3 1L4 11h5l-1.3 8L15 9h-5l1.3-8z" />
-              </svg>
-              <h3 className="mad-v3-qa-heading">Quick Actions</h3>
-            </div>
-
-            {/* Primary Action Button */}
-            <Link to={copy.primary.href} className="mad-v3-qa-primary-btn">
-              <span className="mad-v3-qa-btn-text">
-                <span className="mad-v3-plus">+</span> {copy.primary.label}
-              </span>
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" className="mad-v3-qa-arrow">
-                <path d="M6 3l5 5-5 5" />
-              </svg>
-            </Link>
-
-            {/* Action Items List */}
-            <div className="mad-v3-qa-list">
-              <Link to={copy.quick[0].href} className="mad-v3-qa-item">
-                <div className="mad-v3-qa-item-left">
-                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <path d="M11 4H4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                      <path d="M16 2.5a2.121 2.121 0 013 3L9 15l-4 1 1-4 10-10.5z" />
-                    </svg>
-                  </div>
-                  <span className="mad-v3-qa-label">{copy.quick[0].label}</span>
-                </div>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </Link>
-
-              <Link to={copy.quick[1].href} className="mad-v3-qa-item">
-                <div className="mad-v3-qa-item-left">
-                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <path d="M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                      <polyline points="7,8 10,5 13,8" />
-                      <line x1="10" y1="5" x2="10" y2="14" />
-                    </svg>
-                  </div>
-                  <span className="mad-v3-qa-label">{copy.quick[1].label}</span>
-                </div>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </Link>
-
-              <Link to={copy.quick[2].href} className="mad-v3-qa-item">
-                <div className="mad-v3-qa-item-left">
-                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <circle cx="10" cy="10" r="8" />
-                      <path d="M10 2v8h8" />
-                    </svg>
-                  </div>
-                  <span className="mad-v3-qa-label">{copy.quick[2].label}</span>
-                </div>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </Link>
-            </div>
-          </div>
-          )}
-
-          {/* Recent Activity Card (Flex stretched to align bottom with Workflow Guide) */}
           <div className="mad-v3-activity-card">
             <div className="mad-v3-activity-head">
               <div className="mad-v3-act-title-wrap">

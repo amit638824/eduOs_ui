@@ -46,6 +46,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
     limit,
     searchQuery: searchTerm,
     loading,
+    initialLoading,
     error,
     setSearchQuery: setSearchTerm,
     clearSearch,
@@ -79,7 +80,7 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
     defaultLimit: 10,
   });
 
-  useDashboardLoadingEffect(loading);
+  useDashboardLoadingEffect(initialLoading);
 
   const stats = useMemo(() => {
     let sumPct = 0;
