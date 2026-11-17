@@ -33,7 +33,7 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
             {/* Heading Container: Fixed min-height prevents layout shaking during text animation */}
             <div className="ms-hero-heading-box" data-aos="fade-up" data-aos-duration="900" data-aos-delay="150">
               <h1 className="ms-hero-heading-exact">
-                {content?.titleBefore || 'Smart Online Examination Platform for'}{' '}
+                {content?.titleBefore || 'Smart Online Examination Platform for'}{' '} <br />
                 <span className="eduleb-ms-typed">
                   <TypeAnimation
                     key={phrases.join('|')}
