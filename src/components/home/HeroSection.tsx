@@ -30,21 +30,24 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
               {content?.badge || 'AI-POWERED ONLINE EXAMINATION & ASSESSMENT PLATFORM'}
             </div>
 
-            <h1 className="ms-hero-heading-exact" data-aos="fade-up" data-aos-duration="900" data-aos-delay="150">
-              {content?.titleBefore || 'Smart Online Examination Platform for'}{' '}
-              <span className="eduleb-ms-typed">
-                <TypeAnimation
-                  key={phrases.join('|')}
-                  sequence={sequence}
-                  speed={50}
-                  deletionSpeed={55}
-                  repeat={Infinity}
-                  cursor
-                  preRenderFirstString
-                  style={{ color: '#3861fb', display: 'inline-block', minWidth: '9ch' }}
-                />
-              </span>
-            </h1>
+            {/* Heading Container: Fixed min-height prevents layout shaking during text animation */}
+            <div className="ms-hero-heading-box" data-aos="fade-up" data-aos-duration="900" data-aos-delay="150">
+              <h1 className="ms-hero-heading-exact">
+                {content?.titleBefore || 'Smart Online Examination Platform for'}{' '} <br />
+                <span className="eduleb-ms-typed">
+                  <TypeAnimation
+                    key={phrases.join('|')}
+                    sequence={sequence}
+                    speed={50}
+                    deletionSpeed={55}
+                    repeat={Infinity}
+                    cursor
+                    preRenderFirstString
+                    style={{ color: '#3861fb', display: 'inline-block', minWidth: '9ch' }}
+                  />
+                </span>
+              </h1>
+            </div>
 
             <p className="ms-hero-sub-exact" data-aos="fade-up" data-aos-duration="900" data-aos-delay="220">
               {content?.description ||
