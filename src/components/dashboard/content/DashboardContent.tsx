@@ -1353,6 +1353,14 @@ function PasswordChangeForm({ onCancel }: { onCancel?: () => void } = {}) {
   const [message, setMessage] = useState('');
   const [apiError, setApiError] = useState('');
   const withLoader = useDashboardLoader();
+
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => {
+      setMessage('');
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [message]);
   const {
     register,
     handleSubmit,
