@@ -2354,99 +2354,6 @@ export function StudentTestsPanel() {
   const [nowTick, setNowTick] = useState(() => Date.now());
   const [activeTab, setActiveTab] = useState<'all' | 'official' | 'practice' | 'completed'>('all');
 
-  const counts = useMemo(() => {
-    let practice = 0;
-    let official = 0;
-    let completed = 0;
-    for (const t of tests) {
-      if (isPracticeExam(t)) practice++;
-      else official++;
-      if (t.attempt_status === 'submitted' || t.attempt_status === 'auto_submitted') completed++;
-    }
-    return { all: tests.length, official, practice, completed };
-  }, [tests]);
-
-  const filteredTests = useMemo(() => {
-    if (activeTab === 'practice') return tests.filter(isPracticeExam);
-    if (activeTab === 'official') return tests.filter((t) => !isPracticeExam(t));
-    if (activeTab === 'completed') return tests.filter((t) => t.attempt_status === 'submitted' || t.attempt_status === 'auto_submitted');
-    return tests;
-  }, [tests, activeTab]);
-
-  useEffect(() => {
-    setPageLoading(true);
-
-    examinationService
-      .listMyAssignedTests()
-      .then(setTests)
-      .catch((err) => setError(parseApiError(err)))
-      .finally(() => setPageLoading(false));
-  }, []);
-
-  // Update countdown every second and re-evaluate live / expired states automatically
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      setNowTick(Date.now());
-    }, 1000);
-
-    return () => window.clearInterval(id);
-  }, []);
-
-  // Periodic silent sync every 20 seconds to stay aligned with backend changes without requiring page refresh
-  useEffect(() => {
-    const syncId = window.setInterval(() => {
-      examinationService
-        .listMyAssignedTests({ skipToast: true })
-        .then(setTests)
-        .catch(() => undefined);
-    }, 20000);
-
-    return () => window.clearInterval(syncId);
-  }, []);
-
-  useDashboardLoadingEffect(loading || pageLoading);
-
-  const start = async (testId: string) => {
-    const targetTest = tests.find((x) => x.id === testId);
-    if (targetTest && (isExamExpired(targetTest) || isExamTimeEnded(targetTest))) {
-      setError('This test window has ended.');
-      return;
-    }
-    if (targetTest && isExamScheduledForLater(targetTest)) {
-      setError('This exam is scheduled for later and has not started yet.');
-      return;
-    }
-
-    setLoading(true);
-    setStartingId(testId);
-    setError('');
-
-    try {
-      const attempt = await examinationService.startAttempt(testId);
-
-      navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
-    } catch (err) {
-      const msg = parseApiError(err);
-
-      setError(msg);
-
-      // Refresh in case the exam became live
-      examinationService
-        .listMyAssignedTests()
-        .then(setTests)
-        .catch(() => undefined);
-    } finally {
-      setLoading(false);
-      setStartingId(null);
-    }
-  };
-
-  const resume = (t: ExamTest) => {
-    if (t.attempt_id) {
-      navigate(`/dashboard/exam/${t.id}/attempt/${t.attempt_id}`);
-    }
-  };
-
   /*
    * Assignment schedule has priority.
    * If there is no assignment schedule, use test schedule.
@@ -2591,6 +2498,141 @@ export function StudentTestsPanel() {
     if (isExamExpired(t)) return false;
     if (isExamScheduledForLater(t)) return false;
     return true;
+  };
+
+  const getExamPriorityRank = (t: ExamTest): number => {
+    // 0: Currently in progress (student started, needs to resume)
+    if (t.attempt_status === 'in_progress') return 0;
+    // 1: Live exam (available to start right now)
+    if (isExamLive(t)) return 1;
+    // 2: Scheduled for later (upcoming countdown)
+    if (isExamScheduledForLater(t)) return 2;
+    // 3: Completed exam (already submitted)
+    if (isCompleted(t)) return 3;
+    // 4: Expired exam (scheduled window ended)
+    if (isExamExpired(t)) return 4;
+    return 5;
+  };
+
+  const counts = useMemo(() => {
+    let practice = 0;
+    let official = 0;
+    let completed = 0;
+    for (const t of tests) {
+      if (isPracticeExam(t)) practice++;
+      else official++;
+      if (t.attempt_status === 'submitted' || t.attempt_status === 'auto_submitted') completed++;
+    }
+    return { all: tests.length, official, practice, completed };
+  }, [tests]);
+
+  const filteredTests = useMemo(() => {
+    let list: ExamTest[] = [];
+    if (activeTab === 'practice') list = tests.filter(isPracticeExam);
+    else if (activeTab === 'official') list = tests.filter((t) => !isPracticeExam(t));
+    else if (activeTab === 'completed') list = tests.filter((t) => t.attempt_status === 'submitted' || t.attempt_status === 'auto_submitted');
+    else list = [...tests];
+
+    return list.slice().sort((a, b) => {
+      const rankA = getExamPriorityRank(a);
+      const rankB = getExamPriorityRank(b);
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+
+      // Within Scheduled exams (rank 2): the one starting sooner comes first
+      if (rankA === 2) {
+        const startA = getScheduledStart(a) ? new Date(getScheduledStart(a)!).getTime() : Infinity;
+        const startB = getScheduledStart(b) ? new Date(getScheduledStart(b)!).getTime() : Infinity;
+        if (startA !== startB) return startA - startB;
+      }
+
+      // Within Completed exams (rank 3): most recently submitted comes first
+      if (rankA === 3) {
+        const subA = a.attempt_submitted_at ? new Date(a.attempt_submitted_at).getTime() : 0;
+        const subB = b.attempt_submitted_at ? new Date(b.attempt_submitted_at).getTime() : 0;
+        if (subA !== subB) return subB - subA;
+      }
+
+      // Fallback: newest published_at or created_at first
+      const pubA = a.published_at ? new Date(a.published_at).getTime() : 0;
+      const pubB = b.published_at ? new Date(b.published_at).getTime() : 0;
+      return pubB - pubA;
+    });
+  }, [tests, activeTab, nowTick]);
+
+  useEffect(() => {
+    setPageLoading(true);
+
+    examinationService
+      .listMyAssignedTests()
+      .then(setTests)
+      .catch((err) => setError(parseApiError(err)))
+      .finally(() => setPageLoading(false));
+  }, []);
+
+  // Update countdown every second and re-evaluate live / expired states automatically
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setNowTick(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(id);
+  }, []);
+
+  // Periodic silent sync every 20 seconds to stay aligned with backend changes without requiring page refresh
+  useEffect(() => {
+    const syncId = window.setInterval(() => {
+      examinationService
+        .listMyAssignedTests({ skipToast: true })
+        .then(setTests)
+        .catch(() => undefined);
+    }, 20000);
+
+    return () => window.clearInterval(syncId);
+  }, []);
+
+  useDashboardLoadingEffect(loading || pageLoading);
+
+  const start = async (testId: string) => {
+    const targetTest = tests.find((x) => x.id === testId);
+    if (targetTest && (isExamExpired(targetTest) || isExamTimeEnded(targetTest))) {
+      setError('This test window has ended.');
+      return;
+    }
+    if (targetTest && isExamScheduledForLater(targetTest)) {
+      setError('This exam is scheduled for later and has not started yet.');
+      return;
+    }
+
+    setLoading(true);
+    setStartingId(testId);
+    setError('');
+
+    try {
+      const attempt = await examinationService.startAttempt(testId);
+
+      navigate(`/dashboard/exam/${testId}/attempt/${attempt.id}`);
+    } catch (err) {
+      const msg = parseApiError(err);
+
+      setError(msg);
+
+      // Refresh in case the exam became live
+      examinationService
+        .listMyAssignedTests()
+        .then(setTests)
+        .catch(() => undefined);
+    } finally {
+      setLoading(false);
+      setStartingId(null);
+    }
+  };
+
+  const resume = (t: ExamTest) => {
+    if (t.attempt_id) {
+      navigate(`/dashboard/exam/${t.id}/attempt/${t.attempt_id}`);
+    }
   };
 
   const statusMeta = (t: ExamTest) => {
