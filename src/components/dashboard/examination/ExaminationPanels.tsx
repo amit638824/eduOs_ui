@@ -4947,6 +4947,14 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const withLoader = useDashboardLoader();
   const isFirstTimeSession = typeof window !== 'undefined' && sessionStorage.getItem('first_time_login') === 'true';
+
+  useEffect(() => {
+    if (!message) return;
+    const timer = setTimeout(() => {
+      setMessage('');
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [message]);
   const {
     register,
     handleSubmit,
@@ -4956,7 +4964,7 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
     mode: 'onChange',
     values: {
       firstName: user?.firstName ?? '',
-      lastName: user?.lastName ?? '',
+      lastName: (!user?.lastName || user.lastName === '.' || user.lastName === '-' || user.lastName === '—' || user.lastName.toUpperCase() === 'NA') ? '' : user.lastName,
       email: user?.email ?? '',
       phone: user?.phone ?? '',
       bio: '',
@@ -4986,9 +4994,11 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
     setApiError('');
     await withLoader(async () => {
       try {
+        const rawLast = values.lastName?.trim();
+        const cleanLast = (!rawLast || rawLast === '.' || rawLast === '-' || rawLast === '—' || rawLast.toUpperCase() === 'NA') ? undefined : rawLast;
         await examinationService.updateProfile({
           firstName: values.firstName.trim(),
-          lastName: values.lastName?.trim() || undefined,
+          lastName: cleanLast,
           phone: values.phone?.trim() || undefined,
         });
         await refreshUser();

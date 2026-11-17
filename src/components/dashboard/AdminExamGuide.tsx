@@ -54,6 +54,7 @@ interface AdminExamGuideProps {
   activeStep?: number;
   compact?: boolean;
   testId?: string;
+  allGreen?: boolean;
 }
 
 function stepHref(step: number, testId: string | undefined, testsHref: string): string {
@@ -103,7 +104,12 @@ export function ExamStepper({
   );
 }
 
-export default function AdminExamGuide({ activeStep, compact = false, testId }: AdminExamGuideProps) {
+export default function AdminExamGuide({
+  activeStep,
+  compact = false,
+  testId,
+  allGreen = true,
+}: AdminExamGuideProps) {
   const { user } = useAuth();
   const testsHref = getTestsListPath(user?.roles ?? []);
   const help = activeStep ? STEP_HELP[activeStep] : 'Follow the five steps from left to right.';
@@ -118,8 +124,8 @@ export default function AdminExamGuide({ activeStep, compact = false, testId }: 
       )}
       <ol className="exam-stepper" aria-label="Exam setup">
         {SETUP_STEPS.map((item) => {
-          const done = Boolean(activeStep && item.step < activeStep);
-          const active = activeStep === item.step;
+          const done = allGreen || Boolean(activeStep && item.step < activeStep);
+          const active = !allGreen && activeStep === item.step;
           const state = done ? 'done' : active ? 'active' : 'todo';
           return (
             <li key={item.step} className={`exam-stepper__item exam-stepper__item--${state}`}>
