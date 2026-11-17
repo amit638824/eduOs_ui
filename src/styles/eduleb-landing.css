@@ -953,13 +953,44 @@ body.eduleb-page .eduleb-ms-hero .ms-mission-badge {
   font-family: 'Roboto', sans-serif !important;
 }
 
+/* Hero heading container: fixed min-height prevents layout shaking/jumping during typewriter animation */
+.ms-hero-heading-box,
+body.eduleb-page .eduleb-ms-hero .ms-hero-heading-box {
+  min-height: 180px;
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
 body.eduleb-page .eduleb-ms-hero .ms-hero-heading-exact {
   font-family: 'Roboto', sans-serif !important;
   font-size: clamp(2rem, 4vw, 3.15rem) !important;
   font-weight: 800 !important;
   color: #0f172a !important;
-  min-height: 2.5em;
+  min-height: 3.6em;
   line-height: 1.2 !important;
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 1199px) {
+  .ms-hero-heading-box,
+  body.eduleb-page .eduleb-ms-hero .ms-hero-heading-box {
+    min-height: 195px;
+  }
+}
+
+@media (max-width: 991px) {
+  .ms-hero-heading-box,
+  body.eduleb-page .eduleb-ms-hero .ms-hero-heading-box {
+    min-height: 170px;
+  }
+}
+
+@media (max-width: 575px) {
+  .ms-hero-heading-box,
+  body.eduleb-page .eduleb-ms-hero .ms-hero-heading-box {
+    min-height: 205px;
+  }
 }
 
 body.eduleb-page .eduleb-ms-typed {
@@ -2895,4 +2926,160 @@ body.eduleb-page.nav-scrolled #navigation#navigation.eduleb-topbar {
   background-color: #fff !important;
   background-image: none !important;
   opacity: 1 !important;
+}
+
+/* ============================================================
+   EXAMINATION FACULTY / TEAM CARDS: UNIFORM HEIGHT & PHOTO FIT
+   ============================================================ */
+body.eduleb-page .team_area .row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+}
+
+body.eduleb-page .team_area .row > [class*="col-"] {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+body.eduleb-page .our-team {
+  height: 100% !important;
+  min-height: 410px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 12px !important;
+  text-align: center !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease !important;
+  box-sizing: border-box !important;
+}
+
+body.eduleb-page .our-team:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1) !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* Image container with fixed height so ANY photo (small, big, square, landscape, portrait) fits uniformly */
+body.eduleb-page .our-team .team-content {
+  position: relative !important;
+  width: 100% !important;
+  height: 250px !important;
+  min-height: 250px !important;
+  max-height: 250px !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  background-color: #f1f5f9 !important;
+  flex-shrink: 0 !important;
+}
+
+body.eduleb-page .our-team .team-content a {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+body.eduleb-page .our-team .team-content img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 20% !important;
+  display: block !important;
+  transition: transform 0.4s ease !important;
+}
+
+body.eduleb-page .our-team:hover .team-content img {
+  transform: scale(1.08) !important;
+}
+
+/* Social links overlay */
+body.eduleb-page .our-team .social-links {
+  padding: 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+  position: absolute !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  display: flex !important;
+  z-index: 2 !important;
+}
+
+body.eduleb-page .our-team .social-links li a {
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #fff !important;
+  background: #3861fb !important;
+  font-size: 13px !important;
+  transition: background 0.25s ease !important;
+  text-decoration: none !important;
+}
+
+body.eduleb-page .our-team .social-links li a:hover {
+  background: #f26b65 !important;
+}
+
+/* Faculty Info (Name & Role) */
+body.eduleb-page .our-team .team-prof {
+  padding: 14px 6px 8px !important;
+  flex-grow: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  min-height: 85px !important;
+}
+
+body.eduleb-page .our-team .team-prof h3 {
+  font-size: 1.08rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 0 0 6px 0 !important;
+  line-height: 1.3 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+body.eduleb-page .our-team .team-prof span {
+  font-size: 0.825rem !important;
+  color: #64748b !important;
+  line-height: 1.4 !important;
+  min-height: 2.8em !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+/* Bottom Stats Bar: pinned to bottom across all cards */
+body.eduleb-page .our-team .sth_det2 {
+  border-top: 1px solid #f1f5f9 !important;
+  padding-top: 10px !important;
+  margin-top: auto !important;
+  display: flex !important;
+  justify-content: space-around !important;
+  align-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+body.eduleb-page .our-team .sth_det2 > span {
+  color: #3861fb !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  font-size: 0.8rem !important;
+  margin: 0 4px !important;
+  white-space: nowrap !important;
+}
+
+body.eduleb-page .our-team .sth_det2 u {
+  text-decoration: none !important;
+  color: #334155 !important;
+  font-weight: 600 !important;
+  margin-left: 4px !important;
+  font-family: inherit !important;
 }

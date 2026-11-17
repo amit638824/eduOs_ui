@@ -3,7 +3,7 @@ import type { HomepageContent } from '@/types/homepage';
 const fallbackInstructors = [
   {
     img: '/eduleb/img/team/rashi.jpg',
-    name: 'Prof. Ra Sharma',
+    name: 'Prof. Raashi Sharma',
     role: 'Head of IT & Computer Examinations',
     courses: '45+ Tests',
     students: '12,500+ Assessed',
@@ -43,15 +43,15 @@ export default function InstructorsSection({ content }: { content?: HomepageCont
               'Our question papers and mock tests are designed, peer-reviewed, and verified by certified educators and industry leaders.'}
           </p>
         </div>
-        <div className="row">
+        <div className="row g-4">
           {instructors.map((ins, index) => (
             <div
               key={ins.name}
-              className="col-lg-3 col-sm-6 col-xs-12"
+              className="col-lg-3 col-sm-6 col-12 d-flex"
               data-aos="fade-up"
               data-aos-delay={index * 120}
             >
-              <div className="our-team eduleb-hover-lift">
+              <div className="our-team eduleb-hover-lift w-100">
                 <div className="team-content" data-aos="zoom-in" data-aos-delay={index * 120 + 80}>
                   <a href="#">
                     <img src={ins.img} alt={ins.name} />
