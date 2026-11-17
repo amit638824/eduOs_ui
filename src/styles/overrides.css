@@ -3262,3 +3262,51 @@ body.dark_mode .sca-student-exam-live--expired .edtp-btn:disabled {
   border-color: rgba(255, 255, 255, 0.15) !important;
   color: #94a3b8 !important;
 }
+
+/* ── Option B: Student Countdown Box (Warm Amber / Alert Orange) ── */
+.sca-student-exam-countdown-box {
+  margin: 16px 0 !important;
+  padding: 14px 16px !important;
+  border-radius: 12px !important;
+  text-align: center !important;
+  background: #fffbeb !important;
+  border: 1px solid #fde68a !important;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.08) !important;
+}
+
+.sca-student-exam-countdown-box > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  margin-bottom: 6px !important;
+  color: #b45309 !important;
+}
+
+.sca-student-exam-countdown-box > strong {
+  display: block !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  font-weight: 700 !important;
+  color: #78350f !important;
+  letter-spacing: 0.02em !important;
+}
+
+body.dark_mode .sca-student-exam-countdown-box,
+.sca-dashboard--dark .sca-student-exam-countdown-box {
+  background: rgba(245, 158, 11, 0.1) !important;
+  border-color: rgba(245, 158, 11, 0.28) !important;
+  box-shadow: none !important;
+}
+
+body.dark_mode .sca-student-exam-countdown-box > span,
+.sca-dashboard--dark .sca-student-exam-countdown-box > span {
+  color: #fcd34d !important;
+}
+
+body.dark_mode .sca-student-exam-countdown-box > strong,
+.sca-dashboard--dark .sca-student-exam-countdown-box > strong {
+  color: #fef3c7 !important;
+}
+

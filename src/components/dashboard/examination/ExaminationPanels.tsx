@@ -2913,6 +2913,7 @@ export function StudentTestsPanel() {
                     wait > 0 && (
                       <div className="sca-student-exam-countdown-box">
                         <span>
+                          <FiClock style={{ fontSize: 13, verticalAlign: '-1px', marginRight: 5 }} />
                           Exam starts in
                         </span>
 
