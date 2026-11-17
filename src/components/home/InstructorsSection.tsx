@@ -2,8 +2,8 @@ import type { HomepageContent } from '@/types/homepage';
 
 const fallbackInstructors = [
   {
-    img: '/eduleb/img/team/team1.jpg',
-    name: 'Prof. Rajesh Sharma',
+    img: '/eduleb/img/team/rashi.jpg',
+    name: 'Prof. Ra Sharma',
     role: 'Head of IT & Computer Examinations',
     courses: '45+ Tests',
     students: '12,500+ Assessed',
