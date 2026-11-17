@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -13,6 +13,14 @@ export default function ForgotPasswordPage() {
   const [devToken, setDevToken] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    if (!apiError) return;
+    const timer = window.setTimeout(() => {
+      setApiError('');
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [apiError]);
+
   const {
     register,
     handleSubmit,
@@ -22,6 +30,10 @@ export default function ForgotPasswordPage() {
     mode: 'onTouched',
     defaultValues: { email: '' },
   });
+
+  const onInvalid = () => {
+    setApiError('Please enter correct email address');
+  };
 
   const onSubmit = async (values: ForgotPasswordFormValues) => {
     setApiError('');
@@ -37,7 +49,16 @@ export default function ForgotPasswordPage() {
         setDevToken(result.devResetToken as string);
       }
     } catch (err) {
-      setApiError(parseApiError(err));
+      const errMessage = parseApiError(err);
+      if (
+        !errMessage ||
+        errMessage.toLowerCase().includes('validation failed') ||
+        errMessage.toLowerCase().includes('validation')
+      ) {
+        setApiError('Please enter correct email address');
+      } else {
+        setApiError(errMessage);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -73,7 +94,7 @@ export default function ForgotPasswordPage() {
                   </p>
                 )}
 
-                <form onSubmit={handleSubmit(onSubmit)} noValidate>
+                <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
                   <div className="login__form">
                     <label className="form__label" htmlFor="forgotEmail">
                       Email address
