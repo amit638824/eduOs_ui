@@ -1,5 +1,5 @@
 import type { HomepageContent } from '@/types/homepage';
-
+// ...
 const fallbackInstructors = [
   {
     img: '/eduleb/img/team/rashi.jpg',
