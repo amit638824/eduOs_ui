@@ -4,12 +4,21 @@ export function toCamelCase(value: string): string {
   return value.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
 }
 
+function cleanPlaceholderName(value: unknown): string {
+  const str = String(value ?? '').trim();
+  if (!str || str === '.' || str === '-' || str === '—' || str.toUpperCase() === 'NA') {
+    return '';
+  }
+  return str;
+}
+
 export function normalizeUser(raw: Record<string, unknown>): ApiUser {
   return {
     id: String(raw.id),
     email: String(raw.email),
     firstName: String(raw.firstName ?? raw.first_name ?? ''),
-    lastName: String(raw.lastName ?? raw.last_name ?? ''),
+    lastName: cleanPlaceholderName(raw.lastName ?? raw.last_name),
+
     phone: (raw.phone as string | null) ?? null,
     organizationId:
       (raw.organizationId as string | null) ?? (raw.organization_id as string | null) ?? null,
