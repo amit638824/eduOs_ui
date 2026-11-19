@@ -11,6 +11,7 @@ import type { AdminDashboardData, OrgAnalytics, StudentStats, TestAttempt } from
 import type { Notification } from '@/services/platform.service';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import { formatDate, formatRelativeDate } from '@/utils/dateFormat';
+import { formatPhoneWithCountryCode } from '@/utils/normalize';
 import { notify } from '@/lib/toast';
 
 function sparkGeometry(values: number[]) {
@@ -445,7 +446,7 @@ export default function DashboardProfilePage() {
                   <div className="edtp-tile-item">
                     <div className="edtp-tile-text">
                       <span className="edtp-tile-label">Phone Number</span>
-                      <span className="edtp-tile-value">{user.phone || '—'}</span>
+                      <span className="edtp-tile-value">{user.phone ? formatPhoneWithCountryCode(user.phone) : '—'}</span>
                     </div>
                     <span className="edtp-badge edtp-badge--primary">Primary</span>
                   </div>

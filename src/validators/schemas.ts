@@ -114,9 +114,13 @@ export const registerSchema = yup.object({
   phone: yup
     .string()
     .trim()
-    .default('')
-    .max(20, 'Max 20 characters')
-    .test('phone', 'Enter a valid phone number', (value) => !value || /^[+\d\s()-]+$/.test(value)),
+    .test('phone-10-digits', 'Enter a valid 10-digit number.', (value) => {
+      if (!value || value.trim() === '') return true;
+      const cleaned = value.replace(/^(\+91|\+91\s*|91)/, '').replace(/[\s-]/g, '');
+      return /^\d{10}$/.test(cleaned);
+    })
+    .optional()
+    .default(''),
   password: passwordSchema,
 });
 
@@ -133,7 +137,7 @@ export const profileSettingsSchema = yup.object({
     .trim()
     .test('phone-10-digits', 'Enter a valid 10-digit number.', (value) => {
       if (!value || value.trim() === '') return true;
-      const cleaned = value.replace(/[\s-]/g, '');
+      const cleaned = value.replace(/^(\+91|\+91\s*|91)/, '').replace(/[\s-]/g, '');
       return /^\d{10}$/.test(cleaned);
     })
     .optional()
@@ -273,8 +277,11 @@ export const becomeTeacherSchema = yup.object({
   phone: yup
     .string()
     .trim()
-    .max(20)
-    .matches(/^[+\d\s()-]*$/, 'Enter a valid phone number')
+    .test('phone-10-digits', 'Enter a valid 10-digit number.', (value) => {
+      if (!value || value.trim() === '') return true;
+      const cleaned = value.replace(/^(\+91|\+91\s*|91)/, '').replace(/[\s-]/g, '');
+      return /^\d{10}$/.test(cleaned);
+    })
     .optional()
     .default(''),
   agreeToPrivacy: yup

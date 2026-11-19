@@ -113,7 +113,7 @@ export default function ResetPasswordPage() {
 
                   <div className="login__form">
                     <label className="form__label" htmlFor="resetPassword">
-                      New password
+                      New Password
                     </label>
                     <PasswordInput
                       id="resetPassword"
@@ -129,7 +129,7 @@ export default function ResetPasswordPage() {
 
                   <div className="login__form">
                     <label className="form__label" htmlFor="resetConfirmPassword">
-                      Confirm password
+                      Confirm Password
                     </label>
                     <PasswordInput
                       id="resetConfirmPassword"
@@ -155,7 +155,7 @@ export default function ResetPasswordPage() {
                 </form>
 
                 <p className="auth-back-link">
-                  <Link to="/login">Back to login</Link>
+                  <Link to="/login">Back to Login</Link>
                 </p>
               </div>
             </div>

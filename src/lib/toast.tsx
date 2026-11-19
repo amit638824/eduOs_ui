@@ -10,6 +10,7 @@ type ToastExtra = {
   status?: number;
   code?: string;
   count?: number;
+  position?: ToastOptions['position'];
 };
 
 const DEDUPE_MS = 4000;
@@ -153,9 +154,9 @@ function push(tone: ToastTone, message: string, extra?: ToastExtra): void {
   if (!claim(text)) return;
   if (tone === 'success') lastSuccessAt = Date.now();
   const options: ToastOptions = {
-    position: 'top-right',
+    position: extra?.position ?? 'top-right',
     theme: 'light',
-    autoClose: tone === 'error' ? 5000 : 3200,
+    autoClose: tone === 'error' ? 5000 : 3600,
     toastId: `toast:${normalizeText(text).slice(0, 100)}`,
   };
   const node = <ToastCard title={extra?.title} message={text} count={extra?.count} />;

@@ -7,6 +7,7 @@ import type {
 import { resolveImageUrl } from '@/utils/image';
 import { isOrgStaff, isSuperAdmin } from '@/utils/dashboardRole';
 import { formatDateTime } from '@/utils/dateFormat';
+import { formatPhoneWithCountryCode } from '@/utils/normalize';
 
 const base = '/dashboard';
 
@@ -520,7 +521,7 @@ export function buildProfileFields(user: ApiUser) {
 
     {
       label: 'Phone Number',
-      value: user.phone ?? '—',
+      value: user.phone ? formatPhoneWithCountryCode(user.phone) : '—',
     },
 
     {

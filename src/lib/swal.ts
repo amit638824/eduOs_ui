@@ -52,8 +52,12 @@ export async function confirmAction(options: {
 }
 
 /** Shows the API message. A title is used only when no API message was passed. */
-export function showSuccess(title: string, text?: string): void {
-  notify.success(text || title);
+export function showSuccess(
+  title: string,
+  text?: string,
+  options?: { position?: 'top-right' | 'top-center' | 'top-left' | 'bottom-right' | 'bottom-center' | 'bottom-left' },
+): void {
+  notify.success(text || title, options);
 }
 
 /** Shows the API message. A title is used only when no API message was passed. */

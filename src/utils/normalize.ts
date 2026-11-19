@@ -68,3 +68,37 @@ export function normalizeBranch(raw: Record<string, unknown>): Branch {
     createdAt: String(raw.createdAt ?? raw.created_at ?? ''),
   };
 }
+
+/**
+ * Strips country codes (+91, 91) or leading zero to get the bare 10-digit mobile number for inputs.
+ */
+export function extract10DigitPhone(phone?: string | null): string {
+  if (!phone) return '';
+  let digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('91') && digits.length > 10) {
+    digits = digits.slice(2);
+  } else if (digits.startsWith('0') && digits.length > 10) {
+    digits = digits.slice(1);
+  }
+  return digits.slice(-10);
+}
+
+/**
+ * Formats a phone number for display with +91 country code.
+ */
+export function formatPhoneWithCountryCode(phone?: string | null): string {
+  if (!phone || !phone.trim()) return '';
+  const trimmed = phone.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  if (digits.startsWith('91') && digits.length > 10) {
+    return `+91 ${digits.slice(2, 12)}`;
+  }
+  if (digits.length === 10) {
+    return `+91 ${digits}`;
+  }
+  if (trimmed.startsWith('+91')) {
+    return trimmed;
+  }
+  return `+91 ${trimmed}`;
+}
+

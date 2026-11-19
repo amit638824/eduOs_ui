@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { FormError, inputClassName } from '@/components/ui/FormField';
+import { inputClassName } from '@/components/ui/FormField';
 import { parseApiError } from '@/lib/errors';
 import * as authService from '@/services/auth.service';
 import { forgotPasswordSchema, type ForgotPasswordFormValues } from '@/validators/schemas';
@@ -41,11 +41,13 @@ export default function ForgotPasswordPage() {
     setSubmitting(true);
     try {
       const result = await authService.forgotPassword(values.email);
-      setMessage(
-        (result.message as string) ??
-          'If an account exists for this email, you will receive reset instructions shortly.',
-      );
-      if (result.devResetToken) {
+      const resMsg = (result?.message as string) || '';
+      if (!resMsg || resMsg.includes('If the email exists') || resMsg.includes('If an account exists')) {
+        setMessage('Email sent successfully');
+      } else {
+        setMessage(resMsg || 'Email sent successfully');
+      }
+      if (result?.devResetToken) {
         setDevToken(result.devResetToken as string);
       }
     } catch (err) {
@@ -56,6 +58,12 @@ export default function ForgotPasswordPage() {
         errMessage.toLowerCase().includes('validation')
       ) {
         setApiError('Please enter correct email address');
+      } else if (
+        errMessage.toLowerCase().includes('not registered') ||
+        errMessage.toLowerCase().includes('not found') ||
+        errMessage.toLowerCase() === 'user'
+      ) {
+        setApiError('This email id is not registered with us');
       } else {
         setApiError(errMessage);
       }
@@ -71,9 +79,9 @@ export default function ForgotPasswordPage() {
             <div className="col-xl-5 col-lg-6 col-md-8" data-aos="fade-up">
               <div className="loginarea__wraper auth-card">
                 <div className="login__heading">
-                  <h3 className="login__title">Reset your password</h3>
+                  <h3 className="login__title">Reset Your Password</h3>
                   <p className="login__description">
-                    Enter your email and we will send reset instructions.
+                    Enter your email address, and we'll send you a password reset link.
                   </p>
                 </div>
 
@@ -97,7 +105,7 @@ export default function ForgotPasswordPage() {
                 <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
                   <div className="login__form">
                     <label className="form__label" htmlFor="forgotEmail">
-                      Email address
+                      Email Address
                     </label>
                     <input
                       id="forgotEmail"
@@ -107,7 +115,6 @@ export default function ForgotPasswordPage() {
                       autoComplete="email"
                       {...register('email')}
                     />
-                    <FormError message={errors.email?.message} />
                   </div>
                   <div className="login__button">
                     <button
@@ -115,13 +122,13 @@ export default function ForgotPasswordPage() {
                       className="default__button auth-submit-btn"
                       disabled={submitting}
                     >
-                      {submitting ? 'Sending…' : 'Send reset link'}
+                      {submitting ? 'Sending…' : 'Send Reset Link'}
                     </button>
                   </div>
                 </form>
 
                 <p className="auth-back-link">
-                  <Link to="/login">Back to login</Link>
+                  <Link to="/login">Back to Login</Link>
                 </p>
               </div>
             </div>

@@ -2776,15 +2776,16 @@ body.dark_mode .sca-notifications-card .org-table thead tr,
   color: #14532d !important;
 }
 
-/* 2. Toastify Pop-up Alerts Centered (top-center) */
-.Toastify__toast-container--top-center {
+/* 2. Toastify Pop-up Alerts (top-right, left-aligned) */
+.Toastify__toast-container--top-right {
   top: 24px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-  margin: 0 auto !important;
+  right: 24px !important;
+  left: auto !important;
+  transform: none !important;
+  margin: 0 !important;
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important;
+  align-items: flex-end !important;
   width: auto !important;
   max-width: 520px !important;
   z-index: 999999 !important;
@@ -2792,22 +2793,41 @@ body.dark_mode .sca-notifications-card .org-table thead tr,
 
 .Toastify__toast {
   border-radius: 12px !important;
-  padding: 14px 22px !important;
+  padding: 14px 20px !important;
   box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.18) !important;
-  text-align: center !important;
+  text-align: left !important;
   display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
 }
 
 .Toastify__toast-body {
-  text-align: center !important;
+  text-align: left !important;
   display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
   gap: 10px !important;
   font-size: 0.875rem !important;
   font-weight: 600 !important;
+}
+
+.Toastify__toast-icon {
+  margin-top: 2px !important;
+}
+
+.ms-toast {
+  text-align: left !important;
+  align-items: flex-start !important;
+}
+
+.ms-toast__copy {
+  text-align: left !important;
+}
+
+.ms-toast__message {
+  text-align: left !important;
+  font-size: 0.875rem !important;
+  line-height: 1.45 !important;
 }
 
 /* Success Pop-up Toast: GREEN */
@@ -2821,6 +2841,7 @@ body.dark_mode .sca-notifications-card .org-table thead tr,
 .Toastify__toast--success .ms-toast__message {
   color: #14532d !important;
   font-weight: 600 !important;
+  text-align: left !important;
 }
 
 /* Error / Unsuccessful Pop-up Toast: RED */
@@ -2834,6 +2855,7 @@ body.dark_mode .sca-notifications-card .org-table thead tr,
 .Toastify__toast--error .ms-toast__message {
   color: #991b1b !important;
   font-weight: 600 !important;
+  text-align: left !important;
 }
 
 /* Dark mode support for centered alerts */
