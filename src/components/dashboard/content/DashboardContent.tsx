@@ -1915,13 +1915,24 @@ function BecomeTeacherForm() {
           <div className="dashboard__form__wraper">
             <div className="dashboard__form__input">
               <label htmlFor="ph">Phone</label>
-              <input
-                id="ph"
-                type="tel"
-                placeholder="Phone"
-                className={inputClassName('', !!errors.phone)}
-                {...register('phone')}
-              />
+              <div className="org-phone-input-group">
+                <span className="org-phone-prefix">+91</span>
+                <input
+                  id="ph"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="Enter 10-digit number."
+                  className={`org-phone-input ${inputClassName('', !!errors.phone)}`}
+                  {...register('phone')}
+                  onInput={(e) => {
+                    let val = e.currentTarget.value.replace(/\D/g, '');
+                    if (val.startsWith('91') && val.length > 10) val = val.slice(2);
+                    else if (val.startsWith('0') && val.length > 10) val = val.slice(1);
+                    e.currentTarget.value = val.slice(0, 10);
+                  }}
+                />
+              </div>
               <FormError message={errors.phone?.message} />
             </div>
           </div>

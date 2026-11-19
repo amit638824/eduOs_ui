@@ -23,6 +23,7 @@ import { EdtpBtn, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmAction, confirmDelete, showError, showSuccess } from '@/lib/swal';
 import { formatDateTime } from '@/utils/dateFormat';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
+import { extract10DigitPhone } from '@/utils/normalize';
 import { getOptionText, getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
 import { BulkImportCsvModal } from './BulkImportCsvModal';
@@ -5009,7 +5010,7 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
       firstName: user?.firstName ?? '',
       lastName: (!user?.lastName || user.lastName === '.' || user.lastName === '-' || user.lastName === '—' || user.lastName.toUpperCase() === 'NA') ? '' : user.lastName,
       email: user?.email ?? '',
-      phone: user?.phone ?? '',
+      phone: extract10DigitPhone(user?.phone),
       bio: '',
     },
   });
@@ -5039,10 +5040,13 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
       try {
         const rawLast = values.lastName?.trim();
         const cleanLast = (!rawLast || rawLast === '.' || rawLast === '-' || rawLast === '—' || rawLast.toUpperCase() === 'NA') ? undefined : rawLast;
+        const rawPhone = values.phone?.trim();
+        const tenDigits = rawPhone ? extract10DigitPhone(rawPhone) : '';
+        const formattedPhone = tenDigits ? `+91 ${tenDigits}` : undefined;
         await examinationService.updateProfile({
           firstName: values.firstName.trim(),
           lastName: cleanLast,
-          phone: values.phone?.trim() || undefined,
+          phone: formattedPhone,
         });
         await refreshUser();
         if (typeof window !== 'undefined') {
@@ -5160,23 +5164,29 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
           <label className="org-form-label" htmlFor="phone">
             Phone Number
           </label>
-          <input
-            id="phone"
-            type="tel"
-            inputMode="numeric"
-            maxLength={10}
-            className="org-form-input"
-            placeholder="Enter 10-digit number."
-            {...phoneRegister}
-            onFocus={() => setFocusedField('phone')}
-            onBlur={(e) => {
-              setFocusedField(null);
-              phoneRegister.onBlur(e);
-            }}
-            onInput={(e) => {
-              e.currentTarget.value = e.currentTarget.value.replace(/\D/g, '').slice(0, 10);
-            }}
-          />
+          <div className="org-phone-input-group">
+            <span className="org-phone-prefix">+91</span>
+            <input
+              id="phone"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              className="org-form-input org-phone-input"
+              placeholder="Enter 10-digit number."
+              {...phoneRegister}
+              onFocus={() => setFocusedField('phone')}
+              onBlur={(e) => {
+                setFocusedField(null);
+                phoneRegister.onBlur(e);
+              }}
+              onInput={(e) => {
+                let val = e.currentTarget.value.replace(/\D/g, '');
+                if (val.startsWith('91') && val.length > 10) val = val.slice(2);
+                else if (val.startsWith('0') && val.length > 10) val = val.slice(1);
+                e.currentTarget.value = val.slice(0, 10);
+              }}
+            />
+          </div>
           <FormError message={getErrorMessage('phone')} />
         </div>
       </div>

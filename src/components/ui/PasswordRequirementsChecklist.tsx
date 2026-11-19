@@ -48,6 +48,8 @@ export function PasswordRequirementsChecklist({
 }: PasswordRequirementsChecklistProps) {
   const rules = getPasswordValidationRules(password);
   const allMet = rules.every((r) => r.met);
+  if (allMet) return null;
+
   const metCount = rules.filter((r) => r.met).length;
 
   return (

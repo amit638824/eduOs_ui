@@ -191,6 +191,7 @@ export function OrganizationsPanel() {
           showSuccess(
             'Created!',
             `Organization created. An email to set password has been sent to the organization (${emailedTo}).`,
+            { position: 'top-right' },
           );
         }
         closeDrawer();

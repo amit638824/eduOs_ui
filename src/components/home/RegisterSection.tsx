@@ -6,6 +6,7 @@ import { useAuth } from '@/context/AuthContext';
 import { parseApiError } from '@/lib/errors';
 import { FormError, PasswordInput, PasswordRequirementsChecklist } from '@/components/ui/FormField';
 import { registerSchema, type RegisterFormValues } from '@/validators/schemas';
+import { extract10DigitPhone } from '@/utils/normalize';
 
 interface RegisterSectionProps {
   variant?: 'default' | 'auth';
@@ -45,7 +46,7 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
         password: values.password,
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
-        phone: values.phone?.trim() || undefined,
+        phone: values.phone ? (extract10DigitPhone(values.phone) ? `+91 ${extract10DigitPhone(values.phone)}` : undefined) : undefined,
         role: 'student',
       });
       navigate(dashboardPath);
@@ -113,13 +114,37 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
 
                 <div className="mb-3">
                   <label className="form-label" style={{ fontSize: '0.85rem', fontWeight: 600 }}>Phone (optional)</label>
-                  <input
-                    className="form-control"
-                    type="tel"
-                    placeholder="Enter 10-digit number."
-                    maxLength={10}
-                    {...register('phone')}
-                  />
+                  <div className="input-group">
+                    <span
+                      className="input-group-text"
+                      style={{
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        background: '#f1f5f9',
+                        borderColor: '#cbd5e1',
+                        color: '#334155',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      +91
+                    </span>
+                    <input
+                      className="form-control"
+                      type="tel"
+                      inputMode="numeric"
+                      placeholder="Enter 10-digit number."
+                      maxLength={10}
+                      {...register('phone')}
+                      onInput={(e) => {
+                        let val = e.currentTarget.value.replace(/\D/g, '');
+                        if (val.startsWith('91') && val.length > 10) val = val.slice(2);
+                        else if (val.startsWith('0') && val.length > 10) val = val.slice(1);
+                        e.currentTarget.value = val.slice(0, 10);
+                      }}
+                    />
+                  </div>
                   <FormError message={errors.phone?.message} />
                 </div>
 
