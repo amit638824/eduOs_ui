@@ -41,15 +41,26 @@ import '@/styles/toast.css';
 function ScrollToTop() {
   const { pathname, search, hash } = useLocation();
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    const raf = requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
+    if (hash) {
+      const id = hash.replace('#', '');
+      const scroll = () => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+      scroll();
+      const t1 = setTimeout(scroll, 100);
+      const t2 = setTimeout(scroll, 300);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-    });
-    return () => cancelAnimationFrame(raf);
+    }
   }, [pathname, search, hash]);
   return null;
 }

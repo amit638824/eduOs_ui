@@ -14,24 +14,16 @@ export default function Header() {
     e.preventDefault();
     setMenuOpen(false);
 
-    if (window.location.pathname !== '/') {
-      navigate('/' + targetId);
-      return;
+    if (window.location.pathname === '/') {
+      const id = targetId.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+        window.history.pushState(null, '', targetId);
+        return;
+      }
     }
-
-    const id = targetId.replace('#', '');
-    const element = document.getElementById(id);
-    if (element) {
-      const headerOffset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
-      window.history.pushState(null, '', targetId);
-    }
+    navigate('/' + targetId);
   };
 
   const handleLoginClick = (e: React.MouseEvent) => {
