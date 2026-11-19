@@ -13,7 +13,7 @@ export default function HelpPage() {
             <h3>How can we help?</h3>
             <p>
               Contact {parentCompany.name} support for login help, online test access, admission
-              enquiries, and institute onboarding. Reach out to our support team at Vivek@techwagger.com or call during business hours.
+              enquiries, and institute onboarding. Reach out to our support team at vivek@techwagger.com or call during business hours.
             </p>
             <ul>
               <li>Phone: {contact.phone}</li>
