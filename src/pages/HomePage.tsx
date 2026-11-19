@@ -18,14 +18,7 @@ export default function HomePage() {
     const id = targetId.replace('#', '');
     const element = document.getElementById(id);
     if (element) {
-      const headerOffset = 80;
-      const elementPosition = element.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth',
-      });
+      element.scrollIntoView({ behavior: 'smooth' });
       window.history.pushState(null, '', targetId);
     }
   };
@@ -37,15 +30,7 @@ export default function HomePage() {
         const id = hash.replace('#', '');
         const element = document.getElementById(id);
         if (element) {
-          setTimeout(() => {
-            const headerOffset = 80;
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-            window.scrollTo({
-              top: offsetPosition,
-              behavior: 'smooth',
-            });
-          }, 100);
+          element.scrollIntoView({ behavior: 'smooth' });
         }
       }
     };
