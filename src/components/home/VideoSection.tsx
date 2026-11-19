@@ -11,7 +11,7 @@ export default function VideoSection({ content }: { content?: HomepageContent['v
               data-aos="zoom-in"
               data-aos-duration="800"
               style={{
-                backgroundImage: `url(${content?.image || '/eduleb/img/bg/video.jpg'})`,
+                backgroundImage: `url(${content?.image || 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80'})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center center',
               }}

@@ -30,12 +30,12 @@ body.eduleb-page .main_wrapper.eduleb-main {
   width: 100%;
 }
 
-body.eduleb-page .main_wrapper.eduleb-main > *:not(.footer):not(footer) {
+body.eduleb-page .main_wrapper.eduleb-main>*:not(.footer):not(footer) {
   flex: 0 0 auto;
 }
 
-body.eduleb-page .main_wrapper.eduleb-main > .footer,
-body.eduleb-page .main_wrapper.eduleb-main > footer {
+body.eduleb-page .main_wrapper.eduleb-main>.footer,
+body.eduleb-page .main_wrapper.eduleb-main>footer {
   margin-top: auto !important;
 }
 
@@ -172,15 +172,15 @@ body.eduleb-page #navigation.eduleb-topbar {
   box-sizing: border-box !important;
 }
 
-body.eduleb-page #navigation.eduleb-topbar > .container-fluid,
-body.eduleb-page #navigation.site-navigation > .container-fluid {
+body.eduleb-page #navigation.eduleb-topbar>.container-fluid,
+body.eduleb-page #navigation.site-navigation>.container-fluid {
   width: 100%;
   display: flex;
   align-items: center;
 }
 
-body.eduleb-page #navigation.eduleb-topbar > .container-fluid > .row,
-body.eduleb-page #navigation.site-navigation > .container-fluid > .row {
+body.eduleb-page #navigation.eduleb-topbar>.container-fluid>.row,
+body.eduleb-page #navigation.site-navigation>.container-fluid>.row {
   width: 100%;
   margin: 0 !important;
   align-items: center !important;
@@ -212,8 +212,8 @@ body.eduleb-page.nav-scrolled #navigation.eduleb-topbar::before {
   pointer-events: none;
 }
 
-body.eduleb-page #navigation.eduleb-topbar.is-scrolled > .container-fluid,
-body.eduleb-page.nav-scrolled #navigation.eduleb-topbar > .container-fluid {
+body.eduleb-page #navigation.eduleb-topbar.is-scrolled>.container-fluid,
+body.eduleb-page.nav-scrolled #navigation.eduleb-topbar>.container-fluid {
   position: relative;
   z-index: 1;
 }
@@ -367,7 +367,7 @@ body.eduleb-page .eduleb-exam-cats-row {
   align-items: stretch;
 }
 
-body.eduleb-page .eduleb-exam-cats-row > [class*='col-'] {
+body.eduleb-page .eduleb-exam-cats-row>[class*='col-'] {
   display: flex;
 }
 
@@ -408,7 +408,7 @@ body.eduleb-page .eduleb-exam-cat-card .ms-exam-circle-btn {
   align-self: flex-end;
 }
 
-body.eduleb-page .single_footer > a img,
+body.eduleb-page .single_footer>a img,
 body.eduleb-page .footer .single_footer img[alt='Techwagger'] {
   max-height: 48px;
   width: auto;
@@ -448,13 +448,13 @@ body.eduleb-page #main-menu ul li a {
   white-space: nowrap;
 }
 
-body.eduleb-page #main-menu ul li > a:hover,
-body.eduleb-page #main-menu ul li > a:focus {
+body.eduleb-page #main-menu ul li>a:hover,
+body.eduleb-page #main-menu ul li>a:focus {
   color: #f26b65 !important;
 }
 
 /* No dropdown arrows anywhere in topbar */
-body.eduleb-page #main-menu > ul > li.menu-item-has-children > a::after,
+body.eduleb-page #main-menu>ul>li.menu-item-has-children>a::after,
 body.eduleb-page #navigation #main-menu .menu-item-has-children::after {
   content: none !important;
   display: none !important;
@@ -470,6 +470,7 @@ body.eduleb-page #navigation .eduleb-nav-actions {
 
 /* Desktop only: hide mobile hamburger */
 @media (min-width: 992px) {
+
   body.eduleb-page #sm_menu_ham,
   body.eduleb-page .sm_menu_outer {
     display: none !important;
@@ -533,7 +534,7 @@ body.eduleb-page .home_course .row {
   align-items: stretch;
 }
 
-body.eduleb-page .home_course .row > [class*='col-'] {
+body.eduleb-page .home_course .row>[class*='col-'] {
   display: flex;
 }
 
@@ -653,6 +654,7 @@ body.eduleb-page .eduleb-pricing-card .btn_one {
 
 /* ===== Mobile topnav + hamburger (no black drawer, no scroll jump) ===== */
 @media only screen and (max-width: 991px) {
+
   body.eduleb-page #navigation.site-navigation,
   body.eduleb-page #navigation.eduleb-topbar {
     position: fixed !important;
@@ -682,7 +684,7 @@ body.eduleb-page .eduleb-pricing-card .btn_one {
     margin: 0 !important;
   }
 
-  body.eduleb-page #navigation .container-fluid > .row {
+  body.eduleb-page #navigation .container-fluid>.row {
     margin: 0 !important;
     width: 100% !important;
     align-items: center !important;
@@ -780,7 +782,7 @@ body.eduleb-page .eduleb-pricing-card .btn_one {
     float: none !important;
   }
 
-  body.eduleb-page .sm_menu_outer .mobile_menu > li {
+  body.eduleb-page .sm_menu_outer .mobile_menu>li {
     display: block !important;
     float: none !important;
     width: 100% !important;
@@ -915,6 +917,7 @@ body.eduleb-page .eduleb-testimonial-slider .testimonial {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -934,7 +937,8 @@ body.eduleb-page .home_bg {
 
 /* ===== MindSprint-style hero (home) ===== */
 body.eduleb-page .eduleb-ms-hero {
-  padding: 128px 0 56px !important; /* breathing room under fixed nav */
+  padding: 128px 0 56px !important;
+  /* breathing room under fixed nav */
   background:
     radial-gradient(circle at 12% 20%, rgba(249, 115, 22, 0.14) 0%, transparent 42%),
     radial-gradient(circle at 88% 30%, rgba(56, 97, 251, 0.12) 0%, transparent 45%),
@@ -973,6 +977,7 @@ body.eduleb-page .eduleb-ms-hero .ms-hero-heading-exact {
 }
 
 @media (max-width: 1199px) {
+
   .ms-hero-heading-box,
   body.eduleb-page .eduleb-ms-hero .ms-hero-heading-box {
     min-height: 195px;
@@ -980,6 +985,7 @@ body.eduleb-page .eduleb-ms-hero .ms-hero-heading-exact {
 }
 
 @media (max-width: 991px) {
+
   .ms-hero-heading-box,
   body.eduleb-page .eduleb-ms-hero .ms-hero-heading-box {
     min-height: 170px;
@@ -987,6 +993,7 @@ body.eduleb-page .eduleb-ms-hero .ms-hero-heading-exact {
 }
 
 @media (max-width: 575px) {
+
   .ms-hero-heading-box,
   body.eduleb-page .eduleb-ms-hero .ms-hero-heading-box {
     min-height: 205px;
@@ -1096,16 +1103,20 @@ body.eduleb-page .eduleb-ms-trust-value {
 }
 
 body.eduleb-page .eduleb-ms-hero .ms-hero-photo-wrap {
-  min-height: 420px;
+  min-height: 520px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  position: relative;
 }
 
 body.eduleb-page .eduleb-ms-blob-orange {
   position: absolute;
-  width: 280px;
-  height: 280px;
+  width: 300px;
+  height: 300px;
   border-radius: 45% 55% 60% 40% / 50% 40% 60% 50%;
   background: rgba(242, 107, 101, 0.18);
-  left: 8%;
+  left: 6%;
   bottom: 8%;
   z-index: 0;
 }
@@ -1113,8 +1124,12 @@ body.eduleb-page .eduleb-ms-blob-orange {
 body.eduleb-page .eduleb-ms-hero .ms-hero-student-photo {
   position: relative;
   z-index: 1;
-  max-width: 420px;
+  max-width: 480px;
+  max-height: 580px;
   width: 100%;
+  height: auto;
+  object-fit: contain;
+  display: block;
 }
 
 body.eduleb-page .eduleb-ms-hero .ms-float-score-box {
@@ -1190,6 +1205,7 @@ body.eduleb-page .eduleb-ms-tip-icon {
     margin-top: 16px;
     max-width: none;
   }
+
   body.eduleb-page .eduleb-ms-hero .ms-hero-photo-wrap {
     min-height: auto;
   }
@@ -1213,7 +1229,7 @@ body.eduleb-page .eduleb-exam-strip-row {
   align-items: stretch;
 }
 
-body.eduleb-page .eduleb-exam-strip-row > [class*='col-'] {
+body.eduleb-page .eduleb-exam-strip-row>[class*='col-'] {
   display: flex;
 }
 
@@ -1270,7 +1286,7 @@ body.eduleb-page .eduleb-journey-row {
   align-items: stretch;
 }
 
-body.eduleb-page .eduleb-journey-row > [class*='col-'] {
+body.eduleb-page .eduleb-journey-row>[class*='col-'] {
   display: flex;
 }
 
@@ -1330,6 +1346,24 @@ body.eduleb-page .top_cat__area .single_tp p {
   font-size: 0.9rem !important;
   line-height: 1.55 !important;
   color: #64748b;
+}
+
+/* Testimonial Section - Strict Circle Avatar */
+.testi_pic_title img,
+body.eduleb-page .testi_pic_title img {
+  width: 65px !important;
+  height: 65px !important;
+  min-width: 65px !important;
+  min-height: 65px !important;
+  max-width: 65px !important;
+  max-height: 65px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  aspect-ratio: 1 / 1 !important;
+  float: left !important;
+  margin-right: 15px !important;
+  border: 4px solid #fff !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Why-choose 250+ floating card — icon left of text, centered */
@@ -2143,7 +2177,7 @@ body.eduleb-login-route .main_wrapper {
 }
 
 .ms-login-features li span:last-child,
-.ms-login-features li div > span {
+.ms-login-features li div>span {
   display: block;
   font-size: 0.86rem;
   color: #64748b;
@@ -2226,7 +2260,7 @@ body.eduleb-login-route .main_wrapper {
   width: 100%;
 }
 
-.ms-login-input-wrap > .ms-input-icon {
+.ms-login-input-wrap>.ms-input-icon {
   position: absolute;
   left: 16px;
   z-index: 2;
@@ -2544,20 +2578,24 @@ body.eduleb-login-route .main_wrapper {
 }
 
 @keyframes floralFloatA {
+
   0%,
   100% {
     transform: translateY(0) rotate(-32deg);
   }
+
   50% {
     transform: translateY(-10px) rotate(-26deg);
   }
 }
 
 @keyframes floralFloatB {
+
   0%,
   100% {
     transform: translateY(0) rotate(18deg);
   }
+
   50% {
     transform: translateY(-8px) rotate(24deg);
   }
@@ -2567,12 +2605,13 @@ body.eduleb-login-route .main_wrapper {
   from {
     transform: translateY(-50%) rotate(0deg);
   }
+
   to {
     transform: translateY(-50%) rotate(360deg);
   }
 }
 
-.eduleb-login-floral > .container {
+.eduleb-login-floral>.container {
   position: relative;
   z-index: 1;
   max-width: 1140px;
@@ -2672,7 +2711,7 @@ body.eduleb-login-route .foot_copy {
   line-height: 1.25 !important;
 }
 
-.eduleb-login-aside > p {
+.eduleb-login-aside>p {
   margin: 0 0 28px !important;
   font-size: 1rem !important;
   line-height: 1.65 !important;
@@ -2900,7 +2939,7 @@ body.eduleb-login-route .foot_copy {
     align-items: flex-start !important;
   }
 
-  body.eduleb-login-route .eduleb-login-page > .container {
+  body.eduleb-login-route .eduleb-login-page>.container {
     padding-top: 96px;
     padding-bottom: 40px;
   }
@@ -2936,7 +2975,7 @@ body.eduleb-page .team_area .row {
   flex-wrap: wrap !important;
 }
 
-body.eduleb-page .team_area .row > [class*="col-"] {
+body.eduleb-page .team_area .row>[class*="col-"] {
   display: flex !important;
   flex-direction: column !important;
 }
@@ -3067,7 +3106,7 @@ body.eduleb-page .our-team .sth_det2 {
   flex-shrink: 0 !important;
 }
 
-body.eduleb-page .our-team .sth_det2 > span {
+body.eduleb-page .our-team .sth_det2>span {
   color: #3861fb !important;
   display: inline-flex !important;
   align-items: center !important;

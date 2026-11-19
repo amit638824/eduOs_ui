@@ -16,10 +16,10 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
   const trust = content?.trust?.length
     ? content.trust
     : [
-        { label: 'Trusted by', value: '50,000+ candidates' },
-        { label: 'average rating', value: '4.9/5' },
-        { label: 'reliable platform', value: 'AI Proctored &' },
-      ];
+      { label: 'Trusted by', value: '50,000+ candidates' },
+      { label: 'average rating', value: '4.9/5' },
+      { label: 'reliable platform', value: 'AI Proctored &' },
+    ];
 
   return (
     <section className="ms-hero-exact eduleb-ms-hero">
@@ -109,8 +109,8 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
               <div className="ms-hero-pastel-blob" />
               <div className="eduleb-ms-blob-orange" />
               <img
-                src={content?.image || '/eduleb/img/home-img2.png'}
-                alt="Student preparing for online mock exams"
+                src={content?.image || '/eduleb/img/herosection.png?v=2'}
+                alt="Indian student preparing for online mock exams"
                 className="ms-hero-student-photo"
                 data-aos="fade-left"
                 data-aos-duration="900"

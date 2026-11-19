@@ -2,28 +2,28 @@ import type { HomepageContent } from '@/types/homepage';
 // ...
 const fallbackInstructors = [
   {
-    img: '/eduleb/img/team/rashi.jpg',
-    name: 'Prof. Raashi Sharma',
+    img: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&h=600&q=80',
+    name: 'Prof. Rajesh Sharma',
     role: 'Head of IT & Computer Examinations',
     courses: '45+ Tests',
     students: '12,500+ Assessed',
   },
   {
-    img: '/eduleb/img/team/team2.jpg',
+    img: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&h=600&q=80',
     name: 'Dr. Priya Verma',
     role: 'Aptitude & Competitive Exam Specialist',
     courses: '60+ Tests',
     students: '18,200+ Assessed',
   },
   {
-    img: '/eduleb/img/team/team3.jpg',
+    img: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&h=600&q=80',
     name: 'Er. Amit Srivastava',
     role: 'Software & Coding Assessment Lead',
     courses: '35+ Tests',
     students: '9,800+ Assessed',
   },
   {
-    img: '/eduleb/img/team/team4.jpg',
+    img: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&h=600&q=80',
     name: 'Sunita Mishra',
     role: 'Govt IT & NIELIT Certification Mentor',
     courses: '50+ Tests',

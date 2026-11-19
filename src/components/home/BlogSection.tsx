@@ -3,21 +3,21 @@ import type { HomepageContent } from '@/types/homepage';
 
 const fallbackPosts = [
   {
-    img: '/eduleb/img/blog/1.jpg',
+    img: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=600&q=80',
     date: 'Oct 28, 2026',
     category: 'Exam Prep',
     title: 'Top Strategies to Crack Computer & IT Certification Exams in First Attempt',
     href: '/blog',
   },
   {
-    img: '/eduleb/img/blog/2.jpg',
+    img: '/eduleb/img/blog/b1.jpg',
     date: 'Oct 25, 2026',
     category: 'Online CBT',
     title: 'How AI Proctoring & Timed Mock Tests Boost Real Exam Performance',
     href: '/blog',
   },
   {
-    img: '/eduleb/img/blog/3.jpg',
+    img: '/eduleb/img/blog/b2.jpg',
     date: 'Oct 20, 2026',
     category: 'Govt IT',
     title: 'Complete Guide to CCC & O Level Syllabus, Question Pattern & Mock Papers',

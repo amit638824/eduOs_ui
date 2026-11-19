@@ -23,7 +23,7 @@ export default function AboutSection({ content }: { content?: HomepageContent['a
         <div className="row align-items-center">
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-right" data-aos-duration="900">
             <div className="ab_img eduleb-hover-lift" data-aos="zoom-in" data-aos-delay="150">
-              <img src={content?.image || '/eduleb/img/about1.png'} className="img-fluid" alt="Online examination system" />
+              <img src={content?.image || '/eduleb/enterprise.jpg'} className="img-fluid" alt="Indian online examination system" />
             </div>
           </div>
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-left" data-aos-duration="900">
