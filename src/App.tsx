@@ -122,7 +122,7 @@ export default function App() {
                   element={<BlogPostPage />}
                 />
 
-                {/* Certificate verification .*/}
+                {/* Certificate verification ..*/}
                 <Route
                   path="/verify-certificate"
                   element={<VerifyCertificatePage />}

@@ -280,13 +280,7 @@ export default function ContactPage() {
     setErrors(validationErrors);
     setTouched({ name: true, email: true, subject: true, message: true });
 
-    if (wordCount > 300) {
-      notify.warning(`Message exceeds the 300-word limit (currently ${wordCount} words). Please shorten your message.`);
-      return;
-    }
-
-    if (nameErr || emailErr || subjectErr || messageErr) {
-      notify.warning('Please fix the errors in the form before submitting.');
+    if (wordCount > 300 || nameErr || emailErr || subjectErr || messageErr) {
       return;
     }
 
