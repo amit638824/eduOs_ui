@@ -117,10 +117,10 @@ export default function Header() {
                   }}
                 >
                   <img
-                    src="/img/logo/techwagger-logo.png"
-                    alt="Techwagger"
+                    src="/img/logo/mindsprint-logo.png"
+                    alt="Mindsprint"
                     style={{
-                      maxHeight: '42px',
+                      maxHeight: '44px',
                       width: 'auto',
                       objectFit: 'contain',
                       display: 'block',

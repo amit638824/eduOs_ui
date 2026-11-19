@@ -84,6 +84,7 @@ export interface SiteContent {
     name: string;
     tagline: string;
     logo: string;
+    icon?: string;
     logoFooter: string;
   };
   parentCompany: {

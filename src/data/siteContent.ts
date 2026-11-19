@@ -4,8 +4,9 @@ export const siteContent: SiteContent = {
   brand: {
     name: 'Mindsprint',
     tagline: 'Online exam, examination, e-assessment, and mock test platform',
-    logo: '/img/logo/techwagger-logo.png',
-    logoFooter: '/img/logo/techwagger-logo.png',
+    logo: '/img/logo/mindsprint-logo.png',
+    icon: '/img/logo/mindsprint-app-icon.png',
+    logoFooter: '/img/logo/mindsprint-logo.png',
   },
   parentCompany: {
     name: 'TechWagger',
