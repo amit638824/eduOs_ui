@@ -121,7 +121,7 @@ export default function App() {
                   element={<VerifyCertificatePage />}
                 />
 
-                {/* Instructor (dashboard redirects) */}
+                {/* Instructor (dashboard redirects) .*/}
                 <Route
                   path="/instructor"
                   element={
