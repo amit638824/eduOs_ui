@@ -5,7 +5,7 @@ const fallbackPosts = [
     img: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=600&q=80',
     date: 'Oct 28, 2026',
     category: 'Exam Prep',
-    title: 'Top Strategies to Crack Computer & IT Certification Exams in First Attempt',
+    title: 'Top Strategies to Crack Computer & IT Certification Exams on the First Attempt',
     href: '/blog',
   },
   {
@@ -18,8 +18,8 @@ const fallbackPosts = [
   {
     img: '/eduleb/img/blog/b2.jpg',
     date: 'Oct 20, 2026',
-    category: 'Govt IT',
-    title: 'Complete Guide to CCC & O Level Syllabus, Question Pattern & Mock Papers',
+    category: 'IT Certification',
+    title: 'Complete Guide to IT Certifications, Exam Patterns & Mock Papers',
     href: '/blog',
   },
 ];

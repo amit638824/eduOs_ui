@@ -3,16 +3,16 @@ import PageBanner from '@/components/eduleb/PageBanner';
 
 const faqs = [
   {
-    q: 'What does it take excellent author?',
-    a: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce vitae risus nec dui venenatis dignissim. Our school is know for quality education.',
+    q: 'What does it take to become an instructor?',
+    a: 'We welcome passionate educators and subject matter experts. You can register as an instructor to start creating question banks and mock tests.',
   },
   {
-    q: 'How can I contact a instructor?',
+    q: 'How can I contact an instructor?',
     a: 'You can reach instructors from the instructor page or via the contact form. We reply within 24 hours on business days.',
   },
   {
-    q: 'How can I purchase a course?',
-    a: 'Browse All Course, open course details, then click Register Today or Enroll Now to continue.',
+    q: 'How can I purchase a test or course?',
+    a: 'Browse All Courses, open course details, then click Register Today or Enroll Now to continue.',
   },
   {
     q: 'Do you offer refunds?',
@@ -25,7 +25,7 @@ export default function FaqPage() {
 
   return (
     <>
-      <PageBanner title="Faq" crumb="Faq" />
+      <PageBanner title="FAQ" crumb="FAQ" />
       <section className="faq_area section-padding">
         <div className="container">
           <div className="row">

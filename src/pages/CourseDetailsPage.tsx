@@ -10,7 +10,7 @@ export default function CourseDetailsPage() {
 
   return (
     <>
-      <PageBanner title="Course details" crumb="Course details" />
+      <PageBanner title="Course Details" crumb="Course Details" />
 
       <section className="our_event section-padding">
         <div className="container">
@@ -65,8 +65,8 @@ export default function CourseDetailsPage() {
                           : tab === 'curriculum'
                             ? 'Curriculum'
                             : tab === 'instructor'
-                              ? 'instructor'
-                              : 'reviews'}
+                              ? 'Instructor'
+                              : 'Reviews'}
                       </a>
                     </li>
                   ))}
@@ -94,7 +94,7 @@ export default function CourseDetailsPage() {
                           allowFullScreen
                         />
                         <p>
-                          roin et eros varius, ornare turpis ac, dapibus nisi. Morbi luctus arcu non
+                          Proin et eros varius, ornare turpis ac, dapibus nisi. Morbi luctus arcu non
                           massa consequat, et tristique velit semper. Curabitur interdum vulputate
                           sagittis. Donec erat massa, tincidunt sed feugiat id, suscipit in est.
                           Proin laoreet orci quis augue eleifend varius. Donec hendrerit ex ut lacus
@@ -105,7 +105,7 @@ export default function CourseDetailsPage() {
                             Enroll Now <i className="fa fa-angle-right" />
                           </a>
                           <a href="#0" className="custom-button bg-white">
-                            get membership
+                            Get Membership
                           </a>
                           <ul className="social-icons">
                             <li>
@@ -148,7 +148,7 @@ export default function CourseDetailsPage() {
                             Enroll Now <i className="fa fa-angle-right" />
                           </a>
                           <a href="#0" className="custom-button bg-white">
-                            get membership
+                            Get Membership
                           </a>
                         </div>
                       </div>
@@ -175,7 +175,7 @@ export default function CourseDetailsPage() {
                           Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
                           ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip
                           ex ea commodo consequat. Duis aute irure dolor in reprehenderit in
-                          voluptate velit esse cillum dolore eu fugiat nulla pariatur..
+                          voluptate velit esse cillum dolore eu fugiat nulla pariatur.
                         </p>
                       </div>
                     </div>
@@ -188,9 +188,9 @@ export default function CourseDetailsPage() {
                           <h6 className="review-title">Reviews (03)</h6>
                           <ul className="review-contents">
                             {[
-                              { img: 'client04.png', name: 'Robot Smith' },
-                              { img: 'client02.png', name: 'Nicolas Anelca' },
-                              { img: 'client03.png', name: 'Harry Johnshon' },
+                              { img: 'client04.png', name: 'Robert Smith' },
+                              { img: 'client02.png', name: 'Nicolas Anelka' },
+                              { img: 'client03.png', name: 'Harry Johnson' },
                             ].map((r) => (
                               <li key={r.name}>
                                 <div className="thumb">
@@ -233,7 +233,7 @@ export default function CourseDetailsPage() {
 
             <div className="col-lg-4 col-sm-4 col-xs-12">
               <div className="course_features">
-                <h3>Course features</h3>
+                <h3>Course Features</h3>
                 <ul>
                   <li>
                     <i className="fa fa-calendar" /> Course duration <b>10 days</b>
@@ -258,7 +258,7 @@ export default function CourseDetailsPage() {
                 </a>
               </div>
               <div className="related_course">
-                <h3>Related Course</h3>
+                <h3>Related Courses</h3>
                 {[
                   { img: 'rc-1.png', title: 'UI/UX Design and...', price: '$42.00' },
                   { img: 'rc-2.png', title: 'Greatest Passion In...', price: '$37.00' },
@@ -321,7 +321,7 @@ export default function CourseDetailsPage() {
               </div>
               <div className="sidebar-post">
                 <div className="sidebar_title">
-                  <h4>Follow us</h4>
+                  <h4>Follow Us</h4>
                 </div>
                 <div className="single_social">
                   <ul>

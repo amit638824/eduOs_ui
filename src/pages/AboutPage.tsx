@@ -12,32 +12,6 @@ export default function AboutPage() {
       </div>
       <AboutSection />
 
-      <section
-        className="vid_area va2"
-        style={{
-          backgroundImage: 'url(/eduleb/img/bg/video.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center center',
-        }}
-      >
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-12 vp_top">
-              <div className="video-area2">
-                <a
-                  href="https://www.youtube.com/watch?v=RXv_uIN6e-Y"
-                  className="magnific_popup video-button"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  <i className="fa fa-play" />
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <CounterSection />
 
       <section className="insfreecourse section-padding">
@@ -55,7 +29,7 @@ export default function AboutPage() {
                 <div className="single_ins_content">
                   <h4>For Educators</h4>
                   <h1>Create &amp; Conduct Exams</h1>
-                  <p>Design question banks, schedule batches, and auto-evaluate student performances.</p>
+                  <p>Design question banks, schedule batches, and auto-evaluate student performance.</p>
                   <Link className="btn_one" to="/pricing">
                     View Pricing <i className="ti-arrow-top-right" />
                   </Link>

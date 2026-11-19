@@ -9,7 +9,7 @@ const counters = [
 
 export default function CounterSection() {
   return (
-    <section className="count_area counter_feature">
+    <section className="count_area counter_feature" style={{ marginTop: 0 }}>
       <div className="container">
         <div className="row">
           {counters.map((item, index) => (

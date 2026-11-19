@@ -2,16 +2,16 @@ import { Link } from 'react-router-dom';
 import PageBanner from '@/components/eduleb/PageBanner';
 
 const instructors = [
-  { img: 'team1.jpg', name: 'Bilkis Vabi', role: 'Web designer', courses: '04', students: '27' },
-  { img: 'team2.jpg', name: 'Mood Wasim', role: 'TemplateMonster company', courses: '06', students: '41' },
-  { img: 'team3.jpg', name: 'Shyinn tim', role: 'Codecanyou', courses: '13', students: '31' },
-  { img: 'team4.jpg', name: 'Shorif shorifa', role: 'Tsc chottor', courses: '07', students: '24' },
+  { img: 'team1.jpg', name: 'Bilkis Vabi', role: 'Web Designer', courses: '04', students: '27' },
+  { img: 'team2.jpg', name: 'Mood Wasim', role: 'TemplateMonster', courses: '06', students: '41' },
+  { img: 'team3.jpg', name: 'Shyinn tim', role: 'CodeCanyon', courses: '13', students: '31' },
+  { img: 'team4.jpg', name: 'Shorif shorifa', role: 'Faculty Member', courses: '07', students: '24' },
 ];
 
 export default function InstructorPage() {
   return (
     <>
-      <PageBanner title="Instructor" crumb="Instructor" />
+      <PageBanner title="Instructors" crumb="Instructors" />
       <section className="team_area section-padding">
         <div className="container">
           <div className="row">
@@ -20,7 +20,7 @@ export default function InstructorPage() {
                 <div className="our-team">
                   <div className="team-content">
                     <Link to="/instructor-details-page">
-                      <img src={`/eduleb/img/team/${t.img}`} alt="" />
+                      <img src={`/eduleb/img/team/${t.img}`} alt={t.name} />
                     </Link>
                     <ul className="social-links">
                       <li>
@@ -47,11 +47,11 @@ export default function InstructorPage() {
                   <div className="sth_det2">
                     <span className="ti-file">
                       {' '}
-                      <u>{t.courses} Course</u>
+                      <u>{t.courses} Courses</u>
                     </span>
                     <span className="ti-user">
                       {' '}
-                      <u>{t.students} Student</u>
+                      <u>{t.students} Students</u>
                     </span>
                   </div>
                 </div>

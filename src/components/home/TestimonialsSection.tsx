@@ -5,8 +5,8 @@ const fallbackTestimonials = [
   {
     avatar: '/eduleb/img/testimonial/7.jpg',
     name: 'Aman Gupta',
-    company: 'CCC Exam Candidate',
-    text: 'Practicing on Mindsprint helped me clear my CCC certification on the first attempt! The mock test interface is identical to the real exam pattern and the instant scorecard highlighted my weak topics.',
+    company: 'Certification Candidate',
+    text: 'Practicing on Mindsprint helped me clear my IT certification on the first attempt! The mock test interface is identical to the real exam pattern and the instant scorecard highlighted my weak topics.',
   },
   {
     avatar: '/eduleb/img/testimonial/6.jpg',
