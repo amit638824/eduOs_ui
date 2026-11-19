@@ -1,5 +1,4 @@
-import { useMemo } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { FiMenu } from 'react-icons/fi';
 import { siteContent } from '@/data/siteContent';
 import type { DashboardNavSection, DashboardNavItem } from '@/types/dashboard';
@@ -8,7 +7,7 @@ import DashboardIcon from './DashboardIcon';
 interface DashboardSidebarProps {
   sections: DashboardNavSection[];
   collapsed?: boolean;
-  onLogout: () => void;
+  onLogout?: () => void;
   onNavigate?: () => void;
   onToggleCollapse?: () => void;
 }
@@ -24,24 +23,7 @@ export default function DashboardSidebar({
   onNavigate,
   onToggleCollapse,
 }: DashboardSidebarProps) {
-  const navigate = useNavigate();
   const { brand } = siteContent;
-
-  const handleLogout = async () => {
-    if (onNavigate) onNavigate();
-    await onLogout();
-    navigate('/login');
-  };
-
-  const { pinnedSection, mainSections } = useMemo(() => {
-    const pinned = sections.find(
-      (s) => s.id === 'pinned_bottom' || s.className?.includes('pinned'),
-    );
-    return {
-      pinnedSection: pinned,
-      mainSections: sections.filter((s) => s !== pinned),
-    };
-  }, [sections]);
 
   const renderNavItem = (item: DashboardNavItem) => {
     if (item.action === 'logout') {
@@ -51,7 +33,7 @@ export default function DashboardSidebar({
             type="button"
             className="sca-db-nav-item"
             title={collapsed ? item.label : undefined}
-            onClick={handleLogout}
+            onClick={onLogout}
           >
             <DashboardIcon name={item.icon} />
             {!collapsed && <span className="sca-db-nav-item__label">{item.label}</span>}
@@ -211,7 +193,7 @@ export default function DashboardSidebar({
       </div>
 
       <nav className="sca-db-sidebar__nav">
-        {mainSections.map((section, index) => {
+        {sections.map((section, index) => {
           const sectionKey = sectionKeyOf(section, index);
           return (
             <div
@@ -228,14 +210,6 @@ export default function DashboardSidebar({
           );
         })}
       </nav>
-
-      {pinnedSection && (
-        <div className="sca-db-sidebar__pinned">
-          <div className="sca-db-sidebar__group sca-db-sidebar__group--pinned">
-            {renderSectionItems(pinnedSection)}
-          </div>
-        </div>
-      )}
     </aside>
   );
 }

@@ -1937,7 +1937,16 @@ body.eduleb-page .eduleb-contact .contact_info h4 {
 }
 
 body.eduleb-page .eduleb-contact-form .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 18px;
+}
+
+body.eduleb-page .eduleb-contact-label {
+  display: block !important;
+  font-size: 0.88rem !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  margin-bottom: 6px !important;
+  text-align: left !important;
 }
 
 body.eduleb-page .eduleb-contact-input,
@@ -1988,8 +1997,8 @@ body.eduleb-page #navigation .eduleb-signin-btn {
 .ms-login-page {
   position: relative;
   isolation: isolate;
-  min-height: 100vh !important;
-  padding: 100px 20px 40px !important;
+  min-height: calc(100vh - 110px) !important;
+  padding: 30px 20px 30px !important;
   margin: 0 !important;
   overflow: hidden;
   width: 100%;

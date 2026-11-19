@@ -395,7 +395,21 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} noValidate>
                   <div className="row">
                     <div className="form-group col-md-6 mb-3">
+                      <label
+                        htmlFor="contact-name"
+                        className="eduleb-contact-label"
+                        style={{
+                          display: 'block',
+                          marginBottom: '6px',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                        }}
+                      >
+                        Name <span style={{ color: '#ef4444', fontWeight: 700, marginLeft: '3px' }}>*</span>
+                      </label>
                       <input
+                        id="contact-name"
                         type="text"
                         name="name"
                         value={formData.name}
@@ -403,7 +417,7 @@ export default function ContactPage() {
                         onBlur={handleBlur}
                         maxLength={50}
                         className={`form-control eduleb-contact-input ${(touched.name || formData.name.trim().length > 30) && errors.name ? 'is-invalid' : ''}`}
-                        placeholder="Name *"
+                        placeholder="Enter your name"
                         required
                         disabled={status === 'loading'}
                         style={(touched.name || formData.name.trim().length > 30) && errors.name ? { borderColor: '#ef4444' } : {}}
@@ -415,14 +429,28 @@ export default function ContactPage() {
                       )}
                     </div>
                     <div className="form-group col-md-6 mb-3">
+                      <label
+                        htmlFor="contact-email"
+                        className="eduleb-contact-label"
+                        style={{
+                          display: 'block',
+                          marginBottom: '6px',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                        }}
+                      >
+                        Email Address <span style={{ color: '#ef4444', fontWeight: 700, marginLeft: '3px' }}>*</span>
+                      </label>
                       <input
+                        id="contact-email"
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
                         onBlur={handleBlur}
                         className={`form-control eduleb-contact-input ${touched.email && errors.email ? 'is-invalid' : ''}`}
-                        placeholder="Email *"
+                        placeholder="Enter your email address"
                         required
                         disabled={status === 'loading'}
                         style={touched.email && errors.email ? { borderColor: '#ef4444' } : {}}
@@ -434,14 +462,28 @@ export default function ContactPage() {
                       )}
                     </div>
                     <div className="form-group col-md-12 mb-3">
+                      <label
+                        htmlFor="contact-subject"
+                        className="eduleb-contact-label"
+                        style={{
+                          display: 'block',
+                          marginBottom: '6px',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                        }}
+                      >
+                        Subject <span style={{ color: '#ef4444', fontWeight: 700, marginLeft: '3px' }}>*</span>
+                      </label>
                       <input
+                        id="contact-subject"
                         type="text"
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
                         onBlur={handleBlur}
                         className={`form-control eduleb-contact-input ${touched.subject && errors.subject ? 'is-invalid' : ''}`}
-                        placeholder="Subject *"
+                        placeholder="Enter subject"
                         required
                         disabled={status === 'loading'}
                         style={touched.subject && errors.subject ? { borderColor: '#ef4444' } : {}}
@@ -453,7 +495,21 @@ export default function ContactPage() {
                       )}
                     </div>
                     <div className="form-group col-md-12 mb-2">
+                      <label
+                        htmlFor="contact-message"
+                        className="eduleb-contact-label"
+                        style={{
+                          display: 'block',
+                          marginBottom: '6px',
+                          fontSize: '0.875rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                        }}
+                      >
+                        Message <span style={{ color: '#ef4444', fontWeight: 700, marginLeft: '3px' }}>*</span>
+                      </label>
                       <textarea
+                        id="contact-message"
                         name="message"
                         value={formData.message}
                         onChange={handleChange}
@@ -462,7 +518,7 @@ export default function ContactPage() {
                         onBlur={handleBlur}
                         className={`form-control eduleb-contact-input eduleb-contact-textarea ${((touched.message && errors.message) || wordCount >= 300) ? 'is-invalid' : ''}`}
                         rows={6}
-                        placeholder="Message (max 300 words) *"
+                        placeholder="Write your message here (up to 300 words)..."
                         required
                         disabled={status === 'loading'}
                         style={wordCount >= 300 ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.15)' } : (touched.message && errors.message) ? { borderColor: '#ef4444' } : {}}

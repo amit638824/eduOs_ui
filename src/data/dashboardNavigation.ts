@@ -85,19 +85,9 @@ export function buildDashboardProfile(
   };
 }
 
-const logoutItem = {
-  label: 'Logout',
-  href: '/login',
-  icon: 'logout',
-  action: 'logout' as const,
-};
-
 /**
- * Normal role-based sidebar menu (all items directly visible):
- *
- * - Admin: Core → Organization → Exam Setup → Management & Reports → Account
- * - Teacher: Core → Exam Setup → Monitoring & Reports → Account
- * - Student: Tests, Assignments, Calendar, Results, Certificates, Account
+ * Normal role-based sidebar menu:
+ * Settings, Profile, and Logout are managed in the TopBar user dropdown.
  */
 export function buildDashboardNavigation(
   user: ApiUser,
@@ -124,21 +114,13 @@ export function buildDashboardNavigation(
     if (superAdmin) {
       return [
         {
-          id: 'core',
-          title: 'CORE',
+          id: 'main',
           items: [
             {
               label: 'Dashboard',
               href: `${base}/admin-dashboard`,
               icon: 'home',
             },
-          ],
-        },
-
-        {
-          id: 'organization',
-          title: 'ORGANIZATION',
-          items: [
             {
               label: 'Organizations',
               href: `${base}/admin-organizations`,
@@ -164,13 +146,6 @@ export function buildDashboardNavigation(
               href: `${base}/admin-users`,
               icon: 'users',
             },
-          ],
-        },
-
-        {
-          id: 'exam_setup',
-          title: 'EXAM SETUP',
-          items: [
             {
               label: 'All Tests',
               href: `${base}/admin-course`,
@@ -198,13 +173,6 @@ export function buildDashboardNavigation(
               href: `${base}/admin-assignments`,
               icon: 'assignment',
             },
-          ],
-        },
-
-        {
-          id: 'priority',
-          title: 'MANAGEMENT & REPORTS',
-          items: [
             {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
@@ -244,30 +212,6 @@ export function buildDashboardNavigation(
             },
           ],
         },
-
-        {
-          id: 'pinned_bottom',
-          className: 'sca-db-sidebar__group--pinned',
-          items: [
-            {
-              label: 'Settings',
-              href: `${base}/admin-settings`,
-              icon: 'settings',
-            },
-            {
-              label: 'Profile',
-              href: `${base}/admin-profile`,
-              icon: 'user',
-            },
-            {
-              label: 'Notifications',
-              href: `${base}/admin-message`,
-              icon: 'notifications',
-              badgeVariant: 'danger',
-            },
-            logoutItem,
-          ],
-        },
       ];
     }
 
@@ -279,21 +223,13 @@ export function buildDashboardNavigation(
     if (staffOnly) {
       return [
         {
-          id: 'core',
-          title: 'CORE',
+          id: 'main',
           items: [
             {
               label: 'Dashboard',
               href: `${base}/admin-dashboard`,
               icon: 'home',
             },
-          ],
-        },
-
-        {
-          id: 'organization',
-          title: 'ORGANIZATION',
-          items: [
             {
               label: 'Departments',
               href: `${base}/admin-org`,
@@ -304,13 +240,6 @@ export function buildDashboardNavigation(
               href: `${base}/admin-students`,
               icon: 'students',
             },
-          ],
-        },
-
-        {
-          id: 'exam_setup',
-          title: 'EXAM SETUP',
-          items: [
             {
               label: 'All Tests',
               href: `${base}/admin-course`,
@@ -338,13 +267,6 @@ export function buildDashboardNavigation(
               href: `${base}/admin-assignments`,
               icon: 'assignment',
             },
-          ],
-        },
-
-        {
-          id: 'priority',
-          title: 'MANAGEMENT & REPORTS',
-          items: [
             {
               label: 'Attempts',
               href: `${base}/admin-quiz-attempts`,
@@ -369,30 +291,6 @@ export function buildDashboardNavigation(
             },
           ],
         },
-
-        {
-          id: 'pinned_bottom',
-          className: 'sca-db-sidebar__group--pinned',
-          items: [
-            {
-              label: 'Settings',
-              href: `${base}/admin-settings`,
-              icon: 'settings',
-            },
-            {
-              label: 'Profile',
-              href: `${base}/admin-profile`,
-              icon: 'user',
-            },
-            {
-              label: 'Notifications',
-              href: `${base}/admin-message`,
-              icon: 'notifications',
-              badgeVariant: 'danger',
-            },
-            logoutItem,
-          ],
-        },
       ];
     }
 
@@ -403,21 +301,13 @@ export function buildDashboardNavigation(
      */
     return [
       {
-        id: 'core',
-        title: 'CORE',
+        id: 'main',
         items: [
           {
             label: 'Dashboard',
             href: `${base}/admin-dashboard`,
             icon: 'home',
           },
-        ],
-      },
-
-      {
-        id: 'organization',
-        title: 'ORGANIZATION',
-        items: [
           {
             label: 'Departments',
             href: `${base}/admin-org`,
@@ -433,13 +323,6 @@ export function buildDashboardNavigation(
             href: `${base}/admin-students`,
             icon: 'students',
           },
-        ],
-      },
-
-      {
-        id: 'exam_setup',
-        title: 'EXAM SETUP',
-        items: [
           {
             label: 'All Tests',
             href: `${base}/admin-course`,
@@ -467,13 +350,6 @@ export function buildDashboardNavigation(
             href: `${base}/admin-assignments`,
             icon: 'assignment',
           },
-        ],
-      },
-
-      {
-        id: 'priority',
-        title: 'MANAGEMENT & REPORTS',
-        items: [
           {
             label: 'Attempts',
             href: `${base}/admin-quiz-attempts`,
@@ -498,29 +374,6 @@ export function buildDashboardNavigation(
           },
         ],
       },
-
-      {
-        id: 'pinned_bottom',
-        className: 'sca-db-sidebar__group--pinned',
-        items: [
-          {
-            label: 'Settings',
-            href: `${base}/admin-settings`,
-            icon: 'settings',
-          },
-          {
-            label: 'Profile',
-            href: `${base}/admin-profile`,
-            icon: 'user',
-          },
-          {
-            label: 'Notifications',
-            href: `${base}/admin-message`,
-            icon: 'notifications',
-          },
-          logoutItem,
-        ],
-      },
     ];
   }
 
@@ -532,21 +385,13 @@ export function buildDashboardNavigation(
   if (role === 'teacher') {
     return [
       {
-        id: 'core',
-        title: 'CORE',
+        id: 'main',
         items: [
           {
             label: 'Dashboard',
             href: `${base}/teacher-dashboard`,
             icon: 'home',
           },
-        ],
-      },
-
-      {
-        id: 'exam_setup',
-        title: 'EXAM SETUP',
-        items: [
           {
             label: 'Tests',
             href: `${base}/teacher-course`,
@@ -574,13 +419,6 @@ export function buildDashboardNavigation(
             href: `${base}/teacher-assignments`,
             icon: 'assignment',
           },
-        ],
-      },
-
-      {
-        id: 'priority',
-        title: 'MONITORING & REPORTS',
-        items: [
           {
             label: 'Flagged Attempts',
             href: `${base}/teacher-flagged-attempts`,
@@ -600,29 +438,6 @@ export function buildDashboardNavigation(
           },
         ],
       },
-
-      {
-        id: 'pinned_bottom',
-        className: 'sca-db-sidebar__group--pinned',
-        items: [
-          {
-            label: 'Settings',
-            href: `${base}/teacher-settings`,
-            icon: 'settings',
-          },
-          {
-            label: 'Profile',
-            href: `${base}/teacher-profile`,
-            icon: 'user',
-          },
-          {
-            label: 'Notifications',
-            href: `${base}/teacher-message`,
-            icon: 'notifications',
-          },
-          logoutItem,
-        ],
-      },
     ];
   }
 
@@ -633,69 +448,42 @@ export function buildDashboardNavigation(
    */
   return [
     {
-      title: '',
       items: [
         {
           label: 'Dashboard',
           href: `${base}/student-dashboard`,
           icon: 'home',
         },
-
-        {
-          label: 'Profile',
-          href: `${base}/student-profile`,
-          icon: 'user',
-        },
-
         {
           label: 'Tests',
           href: `${base}/student-enrolled-courses`,
           icon: 'tests',
         },
-
         {
           label: 'Assignments',
           href: `${base}/student-assignments`,
           icon: 'assignment',
         },
-
         {
           label: 'Attempts',
           href: `${base}/student-my-quiz-attempts`,
           icon: 'clock',
         },
-
         {
           label: 'Calendar',
           href: `${base}/student-calendar`,
           icon: 'calendar',
         },
-
         {
           label: 'Results',
           href: `${base}/student-reviews`,
           icon: 'chart',
         },
-
         {
           label: 'Certificates',
           href: `${base}/student-certificates`,
           icon: 'certificate',
         },
-
-        {
-          label: 'Notifications',
-          href: `${base}/student-message`,
-          icon: 'notifications',
-        },
-
-        {
-          label: 'Settings',
-          href: `${base}/student-settings`,
-          icon: 'settings',
-        },
-
-        logoutItem,
       ],
     },
   ];

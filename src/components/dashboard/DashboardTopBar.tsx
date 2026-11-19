@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FiBell, FiMenu, FiX } from 'react-icons/fi';
+import { useEffect, useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { FiBell, FiMenu, FiX, FiUser, FiSettings, FiLogOut } from 'react-icons/fi';
+import { useAuth } from '@/context/AuthContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useOrgScope } from '@/context/OrgScopeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
@@ -29,9 +30,41 @@ export default function DashboardTopBar({
   onToggleMenu,
   menuOpen = false,
 }: DashboardTopBarProps) {
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { isSuperAdmin, scopeReady, selectedOrgId } = useOrgScope();
   const [unread, setUnread] = useState(0);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const profileHref = `/dashboard/${role}-profile`;
+  const settingsHref = `/dashboard/${role}-settings`;
+
+  const handleLogout = async () => {
+    setDropdownOpen(false);
+    await logout();
+    navigate('/login');
+  };
+
+  // Close dropdown on outside click or Escape
+  useEffect(() => {
+    if (!dropdownOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setDropdownOpen(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [dropdownOpen]);
 
   useEffect(() => {
     if (isSuperAdmin && !scopeReady) return;
@@ -121,28 +154,86 @@ export default function DashboardTopBar({
             </svg>
           )}
         </button>
-        <Link to={`/dashboard/${role}-profile`} className="sca-db-user">
-          <img src={profile.image} alt="" className="sca-db-user__avatar" />
-          <div className="sca-db-user__info">
-            <span className="sca-db-user__name">{profile.name}</span>
-            <span className="sca-db-user__role">
-              {role === 'admin' ? 'Administrator' : role === 'teacher' ? 'Faculty' : 'Student'}
-            </span>
-          </div>
-          <svg
-            viewBox="0 0 20 20"
-            fill="currentColor"
-            width="14"
-            height="14"
-            className="sca-db-user__caret"
+
+        {/* User Profile Dropdown */}
+        <div className="sca-db-user-dropdown" ref={dropdownRef}>
+          <button
+            type="button"
+            className="sca-db-user"
+            onClick={() => setDropdownOpen((v) => !v)}
+            aria-expanded={dropdownOpen}
+            aria-haspopup="true"
           >
-            <path
-              fillRule="evenodd"
-              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </Link>
+            <img src={profile.image} alt="" className="sca-db-user__avatar" />
+            <div className="sca-db-user__info">
+              <span className="sca-db-user__name">{profile.name}</span>
+              <span className="sca-db-user__role">
+                {role === 'admin' ? 'Administrator' : role === 'teacher' ? 'Faculty' : 'Student'}
+              </span>
+            </div>
+            <svg
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              width="14"
+              height="14"
+              className={`sca-db-user__caret${dropdownOpen ? ' is-open' : ''}`}
+            >
+              <path
+                fillRule="evenodd"
+                d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
+
+          {dropdownOpen && (
+            <div className="sca-db-user-menu" role="menu">
+              <div className="sca-db-user-menu__header">
+                <img src={profile.image} alt="" className="sca-db-user-menu__avatar" />
+                <div className="sca-db-user-menu__header-info">
+                  <span className="sca-db-user-menu__name">{profile.name}</span>
+                  <span className="sca-db-user-menu__email">
+                    {user?.email || (role === 'admin' ? 'admin@mindsprint.com' : '')}
+                  </span>
+                </div>
+              </div>
+
+              <div className="sca-db-user-menu__divider" />
+
+              <Link
+                to={profileHref}
+                className="sca-db-user-menu__item"
+                role="menuitem"
+                onClick={() => setDropdownOpen(false)}
+              >
+                <FiUser size={16} />
+                <span>Profile</span>
+              </Link>
+
+              <Link
+                to={settingsHref}
+                className="sca-db-user-menu__item"
+                role="menuitem"
+                onClick={() => setDropdownOpen(false)}
+              >
+                <FiSettings size={16} />
+                <span>Settings</span>
+              </Link>
+
+              <div className="sca-db-user-menu__divider" />
+
+              <button
+                type="button"
+                className="sca-db-user-menu__item sca-db-user-menu__item--danger"
+                role="menuitem"
+                onClick={handleLogout}
+              >
+                <FiLogOut size={16} />
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
