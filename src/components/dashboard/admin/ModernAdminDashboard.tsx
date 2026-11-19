@@ -14,7 +14,7 @@ interface ModernAdminDashboardProps {
 }
 
 const COPY: Record<DashboardRole, {
-  welcome: (org: string) => string;
+  welcome: (org?: string) => string;
   stats: [string, string, string, string];
   stepperTitle: string;
   stepperHint: string;
@@ -28,7 +28,7 @@ const COPY: Record<DashboardRole, {
   topHref: string;
 }> = {
   admin: {
-    welcome: (org) => `Manage exams, track student performance, and administer ${org} — all in one place.`,
+    welcome: () => 'Manage exams, monitor student performance, and streamline assessments — all from one platform.',
     stats: ['Total Tests', 'Total Students', 'Total Attempts', 'Average Score'],
     stepperTitle: 'Exam Creation & Delivery',
     stepperHint: 'Step-by-step progress from question bank to student assignment',
@@ -253,9 +253,9 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
     const load =
       role === 'student'
         ? Promise.all([
-            examinationService.getMyStats(),
-            examinationService.listMyResults().catch(() => [] as ExamResult[]),
-          ]).then(([stats, results]) => studentDashboard(stats, results))
+          examinationService.getMyStats(),
+          examinationService.listMyResults().catch(() => [] as ExamResult[]),
+        ]).then(([stats, results]) => studentDashboard(stats, results))
         : examinationService.getAdminDashboard();
 
     load
@@ -339,7 +339,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
           {displayName}
         </h2>
         <p className="mad-v3-welcome-desc">
-          {copy.welcome(organization?.name || 'your organization')}
+          {copy.welcome()}
         </p>
 
         {/* Feature Pills / Cards inside the Banner */}
@@ -474,261 +474,261 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
   // 2. 4 Stat Metric Cards with Sparkline Wave Graphs
   const renderStatsRow = () => (
     <div className="mad-v3-stats-row">
-            {/* Card 1: Total Tests */}
-            <div className="mad-v3-stat-card">
-              <div className="mad-v3-stat-top">
-                <div className="mad-v3-stat-icon mad-v3-stat-icon--blue">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                    <path d="M13 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7l-5-5z" />
-                    <path d="M13 2v5h5" />
-                  </svg>
-                </div>
-                <button type="button" className="mad-v3-kebab" aria-label="Options">
-                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                    <circle cx="10" cy="4" r="1.5" />
-                    <circle cx="10" cy="10" r="1.5" />
-                    <circle cx="10" cy="16" r="1.5" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mad-v3-stat-mid">
-                <div className="mad-v3-stat-value-group">
-                  <span className="mad-v3-stat-num">{totalTests}</span>
-                  <span className="mad-v3-stat-title">{copy.stats[0]}</span>
-                </div>
-                {/* Blue Sparkline SVG */}
-                <div className="mad-v3-sparkline-box">
-                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="spBlue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={sparks.tests.area} fill="url(#spBlue)" />
-                    <path d={sparks.tests.line} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
-                  </svg>
-                </div>
-              </div>
-
-              <div className={`mad-v3-stat-trend${trends.tests < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
-                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
-                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
-                </svg>
-                <span>{trends.tests}%</span> <span className="trend-lbl">from last month</span>
-              </div>
-            </div>
-
-            {/* Card 2: Total Students */}
-            <div className="mad-v3-stat-card">
-              <div className="mad-v3-stat-top">
-                <div className="mad-v3-stat-icon mad-v3-stat-icon--green">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                    <path d="M17 17v-1.5a3.5 3.5 0 00-3.5-3.5h-7A3.5 3.5 0 003 15.5V17" />
-                    <circle cx="10" cy="6" r="3.5" />
-                  </svg>
-                </div>
-                <button type="button" className="mad-v3-kebab" aria-label="Options">
-                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                    <circle cx="10" cy="4" r="1.5" />
-                    <circle cx="10" cy="10" r="1.5" />
-                    <circle cx="10" cy="16" r="1.5" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mad-v3-stat-mid">
-                <div className="mad-v3-stat-value-group">
-                  <span className="mad-v3-stat-num">{totalStudents}</span>
-                  <span className="mad-v3-stat-title">{copy.stats[1]}</span>
-                </div>
-                {/* Green Sparkline SVG */}
-                <div className="mad-v3-sparkline-box">
-                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="spGreen" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={sparks.students.area} fill="url(#spGreen)" />
-                    <path d={sparks.students.line} fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
-                  </svg>
-                </div>
-              </div>
-
-              <div className={`mad-v3-stat-trend${trends.students < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
-                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
-                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
-                </svg>
-                <span>{trends.students}%</span> <span className="trend-lbl">from last month</span>
-              </div>
-            </div>
-
-            {/* Card 3: Total Attempts */}
-            <div className="mad-v3-stat-card">
-              <div className="mad-v3-stat-top">
-                <div className="mad-v3-stat-icon mad-v3-stat-icon--purple">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                    <path d="M7 10l2 2 4-4" />
-                    <rect x="3" y="3" width="14" height="14" rx="3" />
-                  </svg>
-                </div>
-                <button type="button" className="mad-v3-kebab" aria-label="Options">
-                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                    <circle cx="10" cy="4" r="1.5" />
-                    <circle cx="10" cy="10" r="1.5" />
-                    <circle cx="10" cy="16" r="1.5" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mad-v3-stat-mid">
-                <div className="mad-v3-stat-value-group">
-                  <span className="mad-v3-stat-num">{totalAttempts}</span>
-                  <span className="mad-v3-stat-title">{copy.stats[2]}</span>
-                </div>
-                {/* Purple Sparkline SVG */}
-                <div className="mad-v3-sparkline-box">
-                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="spPurple" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={sparks.attempts.area} fill="url(#spPurple)" />
-                    <path d={sparks.attempts.line} fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" />
-                  </svg>
-                </div>
-              </div>
-
-              <div className={`mad-v3-stat-trend${trends.attempts < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
-                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
-                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
-                </svg>
-                <span>{trends.attempts}%</span> <span className="trend-lbl">from last month</span>
-              </div>
-            </div>
-
-            {/* Card 4: Average Score */}
-            <div className="mad-v3-stat-card">
-              <div className="mad-v3-stat-top">
-                <div className="mad-v3-stat-icon mad-v3-stat-icon--amber">
-                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
-                    <path d="M4 17V10" />
-                    <path d="M10 17V6" />
-                    <path d="M16 17V3" />
-                  </svg>
-                </div>
-                <button type="button" className="mad-v3-kebab" aria-label="Options">
-                  <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
-                    <circle cx="10" cy="4" r="1.5" />
-                    <circle cx="10" cy="10" r="1.5" />
-                    <circle cx="10" cy="16" r="1.5" />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="mad-v3-stat-mid">
-                <div className="mad-v3-stat-value-group">
-                  <span className="mad-v3-stat-num">{avgScore}</span>
-                  <span className="mad-v3-stat-title">{copy.stats[3]}</span>
-                </div>
-                {/* Amber Sparkline SVG */}
-                <div className="mad-v3-sparkline-box">
-                  <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="spAmber" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.35" />
-                        <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.0" />
-                      </linearGradient>
-                    </defs>
-                    <path d={sparks.averageScore.area} fill="url(#spAmber)" />
-                    <path d={sparks.averageScore.line} fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
-                  </svg>
-                </div>
-              </div>
-
-              <div className={`mad-v3-stat-trend${trends.averageScore < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
-                <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
-                  <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
-                </svg>
-                <span>{trends.averageScore}%</span> <span className="trend-lbl">from last month</span>
-              </div>
-            </div>
+      {/* Card 1: Total Tests */}
+      <div className="mad-v3-stat-card">
+        <div className="mad-v3-stat-top">
+          <div className="mad-v3-stat-icon mad-v3-stat-icon--blue">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+              <path d="M13 2H6a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7l-5-5z" />
+              <path d="M13 2v5h5" />
+            </svg>
           </div>
+          <button type="button" className="mad-v3-kebab" aria-label="Options">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <circle cx="10" cy="4" r="1.5" />
+              <circle cx="10" cy="10" r="1.5" />
+              <circle cx="10" cy="16" r="1.5" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mad-v3-stat-mid">
+          <div className="mad-v3-stat-value-group">
+            <span className="mad-v3-stat-num">{totalTests}</span>
+            <span className="mad-v3-stat-title">{copy.stats[0]}</span>
+          </div>
+          {/* Blue Sparkline SVG */}
+          <div className="mad-v3-sparkline-box">
+            <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="spBlue" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path d={sparks.tests.area} fill="url(#spBlue)" />
+              <path d={sparks.tests.line} fill="none" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <div className={`mad-v3-stat-trend${trends.tests < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+          <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+            <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+          </svg>
+          <span>{trends.tests}%</span> <span className="trend-lbl">from last month</span>
+        </div>
+      </div>
+
+      {/* Card 2: Total Students */}
+      <div className="mad-v3-stat-card">
+        <div className="mad-v3-stat-top">
+          <div className="mad-v3-stat-icon mad-v3-stat-icon--green">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+              <path d="M17 17v-1.5a3.5 3.5 0 00-3.5-3.5h-7A3.5 3.5 0 003 15.5V17" />
+              <circle cx="10" cy="6" r="3.5" />
+            </svg>
+          </div>
+          <button type="button" className="mad-v3-kebab" aria-label="Options">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <circle cx="10" cy="4" r="1.5" />
+              <circle cx="10" cy="10" r="1.5" />
+              <circle cx="10" cy="16" r="1.5" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mad-v3-stat-mid">
+          <div className="mad-v3-stat-value-group">
+            <span className="mad-v3-stat-num">{totalStudents}</span>
+            <span className="mad-v3-stat-title">{copy.stats[1]}</span>
+          </div>
+          {/* Green Sparkline SVG */}
+          <div className="mad-v3-sparkline-box">
+            <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="spGreen" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path d={sparks.students.area} fill="url(#spGreen)" />
+              <path d={sparks.students.line} fill="none" stroke="#10B981" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <div className={`mad-v3-stat-trend${trends.students < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+          <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+            <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+          </svg>
+          <span>{trends.students}%</span> <span className="trend-lbl">from last month</span>
+        </div>
+      </div>
+
+      {/* Card 3: Total Attempts */}
+      <div className="mad-v3-stat-card">
+        <div className="mad-v3-stat-top">
+          <div className="mad-v3-stat-icon mad-v3-stat-icon--purple">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+              <path d="M7 10l2 2 4-4" />
+              <rect x="3" y="3" width="14" height="14" rx="3" />
+            </svg>
+          </div>
+          <button type="button" className="mad-v3-kebab" aria-label="Options">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <circle cx="10" cy="4" r="1.5" />
+              <circle cx="10" cy="10" r="1.5" />
+              <circle cx="10" cy="16" r="1.5" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mad-v3-stat-mid">
+          <div className="mad-v3-stat-value-group">
+            <span className="mad-v3-stat-num">{totalAttempts}</span>
+            <span className="mad-v3-stat-title">{copy.stats[2]}</span>
+          </div>
+          {/* Purple Sparkline SVG */}
+          <div className="mad-v3-sparkline-box">
+            <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="spPurple" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path d={sparks.attempts.area} fill="url(#spPurple)" />
+              <path d={sparks.attempts.line} fill="none" stroke="#8B5CF6" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <div className={`mad-v3-stat-trend${trends.attempts < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+          <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+            <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+          </svg>
+          <span>{trends.attempts}%</span> <span className="trend-lbl">from last month</span>
+        </div>
+      </div>
+
+      {/* Card 4: Average Score */}
+      <div className="mad-v3-stat-card">
+        <div className="mad-v3-stat-top">
+          <div className="mad-v3-stat-icon mad-v3-stat-icon--amber">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+              <path d="M4 17V10" />
+              <path d="M10 17V6" />
+              <path d="M16 17V3" />
+            </svg>
+          </div>
+          <button type="button" className="mad-v3-kebab" aria-label="Options">
+            <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16">
+              <circle cx="10" cy="4" r="1.5" />
+              <circle cx="10" cy="10" r="1.5" />
+              <circle cx="10" cy="16" r="1.5" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="mad-v3-stat-mid">
+          <div className="mad-v3-stat-value-group">
+            <span className="mad-v3-stat-num">{avgScore}</span>
+            <span className="mad-v3-stat-title">{copy.stats[3]}</span>
+          </div>
+          {/* Amber Sparkline SVG */}
+          <div className="mad-v3-sparkline-box">
+            <svg viewBox="0 0 100 45" className="mad-v3-sparkline-svg" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="spAmber" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#F59E0B" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path d={sparks.averageScore.area} fill="url(#spAmber)" />
+              <path d={sparks.averageScore.line} fill="none" stroke="#F59E0B" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <div className={`mad-v3-stat-trend${trends.averageScore < 0 ? ' mad-v3-stat-trend--down' : ''}`}>
+          <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
+            <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
+          </svg>
+          <span>{trends.averageScore}%</span> <span className="trend-lbl">from last month</span>
+        </div>
+      </div>
+    </div>
   );
 
   const renderQuickActions = () => (
     <div className="mad-v3-qa-card">
-            <div className="mad-v3-qa-head">
-              <svg viewBox="0 0 20 20" fill="#2563EB" width="18" height="18" className="mad-v3-qa-bolt">
-                <path d="M11.3 1L4 11h5l-1.3 8L15 9h-5l1.3-8z" />
+      <div className="mad-v3-qa-head">
+        <svg viewBox="0 0 20 20" fill="#2563EB" width="18" height="18" className="mad-v3-qa-bolt">
+          <path d="M11.3 1L4 11h5l-1.3 8L15 9h-5l1.3-8z" />
+        </svg>
+        <h3 className="mad-v3-qa-heading">Quick Actions</h3>
+      </div>
+
+      {/* Primary Action Button */}
+      <Link to={copy.primary.href} className="mad-v3-qa-primary-btn">
+        <span className="mad-v3-qa-btn-text">
+          <span className="mad-v3-plus">+</span> {copy.primary.label}
+        </span>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" className="mad-v3-qa-arrow">
+          <path d="M6 3l5 5-5 5" />
+        </svg>
+      </Link>
+
+      {/* Action Items List */}
+      <div className="mad-v3-qa-list">
+        <Link to={copy.quick[0].href} className="mad-v3-qa-item">
+          <div className="mad-v3-qa-item-left">
+            <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                <path d="M11 4H4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                <path d="M16 2.5a2.121 2.121 0 013 3L9 15l-4 1 1-4 10-10.5z" />
               </svg>
-              <h3 className="mad-v3-qa-heading">Quick Actions</h3>
             </div>
-
-            {/* Primary Action Button */}
-            <Link to={copy.primary.href} className="mad-v3-qa-primary-btn">
-              <span className="mad-v3-qa-btn-text">
-                <span className="mad-v3-plus">+</span> {copy.primary.label}
-              </span>
-              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="14" height="14" className="mad-v3-qa-arrow">
-                <path d="M6 3l5 5-5 5" />
-              </svg>
-            </Link>
-
-            {/* Action Items List */}
-            <div className="mad-v3-qa-list">
-              <Link to={copy.quick[0].href} className="mad-v3-qa-item">
-                <div className="mad-v3-qa-item-left">
-                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <path d="M11 4H4a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-7" />
-                      <path d="M16 2.5a2.121 2.121 0 013 3L9 15l-4 1 1-4 10-10.5z" />
-                    </svg>
-                  </div>
-                  <span className="mad-v3-qa-label">{copy.quick[0].label}</span>
-                </div>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </Link>
-
-              <Link to={copy.quick[1].href} className="mad-v3-qa-item">
-                <div className="mad-v3-qa-item-left">
-                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <path d="M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2" />
-                      <polyline points="7,8 10,5 13,8" />
-                      <line x1="10" y1="5" x2="10" y2="14" />
-                    </svg>
-                  </div>
-                  <span className="mad-v3-qa-label">{copy.quick[1].label}</span>
-                </div>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </Link>
-
-              <Link to={copy.quick[2].href} className="mad-v3-qa-item">
-                <div className="mad-v3-qa-item-left">
-                  <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
-                    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
-                      <circle cx="10" cy="10" r="8" />
-                      <path d="M10 2v8h8" />
-                    </svg>
-                  </div>
-                  <span className="mad-v3-qa-label">{copy.quick[2].label}</span>
-                </div>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
-                  <path d="M6 3l5 5-5 5" />
-                </svg>
-              </Link>
-            </div>
+            <span className="mad-v3-qa-label">{copy.quick[0].label}</span>
           </div>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
+            <path d="M6 3l5 5-5 5" />
+          </svg>
+        </Link>
+
+        <Link to={copy.quick[1].href} className="mad-v3-qa-item">
+          <div className="mad-v3-qa-item-left">
+            <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                <path d="M4 14v2a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                <polyline points="7,8 10,5 13,8" />
+                <line x1="10" y1="5" x2="10" y2="14" />
+              </svg>
+            </div>
+            <span className="mad-v3-qa-label">{copy.quick[1].label}</span>
+          </div>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
+            <path d="M6 3l5 5-5 5" />
+          </svg>
+        </Link>
+
+        <Link to={copy.quick[2].href} className="mad-v3-qa-item">
+          <div className="mad-v3-qa-item-left">
+            <div className="mad-v3-qa-icon mad-v3-qa-icon--blue">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+                <circle cx="10" cy="10" r="8" />
+                <path d="M10 2v8h8" />
+              </svg>
+            </div>
+            <span className="mad-v3-qa-label">{copy.quick[2].label}</span>
+          </div>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" width="13" height="13" className="mad-v3-qa-item-arrow">
+            <path d="M6 3l5 5-5 5" />
+          </svg>
+        </Link>
+      </div>
+    </div>
   );
 
   return (
