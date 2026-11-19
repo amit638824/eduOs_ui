@@ -160,7 +160,7 @@ export default function LoginPage() {
         <div className="ms-login-grid">
           {/* LEFT PROMO COLUMN */}
           <div className="ms-login-promo">
-            <div className="ms-login-brand" style={{ marginBottom: '28px' }}>
+            {/* <div className="ms-login-brand" style={{ marginBottom: '28px' }}>
               <Link to="/" style={{ display: 'inline-block' }}>
                 <img
                   src="/img/logo/mindsprint-logo.png"
@@ -174,7 +174,7 @@ export default function LoginPage() {
                   }}
                 />
               </Link>
-            </div>
+            </div> */}
 
             <h1 className="ms-login-main-title">
               {loginTitle}
@@ -486,7 +486,7 @@ export default function LoginPage() {
                 </button>
 
                 <p className="ms-login-secure">
-                
+
                   <span>Secure access to your examination management dashboard.</span>
                 </p>
               </form>
