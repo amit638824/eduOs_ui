@@ -6,7 +6,7 @@ export default function Footer() {
       <div className="footer section-padding">
         <div className="container">
           <div className="row">
-            <div className="col-lg-3 col-sm-6 col-xs-12">
+            <div className="col-lg-4 col-sm-6 col-xs-12">
               <div className="single_footer">
                 <Link to="/">
                   <img src="/img/logo/techwagger-logo.png" alt="Techwagger - Mindsprint" />
@@ -97,7 +97,7 @@ export default function Footer() {
               </div>
             </div>
 
-            <div className="col-lg-3 col-sm-6 col-xs-12">
+            <div className="col-lg-4 col-sm-6 col-xs-12">
               <div className="single_footer">
                 <h4>Contact Info</h4>
                 <div className="sf_contact">
@@ -109,30 +109,11 @@ export default function Footer() {
                   <p><a href="tel:+918840622729" style={{ color: "inherit", textDecoration: "none" }}>+91 8840 622 729</a></p>
                 </div>
                 <div className="sf_contact">
-                  <span className="ti-mobile" />
-                  <p>
-                    <a href="https://wa.me/918840622729" target="_blank" rel="noreferrer">Contact via WhatsApp</a>
-                  </p>
-                </div>
-                <div className="sf_contact">
                   <span className="ti-email" />
                   <p>
-                    <a href="mailto:connect@techwagger.com">connect@techwagger.com</a>
+                    <a href="mailto:Vivek@techwagger.com">Vivek@techwagger.com</a>
                   </p>
                 </div>
-              </div>
-            </div>
-
-            <div className="col-lg-2 col-sm-6 col-xs-12">
-              <div className="single_footer">
-                <h4>Mobile Testing</h4>
-                <p>Attempt mock tests and check scorecards anytime on mobile.</p>
-                <a href="https://play.google.com/store/search?q=mindsprint&c=apps" target="_blank" rel="noreferrer">
-                  <img src="/eduleb/img/google-play.jpg" className="foot_img" alt="Google Play" />
-                </a>
-                <a href="https://apps.apple.com/search?term=mindsprint" target="_blank" rel="noreferrer">
-                  <img src="/eduleb/img/app-store.jpg" className="foot_img" alt="App Store" />
-                </a>
               </div>
             </div>
           </div>
@@ -142,7 +123,7 @@ export default function Footer() {
       <div className="foot_copy">
         <div className="footer_copyright">
           <p>
-            &copy; {new Date().getFullYear()} Mindsprint — Enterprise Online Examination Platform. Techwagger Solutions Private Limited. All Rights Reserved.
+            &copy; {new Date().getFullYear()} Techwagger Solutions Pvt. Ltd. All Rights Reserved.
           </p>
         </div>
       </div>

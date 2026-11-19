@@ -2,9 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import PageBanner from '@/components/eduleb/PageBanner';
 import { siteContent } from '@/data/siteContent';
 import { notify } from '@/lib/toast';
+import api from '@/lib/api';
+import { parseApiError } from '@/lib/errors';
+import type { ApiResponse } from '@/types/api';
 
 // Target email address where contact messages are sent.
-const CONTACT_RECIPIENT_EMAIL = 'connect@techwagger.com';
+const CONTACT_RECIPIENT_EMAIL = 'Vivek@techwagger.com';
 
 export default function ContactPage() {
   const { contact } = siteContent;
@@ -290,45 +293,27 @@ export default function ContactPage() {
     setErrorMessage('');
 
     try {
-      const response = await fetch(`https://formsubmit.co/ajax/${CONTACT_RECIPIENT_EMAIL}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          name: formData.name.trim(),
-          email: formData.email.trim(),
-          _subject: `[Mindsprint Contact] ${formData.subject.trim()}`,
-          message: formData.message.trim(),
-          _captcha: 'false',
-          _template: 'table',
-        }),
+      const { data } = await api.post<ApiResponse<{ message: string }>>('/public/contact', {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
       });
 
-      const result = await response.json().catch(() => null);
-
-      if (response.ok && (result?.success === 'true' || result?.success === true)) {
+      if (data.success) {
         setStatus('success');
         setFormData({ name: '', email: '', subject: '', message: '' });
         setTouched({ name: false, email: false, subject: false, message: false });
         setErrors({});
         notify.success('Your message has been sent successfully!');
-      } else if (
-        result?.message &&
-        typeof result.message === 'string' &&
-        result.message.toLowerCase().includes('activation')
-      ) {
-        setStatus('activation_needed');
-        notify.info('Activation pending on recipient mailbox. You can also send directly via email client.');
       } else {
-        const msg = result?.message || 'Failed to submit via online form. Please use the direct email link below.';
+        const msg = data.message || 'Failed to submit via online form. Please use the direct email link below.';
         setStatus('error');
         setErrorMessage(msg);
         notify.error(msg);
       }
-    } catch {
-      const msg = 'Unable to connect to the email service. You can send your message directly using the email client link below.';
+    } catch (err) {
+      const msg = parseApiError(err) || 'Unable to connect to the email service. You can send your message directly using the email client link below.';
       setStatus('error');
       setErrorMessage(msg);
       notify.error(msg);

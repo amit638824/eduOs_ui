@@ -62,7 +62,12 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
               </Link>
-              <a href={content?.secondaryCta?.href || '#video'} className="ms-btn-outline-clean">
+              <a
+                href={content?.secondaryCta?.href || 'https://www.youtube.com/watch?v=RXv_uIN6e-Y'}
+                target="_blank"
+                rel="noreferrer"
+                className="ms-btn-outline-clean"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <polygon points="5 3 19 12 5 21 5 3" />
                 </svg>
