@@ -13,7 +13,6 @@ export default function Layout() {
   const { pathname } = useLocation();
   const isDashboard = pathname.startsWith('/dashboard');
   const isLoginPage = pathname === '/login';
-  /* Marketing + auth pages share Eduleb chrome (header/footer + styles) */
   const isEdulebPage = !isDashboard;
 
   useEffect(() => {

@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import type { HomepageContent } from '@/types/homepage';
 
 const fallbackParagraphs = [
@@ -40,9 +39,9 @@ export default function WhyChooseSection({ content }: { content?: HomepageConten
                 ))}
               </ul>
               <div data-aos="fade-up" data-aos-delay="400">
-                <Link className="btn_one" to={content?.cta?.href || '/exams'}>
+                <a className="btn_one" href="#" onClick={(e) => e.preventDefault()}>
                   {content?.cta?.label || 'Start Online Test'} <i className="ti-arrow-top-right" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>

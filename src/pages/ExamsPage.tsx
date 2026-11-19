@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import PageBanner from '@/components/eduleb/PageBanner';
 import ExamGridSection from '@/components/home/ExamGridSection';
 import SubjectsSection from '@/components/home/SubjectsSection';
@@ -9,6 +10,12 @@ interface ExamsPageProps {
 }
 
 export default function ExamsPage({ category, title = 'Practice Tests' }: ExamsPageProps) {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
   return (
     <>
       <PageBanner

@@ -28,6 +28,7 @@ export default function PartnersSection({ content }: { content?: HomepageContent
                 <a
                   key={src}
                   href="#"
+                  onClick={(e) => e.preventDefault()}
                   className="eduleb-hover-lift"
                   data-aos="zoom-in"
                   data-aos-delay={idx * 80 + 100}

@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import type { HomepageContent } from '@/types/homepage';
 
 const fallbackCourses = [
@@ -65,46 +64,82 @@ export default function CoursesSection({ content }: { content?: HomepageContent[
             Prepare for top competitive exams, government certifications, and skill tests with real-time proctored mock assessments.
           </p>
         </div>
-        <div className="row">
+        <div className="row g-4 align-items-stretch">
           {courses.map((course, index) => (
             <div
               key={course.title}
-              className="col-lg-4 col-sm-6 col-xs-12"
+              className="col-lg-4 col-sm-6 col-xs-12 d-flex"
               data-aos="fade-up"
               data-aos-delay={(index % 3) * 120}
             >
-              <div className="single_course eduleb-hover-lift">
-                <div className="single_c_img" data-aos="zoom-in" data-aos-delay={(index % 3) * 120 + 80}>
-                  <img src={course.img} className="img-fluid" alt={course.title} />
-                  <span>{course.tag}</span>
+              <div className="single_course eduleb-hover-lift w-100 d-flex flex-column text-center">
+                <div
+                  className="single_c_img"
+                  data-aos="zoom-in"
+                  data-aos-delay={(index % 3) * 120 + 80}
+                  style={{
+                    height: '200px',
+                    width: '100%',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    borderRadius: '18px 18px 0 0',
+                    margin: 0,
+                  }}
+                >
+                  <img
+                    src={course.img}
+                    className="img-fluid"
+                    alt={course.title}
+                    style={{
+                      width: '100%',
+                      height: '200px',
+                      objectFit: 'cover',
+                      display: 'block',
+                    }}
+                  />
+                  <span style={{ background: '#3156d8', color: '#fff' }}>{course.tag}</span>
                 </div>
-                <div className="my-2" style={{ color: '#f59e0b' }}>
+                <div className="my-2 pt-3" style={{ color: '#f59e0b' }}>
                   <i className="fa fa-star" />
                   <i className="fa fa-star" />
                   <i className="fa fa-star" />
                   <i className="fa fa-star" />
                   <i className="fa fa-star" />
                 </div>
-                <h4>
-                  <Link to="/exams">{course.title}</Link>
+                <h4
+                  style={{
+                    fontSize: '17px',
+                    fontWeight: 700,
+                    lineHeight: 1.4,
+                    minHeight: '52px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0 16px',
+                    margin: '0 0 12px',
+                  }}
+                >
+                  <a href="#" onClick={(e) => e.preventDefault()} style={{ color: '#14213d' }}>
+                    {course.title}
+                  </a>
                 </h4>
-                <p>
-                  <span className="ti-book"> </span> {course.lessons}
-                </p>
-                <p>
-                  <span className="ti-alarm-clock"> </span>
-                  {course.duration}
-                </p>
-                <div className="price">{course.price}</div>
+                <div className="mb-3" style={{ fontSize: '13.5px', color: '#64718a' }}>
+                  <span className="ti-book me-1" style={{ color: '#3156d8' }} /> {course.lessons}
+                  <span className="mx-2">|</span>
+                  <span className="ti-alarm-clock me-1" style={{ color: '#3156d8' }} /> {course.duration}
+                </div>
+                <div className="price mt-auto" style={{ borderTop: '1px solid #e8e8e9', padding: '12px 20px', color: '#3156d8', fontWeight: 700 }}>
+                  {course.price}
+                </div>
               </div>
             </div>
           ))}
         </div>
         <div className="row mt-5">
           <div className="col-12 text-center" data-aos="fade-up">
-            <Link to={content?.cta?.href || '/exams'} className="btn_one">
+            <a href="#" onClick={(e) => e.preventDefault()} className="btn_one">
               {content?.cta?.label || 'View All Tests'} <i className="ti-arrow-top-right" />
-            </Link>
+            </a>
           </div>
         </div>
       </div>
