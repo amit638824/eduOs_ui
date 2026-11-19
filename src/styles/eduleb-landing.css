@@ -2146,7 +2146,7 @@ body.eduleb-login-route .main_wrapper {
 }
 
 .ms-highlight-blue {
-  color: #2563eb !important;
+  color: #3156d8 !important;
 }
 
 .ms-login-lead {
@@ -2346,14 +2346,14 @@ body.eduleb-login-route .main_wrapper {
 }
 
 .ms-login-input-wrap--pass .password-input-toggle:hover {
-  color: #2563eb;
+  color: #3156d8;
 }
 
 .ms-login-input:focus,
 .ms-login-input-wrap input.ms-login-input:focus {
-  border-color: #3b82f6 !important;
+  border-color: #3156d8 !important;
   background: #fff !important;
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12) !important;
+  box-shadow: 0 0 0 4px rgba(49, 86, 216, 0.12) !important;
 }
 
 .ms-login-input.input-error {
@@ -2403,7 +2403,7 @@ body.eduleb-login-route .main_wrapper {
 .ms-login-remember input {
   width: 16px;
   height: 16px;
-  accent-color: #2563eb;
+  accent-color: #3156d8;
   cursor: pointer;
   border-radius: 4px;
 }
@@ -2411,12 +2411,12 @@ body.eduleb-login-route .main_wrapper {
 .ms-login-forgot {
   font-size: 0.86rem !important;
   font-weight: 600 !important;
-  color: #2563eb !important;
+  color: #3156d8 !important;
   text-decoration: none !important;
 }
 
 .ms-login-forgot:hover {
-  color: #1d4ed8 !important;
+  color: #203fae !important;
   text-decoration: underline !important;
 }
 
@@ -2425,14 +2425,14 @@ body.eduleb-login-route .main_wrapper {
   height: 48px;
   border: none;
   border-radius: 12px !important;
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  background: #3156d8 !important;
   color: #fff !important;
   font-size: 0.98rem !important;
   font-weight: 700 !important;
   font-family: 'Roboto', sans-serif !important;
   cursor: pointer;
-  box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.38) !important;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease !important;
+  box-shadow: 0 10px 24px -4px rgba(49, 86, 216, 0.38) !important;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease, background 0.2s ease !important;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2441,9 +2441,9 @@ body.eduleb-login-route .main_wrapper {
 }
 
 .ms-login-btn:hover:not(:disabled) {
-  filter: brightness(1.03);
+  background: #203fae !important;
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px -4px rgba(37, 99, 235, 0.48) !important;
+  box-shadow: 0 14px 28px -4px rgba(49, 86, 216, 0.48) !important;
 }
 
 .ms-login-btn:disabled {
