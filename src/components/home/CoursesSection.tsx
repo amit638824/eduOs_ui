@@ -39,7 +39,7 @@ const fallbackCourses = [
     title: 'Python Programming & Problem Solving Skill Assessment',
     lessons: '50 Questions',
     duration: '60 Mins',
-    price: '₹49.00',
+    price: 'Free Practice',
   },
   {
     img: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=600&q=80',
