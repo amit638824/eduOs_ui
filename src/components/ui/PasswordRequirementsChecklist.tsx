@@ -1,4 +1,3 @@
-import { FiCheck } from 'react-icons/fi';
 
 export interface PasswordRule {
   id: string;

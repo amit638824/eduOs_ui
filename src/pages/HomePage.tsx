@@ -1,54 +1,44 @@
-import { useState, useLayoutEffect, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Footer from '@/components/layout/Footer';
 import '@/styles/mindsprint-home.css';
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
-  if (typeof document !== 'undefined') {
-    if (!document.body.classList.contains('ms-home-active')) {
-      document.body.classList.remove('eduleb-page', 'body__wrapper', 'dashboard-layout-active');
-      document.body.classList.add('ms-home-active');
-    }
-  }
-
-  useLayoutEffect(() => {
-    document.body.classList.remove('eduleb-page', 'body__wrapper', 'dashboard-layout-active');
-    document.body.classList.add('ms-home-active');
-  }, []);
-
-  useEffect(() => {
-    const hash = window.location.hash;
-    if (hash) {
-      const id = hash.replace('#', '');
-      const timer = setTimeout(() => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 120);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
     setMenuOpen(false);
-    
-    const id = targetId.replace('#', '');
+
     if (window.location.pathname !== '/') {
-      navigate('/#' + id);
+      navigate('/' + targetId);
       return;
     }
 
+    const id = targetId.replace('#', '');
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      window.history.pushState(null, '', '#' + id);
+      element.scrollIntoView({ behavior: 'smooth' });
+      window.history.pushState(null, '', targetId);
     }
   };
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash;
+      if (hash) {
+        const id = hash.replace('#', '');
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    };
+
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
 
   const handleLoginClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -57,7 +47,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="ms-home-root ms-home-active">
+    <>
       <div className="top">
         <div className="wrap">
           <span>Online Examination • Mock Tests • Assessments</span>
@@ -85,9 +75,9 @@ export default function HomePage() {
             <a href="#how" onClick={(e) => scrollToSection(e, '#how')}>
               How It Works
             </a>
-            <Link to="/contact" onClick={() => setMenuOpen(false)}>
+            <a href="#contact" onClick={(e) => scrollToSection(e, '#contact')}>
               Contact
-            </Link>
+            </a>
           </nav>
           <div className="nav-cta">
             <Link className="btn outline" to="/login" onClick={handleLoginClick}>
@@ -281,7 +271,7 @@ export default function HomePage() {
                   MindSprint team to discuss your requirements and request a demo.
                 </p>
               </div>
-              <a className="btn" href="mailto:vivek@techwagger.com?subject=MindSprint%20Demo%20Request">
+              <a className="btn" href="mailto:connect@techwagger.com?subject=MindSprint%20Demo%20Request">
                 Request a Demo&nbsp; →
               </a>
             </div>
@@ -289,7 +279,56 @@ export default function HomePage() {
         </section>
       </main>
 
-      <Footer />
-    </div>
+      <footer>
+        <div className="wrap">
+          <div className="footgrid">
+            <div>
+              <a
+                className="logo footer-logo-badge"
+                href="#home"
+                onClick={(e) => scrollToSection(e, '#home')}
+                aria-label="MindSprint Home"
+              >
+                <img src="/img/logo/mindsprint-logo.png" alt="MindSprint" />
+              </a>
+              <p>
+                Online exams, mock tests and assessments — bringing a smarter digital examination experience to
+                India's learning community.
+              </p>
+            </div>
+            <div>
+              <h4>Quick Links</h4>
+              <div className="footlinks">
+                <a href="#audience" onClick={(e) => scrollToSection(e, '#audience')}>
+                  Solutions
+                </a>
+                <a href="#features" onClick={(e) => scrollToSection(e, '#features')}>
+                  Why MindSprint
+                </a>
+                <a href="#how" onClick={(e) => scrollToSection(e, '#how')}>
+                  How It Works
+                </a>
+              </div>
+            </div>
+            <div>
+              <h4>Get Started</h4>
+              <div className="footlinks">
+                <Link to="/login" onClick={handleLoginClick}>
+                  Login to Portal
+                </Link>
+                <a href="#contact" onClick={(e) => scrollToSection(e, '#contact')}>
+                  Request a Demo
+                </a>
+                <a href="mailto:connect@techwagger.com">Contact Sales</a>
+              </div>
+            </div>
+          </div>
+          <div className="copyright">
+            <span>© {new Date().getFullYear()} MindSprint. All rights reserved.</span>
+            <span>Learn • Practise • Progress</span>
+          </div>
+        </div>
+      </footer>
+    </>
   );
 }
