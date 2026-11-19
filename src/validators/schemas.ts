@@ -22,15 +22,17 @@ export function validateName(value: string | undefined | null, label: string = '
   return null;
 }
 
+export const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+export const PASSWORD_VALIDATION_MESSAGE =
+  'Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, one number, and one special character.';
+
 export function validatePassword(password: string | undefined | null): string | null {
   const p = password ?? '';
   if (!p) return 'Password is required.';
-  if (p.length < 8) return 'Password must be at least 8 characters.';
   if (p.length > 128) return 'Password cannot exceed 128 characters.';
-  if (!/[A-Z]/.test(p)) return 'Password must include at least one uppercase letter.';
-  if (!/[a-z]/.test(p)) return 'Password must include at least one lowercase letter.';
-  if (!/[0-9]/.test(p)) return 'Password must include at least one number.';
-  if (!/[^A-Za-z0-9]/.test(p)) return 'Password must include at least one special character.';
+  if (!PASSWORD_REGEX.test(p)) {
+    return PASSWORD_VALIDATION_MESSAGE;
+  }
   return null;
 }
 
@@ -85,12 +87,8 @@ export const optionalNameSchema = (label: string = 'Name') =>
 export const passwordSchema = yup
   .string()
   .required('Please enter a password.')
-  .min(8, 'Password must be at least 8 characters.')
-  .max(128, 'Password is too long.')
-  .matches(/[A-Z]/, 'Password must include at least one uppercase letter.')
-  .matches(/[a-z]/, 'Password must include at least one lowercase letter.')
-  .matches(/[0-9]/, 'Password must include at least one number.')
-  .matches(/[^A-Za-z0-9]/, 'Password must include at least one special character.');
+  .max(128, 'Password cannot exceed 128 characters.')
+  .matches(PASSWORD_REGEX, PASSWORD_VALIDATION_MESSAGE);
 
 export const loginSchema = yup.object({
   loginId: yup

@@ -2573,11 +2573,9 @@ body.dark_mode .sca-notifications-card .org-table thead tr,
   background: linear-gradient(90deg, #0b0f24 0%, #1d4ed8 100%) !important;
 }
 
-/* Password Requirements Box Dark Mode Support */
-body.dark_mode .password-requirements-box,
-.sca-dashboard--dark .password-requirements-box {
-  background: #1e293b !important;
-  border-color: #334155 !important;
+/* Password Requirements Box Hidden */
+.password-requirements-box {
+  display: none !important;
 }
 
 

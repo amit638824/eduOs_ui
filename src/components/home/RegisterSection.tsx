@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { useAuth } from '@/context/AuthContext';
 import { parseApiError } from '@/lib/errors';
-import { FormError, PasswordInput, PasswordRequirementsChecklist } from '@/components/ui/FormField';
+import { FormError, PasswordInput } from '@/components/ui/FormField';
 import { registerSchema, type RegisterFormValues } from '@/validators/schemas';
 
 interface RegisterSectionProps {
@@ -20,7 +20,6 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: yupResolver(registerSchema),
@@ -33,8 +32,6 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
       password: '',
     },
   });
-
-  const passwordValue = watch('password') || '';
 
   const onSubmit = async (values: RegisterFormValues) => {
     setApiError('');
@@ -129,11 +126,10 @@ export default function RegisterSection({ variant = 'default' }: RegisterSection
                     id="regPassword"
                     inputClass="form-control"
                     hasError={!!errors.password}
-                    placeholder="Min 8 chars, 1 uppercase, 1 number"
+                    placeholder="Enter your password"
                     autoComplete="new-password"
                     {...register('password')}
                   />
-                  <PasswordRequirementsChecklist password={passwordValue} />
                   <FormError message={errors.password?.message} />
                 </div>
 

@@ -11,7 +11,7 @@ import { organizationService, platformService, examinationService } from '@/serv
 import * as authService from '@/services/auth.service';
 import { parseApiError } from '@/lib/errors';
 import { normalizePositiveIntInput } from '@/utils/positiveIntInput';
-import { FormError, PasswordInput, PasswordRequirementsChecklist, inputClassName } from '@/components/ui/FormField';
+import { FormError, PasswordInput, inputClassName } from '@/components/ui/FormField';
 import { EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmDelete } from '@/lib/swal';
 import { formatCountdown, msUntil } from '@/utils/countdown';
@@ -1447,7 +1447,6 @@ function PasswordChangeForm({ onCancel }: { onCancel?: () => void } = {}) {
             className="org-form-input"
             {...register('newPassword')}
           />
-          <PasswordRequirementsChecklist password={newPasswordValue} />
           <FormError message={errors.newPassword?.message} />
         </div>
 
