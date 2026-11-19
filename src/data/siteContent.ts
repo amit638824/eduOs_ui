@@ -17,7 +17,7 @@ export const siteContent: SiteContent = {
   },
   contact: {
     phone: '+91 8840 622 729',
-    email: 'connect@techwagger.com',
+    email: 'vivek@techwagger.com',
     address:
       'L-3/141, Vinay Khand, Gomti Nagar, Lucknow, Uttar Pradesh – 226010, India',
   },

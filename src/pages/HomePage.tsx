@@ -1,5 +1,6 @@
 import { useState, useLayoutEffect, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import Footer from '@/components/layout/Footer';
 import '@/styles/mindsprint-home.css';
 
 export default function HomePage() {
@@ -280,7 +281,7 @@ export default function HomePage() {
                   MindSprint team to discuss your requirements and request a demo.
                 </p>
               </div>
-              <a className="btn" href="mailto:connect@techwagger.com?subject=MindSprint%20Demo%20Request">
+              <a className="btn" href="mailto:vivek@techwagger.com?subject=MindSprint%20Demo%20Request">
                 Request a Demo&nbsp; →
               </a>
             </div>
@@ -288,56 +289,7 @@ export default function HomePage() {
         </section>
       </main>
 
-      <footer>
-        <div className="wrap">
-          <div className="footgrid">
-            <div>
-              <a
-                className="logo footer-logo-badge"
-                href="#home"
-                onClick={(e) => scrollToSection(e, '#home')}
-                aria-label="MindSprint Home"
-              >
-                <img src="/img/logo/mindsprint-logo.png" alt="MindSprint" />
-              </a>
-              <p>
-                Online exams, mock tests and assessments — bringing a smarter digital examination experience to
-                India's learning community.
-              </p>
-            </div>
-            <div>
-              <h4>Quick Links</h4>
-              <div className="footlinks">
-                <a href="#audience" onClick={(e) => scrollToSection(e, '#audience')}>
-                  Solutions
-                </a>
-                <a href="#features" onClick={(e) => scrollToSection(e, '#features')}>
-                  Why MindSprint
-                </a>
-                <a href="#how" onClick={(e) => scrollToSection(e, '#how')}>
-                  How It Works
-                </a>
-              </div>
-            </div>
-            <div>
-              <h4>Get Started</h4>
-              <div className="footlinks">
-                <Link to="/login" onClick={handleLoginClick}>
-                  Login to Portal
-                </Link>
-                <a href="#contact" onClick={(e) => scrollToSection(e, '#contact')}>
-                  Request a Demo
-                </a>
-                <a href="mailto:connect@techwagger.com">Contact Sales</a>
-              </div>
-            </div>
-          </div>
-          <div className="copyright">
-            <span>© {new Date().getFullYear()} MindSprint. All rights reserved.</span>
-            <span>Learn • Practise • Progress</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

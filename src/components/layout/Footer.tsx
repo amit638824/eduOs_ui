@@ -1,194 +1,92 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import '@/styles/mindsprint-home.css';
 
 export default function Footer() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
+    e.preventDefault();
+    const id = targetId.replace('#', '');
+    if (location.pathname === '/') {
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.pushState(null, '', '#' + id);
+        return;
+      }
+    }
+    navigate('/#' + id);
+  };
+
+  const handleLoginClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    navigate('/login');
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  };
+
   return (
-    <>
-      <div className="footer section-padding">
-        <div className="container">
-          <div className="row">
-            <div className="col-lg-3 col-sm-6 col-xs-12">
-              <div className="single_footer">
-                <Link
-                  to="/"
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    marginBottom: '14px',
-                    textDecoration: 'none',
-                    background: '#ffffff',
-                    padding: '8px 16px',
-                    borderRadius: '12px',
-                    width: 'fit-content',
-                  }}
-                >
-                  <img
-                    src="/img/logo/mindsprint-logo.png"
-                    alt="Mindsprint"
-                    style={{
-                      maxHeight: '42px',
-                      height: '42px',
-                      width: 'auto',
-                      objectFit: 'contain',
-                      display: 'block',
-                      marginBottom: '0',
-                    }}
-                  />
-                </Link>
-                <p style={{ marginTop: '8px', marginBottom: '16px' }}>
-                  Mindsprint is a next-generation online examination, CBT mock test, and e-assessment
-                  platform with AI anti-cheat proctoring and verified digital certifications.
-                </p>
-                <div className="social_profile">
-                  <ul
-                    className="footer-social-list"
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                      flexWrap: 'nowrap',
-                      alignItems: 'center',
-                      gap: '12px',
-                      margin: '16px 0 0',
-                      padding: 0,
-                      listStyle: 'none',
-                    }}
-                  >
-                    <li style={{ display: 'inline-flex', width: 'auto', margin: 0 }}>
-                      <a href="https://twitter.com/techwagger" target="_blank" rel="noreferrer" aria-label="Twitter">
-                        <i className="fa-solid fa-x" />
-                      </a>
-                    </li>
-                    <li style={{ display: 'inline-flex', width: 'auto', margin: 0 }}>
-                      <a href="https://facebook.com/techwagger" target="_blank" rel="noreferrer" aria-label="Facebook">
-                        <i className="fa-brands fa-facebook-f" />
-                      </a>
-                    </li>
-                    <li style={{ display: 'inline-flex', width: 'auto', margin: 0 }}>
-                      <a href="https://instagram.com/techwagger" target="_blank" rel="noreferrer" aria-label="Instagram">
-                        <i className="fa-brands fa-instagram" />
-                      </a>
-                    </li>
-                    <li style={{ display: 'inline-flex', width: 'auto', margin: 0 }}>
-                      <a href="https://linkedin.com/company/techwagger" target="_blank" rel="noreferrer" aria-label="LinkedIn">
-                        <i className="fa-brands fa-linkedin-in" />
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-lg-2 col-sm-6 col-xs-12">
-              <div className="single_footer">
-                <h4>Platform Links</h4>
-                <ul>
-                  <li>
-                    <Link to="/about">About Platform</Link>
-                  </li>
-                  <li>
-                    <Link to="/exams">Practice Tests</Link>
-                  </li>
-                  <li>
-                    <Link to="/pricing">Pricing Plans</Link>
-                  </li>
-                  {/* <li>
-                    <Link to="/faq">Frequently Asked</Link>
-                  </li> */}
-                  <li>
-                    <Link to="/contact">Contact Support</Link>
-                  </li>
-                  <li>
-                    <Link to="/login?as=instructor">Instructor Login</Link>
-                  </li>
-                  <li>
-                    <Link to="/login?as=teacher">Become A Teacher</Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="col-lg-2 col-sm-6 col-xs-12">
-              <div className="single_footer">
-                <h4>Popular Exams</h4>
-                <ul>
-                  <li>
-                    <Link to="/exams/hardware-networking">Hardware &amp; Network</Link>
-                  </li>
-                  <li>
-                    <Link to="/exams/govt-it">CCC &amp; O Level</Link>
-                  </li>
-                  <li>
-                    <Link to="/exams/computer-application">Computer Applications</Link>
-                  </li>
-                  <li>
-                    <Link to="/exams/programming">Programming &amp; Code</Link>
-                  </li>
-                  <li>
-                    <Link to="/exams">Aptitude &amp; Reasoning</Link>
-                  </li>
-                  <li>
-                    <Link to="/exams/diploma">Diploma Assessments</Link>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="col-lg-3 col-sm-6 col-xs-12">
-              <div className="single_footer">
-                <h4>Contact Info</h4>
-                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                  <span className="sf_icon">
-                    <i className="fa-solid fa-location-dot" />
-                  </span>
-                  <p style={{ margin: 0, lineHeight: 1.4 }}>
-                    <a
-                      href="https://www.google.com/maps/search/?api=1&query=L-3%2F141%2C+Vinay+Khand%2C+Gomti+Nagar%2C+Lucknow%2C+Uttar+Pradesh+%E2%80%93+226010%2C+India"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      L-3/141, Vinay Khand, Gomti Nagar, Lucknow, UP – 226010
-                    </a>
-                  </p>
-                </div>
-                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                  <span className="sf_icon">
-                    <i className="fa-solid fa-phone" />
-                  </span>
-                  <p style={{ margin: 0, lineHeight: 1.4 }}>
-                    <a href="tel:+918840622729">+91 8840 622 729</a>
-                  </p>
-                </div>
-
-                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
-                  <span className="sf_icon">
-                    <i className="fa-solid fa-envelope" />
-                  </span>
-                  <p style={{ margin: 0, lineHeight: 1.4 }}>
-                    <a href="mailto:connect@techwagger.com">connect@techwagger.com</a>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-lg-2 col-sm-6 col-xs-12">
-              <div className="single_footer">
-                <h4>Mobile Testing</h4>
-                <p>Attempt mock tests and check scorecards anytime on mobile.</p>
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="foot_copy">
-        <div className="container">
-          <div className="footer_copyright text-center py-3">
-            <p className="m-0" style={{ fontSize: '13px', color: '#93a2c2' }}>
-              Copyrights &copy; {new Date().getFullYear()} All Rights Reserved by Mindsprint
+    <footer
+      className="ms-footer-universal"
+      style={{
+        background: '#111d39',
+        color: '#d0d9ed',
+        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif',
+        borderTop: 'none',
+      }}
+    >
+      <div className="wrap">
+        <div className="footgrid">
+          <div>
+            <a
+              className="logo footer-logo-badge"
+              href="/#home"
+              onClick={(e) => scrollToSection(e, '#home')}
+              aria-label="MindSprint Home"
+            >
+              <img src="/img/logo/mindsprint-logo.png" alt="MindSprint" />
+            </a>
+            <p style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>
+              Online exams, mock tests and assessments — bringing a smarter digital examination experience to
+              India's learning community.
             </p>
           </div>
+          <div>
+            <h4 style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>Quick Links</h4>
+            <div className="footlinks" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>
+              <a href="/#audience" onClick={(e) => scrollToSection(e, '#audience')}>
+                Solutions
+              </a>
+              <a href="/#features" onClick={(e) => scrollToSection(e, '#features')}>
+                Why MindSprint
+              </a>
+              <a href="/#how" onClick={(e) => scrollToSection(e, '#how')}>
+                How It Works
+              </a>
+            </div>
+          </div>
+          <div>
+            <h4 style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>Get Started</h4>
+            <div className="footlinks" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>
+              <Link to="/login" onClick={handleLoginClick}>
+                Login to Portal
+              </Link>
+              <a href="/#contact" onClick={(e) => scrollToSection(e, '#contact')}>
+                Request a Demo
+              </a>
+              <a href="mailto:vivek@techwagger.com">Contact Sales</a>
+            </div>
+          </div>
+        </div>
+        <div className="copyright" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>
+          <span style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>
+            © {new Date().getFullYear()} MindSprint. All rights reserved.
+          </span>
+          <span style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>
+            Learn • Practise • Progress
+          </span>
         </div>
       </div>
-    </>
+    </footer>
   );
 }

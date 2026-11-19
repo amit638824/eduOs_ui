@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
+import { FiMapPin, FiPhone, FiMail, FiSend } from 'react-icons/fi';
 import PageBanner from '@/components/eduleb/PageBanner';
 import { siteContent } from '@/data/siteContent';
 import { notify } from '@/lib/toast';
 
 // Target email address where contact messages are sent.
-const CONTACT_RECIPIENT_EMAIL = 'connect@techwagger.com';
+const CONTACT_RECIPIENT_EMAIL = 'vivek@techwagger.com';
 
 export default function ContactPage() {
   const { contact } = siteContent;
@@ -354,15 +355,17 @@ export default function ContactPage() {
           <div className="row align-items-stretch g-4">
             <div className="col-lg-5 col-md-12 d-flex flex-column">
               <div className="contact_info">
-                <h4>Get in Touch</h4>
-                <p style={{ marginBottom: '20px', color: '#64748b', fontSize: '0.86rem', lineHeight: 1.5 }}>
-                  Reach out to our team for platform support, school onboarding, or mock exam inquiries.
+                <h4>Contact Details</h4>
+                <p style={{ marginBottom: '22px', color: '#64748b', fontSize: '0.88rem', lineHeight: 1.5 }}>
+                  Feel free to connect with us for inquiries, platform demonstrations, or institutional onboarding.
                 </p>
 
                 <div className="sf_contact">
-                  <span className="sf_contact_icon ti-map" />
+                  <span className="sf_contact_icon">
+                    <FiMapPin size={18} />
+                  </span>
                   <p>
-                    <strong className="sf_contact_title">Office Location</strong>
+                    <strong className="sf_contact_title">Office Address</strong>
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`}
                       target="_blank"
@@ -378,9 +381,11 @@ export default function ContactPage() {
                 </div>
 
                 <div className="sf_contact">
-                  <span className="sf_contact_icon ti-mobile" />
+                  <span className="sf_contact_icon">
+                    <FiPhone size={18} />
+                  </span>
                   <p>
-                    <strong className="sf_contact_title">Phone Support</strong>
+                    <strong className="sf_contact_title">Phone Number</strong>
                     <a
                       href={`tel:${contact.phone.replace(/[^\d+]/g, '')}`}
                       style={{ color: 'inherit', textDecoration: 'none' }}
@@ -394,9 +399,11 @@ export default function ContactPage() {
                 </div>
 
                 <div className="sf_contact">
-                  <span className="sf_contact_icon ti-email" />
+                  <span className="sf_contact_icon">
+                    <FiMail size={18} />
+                  </span>
                   <p>
-                    <strong className="sf_contact_title">Email Inquiries</strong>
+                    <strong className="sf_contact_title">Email Address</strong>
                     <a
                       href={`mailto:${contact.email}`}
                       style={{ color: 'inherit', textDecoration: 'none' }}
@@ -407,33 +414,6 @@ export default function ContactPage() {
                       {contact.email}
                     </a>
                   </p>
-                </div>
-
-                <div
-                  style={{
-                    marginTop: 'auto',
-                    padding: '12px 14px',
-                    background: '#f8fafc',
-                    borderRadius: '10px',
-                    border: '1px solid #e2e8f0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: '#10b981',
-                      boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.2)',
-                    }}
-                  />
-                  <div>
-                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#14213d' }}>Response within 24 Hours</div>
-                    <div style={{ fontSize: '10.5px', color: '#64748b' }}>Mon – Sat: 9:30 AM – 6:30 PM IST</div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -468,10 +448,14 @@ export default function ContactPage() {
                         placeholder="Enter your name"
                         required
                         disabled={status === 'loading'}
-                        style={(touched.name || formData.name.trim().length > 30) && errors.name ? { borderColor: '#ef4444' } : {}}
+                        style={{
+                          margin: 0,
+                          marginBottom: 0,
+                          ...((touched.name || formData.name.trim().length > 30) && errors.name ? { borderColor: '#ef4444' } : {}),
+                        }}
                       />
                       {(touched.name || formData.name.trim().length > 30) && errors.name && (
-                        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+                        <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', paddingLeft: '3px', fontWeight: 500, lineHeight: 1.2, textAlign: 'left' }}>
                           {errors.name}
                         </div>
                       )}
@@ -501,10 +485,14 @@ export default function ContactPage() {
                         placeholder="Enter your email address"
                         required
                         disabled={status === 'loading'}
-                        style={touched.email && errors.email ? { borderColor: '#ef4444' } : {}}
+                        style={{
+                          margin: 0,
+                          marginBottom: 0,
+                          ...(touched.email && errors.email ? { borderColor: '#ef4444' } : {}),
+                        }}
                       />
                       {touched.email && errors.email && (
-                        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+                        <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', paddingLeft: '3px', fontWeight: 500, lineHeight: 1.2, textAlign: 'left' }}>
                           {errors.email}
                         </div>
                       )}
@@ -534,10 +522,14 @@ export default function ContactPage() {
                         placeholder="Enter subject"
                         required
                         disabled={status === 'loading'}
-                        style={touched.subject && errors.subject ? { borderColor: '#ef4444' } : {}}
+                        style={{
+                          margin: 0,
+                          marginBottom: 0,
+                          ...(touched.subject && errors.subject ? { borderColor: '#ef4444' } : {}),
+                        }}
                       />
                       {touched.subject && errors.subject && (
-                        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+                        <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', paddingLeft: '3px', fontWeight: 500, lineHeight: 1.2, textAlign: 'left' }}>
                           {errors.subject}
                         </div>
                       )}
@@ -569,32 +561,35 @@ export default function ContactPage() {
                         placeholder="Write your message here (up to 300 words)..."
                         required
                         disabled={status === 'loading'}
-                        style={wordCount >= 300 ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.15)' } : (touched.message && errors.message) ? { borderColor: '#ef4444' } : {}}
+                        style={{
+                          margin: 0,
+                          marginBottom: 0,
+                          ...(wordCount >= 300 ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.15)' } : (touched.message && errors.message) ? { borderColor: '#ef4444' } : {}),
+                        }}
                       />
-                      <div className="d-flex justify-content-between align-items-center mt-1 flex-wrap" style={{ gap: '6px' }}>
+                      <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap" style={{ gap: '6px', paddingLeft: '2px' }}>
                         <div>
                           {wordCount >= 300 ? (
-                            <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               <i className="ti-alert" />
-                              Maximum limit of 300 words reached. Typing is disabled until words are removed.
+                              Maximum limit of 300 words reached.
                             </span>
                           ) : touched.message && errors.message ? (
-                            <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600 }}>
+                            <div style={{ color: '#ef4444', fontSize: '11px', fontWeight: 500, lineHeight: 1.2, textAlign: 'left' }}>
                               {errors.message}
-                            </span>
+                            </div>
                           ) : null}
                         </div>
                         <div
                           style={{
-                            fontSize: '12px',
+                            fontSize: '11px',
                             fontWeight: 700,
                             color: wordCount >= 300 ? '#ef4444' : wordCount >= 280 ? '#b45309' : '#64748b',
                             marginLeft: 'auto',
-                            padding: '2px 8px',
+                            padding: '1px 7px',
                             borderRadius: '4px',
                             backgroundColor: wordCount >= 300 ? '#fee2e2' : wordCount >= 280 ? '#fef3c7' : '#f1f5f9',
                             border: wordCount >= 300 ? '1px solid #fca5a5' : '1px solid transparent',
-                            transition: 'all 0.2s ease',
                           }}
                         >
                           {wordCount} / 300 words {wordCount >= 300 ? '(Limit Reached)' : ''}
@@ -629,7 +624,7 @@ export default function ContactPage() {
                           </>
                         ) : (
                           <>
-                            Send Message <i className="ti-arrow-top-right" />
+                            Send Message <FiSend size={14} style={{ marginLeft: '6px' }} />
                           </>
                         )}
                       </button>
