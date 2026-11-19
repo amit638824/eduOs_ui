@@ -66,7 +66,7 @@ export default function WhyChooseSection({ content }: { content?: HomepageConten
                   position: 'absolute',
                   top: 'auto',
                   bottom: '24px',
-                  left: '-20px',
+                  left: '24px',
                   right: 'auto',
                   zIndex: 3,
                   display: 'flex',

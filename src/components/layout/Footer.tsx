@@ -85,9 +85,9 @@ export default function Footer() {
                   <li>
                     <Link to="/pricing">Pricing Plans</Link>
                   </li>
-                  <li>
+                  {/* <li>
                     <Link to="/faq">Frequently Asked</Link>
-                  </li>
+                  </li> */}
                   <li>
                     <Link to="/contact">Contact Support</Link>
                   </li>
@@ -130,11 +130,11 @@ export default function Footer() {
             <div className="col-lg-3 col-sm-6 col-xs-12">
               <div className="single_footer">
                 <h4>Contact Info</h4>
-                <div className="sf_contact">
+                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <span className="sf_icon">
                     <i className="fa-solid fa-location-dot" />
                   </span>
-                  <p>
+                  <p style={{ margin: 0, lineHeight: 1.4 }}>
                     <a
                       href="https://www.google.com/maps/search/?api=1&query=L-3%2F141%2C+Vinay+Khand%2C+Gomti+Nagar%2C+Lucknow%2C+Uttar+Pradesh+%E2%80%93+226010%2C+India"
                       target="_blank"
@@ -144,20 +144,20 @@ export default function Footer() {
                     </a>
                   </p>
                 </div>
-                <div className="sf_contact">
+                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <span className="sf_icon">
                     <i className="fa-solid fa-phone" />
                   </span>
-                  <p>
+                  <p style={{ margin: 0, lineHeight: 1.4 }}>
                     <a href="tel:+918840622729">+91 8840 622 729</a>
                   </p>
                 </div>
 
-                <div className="sf_contact">
+                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
                   <span className="sf_icon">
                     <i className="fa-solid fa-envelope" />
                   </span>
-                  <p>
+                  <p style={{ margin: 0, lineHeight: 1.4 }}>
                     <a href="mailto:connect@techwagger.com">connect@techwagger.com</a>
                   </p>
                 </div>

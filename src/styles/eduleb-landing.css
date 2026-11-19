@@ -454,7 +454,7 @@ body.eduleb-page #main-menu ul li a {
   font-weight: 600 !important;
   letter-spacing: 0.03em;
   padding: 8px 4px !important;
-  color: #0b104a !important;
+  color: #000000 !important;
   white-space: nowrap;
 }
 
@@ -1379,7 +1379,7 @@ body.eduleb-page .testi_pic_title img {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* Why-choose 250+ floating card — icon left of text, centered */
+/* Why-choose 250+ floating card — icon left of text, centered inside image */
 body.eduleb-page .home_ps2 {
   display: flex !important;
   align-items: center !important;
@@ -1391,6 +1391,9 @@ body.eduleb-page .home_ps2 {
   border-radius: 14px !important;
   box-shadow: 0 12px 28px rgba(15, 23, 42, 0.12) !important;
   background: #fff !important;
+  left: 24px !important;
+  bottom: 24px !important;
+  right: auto !important;
 }
 
 body.eduleb-page .home_ps2 span {
@@ -1602,9 +1605,15 @@ body.eduleb-page a.btn_one {
   font-weight: 600 !important;
 }
 
-body.eduleb-page .btn_one i {
+body.eduleb-page .btn_one i,
+body.eduleb-page .btn_one .ti-arrow-top-right,
+body.eduleb-page .single_course .btn_one i,
+body.eduleb-page .eduleb-pricing-card .btn_one i,
+body.eduleb-page a.btn_one i,
+body.eduleb-page .btn_one:hover i {
   display: inline-block !important;
   margin: 0 !important;
+  color: #ffffff !important;
 }
 
 /* Keep nav auth buttons matched (override general btn padding) */
@@ -3247,7 +3256,7 @@ body.eduleb-page .ms-btn-outline-clean:hover {
 /* --- Hero Section Theme --- */
 body.eduleb-page .eduleb-ms-hero {
   background: radial-gradient(circle at 85% 10%, #eff4ff 0, transparent 26%),
-              linear-gradient(120deg, #f1f4ff, #fff 65%) !important;
+    linear-gradient(120deg, #f1f4ff, #fff 65%) !important;
   padding-top: 100px !important;
   padding-bottom: 70px !important;
 }
@@ -3311,7 +3320,7 @@ body.eduleb-page .blog_area .row {
   align-items: stretch !important;
 }
 
-body.eduleb-page .blog_area .row > [class*='col-'] {
+body.eduleb-page .blog_area .row>[class*='col-'] {
   display: flex !important;
   align-items: stretch !important;
 }
@@ -3549,7 +3558,7 @@ body.eduleb-page .footer_copyright {
 /* Contact Info in Footer */
 body.eduleb-page .footer .sf_contact {
   display: flex !important;
-  align-items: flex-start !important;
+  align-items: center !important;
   gap: 12px !important;
   margin-bottom: 14px !important;
   overflow: visible !important;

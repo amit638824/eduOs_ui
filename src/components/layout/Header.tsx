@@ -95,13 +95,13 @@ export default function Header() {
         style={
           isScrolled
             ? {
-                background: '#ffffff',
-                backgroundImage: 'none',
-                backdropFilter: 'none',
-                WebkitBackdropFilter: 'none',
-                boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
-                borderBottom: '1px solid #e8edf5',
-              }
+              background: '#ffffff',
+              backgroundImage: 'none',
+              backdropFilter: 'none',
+              WebkitBackdropFilter: 'none',
+              boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+              borderBottom: '1px solid #e8edf5',
+            }
             : undefined
         }
       >
