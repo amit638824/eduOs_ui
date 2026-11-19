@@ -160,14 +160,20 @@ export default function LoginPage() {
         <div className="ms-login-grid">
           {/* LEFT PROMO COLUMN */}
           <div className="ms-login-promo">
-            <div className="ms-login-brand">
-              <div className="ms-brand-logo-wrap">
-                <img src="/img/logo/techwagger-logo.png" alt="Techwagger" className="ms-brand-logo-img" />
-              </div>
-              <div>
-                <strong>Mindsprint</strong>
-                <span>Learn. Assess. Achieve.</span>
-              </div>
+            <div className="ms-login-brand" style={{ marginBottom: '28px' }}>
+              <Link to="/" style={{ display: 'inline-block' }}>
+                <img
+                  src="/img/logo/mindsprint-logo.png"
+                  alt="Mindsprint"
+                  style={{
+                    maxHeight: '52px',
+                    height: '52px',
+                    width: 'auto',
+                    objectFit: 'contain',
+                    display: 'block',
+                  }}
+                />
+              </Link>
             </div>
 
             <h1 className="ms-login-main-title">

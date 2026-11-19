@@ -273,7 +273,7 @@ export default function CertificatePage() {
               <div className="brand">
                 <div className="brand-logo">
                   <img
-                    src="/img/logo/techwagger-logo.png"
+                    src="/img/logo/mindsprint-logo.png"
                     alt="Mindsprint"
                   />
                 </div>

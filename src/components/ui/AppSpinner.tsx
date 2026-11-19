@@ -1,7 +1,6 @@
 import './loader.css';
-import { siteContent } from '@/data/siteContent';
 
-/** Unified App Spinner - Single ring with prominent Techwagger logo */
+/** Unified App Spinner - Single ring with prominent Mindsprint logo */
 export default function AppSpinner() {
   return (
     <div className="sca-loader-orb-wrap" role="status" aria-label="Loading">
@@ -9,9 +8,9 @@ export default function AppSpinner() {
       <div className="sca-loader-ring" />
       <div className="sca-loader-logo-core">
         <img
-          src={siteContent.brand.logo}
+          src="/img/logo/mindsprint-icon.png"
           className="sca-loader-logo-img"
-          alt="Techwagger"
+          alt="Mindsprint"
         />
       </div>
     </div>

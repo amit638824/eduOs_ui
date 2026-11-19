@@ -11,17 +11,22 @@ export default function Footer() {
                 <Link
                   to="/"
                   style={{
-                    display: 'inline-block',
-                    marginBottom: '8px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    marginBottom: '14px',
                     textDecoration: 'none',
+                    background: '#ffffff',
+                    padding: '8px 16px',
+                    borderRadius: '12px',
+                    width: 'fit-content',
                   }}
                 >
                   <img
-                    src="/img/logo/techwagger-logo-light.png"
-                    alt="Techwagger"
+                    src="/img/logo/mindsprint-logo.png"
+                    alt="Mindsprint"
                     style={{
-                      maxHeight: '60px',
-                      height: '60px',
+                      maxHeight: '42px',
+                      height: '42px',
                       width: 'auto',
                       objectFit: 'contain',
                       display: 'block',

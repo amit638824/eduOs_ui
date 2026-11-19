@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { siteContent } from '@/data/siteContent';
 import type { DashboardNavSection, DashboardNavItem } from '@/types/dashboard';
@@ -275,7 +275,7 @@ export default function DashboardSidebar({
               title={brand.name}
               onClick={onNavigate}
             >
-              <img src={brand.logo} alt={brand.name} className="sca-db-sidebar__logo" />
+              <img src="/img/logo/mindsprint-app-icon.png" alt={brand.name} className="sca-db-sidebar__logo" />
               <span className="sca-db-sidebar__brand-title">{brand.name}</span>
             </Link>
             {onToggleCollapse && (
@@ -312,7 +312,7 @@ export default function DashboardSidebar({
             aria-label="Expand sidebar"
             title="Expand sidebar"
           >
-            <img src={brand.logo} alt={brand.name} className="sca-db-sidebar__logo" />
+            <img src="/img/logo/mindsprint-app-icon.png" alt={brand.name} className="sca-db-sidebar__logo" />
             <span className="sca-db-sidebar__rail-icon-overlay" aria-hidden="true">
               <svg
                 viewBox="0 0 24 24"
