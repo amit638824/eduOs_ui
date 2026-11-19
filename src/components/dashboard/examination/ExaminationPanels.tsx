@@ -5185,7 +5185,7 @@ export function ProfileSettingsApiForm({ onSuccess }: { onSuccess?: () => void }
         <button
           type="submit"
           className="org-add-btn"
-          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          style={{ height: '40px', padding: '0 22px', fontSize: '0.875rem', borderRadius: '8px', width: 'auto', whiteSpace: 'nowrap' }}
           onClick={() => setFocusedField(null)}
         >
           Update Profile

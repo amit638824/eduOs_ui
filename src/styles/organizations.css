@@ -50,11 +50,12 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 7px 16px;
+  padding: 9px 24px;
+  height: 42px;
   border-radius: 10px;
   background: linear-gradient(135deg, #12193b 0%, #225ce5 100%) !important;
   color: #ffffff !important;
-  font-size: 0.825rem;
+  font-size: 0.875rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
@@ -62,9 +63,11 @@
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   text-decoration: none !important;
   flex-shrink: 0;
-  width: 175px;
-  min-width: 175px;
+  width: auto;
+  min-width: fit-content;
+  white-space: nowrap;
   box-sizing: border-box;
+  line-height: 1;
 }
 
 .org-add-btn:hover {
@@ -128,6 +131,39 @@
   background: #f8fafc;
   border-color: #94a3b8;
   color: #0f172a;
+}
+
+.org-btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  height: 40px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none !important;
+  white-space: nowrap;
+  box-sizing: border-box;
+  width: auto;
+  min-width: fit-content;
+}
+
+.org-btn-danger:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.org-btn-danger:active {
+  transform: translateY(0);
 }
 
 /* ── Stat Header Cards (Matching Image 2 Reference) ── */
@@ -1111,6 +1147,7 @@ textarea.org-form-input {
 }
 
 @media (max-width: 900px) {
+
   .org-grid-2,
   .org-grid-3 {
     grid-template-columns: 1fr;
@@ -1459,15 +1496,18 @@ textarea.org-form-input {
   margin-left: 6px;
   vertical-align: middle;
 }
+
 .org-btn-assign-dept:hover {
   background: #2563eb;
   color: #ffffff;
 }
+
 .sca-dashboard--dark .org-btn-assign-dept {
   background: rgba(37, 99, 235, 0.2);
   border-color: #3b82f6;
   color: #93c5fd;
 }
+
 .sca-dashboard--dark .org-btn-assign-dept:hover {
   background: #2563eb;
   color: #ffffff;

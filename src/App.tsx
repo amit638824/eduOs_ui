@@ -173,14 +173,14 @@ export default function App() {
             </Routes>
 
             <ToastContainer
-              position="top-center"
+              position="top-right"
               autoClose={3200}
               hideProgressBar={false}
               newestOnTop
               closeOnClick
               pauseOnHover
               draggable
-              limit={1}
+              limit={4}
               theme="light"
               toastClassName="ms-toast-wrap"
             />

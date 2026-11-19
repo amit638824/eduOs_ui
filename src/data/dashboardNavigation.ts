@@ -182,7 +182,7 @@ export function buildDashboardNavigation(
               label: 'Flagged Attempts',
               href: `${base}/admin-flagged-attempts`,
               icon: 'flag',
-              badge: 'Review',
+              badge: '',
               badgeVariant: 'danger',
             },
             {

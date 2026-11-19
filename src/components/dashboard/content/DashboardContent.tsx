@@ -1115,7 +1115,7 @@ function OrganizationSettingsForm({
         <button
           type="submit"
           className="org-add-btn"
-          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          style={{ height: '40px', padding: '0 22px', fontSize: '0.875rem', borderRadius: '8px', width: 'auto', whiteSpace: 'nowrap' }}
           disabled={!organization}
         >
           Save Organization
@@ -1338,7 +1338,7 @@ function CertificateBrandingForm() {
         <button
           type="button"
           className="org-add-btn"
-          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          style={{ height: '40px', padding: '0 22px', fontSize: '0.875rem', borderRadius: '8px', width: 'auto', whiteSpace: 'nowrap' }}
           onClick={() => void save()}
           disabled={loading}
         >
@@ -1480,10 +1480,12 @@ function PasswordChangeForm({ onCancel }: { onCancel?: () => void } = {}) {
           type="submit"
           className="org-add-btn"
           style={{
-            padding: '9px 36px',
+            height: '40px',
+            padding: '0 22px',
             fontSize: '0.875rem',
-            borderRadius: '10px',
+            borderRadius: '8px',
             whiteSpace: 'nowrap',
+            width: 'auto',
             flexShrink: 0,
             display: 'inline-flex',
             alignItems: 'center',
@@ -1497,12 +1499,16 @@ function PasswordChangeForm({ onCancel }: { onCancel?: () => void } = {}) {
           onClick={handleDontModify}
           className="org-btn-secondary"
           style={{
-            padding: '9px 24px',
+            height: '40px',
+            padding: '0 20px',
             fontSize: '0.875rem',
-            borderRadius: '10px',
-            height: 'auto',
+            borderRadius: '8px',
             whiteSpace: 'nowrap',
+            width: 'auto',
             flexShrink: 0,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             cursor: 'pointer',
           }}
         >
@@ -1637,28 +1643,23 @@ function SocialLinksForm() {
         <button
           type="submit"
           className="org-add-btn"
-          style={{ padding: '9px 36px', fontSize: '0.875rem', borderRadius: '10px' }}
+          style={{ height: '40px', padding: '0 22px', fontSize: '0.875rem', borderRadius: '8px', width: 'auto', whiteSpace: 'nowrap' }}
         >
           Save Branding Links
         </button>
         <button
           type="button"
           onClick={resetForm}
-          className="org-drawer-cancel"
-          style={{ width: 'auto', padding: '9px 20px', borderRadius: '10px' }}
+          className="org-btn-secondary"
+          style={{ height: '40px', padding: '0 20px', fontSize: '0.875rem', borderRadius: '8px', width: 'auto', whiteSpace: 'nowrap' }}
         >
           Clear Form
         </button>
         <button
           type="button"
           onClick={() => void clearSaved()}
-          className="org-action-btn org-action-btn--danger"
-          style={{
-            height: '38px',
-            padding: '0 18px',
-            borderRadius: '10px',
-            fontSize: '0.825rem',
-          }}
+          className="org-btn-danger"
+          style={{ height: '40px', padding: '0 20px', fontSize: '0.875rem', borderRadius: '8px', width: 'auto', whiteSpace: 'nowrap' }}
         >
           Delete Saved Links
         </button>
