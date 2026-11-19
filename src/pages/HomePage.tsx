@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState, useLayoutEffect, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import '@/styles/mindsprint-home.css';
 
@@ -6,39 +6,48 @@ export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
 
+  if (typeof document !== 'undefined') {
+    if (!document.body.classList.contains('ms-home-active')) {
+      document.body.classList.remove('eduleb-page', 'body__wrapper', 'dashboard-layout-active');
+      document.body.classList.add('ms-home-active');
+    }
+  }
+
+  useLayoutEffect(() => {
+    document.body.classList.remove('eduleb-page', 'body__wrapper', 'dashboard-layout-active');
+    document.body.classList.add('ms-home-active');
+  }, []);
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash) {
+      const id = hash.replace('#', '');
+      const timer = setTimeout(() => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 120);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
     setMenuOpen(false);
     
+    const id = targetId.replace('#', '');
     if (window.location.pathname !== '/') {
-      navigate('/' + targetId);
+      navigate('/#' + id);
       return;
     }
 
-    const id = targetId.replace('#', '');
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      window.history.pushState(null, '', targetId);
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.history.pushState(null, '', '#' + id);
     }
   };
-
-  useEffect(() => {
-    const handleHash = () => {
-      const hash = window.location.hash;
-      if (hash) {
-        const id = hash.replace('#', '');
-        const element = document.getElementById(id);
-        if (element) {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }
-      }
-    };
-
-    handleHash();
-    window.addEventListener('hashchange', handleHash);
-    return () => window.removeEventListener('hashchange', handleHash);
-  }, []);
 
   const handleLoginClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,7 +56,7 @@ export default function HomePage() {
   };
 
   return (
-    <>
+    <div className="ms-home-root ms-home-active">
       <div className="top">
         <div className="wrap">
           <span>Online Examination • Mock Tests • Assessments</span>
@@ -75,9 +84,9 @@ export default function HomePage() {
             <a href="#how" onClick={(e) => scrollToSection(e, '#how')}>
               How It Works
             </a>
-            <a href="#contact" onClick={(e) => scrollToSection(e, '#contact')}>
+            <Link to="/contact" onClick={() => setMenuOpen(false)}>
               Contact
-            </a>
+            </Link>
           </nav>
           <div className="nav-cta">
             <Link className="btn outline" to="/login" onClick={handleLoginClick}>
@@ -329,6 +338,6 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }

@@ -39,29 +39,17 @@ import 'react-toastify/dist/ReactToastify.css';
 import '@/styles/toast.css';
 
 function ScrollToTop() {
-  const { pathname, search, hash } = useLocation();
+  const { pathname, hash } = useLocation();
+
   useEffect(() => {
-    if (hash) {
-      const id = hash.replace('#', '');
-      const scroll = () => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-        }
-      };
-      scroll();
-      const t1 = setTimeout(scroll, 100);
-      const t2 = setTimeout(scroll, 300);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    } else {
+    // Only reset scroll to top on normal route transitions without a hash
+    if (!hash) {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
     }
-  }, [pathname, search, hash]);
+  }, [pathname, hash]);
+
   return null;
 }
 

@@ -329,30 +329,31 @@ export default function ContactPage() {
   return (
     <>
       <PageBanner
-        title="Contact"
+        title="Contact Us"
         crumb="Contact"
         tone="soft"
-        subtitle="Have a question about exams, courses, or institute onboarding? Reach out and our team will get back to you shortly."
+        subtitle="Have questions about exams, tests or institute onboarding? Reach out and our team will assist you."
       />
       <section className="contact_area section-padding eduleb-contact eduleb-page-merge">
-        <div className="container">
-          <div className="row align-items-start">
-            <div className="col-lg-5 col-sm-12 col-xs-12">
+        <div className="container" style={{ maxWidth: '1060px' }}>
+          <div className="row align-items-stretch g-4">
+            <div className="col-lg-5 col-md-12 d-flex flex-column">
               <div className="contact_info">
-                <h4>Contact Info</h4>
-                <p style={{ marginBottom: '28px', color: '#64748b', lineHeight: 1.6 }}>
-                  Have a question about exams, courses, or institute onboarding? Reach out and our
-                  team will get back to you shortly.
+                <h4>Get in Touch</h4>
+                <p style={{ marginBottom: '20px', color: '#64748b', fontSize: '0.86rem', lineHeight: 1.5 }}>
+                  Reach out to our team for platform support, school onboarding, or mock exam inquiries.
                 </p>
-                <div className="sf_contact" style={{ marginBottom: '16px' }}>
-                  <span className="ti-map" />
+
+                <div className="sf_contact">
+                  <span className="sf_contact_icon ti-map" />
                   <p>
+                    <strong className="sf_contact_title">Office Location</strong>
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`}
                       target="_blank"
                       rel="noreferrer"
                       style={{ color: 'inherit', textDecoration: 'none' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = '#2563eb')}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#3156d8')}
                       onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
                       title="View location on Google Maps"
                     >
@@ -360,13 +361,15 @@ export default function ContactPage() {
                     </a>
                   </p>
                 </div>
-                <div className="sf_contact" style={{ marginBottom: '16px' }}>
-                  <span className="ti-mobile" />
+
+                <div className="sf_contact">
+                  <span className="sf_contact_icon ti-mobile" />
                   <p>
+                    <strong className="sf_contact_title">Phone Support</strong>
                     <a
                       href={`tel:${contact.phone.replace(/[^\d+]/g, '')}`}
                       style={{ color: 'inherit', textDecoration: 'none' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = '#2563eb')}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#3156d8')}
                       onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
                       title="Call us directly"
                     >
@@ -374,13 +377,15 @@ export default function ContactPage() {
                     </a>
                   </p>
                 </div>
+
                 <div className="sf_contact">
-                  <span className="ti-email" />
+                  <span className="sf_contact_icon ti-email" />
                   <p>
+                    <strong className="sf_contact_title">Email Inquiries</strong>
                     <a
                       href={`mailto:${contact.email}`}
                       style={{ color: 'inherit', textDecoration: 'none' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = '#2563eb')}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#3156d8')}
                       onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
                       title="Send us an email"
                     >
@@ -388,20 +393,48 @@ export default function ContactPage() {
                     </a>
                   </p>
                 </div>
+
+                <div
+                  style={{
+                    marginTop: 'auto',
+                    padding: '12px 14px',
+                    background: '#f8fafc',
+                    borderRadius: '10px',
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      borderRadius: '50%',
+                      backgroundColor: '#10b981',
+                      boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.2)',
+                    }}
+                  />
+                  <div>
+                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: '#14213d' }}>Response within 24 Hours</div>
+                    <div style={{ fontSize: '10.5px', color: '#64748b' }}>Mon – Sat: 9:30 AM – 6:30 PM IST</div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="col-lg-7 col-sm-12 col-xs-12">
+
+            <div className="col-lg-7 col-md-12 d-flex flex-column">
               <div className="contact eduleb-contact-form">
                 <form onSubmit={handleSubmit} noValidate>
                   <div className="row">
-                    <div className="form-group col-md-6 mb-3">
+                    <div className="form-group col-md-6 mb-2">
                       <label
                         htmlFor="contact-name"
                         className="eduleb-contact-label"
                         style={{
                           display: 'block',
-                          marginBottom: '6px',
-                          fontSize: '0.875rem',
+                          marginBottom: '4px',
+                          fontSize: '0.82rem',
                           fontWeight: 600,
                           color: '#1e293b',
                         }}
@@ -428,14 +461,14 @@ export default function ContactPage() {
                         </div>
                       )}
                     </div>
-                    <div className="form-group col-md-6 mb-3">
+                    <div className="form-group col-md-6 mb-2">
                       <label
                         htmlFor="contact-email"
                         className="eduleb-contact-label"
                         style={{
                           display: 'block',
-                          marginBottom: '6px',
-                          fontSize: '0.875rem',
+                          marginBottom: '4px',
+                          fontSize: '0.82rem',
                           fontWeight: 600,
                           color: '#1e293b',
                         }}
@@ -461,14 +494,14 @@ export default function ContactPage() {
                         </div>
                       )}
                     </div>
-                    <div className="form-group col-md-12 mb-3">
+                    <div className="form-group col-md-12 mb-2">
                       <label
                         htmlFor="contact-subject"
                         className="eduleb-contact-label"
                         style={{
                           display: 'block',
-                          marginBottom: '6px',
-                          fontSize: '0.875rem',
+                          marginBottom: '4px',
+                          fontSize: '0.82rem',
                           fontWeight: 600,
                           color: '#1e293b',
                         }}
@@ -500,8 +533,8 @@ export default function ContactPage() {
                         className="eduleb-contact-label"
                         style={{
                           display: 'block',
-                          marginBottom: '6px',
-                          fontSize: '0.875rem',
+                          marginBottom: '4px',
+                          fontSize: '0.82rem',
                           fontWeight: 600,
                           color: '#1e293b',
                         }}
@@ -517,7 +550,7 @@ export default function ContactPage() {
                         onPaste={handleMessagePaste}
                         onBlur={handleBlur}
                         className={`form-control eduleb-contact-input eduleb-contact-textarea ${((touched.message && errors.message) || wordCount >= 300) ? 'is-invalid' : ''}`}
-                        rows={6}
+                        rows={3}
                         placeholder="Write your message here (up to 300 words)..."
                         required
                         disabled={status === 'loading'}

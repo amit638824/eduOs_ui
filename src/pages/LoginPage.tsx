@@ -214,7 +214,7 @@ export default function LoginPage() {
               </li>
               <li>
                 <span className="ms-login-feat-icon ms-login-feat-icon--blue">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3156d8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     <polyline points="9 12 11 14 15 10" />
                   </svg>
@@ -240,8 +240,8 @@ export default function LoginPage() {
                 {/* Stack of books on the left */}
                 <g>
                   {/* Bottom book: Royal Blue */}
-                  <rect x="24" y="176" width="76" height="12" rx="2" fill="#2563eb" />
-                  <rect x="24" y="178" width="73" height="8" rx="1" fill="#1d4ed8" />
+                  <rect x="24" y="176" width="76" height="12" rx="2" fill="#3156d8" />
+                  <rect x="24" y="178" width="73" height="8" rx="1" fill="#203fae" />
                   <line x1="28" y1="180" x2="28" y2="184" stroke="#ffffff" strokeWidth="1.5" />
                   <line x1="32" y1="180" x2="32" y2="184" stroke="#ffffff" strokeWidth="1.5" />
                   <rect x="96" y="178" width="4" height="8" fill="#ffffff" />
