@@ -153,6 +153,46 @@ body.sca-dashboard-body .main_wrapper--dashboard {
   gap: 0;
 }
 
+.sca-db-sidebar__brand-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.sca-db-sidebar__toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.sca-db-sidebar__toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.sca-db-sidebar__rail-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0 auto;
+}
+
 .sca-db-sidebar__nav {
   flex: 1;
   min-height: 0;
@@ -356,7 +396,9 @@ body.sca-dashboard-body .main_wrapper--dashboard {
 
 .sca-db-nav-item i,
 .sca-db-nav-item .dashboard-nav-icon {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.125rem;
   width: 18px;
   height: 18px;

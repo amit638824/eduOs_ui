@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBell } from 'react-icons/fi';
+import { FiBell, FiMenu, FiX } from 'react-icons/fi';
 import { useTheme } from '@/context/ThemeContext';
 import { useOrgScope } from '@/context/OrgScopeContext';
 import type { DashboardProfile, DashboardRole } from '@/types/dashboard';
@@ -11,35 +11,9 @@ import OrgSwitcher from './OrgSwitcher';
 interface DashboardTopBarProps {
   profile: DashboardProfile;
   role: DashboardRole;
+  collapsed?: boolean;
   onToggleMenu: () => void;
   menuOpen?: boolean;
-}
-
-function MenuIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      className={`sca-menu-icon${open ? ' is-open' : ''}`}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      width="20"
-      height="20"
-      aria-hidden="true"
-    >
-      <g className="sca-menu-icon__menu">
-        <path d="M4 7h16" />
-        <path d="M4 12h10" />
-        <path d="M4 17h14" />
-      </g>
-      <g className="sca-menu-icon__close">
-        <path d="M6 6l12 12" />
-        <path d="M18 6L6 18" />
-      </g>
-    </svg>
-  );
 }
 
 function notificationsHref(role: DashboardRole) {
@@ -48,7 +22,13 @@ function notificationsHref(role: DashboardRole) {
   return '/dashboard/admin-message';
 }
 
-export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen = false }: DashboardTopBarProps) {
+export default function DashboardTopBar({
+  profile,
+  role,
+  collapsed = false,
+  onToggleMenu,
+  menuOpen = false,
+}: DashboardTopBarProps) {
   const { isDark, toggleTheme } = useTheme();
   const { isSuperAdmin, scopeReady, selectedOrgId } = useOrgScope();
   const [unread, setUnread] = useState(0);
@@ -85,10 +65,11 @@ export default function DashboardTopBar({ profile, role, onToggleMenu, menuOpen 
           type="button"
           className={`sca-db-icon-btn sca-db-icon-btn--menu${menuOpen ? ' is-open' : ''}`}
           onClick={onToggleMenu}
-          aria-label="Toggle sidebar menu"
+          aria-label={menuOpen ? 'Close menu' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          title={menuOpen ? 'Close menu' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           aria-expanded={menuOpen}
         >
-          <MenuIcon open={menuOpen} />
+          {menuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
         </button>
       </div>
 
