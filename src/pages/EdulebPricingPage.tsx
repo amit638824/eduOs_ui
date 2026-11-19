@@ -70,8 +70,8 @@ export default function EdulebPricingPage() {
                     ))}
                   </ul>
                   <div className="mt-4">
-                    <Link to="/login" className="btn_one w-100 text-center">
-                      Get Started <i className="ti-arrow-top-right" />
+                    <Link to="/login" className="btn_one w-100 text-center" style={{ color: '#ffffff' }}>
+                      Get Started <i className="ti-arrow-top-right" style={{ color: '#ffffff', marginLeft: '6px' }} />
                     </Link>
                   </div>
                 </div>

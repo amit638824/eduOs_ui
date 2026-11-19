@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import type { HomepageContent } from '@/types/homepage';
 
 const fallbackParagraphs = [
@@ -40,16 +39,49 @@ export default function WhyChooseSection({ content }: { content?: HomepageConten
                 ))}
               </ul>
               <div data-aos="fade-up" data-aos-delay="400">
-                <Link className="btn_one" to={content?.cta?.href || '/exams'}>
+                <a className="btn_one" href="#" onClick={(e) => e.preventDefault()}>
                   {content?.cta?.label || 'Start Online Test'} <i className="ti-arrow-top-right" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-left">
-            <div className="ab_img" data-aos="zoom-in" data-aos-delay="150">
-              <img src={content?.image || '/eduleb/img/about3.png'} className="img-fluid" alt="Why choose Mindsprint" />
-              <div className="home_ps2" data-aos="zoom-in" data-aos-delay="300">
+            <div className="ab_img" data-aos="zoom-in" data-aos-delay="150" style={{ position: 'relative' }}>
+              <img
+                src={content?.image || '/eduleb/img/institutions.jpg'}
+                className="img-fluid"
+                alt="Why choose Mindsprint"
+                style={{
+                  borderRadius: '20px',
+                  boxShadow: '0 18px 40px rgba(15, 23, 42, 0.12)',
+                  width: '100%',
+                  display: 'block',
+                }}
+              />
+              <div
+                className="home_ps2"
+                data-aos="zoom-in"
+                data-aos-delay="300"
+                style={{
+                  position: 'absolute',
+                  top: 'auto',
+                  bottom: '24px',
+                  left: '24px',
+                  right: 'auto',
+                  zIndex: 3,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  width: 'auto',
+                  minWidth: '220px',
+                  maxWidth: '280px',
+                  padding: '14px 18px',
+                  borderRadius: '16px',
+                  border: '1px solid rgba(226, 232, 240, 0.95)',
+                  boxShadow: '0 16px 36px rgba(15, 23, 42, 0.14)',
+                  background: '#ffffff',
+                }}
+              >
                 <span className="ti-book" aria-hidden />
                 <div className="home_ps2__text">
                   <h2>{content?.statValue || '250+'}</h2>

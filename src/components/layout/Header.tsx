@@ -15,11 +15,8 @@ const navItems: NavItem[] = [
   { label: 'Online Tests', href: '/exams' },
   { label: 'About', href: '/about' },
   { label: 'Pricing', href: '/pricing' },
-  { label: 'Blog', href: '/blog' },
   { label: 'Contact', href: '/contact' },
 ];
-
-const LOGO_SRC = '/img/logo/techwagger-logo.png';
 
 export default function Header() {
   const navigate = useNavigate();
@@ -70,19 +67,41 @@ export default function Header() {
 
   return (
     <>
+      {/* MindSprint Top Notification Bar */}
+      <div
+        className="ms-top-bar"
+        style={{
+          background: '#132143',
+          color: '#dfe7ff',
+          fontSize: '12px',
+          padding: '8px 0',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          fontFamily: 'Inter, system-ui, sans-serif',
+        }}
+      >
+        <div className="container-fluid px-lg-5 d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span>Online Examination • Mock Tests • Assessments</span>
+          <span>
+            <strong style={{ color: '#fff' }}>For Schools</strong> &nbsp;|&nbsp;{' '}
+            <strong style={{ color: '#fff' }}>For Coaching Institutes</strong> &nbsp;|&nbsp;{' '}
+            <strong style={{ color: '#fff' }}>For Learners</strong>
+          </span>
+        </div>
+      </div>
+
       <div
         id="navigation"
         className={`navbar-light site-navigation eduleb-topbar${isScrolled ? ' is-scrolled' : ''}`}
         style={
           isScrolled
             ? {
-                background: '#ffffff',
-                backgroundImage: 'none',
-                backdropFilter: 'none',
-                WebkitBackdropFilter: 'none',
-                boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
-                borderBottom: '1px solid #e8edf5',
-              }
+              background: '#ffffff',
+              backgroundImage: 'none',
+              backdropFilter: 'none',
+              WebkitBackdropFilter: 'none',
+              boxShadow: '0 8px 24px rgba(15, 23, 42, 0.08)',
+              borderBottom: '1px solid #e8edf5',
+            }
             : undefined
         }
       >
@@ -90,8 +109,24 @@ export default function Header() {
           <div className="row align-items-center">
             <div className="col-20 align-self-center">
               <div className="site-logo eduleb-brand-logo">
-                <Link to="/">
-                  <img src={LOGO_SRC} alt="Techwagger" />
+                <Link
+                  to="/"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <img
+                    src="/img/logo/techwagger-logo.png"
+                    alt="Techwagger"
+                    style={{
+                      maxHeight: '42px',
+                      width: 'auto',
+                      objectFit: 'contain',
+                      display: 'block',
+                    }}
+                  />
                 </Link>
               </div>
             </div>
@@ -130,7 +165,7 @@ export default function Header() {
             <div className="col-20 text-end align-self-center eduleb-nav-actions eduleb-nav-actions--desktop">
               {user ? (
                 <>
-                  <Link to={dashboardPath} className="header-btn">
+                  <Link to={dashboardPath} className="header-btn me-2">
                     Dashboard
                   </Link>
                   <button type="button" className="btn_one" onClick={handleLogout}>
@@ -138,8 +173,8 @@ export default function Header() {
                   </button>
                 </>
               ) : (
-                <Link to="/login" className="btn_one eduleb-signin-btn">
-                  Sign In
+                <Link to="/login" className="btn_one">
+                  Login
                 </Link>
               )}
             </div>
@@ -219,7 +254,7 @@ export default function Header() {
           ) : (
             <li>
               <Link to="/login" onClick={closeMobile}>
-                Sign In
+                Login
               </Link>
             </li>
           )}

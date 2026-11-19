@@ -21,7 +21,7 @@ export default function ExamGridSection({ activeCategory: _activeCategory }: Exa
       rating: 4.8,
       reviews: '12.4k',
       price: '₹299',
-      img: '/img/grid/grid_1.png',
+      img: '/img/grid/g1.jpg',
     },
     {
       id: 'jee-main-practice',
@@ -32,7 +32,7 @@ export default function ExamGridSection({ activeCategory: _activeCategory }: Exa
       rating: 4.7,
       reviews: '9.8k',
       price: '₹249',
-      img: '/img/grid/grid_2.png',
+      img: '/img/grid/g2.jpg',
     },
     {
       id: 'ibps-po-mock',
@@ -43,7 +43,7 @@ export default function ExamGridSection({ activeCategory: _activeCategory }: Exa
       rating: 4.6,
       reviews: '7.2k',
       price: '₹199',
-      img: '/img/grid/grid_3.png',
+      img: '/img/grid/g3.jpg',
     },
     {
       id: 'upsc-prelims-mock',
@@ -54,7 +54,7 @@ export default function ExamGridSection({ activeCategory: _activeCategory }: Exa
       rating: 4.9,
       reviews: '5.3k',
       price: '₹349',
-      img: '/img/grid/grid_4.png',
+      img: '/img/grid/g4.jpg',
     },
   ];
 

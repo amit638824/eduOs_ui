@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import type { HomepageContent } from '@/types/homepage';
 
 const fallbackParagraphs = [
@@ -23,7 +22,7 @@ export default function AboutSection({ content }: { content?: HomepageContent['a
         <div className="row align-items-center">
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-right" data-aos-duration="900">
             <div className="ab_img eduleb-hover-lift" data-aos="zoom-in" data-aos-delay="150">
-              <img src={content?.image || '/eduleb/img/about1.png'} className="img-fluid" alt="Online examination system" />
+              <img src={content?.image || '/eduleb/enterprise.jpg'} className="img-fluid" alt="Indian online examination system" />
             </div>
           </div>
           <div className="col-lg-6 col-sm-12 col-xs-12" data-aos="fade-left" data-aos-duration="900">
@@ -44,9 +43,9 @@ export default function AboutSection({ content }: { content?: HomepageContent['a
                 ))}
               </ul>
               <div data-aos="fade-up" data-aos-delay="400">
-                <Link className="btn_one" to={content?.cta?.href || '/exams'}>
+                <a className="btn_one" href="#" onClick={(e) => e.preventDefault()}>
                   {content?.cta?.label || 'Browse Practice Tests'} <i className="ti-arrow-top-right" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>

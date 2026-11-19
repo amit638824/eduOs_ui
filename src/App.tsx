@@ -39,10 +39,18 @@ import 'react-toastify/dist/ReactToastify.css';
 import '@/styles/toast.css';
 
 function ScrollToTop() {
-  const { pathname } = useLocation();
+  const { pathname, search, hash } = useLocation();
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    const raf = requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [pathname, search, hash]);
   return null;
 }
 
@@ -121,7 +129,7 @@ export default function App() {
                   element={<VerifyCertificatePage />}
                 />
 
-                {/* Instructor (dashboard redirects) */}
+                {/* Instructor (dashboard redirects) .*/}
                 <Route
                   path="/instructor"
                   element={

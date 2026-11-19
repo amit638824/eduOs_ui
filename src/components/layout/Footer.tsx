@@ -8,32 +8,62 @@ export default function Footer() {
           <div className="row">
             <div className="col-lg-4 col-sm-6 col-xs-12">
               <div className="single_footer">
-                <Link to="/">
-                  <img src="/img/logo/techwagger-logo.png" alt="Techwagger - Mindsprint" />
+                <Link
+                  to="/"
+                  style={{
+                    display: 'inline-block',
+                    marginBottom: '8px',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <img
+                    src="/img/logo/techwagger-logo-light.png"
+                    alt="Techwagger"
+                    style={{
+                      maxHeight: '60px',
+                      height: '60px',
+                      width: 'auto',
+                      objectFit: 'contain',
+                      display: 'block',
+                      marginBottom: '0',
+                    }}
+                  />
                 </Link>
-                <p>
+                <p style={{ marginTop: '8px', marginBottom: '16px' }}>
                   Mindsprint is a next-generation online examination, CBT mock test, and e-assessment
                   platform with AI anti-cheat proctoring and verified digital certifications.
                 </p>
                 <div className="social_profile">
-                  <ul>
-                    <li>
-                      <a className="f_facebook" href="https://twitter.com/techwagger" target="_blank" rel="noreferrer" aria-label="Twitter">
+                  <ul
+                    className="footer-social-list"
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      flexWrap: 'nowrap',
+                      alignItems: 'center',
+                      gap: '12px',
+                      margin: '16px 0 0',
+                      padding: 0,
+                      listStyle: 'none',
+                    }}
+                  >
+                    <li style={{ display: 'inline-flex', width: 'auto', margin: 0 }}>
+                      <a href="https://twitter.com/techwagger" target="_blank" rel="noreferrer" aria-label="Twitter">
                         <i className="fa-solid fa-x" />
                       </a>
                     </li>
-                    <li>
-                      <a className="f_twitter" href="https://facebook.com/techwagger" target="_blank" rel="noreferrer" aria-label="Facebook">
+                    <li style={{ display: 'inline-flex', width: 'auto', margin: 0 }}>
+                      <a href="https://facebook.com/techwagger" target="_blank" rel="noreferrer" aria-label="Facebook">
                         <i className="fa-brands fa-facebook-f" />
                       </a>
                     </li>
-                    <li>
-                      <a className="f_instagram" href="https://instagram.com/techwagger" target="_blank" rel="noreferrer" aria-label="Instagram">
+                    <li style={{ display: 'inline-flex', width: 'auto', margin: 0 }}>
+                      <a href="https://instagram.com/techwagger" target="_blank" rel="noreferrer" aria-label="Instagram">
                         <i className="fa-brands fa-instagram" />
                       </a>
                     </li>
-                    <li>
-                      <a className="f_linkedin" href="https://linkedin.com/company/techwagger" target="_blank" rel="noreferrer" aria-label="LinkedIn">
+                    <li style={{ display: 'inline-flex', width: 'auto', margin: 0 }}>
+                      <a href="https://linkedin.com/company/techwagger" target="_blank" rel="noreferrer" aria-label="LinkedIn">
                         <i className="fa-brands fa-linkedin-in" />
                       </a>
                     </li>
@@ -55,9 +85,9 @@ export default function Footer() {
                   <li>
                     <Link to="/pricing">Pricing Plans</Link>
                   </li>
-                  <li>
+                  {/* <li>
                     <Link to="/faq">Frequently Asked</Link>
-                  </li>
+                  </li> */}
                   <li>
                     <Link to="/contact">Contact Support</Link>
                   </li>
@@ -65,7 +95,7 @@ export default function Footer() {
                     <Link to="/login?as=instructor">Instructor Login</Link>
                   </li>
                   <li>
-                    <Link to="/login?as=teacher">Become a Teacher</Link>
+                    <Link to="/login?as=teacher">Become A Teacher</Link>
                   </li>
                 </ul>
               </div>
@@ -100,17 +130,34 @@ export default function Footer() {
             <div className="col-lg-4 col-sm-6 col-xs-12">
               <div className="single_footer">
                 <h4>Contact Info</h4>
-                <div className="sf_contact">
-                  <span className="ti-map" />
-                  <p><a href="https://www.google.com/maps/search/?api=1&query=L-3%2F141%2C+Vinay+Khand%2C+Gomti+Nagar%2C+Lucknow%2C+Uttar+Pradesh+%E2%80%93+226010%2C+India" target="_blank" rel="noreferrer" style={{ color: "inherit", textDecoration: "none" }}>L-3/141, Vinay Khand, Gomti Nagar, Lucknow, Uttar Pradesh – 226010, India</a></p>
+                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                  <span className="sf_icon">
+                    <i className="fa-solid fa-location-dot" />
+                  </span>
+                  <p style={{ margin: 0, lineHeight: 1.4 }}>
+                    <a
+                      href="https://www.google.com/maps/search/?api=1&query=L-3%2F141%2C+Vinay+Khand%2C+Gomti+Nagar%2C+Lucknow%2C+Uttar+Pradesh+%E2%80%93+226010%2C+India"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      L-3/141, Vinay Khand, Gomti Nagar, Lucknow, UP – 226010
+                    </a>
+                  </p>
                 </div>
-                <div className="sf_contact">
-                  <span className="ti-mobile" />
-                  <p><a href="tel:+918840622729" style={{ color: "inherit", textDecoration: "none" }}>+91 8840 622 729</a></p>
+                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                  <span className="sf_icon">
+                    <i className="fa-solid fa-phone" />
+                  </span>
+                  <p style={{ margin: 0, lineHeight: 1.4 }}>
+                    <a href="tel:+918840622729">+91 8840 622 729</a>
+                  </p>
                 </div>
-                <div className="sf_contact">
-                  <span className="ti-email" />
-                  <p>
+
+                <div className="sf_contact" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+                  <span className="sf_icon">
+                    <i className="fa-solid fa-envelope" />
+                  </span>
+                  <p style={{ margin: 0, lineHeight: 1.4 }}>
                     <a href="mailto:Vivek@techwagger.com">Vivek@techwagger.com</a>
                   </p>
                 </div>
@@ -121,10 +168,12 @@ export default function Footer() {
       </div>
 
       <div className="foot_copy">
-        <div className="footer_copyright">
-          <p>
-            &copy; {new Date().getFullYear()} Techwagger Solutions Pvt. Ltd. All Rights Reserved.
-          </p>
+        <div className="container">
+          <div className="footer_copyright text-center py-3">
+            <p className="m-0" style={{ fontSize: '13px', color: '#93a2c2' }}>
+              &copy; {new Date().getFullYear()} Techwagger Solutions Pvt. Ltd. All Rights Reserved.
+            </p>
+          </div>
         </div>
       </div>
     </>

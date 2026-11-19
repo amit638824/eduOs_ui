@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { TypeAnimation } from 'react-type-animation';
 import type { HomepageContent } from '@/types/homepage';
 
@@ -16,10 +15,10 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
   const trust = content?.trust?.length
     ? content.trust
     : [
-        { label: 'Trusted by', value: '50,000+ candidates' },
-        { label: 'average rating', value: '4.9/5' },
-        { label: 'reliable platform', value: 'AI Proctored &' },
-      ];
+      { label: 'Trusted by', value: '50,000+ candidates' },
+      { label: 'average rating', value: '4.9/5' },
+      { label: 'reliable platform', value: 'AI Proctored &' },
+    ];
 
   return (
     <section className="ms-hero-exact eduleb-ms-hero">
@@ -55,13 +54,13 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
             </p>
 
             <div className="d-flex align-items-center flex-wrap gap-3 mb-4" data-aos="fade-up" data-aos-duration="900" data-aos-delay="300">
-              <Link to={content?.primaryCta?.href || '/exams'} className="ms-btn-coral">
+              <a href="#" onClick={(e) => e.preventDefault()} className="btn_one ms-btn-cta-primary">
                 <span>{content?.primaryCta?.label || 'Explore Mock Tests'}</span>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
                 </svg>
-              </Link>
+              </a>
               <a
                 href={content?.secondaryCta?.href || 'https://www.youtube.com/watch?v=RXv_uIN6e-Y'}
                 target="_blank"
@@ -112,10 +111,10 @@ export default function HeroSection({ content }: { content?: HomepageContent['he
           <div className="col-xl-6 col-lg-6 col-12">
             <div className="ms-hero-photo-wrap">
               <div className="ms-hero-pastel-blob" />
-              <div className="eduleb-ms-blob-orange" />
+              <div className="eduleb-ms-blob-blue" />
               <img
-                src={content?.image || '/eduleb/img/home-img2.png'}
-                alt="Student preparing for online mock exams"
+                src={content?.image || '/eduleb/img/herosection.png?v=2'}
+                alt="Indian student preparing for online mock exams"
                 className="ms-hero-student-photo"
                 data-aos="fade-left"
                 data-aos-duration="900"

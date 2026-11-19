@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
 import { siteContent } from '@/data/siteContent';
 import Breadcrumb from '@/components/ui/Breadcrumb';
@@ -6,6 +7,12 @@ import ExamsPage from './ExamsPage';
 
 export default function ExamSlugPage() {
   const { slug = '' } = useParams();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [slug]);
   const exam = siteContent.exams.items.find((item) => item.id === slug);
 
   if (exam) {

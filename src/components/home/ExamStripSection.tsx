@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import type { HomepageContent } from '@/types/homepage';
 
 const fallbackExams = [
@@ -34,10 +33,10 @@ export default function ExamStripSection({ content }: { content?: HomepageConten
               data-aos-delay={idx * 80}
               data-aos-duration="1000"
             >
-              <Link to="/exams" className="eduleb-exam-card eduleb-hover-lift">
+              <a href="#" onClick={(e) => e.preventDefault()} className="eduleb-exam-card eduleb-hover-lift">
                 <span className="eduleb-exam-title">{exam.title}</span>
                 <span className="eduleb-exam-sub">{exam.sub}</span>
-              </Link>
+              </a>
             </div>
           ))}
         </div>
