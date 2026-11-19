@@ -14,16 +14,16 @@ export default function Header() {
     e.preventDefault();
     setMenuOpen(false);
 
+    const id = targetId.replace('#', '');
     if (window.location.pathname === '/') {
-      const id = targetId.replace('#', '');
       const element = document.getElementById(id);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-        window.history.pushState(null, '', targetId);
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.pushState(null, '', '#' + id);
         return;
       }
     }
-    navigate('/' + targetId);
+    navigate('/#' + id);
   };
 
   const handleLoginClick = (e: React.MouseEvent) => {
@@ -72,9 +72,9 @@ export default function Header() {
             <a href="/#how" onClick={(e) => scrollToSection(e, '#how')}>
               How It Works
             </a>
-            <a href="/#contact" onClick={(e) => scrollToSection(e, '#contact')}>
+            <Link to="/contact" onClick={() => setMenuOpen(false)}>
               Contact
-            </a>
+            </Link>
           </nav>
           <div className="nav-cta">
             {user ? (

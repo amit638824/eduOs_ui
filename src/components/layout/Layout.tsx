@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import Preloader from './Preloader';
 import DarkModeSwitcher from './DarkModeSwitcher';
@@ -16,7 +16,7 @@ export default function Layout() {
   const isHomePage = pathname === '/';
   const isEdulebPage = !isDashboard;
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isDashboard) {
       document.body.classList.add('body__wrapper', 'dashboard-layout-active');
       document.body.classList.remove('eduleb-page', 'ms-home-active');
@@ -29,9 +29,6 @@ export default function Layout() {
       document.body.classList.remove('dashboard-layout-active', 'ms-home-active');
       document.documentElement.classList.remove('is_dark');
     }
-    return () => {
-      document.body.classList.remove('body__wrapper', 'dashboard-layout-active', 'eduleb-page', 'ms-home-active');
-    };
   }, [isDashboard, isHomePage]);
 
   if (isHomePage) {

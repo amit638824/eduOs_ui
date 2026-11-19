@@ -290,9 +290,13 @@ body.eduleb-page .eduleb-page-intro {
   box-shadow: none !important;
 }
 
-/* Soft off-white — Pricing / Blog / Contact (matches #F9F9F9 sections) */
+/* Soft off-white — Pricing / Blog / Contact (matches theme) */
 body.eduleb-page .eduleb-page-intro--soft {
-  background: #f9f9f9 !important;
+  /* background: radial-gradient(circle at 85% 10%, #ffe9d5 0, transparent 26%),
+    linear-gradient(120deg, #f1f4ff, #fff 65%) !important; */
+  background: #f8fbff !important;
+  padding: 56px 0 32px !important;
+  /* border-bottom: 1px solid #e6eaf3 !important; */
 }
 
 /* Blue soft gradient — Practice Tests (exact same as Explore Our Exams) */
@@ -329,7 +333,7 @@ body.eduleb-page .eduleb-about-flow .top_cat__area {
 
 body.eduleb-page .eduleb-page-intro__inner {
   margin: 0 auto !important;
-  max-width: 720px;
+  max-width: 900px !important;
   width: 100%;
   text-align: center !important;
 }
@@ -343,8 +347,8 @@ body.eduleb-page .eduleb-page-intro h1 {
   font-size: clamp(1.75rem, 3vw, 2.25rem) !important;
   font-weight: 800 !important;
   line-height: 1.25 !important;
-  color: #0f172a !important;
-  font-family: 'Roboto', sans-serif !important;
+  color: #14213d !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
 }
 
 body.eduleb-page .eduleb-page-intro p {
@@ -352,11 +356,12 @@ body.eduleb-page .eduleb-page-intro p {
   width: 100%;
   margin: 0 auto !important;
   padding: 0 !important;
-  max-width: 42rem;
+  max-width: 860px !important;
   text-align: center !important;
-  font-size: 1rem !important;
-  line-height: 1.65 !important;
+  font-size: 0.95rem !important;
+  line-height: 1.5 !important;
   color: #64748b !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
 }
 
 body.eduleb-page .section-top,
@@ -1929,37 +1934,102 @@ body.eduleb-page .edtp-alert--success {
   margin-right: 6px;
 }
 
+body.eduleb-page .contact_area.eduleb-contact {
+  background: #f8fbff !important;
+  padding: 36px 0 64px !important;
+}
+
+body.eduleb-page .eduleb-contact .contact_info,
+body.eduleb-page .eduleb-contact-form {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 10px 30px rgba(30, 53, 112, 0.05) !important;
+  padding: 26px 26px !important;
+  height: 100% !important;
+  display: flex !important;
+  flex-direction: column !important;
+  box-sizing: border-box !important;
+}
+
 body.eduleb-page .eduleb-contact .contact_info h4 {
-  font-size: 1.5rem !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  font-size: 1.25rem !important;
   font-weight: 800 !important;
-  color: #0f172a !important;
-  margin-bottom: 14px !important;
+  color: #14213d !important;
+  letter-spacing: -0.4px !important;
+  margin-bottom: 6px !important;
+}
+
+body.eduleb-page .eduleb-contact .sf_contact {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  margin-bottom: 16px !important;
+}
+
+body.eduleb-page .eduleb-contact .sf_contact .sf_contact_icon,
+body.eduleb-page .eduleb-contact .sf_contact > span:first-child {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  border-radius: 10px !important;
+  background: #eef2ff !important;
+  color: #3156d8 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 16px !important;
+  margin-top: 2px !important;
+  flex-shrink: 0 !important;
+}
+
+body.eduleb-page .eduleb-contact .sf_contact_title {
+  display: block !important;
+  font-size: 0.74rem !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 2px !important;
+  line-height: 1.2 !important;
+}
+
+body.eduleb-page .eduleb-contact .sf_contact p {
+  margin: 0 !important;
+  font-size: 0.88rem !important;
+  color: #475569 !important;
+  line-height: 1.45 !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  flex: 1 !important;
 }
 
 body.eduleb-page .eduleb-contact-form .form-group {
-  margin-bottom: 18px;
+  margin-bottom: 12px !important;
 }
 
 body.eduleb-page .eduleb-contact-label {
   display: block !important;
-  font-size: 0.88rem !important;
+  font-size: 0.82rem !important;
   font-weight: 600 !important;
   color: #1e293b !important;
-  margin-bottom: 6px !important;
+  margin-bottom: 4px !important;
   text-align: left !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
 }
 
 body.eduleb-page .eduleb-contact-input,
 body.eduleb-page .eduleb-contact-form .form-control {
   width: 100% !important;
   box-sizing: border-box !important;
-  border: 1.5px solid #e2e8f0 !important;
-  border-radius: 12px !important;
-  padding: 14px 16px !important;
-  font-size: 0.98rem !important;
-  font-family: 'Roboto', sans-serif !important;
-  color: #0f172a !important;
-  background: #f8fafc !important;
+  border: 1px solid #dbe2ea !important;
+  border-radius: 9px !important;
+  padding: 8px 13px !important;
+  height: 40px !important;
+  font-size: 0.88rem !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+  color: #14213d !important;
+  background: #fbfcfe !important;
   box-shadow: none !important;
   outline: none !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
@@ -1967,26 +2037,43 @@ body.eduleb-page .eduleb-contact-form .form-control {
 
 body.eduleb-page .eduleb-contact-input:focus,
 body.eduleb-page .eduleb-contact-form .form-control:focus {
-  border-color: #3861fb !important;
+  border-color: #3156d8 !important;
   background: #fff !important;
-  box-shadow: 0 0 0 4px rgba(56, 97, 251, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(49, 86, 216, 0.12) !important;
 }
 
 body.eduleb-page .eduleb-contact-textarea,
 body.eduleb-page .eduleb-contact-form textarea.form-control {
-  min-height: 160px !important;
-  max-height: 160px !important;
-  height: 160px !important;
+  min-height: 95px !important;
+  max-height: 105px !important;
+  height: 95px !important;
   resize: none !important;
   overflow-y: auto !important;
+  padding: 8px 13px !important;
+  font-size: 0.88rem !important;
+  line-height: 1.45 !important;
 }
 
 body.eduleb-page .eduleb-contact-btn {
-  border-radius: 12px !important;
-  padding: 13px 26px !important;
+  border-radius: 9px !important;
+  padding: 10px 22px !important;
   display: inline-flex !important;
   align-items: center;
   gap: 8px;
+  background: #3156d8 !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 13.5px !important;
+  box-shadow: 0 6px 16px rgba(49, 86, 216, 0.25) !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+}
+
+body.eduleb-page .eduleb-contact-btn:hover {
+  background: #203fae !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 20px rgba(49, 86, 216, 0.35) !important;
 }
 
 body.eduleb-page #navigation .eduleb-signin-btn {
