@@ -9,15 +9,21 @@ const durationMinutesField = yup
     return parsed != null && parsed >= 1;
   });
 
-export function validateName(value: string | undefined | null, label: string = 'Name'): string | null {
+export function sanitizeNameInput(val: string, maxLen: number = 15): string {
+  return val.replace(/[^a-zA-Z\s]/g, '').slice(0, maxLen);
+}
+
+export function sanitizeOrgNameInput(val: string, maxLen: number = 20): string {
+  return val.replace(/[^a-zA-Z\s]/g, '').slice(0, maxLen);
+}
+
+export function validateName(value: string | undefined | null, label: string = 'Name', max: number = 15): string | null {
   const trimmed = (value ?? '').trim();
   if (!trimmed) return `${label} is required.`;
-  if (/^[0-9]/.test(trimmed)) return `${label} cannot start with a number.`;
-  if (!/^[A-Za-z]/.test(trimmed)) return `${label} must start with a letter.`;
   if (trimmed.length < 2) return `${label} must be at least 2 characters.`;
-  if (trimmed.length > 50) return `${label} cannot exceed 50 characters.`;
-  if (!/^[A-Za-z][A-Za-z\s'-]*$/.test(trimmed)) {
-    return `${label} can only contain letters, spaces, hyphens, and apostrophes.`;
+  if (trimmed.length > max) return `${label} cannot exceed ${max} characters.`;
+  if (!/^[A-Za-z\s]+$/.test(trimmed)) {
+    return `${label} cannot exceed ${max} characters and can only contain letters.`;
   }
   return null;
 }
@@ -36,52 +42,31 @@ export function validatePassword(password: string | undefined | null): string | 
   return null;
 }
 
-export const createNameSchema = (label: string = 'Name') =>
+export const createNameSchema = (label: string = 'Name', max: number = 15) =>
   yup
     .string()
     .trim()
     .required(`${label} is required.`)
-    .test(
-      'not-start-with-number',
-      `${label} cannot start with a number.`,
-      (value) => !value || !/^[0-9]/.test(value.trim())
-    )
-    .test(
-      'start-with-letter',
-      `${label} must start with a letter.`,
-      (value) => !value || /^[A-Za-z]/.test(value.trim())
-    )
     .min(2, `${label} must be at least 2 characters.`)
-    .max(50, `${label} cannot exceed 50 characters.`)
+    .max(max, `${label} cannot exceed ${max} characters.`)
     .matches(
-      /^[A-Za-z][A-Za-z\s'-]*$/,
-      `${label} can only contain letters, spaces, hyphens, and apostrophes.`
+      /^[A-Za-z\s]+$/,
+      `${label} cannot exceed ${max} characters and can only contain letters.`
     );
 
-export const firstNameSchema = createNameSchema('First name');
-export const lastNameSchema = createNameSchema('Last name');
+export const firstNameSchema = createNameSchema('First name', 15);
+export const lastNameSchema = createNameSchema('Last name', 15);
 
-export const optionalNameSchema = (label: string = 'Name') =>
+export const optionalNameSchema = (label: string = 'Name', max: number = 15) =>
   yup
     .string()
     .trim()
     .transform((v) => (v == null || v === '' ? undefined : v))
     .optional()
-    .test(
-      'not-start-with-number',
-      `${label} cannot start with a number.`,
-      (value) => !value || !/^[0-9]/.test(value.trim())
-    )
-    .test(
-      'start-with-letter',
-      `${label} must start with a letter.`,
-      (value) => !value || /^[A-Za-z]/.test(value.trim())
-    )
-    .min(2, `${label} must be at least 2 characters.`)
-    .max(50, `${label} cannot exceed 50 characters.`)
+    .max(max, `${label} cannot exceed ${max} characters.`)
     .matches(
-      /^[A-Za-z][A-Za-z\s'-]*$/,
-      `${label} can only contain letters, spaces, hyphens, and apostrophes.`
+      /^[A-Za-z\s]+$/,
+      `${label} cannot exceed ${max} characters and can only contain letters.`
     );
 
 export const passwordSchema = yup

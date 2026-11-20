@@ -1056,7 +1056,12 @@ function formatEnrollmentNumber(
 }
 
 const createUserSchema = yup.object({
-  email: yup.string().email('Please enter a valid email address.').required('Email is required.'),
+  email: yup
+    .string()
+    .trim()
+    .required('Please enter valid email address.')
+    .matches(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter valid email address.')
+    .max(191),
   password: yup
     .string()
     .transform((v) => (v == null || v === '' ? undefined : v))
@@ -1067,12 +1072,24 @@ const createUserSchema = yup.object({
       if (err) return this.createError({ message: err });
       return true;
     }),
-  firstName: createNameSchema('First name'),
-  lastName: optionalNameSchema('Last name'),
+  firstName: createNameSchema('First name', 15),
+  lastName: optionalNameSchema('Last name', 15),
   role: yup.mixed<'student' | 'teacher' | 'org_admin' | 'staff'>().oneOf(['student', 'teacher', 'org_admin', 'staff']).required('Role is required.'),
   enrollmentNo: yup.string().trim().max(50).optional(),
-  branchId: yup.string().trim().optional(),
-  departmentId: yup.string().trim().optional(),
+  branchId: yup.string().trim().test('branch-required', 'Please select a branch.', function (val) {
+    const role = this.parent?.role;
+    if (role === 'student' || role === 'teacher') {
+      return Boolean(val && val.trim().length > 0);
+    }
+    return true;
+  }),
+  departmentId: yup.string().trim().test('dept-required', 'Please select a department.', function (val) {
+    const role = this.parent?.role;
+    if (role === 'student' || role === 'teacher') {
+      return Boolean(val && val.trim().length > 0);
+    }
+    return true;
+  }),
 });
 
 type CreateUserForm = {
@@ -1214,6 +1231,7 @@ export function UsersManagementPanel({
     setValue,
     watch,
     control,
+    trigger,
     formState: { errors },
   } = useForm<CreateUserForm>({
     // yup InferType + optional password conflicts with RHF Resolver generics
@@ -2001,7 +2019,7 @@ export function UsersManagementPanel({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <form noValidate onSubmit={handleSubmit(onSubmit)} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div className="org-drawer-body">
             <div className="org-grid-2">
               <div className="org-form-field">
@@ -2011,7 +2029,16 @@ export function UsersManagementPanel({
                 <input
                   className="org-form-input"
                   placeholder="e.g. John"
-                  {...register('firstName')}
+                  maxLength={15}
+                  onKeyDown={(e) => {
+                    if (['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'Delete', 'Home', 'End'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+                    if (!/^[a-zA-Z\s]$/.test(e.key)) e.preventDefault();
+                  }}
+                  {...register('firstName', {
+                    onChange: (e) => {
+                      e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 15);
+                    },
+                  })}
                 />
                 <FormError message={errors.firstName?.message} />
               </div>
@@ -2023,7 +2050,16 @@ export function UsersManagementPanel({
                 <input
                   className="org-form-input"
                   placeholder="e.g. Doe"
-                  {...register('lastName')}
+                  maxLength={15}
+                  onKeyDown={(e) => {
+                    if (['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'Delete', 'Home', 'End'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+                    if (!/^[a-zA-Z\s]$/.test(e.key)) e.preventDefault();
+                  }}
+                  {...register('lastName', {
+                    onChange: (e) => {
+                      e.target.value = e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 15);
+                    },
+                  })}
                 />
                 <FormError message={errors.lastName?.message} />
               </div>
@@ -2034,11 +2070,15 @@ export function UsersManagementPanel({
                 Email Address <span className="org-required-star">*</span>
               </label>
               <input
-                type="email"
+                type="text"
                 className="org-form-input"
                 placeholder="e.g. user@institution.edu"
                 disabled={Boolean(editingId)}
-                {...register('email')}
+                {...register('email', {
+                  onBlur: () => {
+                    trigger('email');
+                  },
+                })}
               />
               <FormError message={errors.email?.message} />
             </div>
@@ -2060,10 +2100,12 @@ export function UsersManagementPanel({
               <input type="hidden" {...register('role')} />
             )}
 
-            {/* Branch / Campus and Department Dropdowns */}
+            {/* Branch and Department Dropdowns */}
             <div className="org-grid-2">
               <div className="org-form-field">
-                <label className="org-form-label">Branch / Campus</label>
+                <label className="org-form-label">
+                  Branch <span className="org-required-star">*</span>
+                </label>
                 <Controller
                   name="branchId"
                   control={control}
@@ -2084,7 +2126,9 @@ export function UsersManagementPanel({
                       }}
                       id="userBranchSelect"
                     >
-                      <option value="">Select Branch / Campus</option>
+                      <option value="">
+                        {branches.length === 0 ? 'No branches available' : 'Select Branch'}
+                      </option>
                       {branches.map((b) => (
                         <option key={b.id} value={b.id}>
                           {b.name}
@@ -2094,10 +2138,17 @@ export function UsersManagementPanel({
                   )}
                 />
                 <FormError message={errors.branchId?.message} />
+                {branches.length === 0 && (
+                  <span className="org-form-hint" style={{ color: '#dc2626' }}>
+                    No branches found. Please create a branch in Organization Setup first.
+                  </span>
+                )}
               </div>
 
               <div className="org-form-field">
-                <label className="org-form-label">Department</label>
+                <label className="org-form-label">
+                  Department <span className="org-required-star">*</span>
+                </label>
                 <Controller
                   name="departmentId"
                   control={control}
@@ -2120,7 +2171,9 @@ export function UsersManagementPanel({
                       <option value="">
                         {watchedBranchId && drawerDepartments.length === 0
                           ? 'No departments in this branch'
-                          : 'Select Department'}
+                          : drawerDepartments.length === 0
+                            ? 'No departments available'
+                            : 'Select Department'}
                       </option>
                       {drawerDepartments.map((d) => (
                         <option key={d.id} value={d.id}>
@@ -2131,6 +2184,11 @@ export function UsersManagementPanel({
                   )}
                 />
                 <FormError message={errors.departmentId?.message} />
+                {drawerDepartments.length === 0 && (
+                  <span className="org-form-hint" style={{ color: '#dc2626' }}>
+                    No departments found. Please create a department in Organization Setup first.
+                  </span>
+                )}
               </div>
             </div>
 

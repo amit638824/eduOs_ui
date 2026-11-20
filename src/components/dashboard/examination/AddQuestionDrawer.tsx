@@ -24,6 +24,80 @@ export type McqOptionCount = 2 | 3 | 4 | 5;
 
 const DEFAULT_OPTION_TEXTS = ['', '', '', '', ''];
 
+/** Detects pure repeated characters like "gggggg...", "vvvvvv..." or lack of character variance in long strings */
+export function hasRepetitivePattern(text: string): boolean {
+  if (!text) return false;
+  // 6 or more consecutive identical characters (case-insensitive)
+  if (/(.)\1{5,}/i.test(text)) return true;
+  // If string has 20+ non-whitespace characters, check distinct characters
+  const cleaned = text.replace(/\s+/g, '').toLowerCase();
+  if (cleaned.length >= 20) {
+    const uniqueChars = new Set(cleaned.split('')).size;
+    if (uniqueChars < 4) return true;
+  }
+  return false;
+}
+
+export function validateQuestionText(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return 'Question text is required.';
+  }
+  if (trimmed.length < 5) {
+    return 'Question text must be at least 5 characters.';
+  }
+  if (trimmed.length > 50) {
+    return 'Question text cannot exceed 50 characters.';
+  }
+  if (!/[a-zA-Z0-9\u00C0-\u024F\u0900-\u097F]/.test(trimmed)) {
+    return 'Question text must contain meaningful letters or numbers.';
+  }
+  return null;
+}
+
+export function validateOptionText(
+  text: string,
+  index: number,
+  allOptions: string[]
+): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return `Option ${index + 1} is required.`;
+  }
+  if (trimmed.length > 20) {
+    return `Option ${index + 1} cannot exceed 20 characters.`;
+  }
+  if (hasRepetitivePattern(trimmed)) {
+    return `Option ${index + 1} cannot contain repetitive characters or gibberish.`;
+  }
+  // Duplicate check across active options
+  const lower = trimmed.toLowerCase();
+  for (let i = 0; i < allOptions.length; i++) {
+    if (i !== index && allOptions[i]?.trim().toLowerCase() === lower) {
+      return `Option ${index + 1} is identical to Option ${i + 1}. Each option must be unique.`;
+    }
+  }
+  return null;
+}
+
+export function validateSingleAnswer(type: QuestionType, val: string): string | null {
+  const trimmed = val.trim();
+  if (!trimmed) {
+    return type === 'fill_blank' ? 'Correct answer text is required.' : 'Correct value is required.';
+  }
+  if (type === 'fill_blank') {
+    if (trimmed.length > 20) return 'Answer text cannot exceed 20 characters.';
+    if (hasRepetitivePattern(trimmed)) return 'Answer text cannot contain repetitive characters or gibberish.';
+  } else if (type === 'integer') {
+    const num = Number(trimmed);
+    if (!Number.isInteger(num)) return 'Please enter a valid integer (whole number).';
+  } else if (type === 'numerical') {
+    const num = Number(trimmed);
+    if (!Number.isFinite(num)) return 'Please enter a valid numeric value.';
+  }
+  return null;
+}
+
 export interface AddQuestionDrawerProps {
   isOpen: boolean;
   onClose: () => void;
@@ -78,8 +152,28 @@ export function AddQuestionDrawer({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
+  const [questionTextError, setQuestionTextError] = useState<string | null>(null);
+  const [questionTextTouched, setQuestionTextTouched] = useState(false);
+
+  const [optionErrors, setOptionErrors] = useState<(string | null)[]>([null, null, null, null, null]);
+  const [optionsTouched, setOptionsTouched] = useState<boolean[]>([false, false, false, false, false]);
+
+  const [opt1Error, setOpt1Error] = useState<string | null>(null);
+  const [opt1Touched, setOpt1Touched] = useState(false);
+
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const questionTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const optionInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const opt1InputRef = useRef<HTMLInputElement>(null);
+
+  const resetValidation = () => {
+    setQuestionTextError(null);
+    setQuestionTextTouched(false);
+    setOptionErrors([null, null, null, null, null]);
+    setOptionsTouched([false, false, false, false, false]);
+    setOpt1Error(null);
+    setOpt1Touched(false);
+  };
 
   // Sync initial department / subject / topic when drawer opens
   useEffect(() => {
@@ -89,6 +183,7 @@ export function AddQuestionDrawer({
       if (initialTopicId) setTopicId(initialTopicId);
       setError('');
       setMessage('');
+      resetValidation();
     }
   }, [isOpen, initialDepartmentId, initialSubjectId, initialTopicId]);
 
@@ -209,14 +304,76 @@ export function AddQuestionDrawer({
     if (Number(correct) > count) {
       setCorrect('1');
     }
+    // Revalidate remaining active options
+    const activeTexts = optionTexts.slice(0, count);
+    const nextErrors = [...optionErrors];
+    for (let i = 0; i < count; i++) {
+      if (optionsTouched[i]) {
+        nextErrors[i] = validateOptionText(optionTexts[i] ?? '', i, activeTexts);
+      }
+    }
+    setOptionErrors(nextErrors);
+  };
+
+  const handleQuestionTextChange = (value: string) => {
+    const limited = value.slice(0, 50);
+    setQuestionText(limited);
+    if (questionTextTouched || questionTextError) {
+      setQuestionTextError(validateQuestionText(limited));
+    }
+  };
+
+  const handleQuestionTextBlur = () => {
+    setQuestionTextTouched(true);
+    setQuestionTextError(validateQuestionText(questionText));
   };
 
   const handleOptionTextChange = (index: number, value: string) => {
-    setOptionTexts((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
+    const limited = value.slice(0, 20);
+    const nextTexts = [...optionTexts];
+    nextTexts[index] = limited;
+    setOptionTexts(nextTexts);
+
+    if (optionsTouched[index] || optionErrors[index]) {
+      const activeTexts = nextTexts.slice(0, optionCount);
+      const nextErrors = [...optionErrors];
+      nextErrors[index] = validateOptionText(limited, index, activeTexts);
+      // Also update duplicate check on any other touched options
+      for (let i = 0; i < optionCount; i++) {
+        if (i !== index && optionsTouched[i]) {
+          nextErrors[i] = validateOptionText(nextTexts[i] ?? '', i, activeTexts);
+        }
+      }
+      setOptionErrors(nextErrors);
+    }
+  };
+
+  const handleOptionBlur = (index: number) => {
+    const nextTouched = [...optionsTouched];
+    nextTouched[index] = true;
+    setOptionsTouched(nextTouched);
+
+    const activeTexts = optionTexts.slice(0, optionCount);
+    const nextErrors = [...optionErrors];
+    nextErrors[index] = validateOptionText(optionTexts[index] ?? '', index, activeTexts);
+    for (let i = 0; i < optionCount; i++) {
+      if (i !== index && nextTouched[i]) {
+        nextErrors[i] = validateOptionText(optionTexts[i] ?? '', i, activeTexts);
+      }
+    }
+    setOptionErrors(nextErrors);
+  };
+
+  const handleOpt1Change = (value: string) => {
+    setOpt1(value);
+    if (opt1Touched || opt1Error) {
+      setOpt1Error(validateSingleAnswer(questionType, value));
+    }
+  };
+
+  const handleOpt1Blur = () => {
+    setOpt1Touched(true);
+    setOpt1Error(validateSingleAnswer(questionType, opt1));
   };
 
   const buildOptions = () => {
@@ -227,15 +384,16 @@ export function AddQuestionDrawer({
       ];
     }
     if (questionType === 'fill_blank') {
-      return [{ content: { text: opt1 }, isCorrect: true }];
+      return [{ content: { text: opt1.trim() }, isCorrect: true }];
     }
     if (questionType === 'integer' || questionType === 'numerical') {
-      return [{ content: { text: opt1 }, isCorrect: true }];
+      const num = Number(opt1.trim());
+      return [{ content: { text: opt1.trim(), value: isNaN(num) ? undefined : num }, isCorrect: true }];
     }
     // MCQ / MSQ
     const chosenIndex = Math.max(0, parseInt(correct, 10) - 1);
     return optionTexts.slice(0, optionCount).map((text, idx) => ({
-      content: { text },
+      content: { text: text.trim() },
       isCorrect: idx === chosenIndex,
     }));
   };
@@ -250,6 +408,7 @@ export function AddQuestionDrawer({
     setNegativeMarksInput('0');
     setError('');
     setMessage('');
+    resetValidation();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -259,37 +418,68 @@ export function AddQuestionDrawer({
 
     if (!departmentId || !subjectId || !topicId) {
       setError('Please select department, subject, and topic for the question.');
-      return;
-    }
-
-    if (!questionText.trim()) {
-      setError('Question text is required.');
+      drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     const marks = parsePositiveIntInput(marksInput);
     if (marks == null || marks < 1) {
       setError('Marks per question must be at least 1.');
+      drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Validate Question Text
+    const qErr = validateQuestionText(questionText);
+    setQuestionTextTouched(true);
+    setQuestionTextError(qErr);
+
+    let hasValidationError = Boolean(qErr);
+    let firstInvalidElement: HTMLElement | null = null;
+
+    if (qErr && !firstInvalidElement) {
+      firstInvalidElement = questionTextareaRef.current;
+    }
+
+    // Validate options
+    if (questionType === 'mcq' || questionType === 'msq') {
+      const activeTexts = optionTexts.slice(0, optionCount);
+      const newOptionErrors: (string | null)[] = [null, null, null, null, null];
+      for (let i = 0; i < optionCount; i++) {
+        const err = validateOptionText(optionTexts[i] ?? '', i, activeTexts);
+        newOptionErrors[i] = err;
+        if (err) {
+          hasValidationError = true;
+          if (!firstInvalidElement) {
+            firstInvalidElement = optionInputRefs.current[i];
+          }
+        }
+      }
+      setOptionsTouched([true, true, true, true, true]);
+      setOptionErrors(newOptionErrors);
+    } else if (questionType === 'fill_blank' || questionType === 'integer' || questionType === 'numerical') {
+      const singleErr = validateSingleAnswer(questionType, opt1);
+      setOpt1Touched(true);
+      setOpt1Error(singleErr);
+      if (singleErr) {
+        hasValidationError = true;
+        if (!firstInvalidElement) {
+          firstInvalidElement = opt1InputRef.current;
+        }
+      }
+    }
+
+    if (hasValidationError) {
+      setError('Please fix the highlighted validation errors before saving.');
+      if (firstInvalidElement) {
+        firstInvalidElement.focus();
+        firstInvalidElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
 
     const difficulty = Number(difficultyInput);
     const negativeMarks = Number(negativeMarksInput);
-
-    // Validate options
-    if (questionType === 'mcq' || questionType === 'msq') {
-      for (let i = 0; i < optionCount; i++) {
-        if (!optionTexts[i]?.trim()) {
-          setError(`Please enter text for Option ${i + 1}.`);
-          return;
-        }
-      }
-    } else if (questionType === 'fill_blank' || questionType === 'integer' || questionType === 'numerical') {
-      if (!opt1.trim()) {
-        setError('Please enter the correct answer/value.');
-        return;
-      }
-    }
 
     const payload = {
       type: questionType,
@@ -637,10 +827,25 @@ export function AddQuestionDrawer({
                 rows={3}
                 placeholder="Enter the complete question text..."
                 value={questionText}
-                onChange={(e) => setQuestionText(e.target.value)}
-                style={{ height: '96px', minHeight: '96px', maxHeight: '96px', resize: 'none' }}
+                onChange={(e) => handleQuestionTextChange(e.target.value)}
+                onBlur={handleQuestionTextBlur}
+                maxLength={50}
+                style={{
+                  height: '96px',
+                  minHeight: '96px',
+                  maxHeight: '96px',
+                  resize: 'none',
+                  borderColor: questionTextError ? '#ef4444' : undefined,
+                  boxShadow: questionTextError ? '0 0 0 1px #ef4444' : undefined,
+                }}
+                aria-invalid={Boolean(questionTextError)}
                 required
               />
+              {questionTextError && (
+                <div style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span>{questionTextError}</span>
+                </div>
+              )}
             </div>
 
             {/* True/False Answer */}
@@ -662,15 +867,28 @@ export function AddQuestionDrawer({
             {(questionType === 'fill_blank' || questionType === 'integer' || questionType === 'numerical') && (
               <div className="org-form-field">
                 <label className="org-form-label">
-                  {questionType === 'fill_blank' ? 'Correct Answer Text' : 'Correct Value'}
+                  {questionType === 'fill_blank' ? 'Correct Answer Text' : 'Correct Value'} <span className="org-required-star">*</span>
                 </label>
                 <input
+                  ref={opt1InputRef}
                   className="org-form-input"
                   placeholder={questionType === 'fill_blank' ? 'Answer text' : 'Numeric value'}
                   value={opt1}
-                  onChange={(e) => setOpt1(e.target.value)}
+                  onChange={(e) => handleOpt1Change(e.target.value)}
+                  onBlur={handleOpt1Blur}
+                  maxLength={questionType === 'fill_blank' ? 20 : undefined}
+                  style={{
+                    borderColor: opt1Error ? '#ef4444' : undefined,
+                    boxShadow: opt1Error ? '0 0 0 1px #ef4444' : undefined,
+                  }}
+                  aria-invalid={Boolean(opt1Error)}
                   required
                 />
+                {opt1Error && (
+                  <div style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span>{opt1Error}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -678,18 +896,36 @@ export function AddQuestionDrawer({
             {(questionType === 'mcq' || questionType === 'msq') && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <label className="org-form-label">Options &amp; Correct Answer</label>
-                {Array.from({ length: optionCount }, (_, index) => (
-                  <div key={index} className="org-form-field">
-                    <label className="org-form-hint">Option {index + 1}</label>
-                    <input
-                      className="org-form-input"
-                      placeholder={`Enter text for Option ${index + 1}`}
-                      value={optionTexts[index] ?? ''}
-                      onChange={(e) => handleOptionTextChange(index, e.target.value)}
-                      required
-                    />
-                  </div>
-                ))}
+                {Array.from({ length: optionCount }, (_, index) => {
+                  const err = optionErrors[index];
+                  return (
+                    <div key={index} className="org-form-field">
+                      <label className="org-form-hint">Option {index + 1} <span className="org-required-star">*</span></label>
+                      <input
+                        ref={(el) => {
+                          optionInputRefs.current[index] = el;
+                        }}
+                        className="org-form-input"
+                        placeholder={`Enter text for Option ${index + 1}`}
+                        value={optionTexts[index] ?? ''}
+                        onChange={(e) => handleOptionTextChange(index, e.target.value)}
+                        onBlur={() => handleOptionBlur(index)}
+                        maxLength={20}
+                        style={{
+                          borderColor: err ? '#ef4444' : undefined,
+                          boxShadow: err ? '0 0 0 1px #ef4444' : undefined,
+                        }}
+                        aria-invalid={Boolean(err)}
+                        required
+                      />
+                      {err && (
+                        <div style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span>{err}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
 
                 <div className="org-form-field" style={{ marginTop: 4 }}>
                   <label className="org-form-label">Select Correct Option</label>
