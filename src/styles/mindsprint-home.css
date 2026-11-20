@@ -531,8 +531,14 @@ body.ms-home-active .section {
 
 body.ms-home-active .heading {
   text-align: center !important;
-  max-width: 700px !important;
+  max-width: 880px !important;
   margin: 0 auto 38px !important;
+}
+
+@media (min-width: 768px) {
+  body.ms-home-active #audience .heading h2 {
+    white-space: nowrap !important;
+  }
 }
 
 body.ms-home-active .eyebrow {
