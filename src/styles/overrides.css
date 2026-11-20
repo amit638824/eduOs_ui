@@ -2743,16 +2743,17 @@ body.dark_mode .sca-notifications-card .org-table thead tr,
 .mad-alert-success,
 .auth-alert,
 .edtp-alert,
-.edtp-security-alert-box {
+.edtp-security-alert-box,
+.ms-login-error {
   display: flex !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   align-items: center !important;
-  text-align: center !important;
+  text-align: left !important;
   gap: 10px !important;
-  padding: 12px 20px !important;
+  padding: 12px 18px !important;
   border-radius: 10px !important;
   font-size: 0.875rem !important;
-  font-weight: 600 !important;
+  font-weight: 500 !important;
 }
 
 /* Red for Unsuccessful / Error Messages */

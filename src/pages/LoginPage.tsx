@@ -35,6 +35,15 @@ export default function LoginPage() {
   const [mfaCode, setMfaCode] = useState('');
   const [rememberMe, setRememberMe] = useState(() => Boolean(remembered));
 
+  // Auto-dismiss error after 5 seconds
+  useEffect(() => {
+    if (!apiError) return;
+    const timer = window.setTimeout(() => {
+      setApiError('');
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [apiError]);
+
   const {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,
@@ -359,7 +368,7 @@ export default function LoginPage() {
 
           {/* RIGHT FLOATING LOGIN CARD */}
           <div className="ms-login-card">
-            <h2>Login to Mindsprint</h2>
+            <h2>Log In to MindSprint</h2>
             <p className="ms-login-card-sub">
               Access your dashboard to manage examinations and monitor performance.
             </p>
