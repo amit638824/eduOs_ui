@@ -81,6 +81,7 @@ export function OrganizationsPanel() {
   // Form Fields
   const [name, setName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
   const [adminFirstName, setAdminFirstName] = useState('');
   const [adminLastName, setAdminLastName] = useState('');
   const [firstNameError, setFirstNameError] = useState('');
@@ -104,6 +105,7 @@ export function OrganizationsPanel() {
     setEditingId(null);
     setName('');
     setContactEmail('');
+    setEmailError('');
     setAdminFirstName('');
     setAdminLastName('');
     setFirstNameError('');
@@ -119,6 +121,7 @@ export function OrganizationsPanel() {
     setContactEmail(
       typeof org.settings?.contactEmail === 'string' ? org.settings.contactEmail : '',
     );
+    setEmailError('');
     setActivateNow(org.isActive);
     setFirstNameError('');
     setLastNameError('');
@@ -128,33 +131,58 @@ export function OrganizationsPanel() {
 
   const closeDrawer = () => {
     setIsDrawerOpen(false);
+    setEmailError('');
     setFirstNameError('');
     setLastNameError('');
     setDrawerError('');
   };
 
   const save = async () => {
+    setEmailError('');
     setFirstNameError('');
     setLastNameError('');
     setDrawerError('');
 
-    const nextSlug = slugify(name);
-    if (!name.trim() || !nextSlug) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       setDrawerError('Organization name is required.');
       return;
     }
-    if (!editingId && !contactEmail.trim()) {
-      setDrawerError('Login email is required — org admin credentials will be emailed there.');
+    if (trimmedName.length < 2) {
+      setDrawerError('Organization name must be at least 2 characters.');
+      return;
+    }
+    if (trimmedName.length > 20) {
+      setDrawerError('Organization name cannot exceed 20 characters.');
+      return;
+    }
+    if (!/^[A-Za-z\s]+$/.test(trimmedName)) {
+      setDrawerError('Organization name cannot exceed 20 characters and can only contain letters.');
+      return;
+    }
+
+    const nextSlug = slugify(trimmedName);
+    if (!nextSlug) {
+      setDrawerError('Organization name is required.');
+      return;
+    }
+    const trimmedContact = contactEmail.trim();
+    if (!editingId && !trimmedContact) {
+      setEmailError('Please enter valid email address.');
+      return;
+    }
+    if (trimmedContact && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedContact)) {
+      setEmailError('Please enter valid email address.');
       return;
     }
     if (!editingId) {
-      const fnErr = validateName(adminFirstName, 'First name');
+      const fnErr = validateName(adminFirstName, 'First name', 15);
       if (fnErr) {
         setFirstNameError(fnErr);
         return;
       }
       if (adminLastName.trim()) {
-        const lnErr = validateName(adminLastName, 'Last name');
+        const lnErr = validateName(adminLastName, 'Last name', 15);
         if (lnErr) {
           setLastNameError(lnErr);
           return;
@@ -565,7 +593,15 @@ export function OrganizationsPanel() {
               id="drawerOrgName"
               className="org-form-input"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              maxLength={20}
+              onKeyDown={(e) => {
+                if (['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'Delete', 'Home', 'End'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+                if (!/^[a-zA-Z\s]$/.test(e.key)) e.preventDefault();
+              }}
+              onChange={(e) => {
+                setName(e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 20));
+                if (drawerError) setDrawerError('');
+              }}
               placeholder="e.g. TechWagger Solutions"
               autoFocus={isDrawerOpen}
             />
@@ -578,13 +614,31 @@ export function OrganizationsPanel() {
             </label>
             <input
               id="drawerOrgContact"
-              type="email"
+              type="text"
               className="org-form-input"
               value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
+              onChange={(e) => {
+                setContactEmail(e.target.value);
+                if (emailError) {
+                  const val = e.target.value.trim();
+                  if (!val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                    setEmailError('');
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                const val = e.target.value.trim();
+                if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+                  setEmailError('Please enter valid email address.');
+                } else if (!val && !editingId) {
+                  setEmailError('Please enter valid email address.');
+                } else {
+                  setEmailError('');
+                }
+              }}
               placeholder="admin@organization.com"
-              required={!editingId}
             />
+            <FormError message={emailError} />
             <span className="org-form-hint">
               {editingId
                 ? 'Used for superadmin communication and notifications.'
@@ -604,8 +658,13 @@ export function OrganizationsPanel() {
                     id="drawerAdminFirst"
                     className="org-form-input"
                     value={adminFirstName}
+                    maxLength={15}
+                    onKeyDown={(e) => {
+                      if (['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'Delete', 'Home', 'End'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+                      if (!/^[a-zA-Z\s]$/.test(e.key)) e.preventDefault();
+                    }}
                     onChange={(e) => {
-                      setAdminFirstName(e.target.value);
+                      setAdminFirstName(e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 15));
                       if (firstNameError) setFirstNameError('');
                     }}
                     placeholder="e.g. John"
@@ -620,8 +679,13 @@ export function OrganizationsPanel() {
                     id="drawerAdminLast"
                     className="org-form-input"
                     value={adminLastName}
+                    maxLength={15}
+                    onKeyDown={(e) => {
+                      if (['Backspace', 'Tab', 'Enter', 'Escape', 'ArrowLeft', 'ArrowRight', 'Delete', 'Home', 'End'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+                      if (!/^[a-zA-Z\s]$/.test(e.key)) e.preventDefault();
+                    }}
                     onChange={(e) => {
-                      setAdminLastName(e.target.value);
+                      setAdminLastName(e.target.value.replace(/[^a-zA-Z\s]/g, '').slice(0, 15));
                       if (lastNameError) setLastNameError('');
                     }}
                     placeholder="e.g. Doe"
