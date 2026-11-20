@@ -24,7 +24,11 @@ body.ms-home-active #audience,
 body.ms-home-active #features,
 body.ms-home-active #how,
 body.ms-home-active #contact,
-#home, #audience, #features, #how, #contact {
+#home,
+#audience,
+#features,
+#how,
+#contact {
   scroll-margin-top: 80px !important;
 }
 
@@ -51,7 +55,6 @@ body.ms-home-active a {
 
 body.ms-home-active .wrap,
 .ms-header-universal .wrap,
-.ms-footer-universal .wrap,
 body.eduleb-login-route .wrap {
   width: min(1200px, calc(100% - 48px)) !important;
   margin-left: auto !important;
@@ -760,19 +763,15 @@ body.ms-home-active .cta-box .btn {
   white-space: nowrap !important;
 }
 
-body.ms-home-active footer,
-footer.ms-footer-universal {
+body.ms-home-active footer {
   background: #111d39 !important;
   color: #d0d9ed !important;
   padding: 44px 0 20px !important;
-  margin-top: auto !important;
-  width: 100% !important;
 }
 
 body.ms-home-active footer .logo,
 body.ms-home-active footer .footer-logo-badge,
-footer .footer-logo-badge,
-.ms-footer-universal .footer-logo-badge {
+footer .footer-logo-badge {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -781,13 +780,11 @@ footer .footer-logo-badge,
   border-radius: 14px !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
   margin-bottom: 16px !important;
-  text-decoration: none !important;
 }
 
 body.ms-home-active footer .logo img,
 body.ms-home-active footer .footer-logo-badge img,
-footer .footer-logo-badge img,
-.ms-footer-universal .footer-logo-badge img {
+footer .footer-logo-badge img {
   height: 38px !important;
   max-height: 38px !important;
   width: auto !important;
@@ -795,54 +792,45 @@ footer .footer-logo-badge img,
   display: block !important;
 }
 
-body.ms-home-active .footgrid,
-.ms-footer-universal .footgrid {
+body.ms-home-active .footgrid {
   display: grid !important;
   grid-template-columns: 1.5fr 1fr 1fr !important;
   gap: 35px !important;
   padding-bottom: 30px !important;
 }
 
-body.ms-home-active .footgrid p,
-.ms-footer-universal .footgrid p {
+body.ms-home-active .footgrid p {
   color: #aebbd5 !important;
   font-size: 13px !important;
   max-width: 360px !important;
   line-height: 1.6 !important;
   margin-top: 10px !important;
-  margin-bottom: 0 !important;
 }
 
-body.ms-home-active .footgrid h4,
-.ms-footer-universal .footgrid h4 {
+body.ms-home-active .footgrid h4 {
   color: white !important;
   margin: 0 0 12px !important;
   font-size: 15px !important;
   font-weight: 700 !important;
 }
 
-body.ms-home-active .footlinks,
-.ms-footer-universal .footlinks {
+body.ms-home-active .footlinks {
   display: grid !important;
   gap: 8px !important;
   color: #b5c1da !important;
   font-size: 13px !important;
 }
 
-body.ms-home-active .footlinks a,
-.ms-footer-universal .footlinks a {
+body.ms-home-active .footlinks a {
   color: #b5c1da !important;
-  text-decoration: none !important;
   transition: color 0.2s ease !important;
 }
 
-body.ms-home-active .footlinks a:hover,
-.ms-footer-universal .footlinks a:hover {
+body.ms-home-active .footlinks a:hover {
   color: white !important;
 }
 
-body.ms-home-active .copyright,
-.ms-footer-universal .copyright {
+body.ms-home-active .copyright {
   border-top: 1px solid #ffffff20 !important;
   padding-top: 17px !important;
   color: #93a2c2 !important;
@@ -868,9 +856,7 @@ body.ms-home-active .copyright,
 }
 
 @media (max-width: 700px) {
-  body.ms-home-active .wrap,
-  .ms-header-universal .wrap,
-  .ms-footer-universal .wrap {
+  body.ms-home-active .wrap {
     width: calc(100% - 30px) !important;
   }
 
@@ -956,13 +942,11 @@ body.ms-home-active .copyright,
     margin-top: 20px !important;
   }
 
-  body.ms-home-active .footgrid,
-  .ms-footer-universal .footgrid {
+  body.ms-home-active .footgrid {
     grid-template-columns: 1fr 1fr !important;
   }
 
-  body.ms-home-active .footgrid>div:first-child,
-  .ms-footer-universal .footgrid>div:first-child {
+  body.ms-home-active .footgrid>div:first-child {
     grid-column: 1 / -1 !important;
   }
 }

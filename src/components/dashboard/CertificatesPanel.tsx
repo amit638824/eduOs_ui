@@ -14,6 +14,7 @@ import {
   CertificatePreviewModal,
   type CertificateTemplate,
 } from '@/components/dashboard/CertificatePreviewModal';
+import { TableEmptyState } from '@/components/ui/TableEmptyState';
 import {
   FiSearch,
   FiX,
@@ -405,11 +406,16 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
                 </tr>
               ))}
               {items.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={mode === 'org' ? 8 : 7} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-                    {!searchTerm.trim() ? 'No certificates yet.' : 'No certificates match your search query.'}
-                  </td>
-                </tr>
+                <TableEmptyState
+                  colSpan={mode === 'org' ? 8 : 7}
+                  icon={FiAward}
+                  title={!searchTerm.trim() ? 'No certificates yet' : 'No matching certificates'}
+                  description={
+                    !searchTerm.trim()
+                      ? 'No certificates have been issued yet for this organization.'
+                      : 'No certificates match your search query.'
+                  }
+                />
               )}
             </tbody>
           </table>

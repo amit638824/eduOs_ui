@@ -115,13 +115,20 @@ export function buildDashboardNavigation(
     if (superAdmin) {
       return [
         {
-          id: 'main',
+          id: 'overview',
           items: [
             {
               label: 'Dashboard',
               href: `${base}/admin-dashboard`,
               icon: 'home',
             },
+          ],
+        },
+        {
+          id: 'organization',
+          title: 'Organization',
+          collapsible: true,
+          items: [
             {
               label: 'Organizations',
               href: `${base}/admin-organizations`,
@@ -147,6 +154,13 @@ export function buildDashboardNavigation(
               href: `${base}/admin-users`,
               icon: 'users',
             },
+          ],
+        },
+        {
+          id: 'assessments',
+          title: 'Assessments',
+          collapsible: true,
+          items: [
             {
               label: 'All Tests',
               href: `${base}/admin-course`,
@@ -156,11 +170,6 @@ export function buildDashboardNavigation(
               label: 'Question Bank',
               href: `${base}/admin-question-bank`,
               icon: 'quiz',
-            },
-            {
-              label: 'Create Test',
-              href: `${base}/create-test`,
-              icon: 'plus',
             },
             {
               label: 'Build with AI',
@@ -183,9 +192,16 @@ export function buildDashboardNavigation(
               label: 'Flagged Attempts',
               href: `${base}/admin-flagged-attempts`,
               icon: 'flag',
-              badge: '',
+              badge: 'Review',
               badgeVariant: 'danger',
             },
+          ],
+        },
+        {
+          id: 'reports',
+          title: 'Reports & Certificates',
+          collapsible: true,
+          items: [
             {
               label: 'Reports',
               href: `${base}/admin-reviews`,
@@ -196,6 +212,13 @@ export function buildDashboardNavigation(
               href: `${base}/admin-certificates`,
               icon: 'certificate',
             },
+          ],
+        },
+        {
+          id: 'system',
+          title: 'System & Logs',
+          collapsible: true,
+          items: [
             {
               label: 'Payments',
               href: `${base}/admin-wishlist`,
@@ -224,13 +247,20 @@ export function buildDashboardNavigation(
     if (staffOnly) {
       return [
         {
-          id: 'main',
+          id: 'overview',
           items: [
             {
               label: 'Dashboard',
               href: `${base}/admin-dashboard`,
               icon: 'home',
             },
+          ],
+        },
+        {
+          id: 'organization',
+          title: 'Organization',
+          collapsible: true,
+          items: [
             {
               label: 'Departments',
               href: `${base}/admin-org`,
@@ -241,6 +271,13 @@ export function buildDashboardNavigation(
               href: `${base}/admin-students`,
               icon: 'students',
             },
+          ],
+        },
+        {
+          id: 'assessments',
+          title: 'Assessments',
+          collapsible: true,
+          items: [
             {
               label: 'All Tests',
               href: `${base}/admin-course`,
@@ -250,11 +287,6 @@ export function buildDashboardNavigation(
               label: 'Question Bank',
               href: `${base}/admin-question-bank`,
               icon: 'quiz',
-            },
-            {
-              label: 'Create Test',
-              href: `${base}/create-test`,
-              icon: 'plus',
             },
             {
               label: 'Build with AI',
@@ -280,6 +312,13 @@ export function buildDashboardNavigation(
               badge: 'Review',
               badgeVariant: 'danger',
             },
+          ],
+        },
+        {
+          id: 'reports',
+          title: 'Reports & Certificates',
+          collapsible: true,
+          items: [
             {
               label: 'Reports',
               href: `${base}/admin-reviews`,
@@ -302,13 +341,20 @@ export function buildDashboardNavigation(
      */
     return [
       {
-        id: 'main',
+        id: 'overview',
         items: [
           {
             label: 'Dashboard',
             href: `${base}/admin-dashboard`,
             icon: 'home',
           },
+        ],
+      },
+      {
+        id: 'organization',
+        title: 'Organization',
+        collapsible: true,
+        items: [
           {
             label: 'Departments',
             href: `${base}/admin-org`,
@@ -325,6 +371,18 @@ export function buildDashboardNavigation(
             icon: 'students',
           },
           {
+            label: 'Users',
+            href: `${base}/admin-users`,
+            icon: 'users',
+          },
+        ],
+      },
+      {
+        id: 'assessments',
+        title: 'Assessments',
+        collapsible: true,
+        items: [
+          {
             label: 'All Tests',
             href: `${base}/admin-course`,
             icon: 'tests',
@@ -333,11 +391,6 @@ export function buildDashboardNavigation(
             label: 'Question Bank',
             href: `${base}/admin-question-bank`,
             icon: 'quiz',
-          },
-          {
-            label: 'Create Test',
-            href: `${base}/create-test`,
-            icon: 'plus',
           },
           {
             label: 'Build with AI',
@@ -363,6 +416,13 @@ export function buildDashboardNavigation(
             badge: 'Review',
             badgeVariant: 'danger',
           },
+        ],
+      },
+      {
+        id: 'reports',
+        title: 'Reports & Certificates',
+        collapsible: true,
+        items: [
           {
             label: 'Reports',
             href: `${base}/admin-reviews`,
@@ -372,6 +432,28 @@ export function buildDashboardNavigation(
             label: 'Certificates',
             href: `${base}/admin-certificates`,
             icon: 'certificate',
+          },
+        ],
+      },
+      {
+        id: 'system',
+        title: 'System & Logs',
+        collapsible: true,
+        items: [
+          {
+            label: 'Payments',
+            href: `${base}/admin-wishlist`,
+            icon: 'payments',
+          },
+          {
+            label: 'Audit Logs',
+            href: `${base}/admin-audit`,
+            icon: 'audit',
+          },
+          {
+            label: 'Sessions',
+            href: `${base}/admin-sessions`,
+            icon: 'sessions',
           },
         ],
       },
@@ -386,13 +468,20 @@ export function buildDashboardNavigation(
   if (role === 'teacher') {
     return [
       {
-        id: 'main',
+        id: 'overview',
         items: [
           {
             label: 'Dashboard',
             href: `${base}/teacher-dashboard`,
             icon: 'home',
           },
+        ],
+      },
+      {
+        id: 'assessments',
+        title: 'Assessments',
+        collapsible: true,
+        items: [
           {
             label: 'Tests',
             href: `${base}/teacher-course`,
@@ -402,11 +491,6 @@ export function buildDashboardNavigation(
             label: 'Question Bank',
             href: `${base}/admin-question-bank`,
             icon: 'quiz',
-          },
-          {
-            label: 'Create Test',
-            href: `${base}/create-test`,
-            icon: 'plus',
           },
           {
             label: 'Build with AI',
@@ -427,6 +511,13 @@ export function buildDashboardNavigation(
             badge: 'Review',
             badgeVariant: 'danger',
           },
+        ],
+      },
+      {
+        id: 'reports',
+        title: 'Reports & Certificates',
+        collapsible: true,
+        items: [
           {
             label: 'Reports',
             href: `${base}/teacher-reviews`,
@@ -449,12 +540,20 @@ export function buildDashboardNavigation(
    */
   return [
     {
+      id: 'overview',
       items: [
         {
           label: 'Dashboard',
           href: `${base}/student-dashboard`,
           icon: 'home',
         },
+      ],
+    },
+    {
+      id: 'academics',
+      title: 'Academics',
+      collapsible: true,
+      items: [
         {
           label: 'Tests',
           href: `${base}/student-enrolled-courses`,
@@ -475,6 +574,13 @@ export function buildDashboardNavigation(
           href: `${base}/student-calendar`,
           icon: 'calendar',
         },
+      ],
+    },
+    {
+      id: 'performance',
+      title: 'Performance',
+      collapsible: true,
+      items: [
         {
           label: 'Results',
           href: `${base}/student-reviews`,

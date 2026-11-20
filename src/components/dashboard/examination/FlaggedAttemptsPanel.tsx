@@ -17,6 +17,7 @@ import {
   FiEye,
   FiCalendar,
 } from 'react-icons/fi';
+import { TableEmptyState } from '@/components/ui/TableEmptyState';
 import '@/styles/organizations.css';
 
 type FlaggedRow = {
@@ -200,8 +201,21 @@ export function FlaggedAttemptsPanel() {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="org-form-input"
-              style={{ width: 145, height: 32, padding: '2px 8px', fontSize: '0.8rem' }}
+              className="org-form-input org-date-input"
+              style={{ width: 145, height: 32, padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
+              onClick={(e) => {
+                try {
+                  e.currentTarget.showPicker?.();
+                } catch {}
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Tab' && e.key !== 'Escape') {
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.showPicker?.();
+                  } catch {}
+                }
+              }}
             />
           </label>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, margin: 0 }}>
@@ -210,8 +224,21 @@ export function FlaggedAttemptsPanel() {
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="org-form-input"
-              style={{ width: 145, height: 32, padding: '2px 8px', fontSize: '0.8rem' }}
+              className="org-form-input org-date-input"
+              style={{ width: 145, height: 32, padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
+              onClick={(e) => {
+                try {
+                  e.currentTarget.showPicker?.();
+                } catch {}
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Tab' && e.key !== 'Escape') {
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.showPicker?.();
+                  } catch {}
+                }
+              }}
             />
           </label>
           {(dateFrom || dateTo) && (
@@ -411,17 +438,12 @@ export function FlaggedAttemptsPanel() {
                 );
               })}
               {rows.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={6} className="org-table-empty" style={{ padding: '48px 20px', color: '#64748b' }}>
-                    <FiShield style={{ fontSize: 32, color: '#10b981', display: 'block', margin: '0 auto 8px' }} />
-                    <strong style={{ display: 'block', color: '#0f172a', marginBottom: 4, textAlign: 'center' }}>
-                      No Flagged Attempts
-                    </strong>
-                    <span style={{ display: 'block', textAlign: 'center' }}>
-                      No test attempts match the selected filter criteria.
-                    </span>
-                  </td>
-                </tr>
+                <TableEmptyState
+                  colSpan={6}
+                  icon={FiShield}
+                  title="No flagged attempts"
+                  description="No test attempts match the selected filter criteria. All attempts are clean."
+                />
               )}
             </tbody>
           </table>

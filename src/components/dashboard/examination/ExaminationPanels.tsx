@@ -21,7 +21,7 @@ import AdminExamGuide, { ExamStepper } from '@/components/dashboard/AdminExamGui
 import { FieldHint } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmAction, confirmDelete, showError, showSuccess } from '@/lib/swal';
-import { formatDateTime } from '@/utils/dateFormat';
+import { formatDate, formatTime, formatDateTime } from '@/utils/dateFormat';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
 import { extract10DigitPhone } from '@/utils/normalize';
 import { getOptionText, getQuestionText } from '@/utils/questionContent';
@@ -59,7 +59,10 @@ import {
   FiTrendingUp,
   FiTarget,
   FiClock,
+  FiCheckSquare,
+  FiBarChart2,
 } from 'react-icons/fi';
+import { TableEmptyState } from '@/components/ui/TableEmptyState';
 
 type QuestionType = 'mcq' | 'msq' | 'true_false' | 'fill_blank' | 'integer' | 'numerical';
 
@@ -1411,37 +1414,36 @@ export function QuestionBankPanel() {
                 );
               })}
               {filteredQuestions.length === 0 && (
-                <tr>
-                  <td colSpan={8}>
-                    <div className="org-empty-state" style={{ padding: '36px 16px', textAlign: 'center' }}>
-                      <FiHelpCircle className="org-empty-icon" />
-                      <p className="org-empty-title">No questions found</p>
-                      <p className="org-empty-desc">
-                        {hasActiveFilters
-                          ? 'No questions match the selected branch, department, subject, or topic filters.'
-                          : 'No questions found. Click + Add Question above or import questions from CSV.'}
-                      </p>
-                      {hasActiveFilters && (
-                        <button
-                          type="button"
-                          className="org-drawer-cancel"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            margin: '8px auto 0',
-                            padding: '6px 14px',
-                            fontSize: '0.8125rem',
-                          }}
-                          onClick={resetFilters}
-                        >
-                          <FiRefreshCw style={{ fontSize: 13 }} />
-                          <span>Reset filters</span>
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                <TableEmptyState
+                  colSpan={8}
+                  icon={FiHelpCircle}
+                  title={hasActiveFilters ? 'No matching questions' : 'No questions found'}
+                  description={
+                    hasActiveFilters
+                      ? 'No questions match the selected branch, department, subject, or topic filters.'
+                      : 'No questions found. Click + Add Question above or import questions from CSV.'
+                  }
+                  action={
+                    hasActiveFilters ? (
+                      <button
+                        type="button"
+                        className="org-drawer-cancel"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          margin: '8px auto 0',
+                          padding: '6px 14px',
+                          fontSize: '0.8125rem',
+                        }}
+                        onClick={resetFilters}
+                      >
+                        <FiRefreshCw style={{ fontSize: 13 }} />
+                        <span>Reset filters</span>
+                      </button>
+                    ) : undefined
+                  }
+                />
               )}
             </tbody>
           </table>
@@ -2233,15 +2235,27 @@ export function TestsListPanel({ title }: { title: string }) {
                 </tr>
               ))}
               {tests.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={5} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-                    {!searchTerm.trim() ? (
-                      <>No tests yet. <Link to="/dashboard/create-test" style={{ color: '#2563eb', fontWeight: 600 }}>Create your first test</Link>.</>
-                    ) : (
-                      'No tests match your search filter.'
-                    )}
-                  </td>
-                </tr>
+                <TableEmptyState
+                  colSpan={5}
+                  icon={FiCheckSquare}
+                  title={!searchTerm.trim() ? 'No tests found' : 'No matching tests'}
+                  description={
+                    !searchTerm.trim()
+                      ? 'No tests have been created yet. Click "Create your first test" to get started.'
+                      : 'No tests match your search filter.'
+                  }
+                  action={
+                    !searchTerm.trim() ? (
+                      <Link
+                        to="/dashboard/create-test"
+                        className="org-add-btn"
+                        style={{ padding: '8px 20px', fontSize: '0.85rem', textDecoration: 'none' }}
+                      >
+                        Create your first test
+                      </Link>
+                    ) : undefined
+                  }
+                />
               )}
             </tbody>
           </table>
@@ -3101,16 +3115,7 @@ export function StudentTestsPanel() {
                         </span>
 
                         <strong>
-                          {new Date(
-                            scheduledStart,
-                          ).toLocaleDateString(
-                            'en-IN',
-                            {
-                              day: '2-digit',
-                              month: 'long',
-                              year: 'numeric',
-                            },
-                          )}
+                          {formatDate(scheduledStart)}
                         </strong>
                       </div>
 
@@ -3120,16 +3125,7 @@ export function StudentTestsPanel() {
                         </span>
 
                         <strong>
-                          {new Date(
-                            scheduledStart,
-                          ).toLocaleTimeString(
-                            'en-IN',
-                            {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                            },
-                          )}
+                          {formatTime(scheduledStart)}
                         </strong>
                       </div>
                     </div>
@@ -3381,11 +3377,16 @@ export function AttemptsListPanel({
                 </tr>
               ))}
               {attempts.length === 0 && !loading && (
-                <tr>
-                  <td colSpan={readOnly ? 4 : 5} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-                    {!searchTerm.trim() ? 'No attempts found.' : 'No attempts match your search filter.'}
-                  </td>
-                </tr>
+                <TableEmptyState
+                  colSpan={readOnly ? 4 : 5}
+                  icon={FiClock}
+                  title={!searchTerm.trim() ? 'No attempts recorded' : 'No matching attempts'}
+                  description={
+                    !searchTerm.trim()
+                      ? 'No student attempts have been submitted yet.'
+                      : 'No attempts match your search filter.'
+                  }
+                />
               )}
             </tbody>
           </table>
@@ -3653,12 +3654,17 @@ export function ResultsPanel() {
                 );
               })}
               {filteredResults.length === 0 && (
-                <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748b' }}>
-                    <div style={{ fontSize: '1rem', fontWeight: 500, marginBottom: 4 }}>
-                      {results.length === 0 ? 'No results found.' : 'No results match your search filter.'}
-                    </div>
-                    {searchTerm && (
+                <TableEmptyState
+                  colSpan={8}
+                  icon={FiBarChart2}
+                  title={results.length === 0 ? 'No results recorded' : 'No matching results'}
+                  description={
+                    results.length === 0
+                      ? 'No exam results available yet. Results will appear here after students submit tests.'
+                      : 'No exam results match your search query.'
+                  }
+                  action={
+                    searchTerm ? (
                       <button
                         type="button"
                         className="sca-assignments-reset-filter"
@@ -3666,9 +3672,9 @@ export function ResultsPanel() {
                       >
                         Reset search
                       </button>
-                    )}
-                  </td>
-                </tr>
+                    ) : undefined
+                  }
+                />
               )}
             </tbody>
           </table>

@@ -1,5 +1,3 @@
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] as const;
-
 export type DateInput = string | Date | null | undefined;
 
 function parseDate(value: DateInput): Date | null {
@@ -8,16 +6,17 @@ function parseDate(value: DateInput): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** e.g. 02 Jan 2026 */
+/** Formats date as DD/MM/YYYY (e.g. 02/01/2026) */
 export function formatDate(value: DateInput): string {
   const d = parseDate(value);
   if (!d) return '—';
   const day = String(d.getDate()).padStart(2, '0');
-  const month = MONTHS[d.getMonth()];
-  return `${day} ${month} ${d.getFullYear()}`;
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
 }
 
-/** e.g. 3:45 PM */
+/** Formats time as hh:mm AM/PM (e.g. 03:45 PM) */
 export function formatTime(value: DateInput): string {
   const d = parseDate(value);
   if (!d) return '—';
@@ -26,17 +25,18 @@ export function formatTime(value: DateInput): string {
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours %= 12;
   if (hours === 0) hours = 12;
-  return `${hours}:${minutes} ${ampm}`;
+  const hoursStr = String(hours).padStart(2, '0');
+  return `${hoursStr}:${minutes} ${ampm}`;
 }
 
-/** e.g. 02 Jan 2026, 3:45 PM */
+/** Formats datetime as DD/MM/YYYY, hh:mm AM/PM (e.g. 02/01/2026, 03:45 PM) */
 export function formatDateTime(value: DateInput): string {
   const d = parseDate(value);
   if (!d) return '—';
   return `${formatDate(d)}, ${formatTime(d)}`;
 }
 
-/** Relative time for activity feeds; falls back to project date format after 7 days. */
+/** Relative time for activity feeds; falls back to DD/MM/YYYY after 7 days. */
 export function formatRelativeDate(value: DateInput): string {
   const d = parseDate(value);
   if (!d) return '—';
