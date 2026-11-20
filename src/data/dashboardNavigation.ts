@@ -128,7 +128,6 @@ export function buildDashboardNavigation(
           id: 'organization',
           title: 'Organization',
           collapsible: true,
-          defaultOpen: true,
           items: [
             {
               label: 'Organizations',
@@ -161,7 +160,6 @@ export function buildDashboardNavigation(
           id: 'assessments',
           title: 'Assessments',
           collapsible: true,
-          defaultOpen: true,
           items: [
             {
               label: 'All Tests',
@@ -203,7 +201,6 @@ export function buildDashboardNavigation(
           id: 'reports',
           title: 'Reports & Certificates',
           collapsible: true,
-          defaultOpen: false,
           items: [
             {
               label: 'Reports',
@@ -221,7 +218,6 @@ export function buildDashboardNavigation(
           id: 'system',
           title: 'System & Logs',
           collapsible: true,
-          defaultOpen: false,
           items: [
             {
               label: 'Payments',
@@ -264,7 +260,6 @@ export function buildDashboardNavigation(
           id: 'organization',
           title: 'Organization',
           collapsible: true,
-          defaultOpen: true,
           items: [
             {
               label: 'Departments',
@@ -282,7 +277,6 @@ export function buildDashboardNavigation(
           id: 'assessments',
           title: 'Assessments',
           collapsible: true,
-          defaultOpen: true,
           items: [
             {
               label: 'All Tests',
@@ -324,7 +318,6 @@ export function buildDashboardNavigation(
           id: 'reports',
           title: 'Reports & Certificates',
           collapsible: true,
-          defaultOpen: false,
           items: [
             {
               label: 'Reports',
@@ -361,7 +354,6 @@ export function buildDashboardNavigation(
         id: 'organization',
         title: 'Organization',
         collapsible: true,
-        defaultOpen: true,
         items: [
           {
             label: 'Departments',
@@ -389,7 +381,6 @@ export function buildDashboardNavigation(
         id: 'assessments',
         title: 'Assessments',
         collapsible: true,
-        defaultOpen: true,
         items: [
           {
             label: 'All Tests',
@@ -431,7 +422,6 @@ export function buildDashboardNavigation(
         id: 'reports',
         title: 'Reports & Certificates',
         collapsible: true,
-        defaultOpen: false,
         items: [
           {
             label: 'Reports',
@@ -449,7 +439,6 @@ export function buildDashboardNavigation(
         id: 'system',
         title: 'System & Logs',
         collapsible: true,
-        defaultOpen: false,
         items: [
           {
             label: 'Payments',
@@ -492,7 +481,6 @@ export function buildDashboardNavigation(
         id: 'assessments',
         title: 'Assessments',
         collapsible: true,
-        defaultOpen: true,
         items: [
           {
             label: 'Tests',
@@ -529,7 +517,6 @@ export function buildDashboardNavigation(
         id: 'reports',
         title: 'Reports & Certificates',
         collapsible: true,
-        defaultOpen: false,
         items: [
           {
             label: 'Reports',
@@ -566,7 +553,6 @@ export function buildDashboardNavigation(
       id: 'academics',
       title: 'Academics',
       collapsible: true,
-      defaultOpen: true,
       items: [
         {
           label: 'Tests',
@@ -594,7 +580,6 @@ export function buildDashboardNavigation(
       id: 'performance',
       title: 'Performance',
       collapsible: true,
-      defaultOpen: true,
       items: [
         {
           label: 'Results',

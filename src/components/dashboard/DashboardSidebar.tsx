@@ -46,35 +46,52 @@ export default function DashboardSidebar({
     return section.items.some((item) => isItemActive(item, currentPath));
   };
 
-  // Track accordion expand/collapse state
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    sections.forEach((sec, idx) => {
-      const key = sectionKeyOf(sec, idx);
-      if (sec.collapsible) {
-        initial[key] = sec.defaultOpen ?? false;
-      } else {
-        initial[key] = true;
-      }
-    });
-    return initial;
+  // Single-open accordion state: null means all collapsible sections are closed.
+  // By default all are collapsed so only top-level Dashboard is visible.
+  const [openSectionKey, setOpenSectionKey] = useState<string | null>(() => {
+    const isDashboardRoute =
+      location.pathname === '/dashboard' ||
+      location.pathname === '/dashboard/admin-dashboard' ||
+      location.pathname === '/dashboard/teacher-dashboard' ||
+      location.pathname === '/dashboard/student-dashboard';
+
+    if (isDashboardRoute) return null;
+
+    const activeSec = sections.find(
+      (sec) => sec.collapsible && sectionHasActive(sec, location.pathname)
+    );
+    if (activeSec) {
+      return sectionKeyOf(activeSec, sections.indexOf(activeSec));
+    }
+    return null;
   });
 
-  // Automatically expand the section that contains the currently active route
+  // Automatically keep only the current route's section open when navigating;
+  // If navigating back to Dashboard, close all collapsible sections.
   useEffect(() => {
-    sections.forEach((sec, idx) => {
-      if (sec.collapsible && sectionHasActive(sec, location.pathname)) {
-        const key = sectionKeyOf(sec, idx);
-        setOpenSections((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
-      }
-    });
+    const isDashboardRoute =
+      location.pathname === '/dashboard' ||
+      location.pathname === '/dashboard/admin-dashboard' ||
+      location.pathname === '/dashboard/teacher-dashboard' ||
+      location.pathname === '/dashboard/student-dashboard';
+
+    if (isDashboardRoute) {
+      setOpenSectionKey(null);
+      return;
+    }
+
+    const activeSec = sections.find(
+      (sec) => sec.collapsible && sectionHasActive(sec, location.pathname)
+    );
+    if (activeSec) {
+      const key = sectionKeyOf(activeSec, sections.indexOf(activeSec));
+      setOpenSectionKey(key);
+    }
   }, [location.pathname, sections]);
 
+  // Toggle single section: opens clicked one & closes any other open section; clicking the open one collapses it.
   const toggleSection = (key: string) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
+    setOpenSectionKey((prev) => (prev === key ? null : key));
   };
 
   const renderNavItem = (item: DashboardNavItem) => {
@@ -248,7 +265,7 @@ export default function DashboardSidebar({
         {sections.map((section, index) => {
           const sectionKey = sectionKeyOf(section, index);
           const isCollapsible = Boolean(section.collapsible && section.title);
-          const isOpen = isCollapsible ? Boolean(openSections[sectionKey]) : true;
+          const isOpen = isCollapsible ? openSectionKey === sectionKey : true;
 
           return (
             <div
