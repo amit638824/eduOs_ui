@@ -3813,9 +3813,9 @@ export function OrgStructurePanel() {
 
   const deleteDept = async (id: string, name: string) => {
     const ok = await confirmDelete({
-      title: 'Delete department?',
-      text: `“${name}” will be permanently deleted. This cannot be undone.`,
-      confirmText: 'Yes, delete it!',
+      title: 'Delete Department?',
+      text: `Are you sure you want to delete ${name}? This action cannot be undone.`,
+      confirmText: 'Yes, Delete It!',
     });
     if (!ok) return;
     setError('');

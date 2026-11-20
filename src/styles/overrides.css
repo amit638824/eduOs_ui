@@ -3486,3 +3486,200 @@ body.dark_mode .sca-db-org-switcher__status.is-active {
 .sca-db-sidebar__chevron {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease !important;
 }
+
+/* ══════════════════════════════════════════════════════════════════
+   SweetAlert2 (swal) Modern Theme & Typography Matching Site Branding
+   ══════════════════════════════════════════════════════════════════ */
+
+/* Backdrop overlay with modern blur */
+.swal2-container {
+  background-color: rgba(15, 23, 42, 0.55) !important;
+  backdrop-filter: blur(4px) !important;
+  -webkit-backdrop-filter: blur(4px) !important;
+  z-index: 99999999 !important;
+  padding: 16px !important;
+}
+
+/* Modal Popup Box */
+.swal2-popup,
+.ms-swal-popup {
+  font-family: inherit !important;
+  border-radius: 16px !important;
+  padding: 28px 24px 24px 24px !important;
+  width: 100% !important;
+  max-width: 440px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.08) !important;
+  box-sizing: border-box !important;
+}
+
+/* Icons */
+.swal2-icon {
+  width: 58px !important;
+  height: 58px !important;
+  margin: 4px auto 16px auto !important;
+  border-width: 2.5px !important;
+  box-sizing: border-box !important;
+}
+
+.swal2-icon.swal2-warning {
+  border-color: #f59e0b !important;
+  color: #f59e0b !important;
+}
+
+.swal2-icon.swal2-question {
+  border-color: #3b82f6 !important;
+  color: #3b82f6 !important;
+}
+
+.swal2-icon.swal2-success {
+  border-color: #10b981 !important;
+  color: #10b981 !important;
+}
+
+.swal2-icon.swal2-error {
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+/* Title text size & weight matching theme heading */
+.swal2-title,
+.ms-swal-title {
+  font-family: inherit !important;
+  font-size: 1.25rem !important; /* 20px */
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  padding: 0 0 10px 0 !important;
+  margin: 0 !important;
+  line-height: 1.35 !important;
+  text-align: center !important;
+  letter-spacing: -0.01em !important;
+}
+
+/* Body / Description text size & line-height */
+.swal2-html-container,
+.ms-swal-html {
+  font-family: inherit !important;
+  font-size: 0.9rem !important; /* 14.5px */
+  font-weight: 400 !important;
+  color: #64748b !important;
+  line-height: 1.55 !important;
+  margin: 0 0 24px 0 !important;
+  padding: 0 6px !important;
+  text-align: center !important;
+}
+
+/* Action Buttons Row */
+.swal2-actions,
+.ms-swal-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+/* Action Buttons Base Styling */
+.swal2-styled {
+  margin: 0 !important;
+  min-height: 42px !important;
+  height: 42px !important;
+  padding: 0 22px !important;
+  border-radius: 10px !important;
+  font-family: inherit !important;
+  font-size: 0.875rem !important; /* 14px */
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Cancel Button: White with Border (Theme Secondary / Cancel Button) */
+.swal2-styled.swal2-cancel,
+.ms-swal-cancel {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border: 1.5px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05) !important;
+}
+
+.swal2-styled.swal2-cancel:hover,
+.ms-swal-cancel:hover {
+  background: #f8fafc !important;
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08) !important;
+}
+
+.swal2-styled.swal2-cancel:focus,
+.ms-swal-cancel:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.25) !important;
+}
+
+/* Confirm Button: Filled Color Button with Smooth Hover & Shadow */
+.swal2-styled.swal2-confirm,
+.ms-swal-confirm {
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
+}
+
+.swal2-styled.swal2-confirm:hover,
+.ms-swal-confirm:hover {
+  filter: brightness(0.92) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+}
+
+.swal2-styled.swal2-confirm:active,
+.ms-swal-confirm:active {
+  transform: translateY(0) !important;
+}
+
+.swal2-styled.swal2-confirm:focus,
+.ms-swal-confirm:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Dark Mode Theme overrides */
+body.dark_mode .swal2-popup,
+.sca-dashboard--dark .swal2-popup {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+body.dark_mode .swal2-title,
+.sca-dashboard--dark .swal2-title {
+  color: #f8fafc !important;
+}
+
+body.dark_mode .swal2-html-container,
+.sca-dashboard--dark .swal2-html-container {
+  color: #94a3b8 !important;
+}
+
+body.dark_mode .swal2-styled.swal2-cancel,
+.sca-dashboard--dark .swal2-styled.swal2-cancel {
+  background: #0f172a !important;
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #cbd5e1 !important;
+}
+
+body.dark_mode .swal2-styled.swal2-cancel:hover,
+.sca-dashboard--dark .swal2-styled.swal2-cancel:hover {
+  background: #1e293b !important;
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+  color: #f8fafc !important;
+}
