@@ -53,7 +53,7 @@ export default function Footer() {
               <img src="/img/logo/mindsprint-logo.png" alt="MindSprint" />
             </a>
             <p style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>
-              Online exams, mock tests and assessments — bringing a smarter digital examination experience to
+              Online exams, mock tests, and assessments — delivering a smarter digital examination experience for
               India's learning community.
             </p>
           </div>
@@ -75,9 +75,9 @@ export default function Footer() {
             <h4 style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>Get Started</h4>
             <div className="footlinks" style={{ fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, sans-serif' }}>
               <Link to="/login" onClick={handleLoginClick}>
-                Login to Portal
+                Log in to the Portal
               </Link>
-              <a href="/#contact" onClick={(e) => scrollToSection(e, '#contact')}>
+              <a href="mailto:connect@techwagger.com?subject=MindSprint%20Demo%20Request">
                 Request a Demo
               </a>
               <a href="mailto:vivek@techwagger.com">Contact Sales</a>
