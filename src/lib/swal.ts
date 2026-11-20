@@ -5,6 +5,14 @@ const base = Swal.mixin({
   buttonsStyling: true,
   reverseButtons: true,
   heightAuto: false,
+  customClass: {
+    popup: 'ms-swal-popup',
+    title: 'ms-swal-title',
+    htmlContainer: 'ms-swal-html',
+    actions: 'ms-swal-actions',
+    confirmButton: 'ms-swal-confirm',
+    cancelButton: 'ms-swal-cancel',
+  },
 });
 
 /** Delete / destructive confirm — SweetAlert2 */
@@ -16,12 +24,12 @@ export async function confirmDelete(options?: {
   cancelColor?: string;
 }): Promise<boolean> {
   const result = await base.fire({
-    title: options?.title ?? 'Are you sure?',
+    title: options?.title ?? 'Delete Organization?',
     text: options?.text ?? "You won't be able to revert this!",
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: options?.confirmColor ?? '#10b981',
-    cancelButtonColor: options?.cancelColor ?? '#ef4444',
+    cancelButtonColor: options?.cancelColor ?? '#ffffff',
     confirmButtonText: options?.confirmText ?? 'Yes, Delete It!',
     cancelButtonText: 'Cancel',
   });
@@ -35,6 +43,7 @@ export async function confirmAction(options: {
   icon?: 'warning' | 'question' | 'info';
   confirmText?: string;
   confirmColor?: string;
+  cancelColor?: string;
 }): Promise<boolean> {
   // Fullscreen exams: dialog must render inside the fullscreen element or it is invisible
   const fullscreenRoot = document.fullscreenElement as HTMLElement | null;
@@ -43,9 +52,9 @@ export async function confirmAction(options: {
     text: options.text,
     icon: options.icon ?? 'question',
     showCancelButton: true,
-    confirmButtonColor: options.confirmColor ?? '#3085d6',
-    cancelButtonColor: '#6b7280',
-    confirmButtonText: options.confirmText ?? 'Yes, confirm',
+    confirmButtonColor: options.confirmColor ?? '#10b981',
+    cancelButtonColor: options.cancelColor ?? '#ffffff',
+    confirmButtonText: options.confirmText ?? 'Yes, Confirm',
     cancelButtonText: 'Cancel',
     target: fullscreenRoot ?? 'body',
     heightAuto: false,
