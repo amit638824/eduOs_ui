@@ -70,8 +70,8 @@ const COPY: Record<DashboardRole, {
     ],
     banner: [
       { href: '/dashboard/create-test', title: 'Create Tests', hint: 'Build Custom Assessments' },
-      { href: '/dashboard/teacher-course', title: 'Tests', hint: 'Review and publish papers' },
-      { href: '/dashboard/teacher-reviews', title: 'View Reports', hint: 'See student scores' },
+      { href: '/dashboard/teacher-course', title: 'Manage Students', hint: 'Track Progress & Performance' },
+      { href: '/dashboard/teacher-reviews', title: 'View Reports', hint: 'Get Detailed Insights' },
       { href: '/dashboard/admin-question-bank', title: 'Question Bank', hint: 'Organize & Reuse Questions' },
     ],
     primary: { href: '/dashboard/create-test', label: 'Create New Test' },
@@ -238,7 +238,7 @@ function tagColor(tag: string): string {
 export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAdminDashboardProps) {
   const { user } = useAuth();
   const [timeFilter, setTimeFilter] = useState<'All' | 'Last 7 Days' | 'Last 30 Days'>('All');
-  const [subjectMonth, setSubjectMonth] = useState<'This Month' | 'Last Month' | 'All Time'>('This Month');
+  const [subjectMonth, setSubjectMonth] = useState<'All Time' | 'This Month' | 'Last Month'>('All Time');
   const [dash, setDash] = useState<AdminDashboardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1095,9 +1095,9 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
                 className="mad-v3-select"
                 aria-label="Filter month"
               >
+                <option value="All Time">All</option>
                 <option value="This Month">This Month</option>
                 <option value="Last Month">Last Month</option>
-                <option value="All Time">All Time</option>
               </select>
               <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12" className="mad-v3-select-chevron">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />

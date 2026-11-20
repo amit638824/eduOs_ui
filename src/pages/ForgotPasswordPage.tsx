@@ -115,7 +115,12 @@ export default function ForgotPasswordPage() {
                       className={inputClassName('common__login__input', !!errors.email)}
                       placeholder="you@example.com"
                       autoComplete="email"
-                      {...register('email')}
+                      {...register('email', {
+                        onChange: () => {
+                          if (apiError) setApiError('');
+                          if (message) setMessage('');
+                        },
+                      })}
                     />
                   </div>
                   <div className="login__button">
@@ -123,6 +128,10 @@ export default function ForgotPasswordPage() {
                       type="submit"
                       className="default__button auth-submit-btn"
                       disabled={submitting}
+                      onClick={() => {
+                        setApiError('');
+                        setMessage('');
+                      }}
                     >
                       {submitting ? 'Sending…' : 'Send Reset Link'}
                     </button>

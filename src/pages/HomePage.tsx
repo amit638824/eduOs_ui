@@ -1,10 +1,170 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '@/lib/api';
+import { notify } from '@/lib/toast';
+import { parseApiError } from '@/lib/errors';
+import type { ApiResponse } from '@/types/api';
 import '@/styles/mindsprint-home.css';
 
 export default function HomePage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Demo / Contact form state
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    subject: '',
+    message: '',
+  });
+
+  const [touched, setTouched] = useState({
+    name: false,
+    email: false,
+    phone: false,
+    subject: false,
+    message: false,
+  });
+
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    subject?: string;
+    message?: string;
+  }>({});
+
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const validateField = (field: string, value: string): string => {
+    switch (field) {
+      case 'name': {
+        const trimmed = value.trim();
+        if (!trimmed) return 'Name is required.';
+        if (trimmed.length < 2) return 'Name must be at least 2 characters.';
+        if (trimmed.length > 50) return 'Name cannot exceed 50 characters.';
+        return '';
+      }
+      case 'email': {
+        const trimmed = value.trim();
+        if (!trimmed) return 'Email is required.';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(trimmed)) return 'Please enter a valid email address.';
+        return '';
+      }
+      case 'phone': {
+        const trimmed = value.trim();
+        if (trimmed && !/^[0-9+\-\s()]{7,20}$/.test(trimmed)) {
+          return 'Please enter a valid phone number.';
+        }
+        return '';
+      }
+      case 'subject': {
+        const trimmed = value.trim();
+        if (!trimmed) return 'Institute or organization name is required.';
+        if (trimmed.length < 2) return 'Name must be at least 2 characters.';
+        return '';
+      }
+      case 'message': {
+        const trimmed = value.trim();
+        if (!trimmed) return 'Please tell us about your requirements.';
+        if (trimmed.length < 10) return 'Message must be at least 10 characters.';
+        if (value.length > 300) return 'Message cannot exceed 300 characters.';
+        return '';
+      }
+      default:
+        return '';
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    if (name === 'message' && value.length > 300) {
+      return;
+    }
+    const formatted =
+      (name === 'name' || name === 'subject') && value.length === 1
+        ? value.toUpperCase()
+        : value;
+
+    setFormData((prev) => ({ ...prev, [name]: formatted }));
+
+    if (touched[name as keyof typeof touched]) {
+      const err = validateField(name, formatted);
+      setErrors((prev) => ({ ...prev, [name]: err }));
+    }
+
+    if (status !== 'idle' && status !== 'loading') {
+      setStatus('idle');
+      setErrorMessage('');
+    }
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    const err = validateField(name, value);
+    setErrors((prev) => ({ ...prev, [name]: err }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const nameErr = validateField('name', formData.name);
+    const emailErr = validateField('email', formData.email);
+    const phoneErr = validateField('phone', formData.phone);
+    const subjectErr = validateField('subject', formData.subject);
+    const messageErr = validateField('message', formData.message);
+
+    const validationErrors = {
+      name: nameErr,
+      email: emailErr,
+      phone: phoneErr,
+      subject: subjectErr,
+      message: messageErr,
+    };
+
+    setErrors(validationErrors);
+    setTouched({ name: true, email: true, phone: true, subject: true, message: true });
+
+    if (nameErr || emailErr || phoneErr || subjectErr || messageErr) {
+      notify.warning('Please fill in the required fields correctly.');
+      return;
+    }
+
+    setStatus('loading');
+    setErrorMessage('');
+
+    try {
+      const { data } = await api.post<ApiResponse<{ message: string }>>('/public/contact', {
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
+        subject: `[Demo Request] ${formData.subject.trim()}`,
+        message: formData.message.trim(),
+      });
+
+      if (data.success) {
+        setStatus('success');
+        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+        setTouched({ name: false, email: false, phone: false, subject: false, message: false });
+        setErrors({});
+        notify.success('Your demo request has been sent successfully! Our team will reach out shortly.');
+      } else {
+        const msg = data.message || 'Failed to submit demo request. Please try again.';
+        setStatus('error');
+        setErrorMessage(msg);
+        notify.error(msg);
+      }
+    } catch (err) {
+      const msg = parseApiError(err) || 'Unable to send demo request. Please email vivek@techwagger.com directly.';
+      setStatus('error');
+      setErrorMessage(msg);
+      notify.error(msg);
+    }
+  };
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault();
@@ -263,17 +423,196 @@ export default function HomePage() {
 
         <section className="cta" id="contact">
           <div className="wrap">
-            <div className="cta-box">
-              <div>
+            <div className="ms-demo-box">
+              {/* Left Column: Platform info & benefits */}
+              <div className="ms-demo-info">
+                <span className="ms-demo-eyebrow">Request a Demo</span>
                 <h2>Let's make online exams simpler.</h2>
                 <p>
-                  Looking for an online examination solution for your school or coaching institute? Connect with the
-                  MindSprint team to discuss your requirements and request a demo.
+                  Looking for an online examination solution for your school, college, or coaching institute?
+                  Connect with the MindSprint team for a live walkthrough, test paper authoring preview, and personalized onboarding plan.
                 </p>
+
+                <div className="ms-demo-perks">
+                  <div className="ms-demo-perk-item">
+                    <span className="ms-demo-check">✓</span>
+                    <div>
+                      <strong>Complete Platform Walkthrough</strong>
+                      <span>Live demo of question bank, exam authoring, proctoring, and grading.</span>
+                    </div>
+                  </div>
+                  <div className="ms-demo-perk-item">
+                    <span className="ms-demo-check">✓</span>
+                    <div>
+                      <strong>Customized for Your Institution</strong>
+                      <span>Tailored setup for schools, universities, coaching centers, and training hubs.</span>
+                    </div>
+                  </div>
+                  <div className="ms-demo-perk-item">
+                    <span className="ms-demo-check">✓</span>
+                    <div>
+                      <strong>Instant Pilot &amp; Academic Support</strong>
+                      <span>Quick onboarding with dedicated technical and examination controller help.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="ms-demo-direct-contact">
+                  <div className="ms-demo-contact-chip">
+                    <span className="ms-chip-icon">📞</span>
+                    <div>
+                      <small>Call us directly</small>
+                      <a href="tel:+918840622729">+91 8840 622 729</a>
+                    </div>
+                  </div>
+                  <div className="ms-demo-contact-chip">
+                    <span className="ms-chip-icon">✉️</span>
+                    <div>
+                      <small>Email our team</small>
+                      <a href="mailto:vivek@techwagger.com">vivek@techwagger.com</a>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <a className="btn" href="mailto:connect@techwagger.com?subject=MindSprint%20Demo%20Request">
-                Request a Demo&nbsp; →
-              </a>
+
+              {/* Right Column: Live Working Form */}
+              <div className="ms-demo-form-card">
+                <h3>Schedule Your Demo</h3>
+                <p className="ms-demo-card-subtitle">
+                  Fill in your details below and our team will get in touch shortly.
+                </p>
+
+                {status === 'success' ? (
+                  <div className="ms-demo-success-box">
+                    <div className="ms-demo-success-icon">✓</div>
+                    <h4>Thank You!</h4>
+                    <p>Your demo request has been submitted successfully. Our team will contact you within 24 hours.</p>
+                    <button
+                      type="button"
+                      className="btn primary ms-demo-reset-btn"
+                      onClick={() => setStatus('idle')}
+                    >
+                      Send Another Request
+                    </button>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubmit} noValidate className="ms-demo-form">
+                    {errorMessage && (
+                      <div className="auth-alert auth-alert--error" role="alert" style={{ marginBottom: 12 }}>
+                        {errorMessage}
+                      </div>
+                    )}
+
+                    <div className="ms-demo-field-row">
+                      <div className="ms-demo-field">
+                        <label htmlFor="demo-name">
+                          Full Name <span>*</span>
+                        </label>
+                        <input
+                          id="demo-name"
+                          type="text"
+                          name="name"
+                          placeholder="e.g. Dr. Rajesh Kumar"
+                          value={formData.name}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          disabled={status === 'loading'}
+                          className={errors.name && touched.name ? 'is-invalid' : ''}
+                        />
+                        {errors.name && touched.name && <span className="ms-demo-error">{errors.name}</span>}
+                      </div>
+
+                      <div className="ms-demo-field">
+                        <label htmlFor="demo-email">
+                          Email Address <span>*</span>
+                        </label>
+                        <input
+                          id="demo-email"
+                          type="email"
+                          name="email"
+                          placeholder="name@school.edu.in"
+                          value={formData.email}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          disabled={status === 'loading'}
+                          className={errors.email && touched.email ? 'is-invalid' : ''}
+                        />
+                        {errors.email && touched.email && <span className="ms-demo-error">{errors.email}</span>}
+                      </div>
+                    </div>
+
+                    <div className="ms-demo-field-row">
+                      <div className="ms-demo-field">
+                        <label htmlFor="demo-phone">
+                          Phone Number
+                        </label>
+                        <input
+                          id="demo-phone"
+                          type="tel"
+                          name="phone"
+                          placeholder="10-digit mobile number"
+                          value={formData.phone}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          disabled={status === 'loading'}
+                          className={errors.phone && touched.phone ? 'is-invalid' : ''}
+                        />
+                        {errors.phone && touched.phone && <span className="ms-demo-error">{errors.phone}</span>}
+                      </div>
+
+                      <div className="ms-demo-field">
+                        <label htmlFor="demo-subject">
+                          Institute / Organization <span>*</span>
+                        </label>
+                        <input
+                          id="demo-subject"
+                          type="text"
+                          name="subject"
+                          placeholder="School / College / Coaching Name"
+                          value={formData.subject}
+                          onChange={handleChange}
+                          onBlur={handleBlur}
+                          disabled={status === 'loading'}
+                          className={errors.subject && touched.subject ? 'is-invalid' : ''}
+                        />
+                        {errors.subject && touched.subject && <span className="ms-demo-error">{errors.subject}</span>}
+                      </div>
+                    </div>
+
+                    <div className="ms-demo-field">
+                      <div className="ms-demo-label-row">
+                        <label htmlFor="demo-message">
+                          Message / Requirements <span>*</span>
+                        </label>
+                        <span className={`ms-demo-char-count${formData.message.length >= 300 ? ' is-max' : ''}`}>
+                          {formData.message.length}/300 characters
+                        </span>
+                      </div>
+                      <textarea
+                        id="demo-message"
+                        name="message"
+                        rows={3}
+                        maxLength={300}
+                        placeholder="Tell us about student count, types of exams, or preferred demo timings... (Max 300 characters)"
+                        value={formData.message}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        disabled={status === 'loading'}
+                        className={errors.message && touched.message ? 'is-invalid' : ''}
+                      />
+                      {errors.message && touched.message && <span className="ms-demo-error">{errors.message}</span>}
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="btn primary ms-demo-submit-btn"
+                      disabled={status === 'loading'}
+                    >
+                      {status === 'loading' ? 'Submitting Request...' : 'Request a Demo →'}
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           </div>
         </section>
@@ -319,7 +658,7 @@ export default function HomePage() {
                 <a href="#contact" onClick={(e) => scrollToSection(e, '#contact')}>
                   Request a Demo
                 </a>
-                <a href="mailto:connect@techwagger.com">Contact Sales</a>
+                <a href="mailto:vivek@techwagger.com">Contact Sales</a>
               </div>
             </div>
           </div>
