@@ -125,8 +125,8 @@ export function buildDashboardNavigation(
           ],
         },
         {
-          id: 'organization',
-          title: 'Organization',
+          id: 'administration',
+          title: 'Administration',
           collapsible: true,
           items: [
             {
@@ -257,8 +257,8 @@ export function buildDashboardNavigation(
           ],
         },
         {
-          id: 'organization',
-          title: 'Organization',
+          id: 'administration',
+          title: 'Administration',
           collapsible: true,
           items: [
             {
@@ -351,8 +351,8 @@ export function buildDashboardNavigation(
         ],
       },
       {
-        id: 'organization',
-        title: 'Organization',
+        id: 'administration',
+        title: 'Administration',
         collapsible: true,
         items: [
           {
