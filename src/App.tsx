@@ -39,18 +39,17 @@ import 'react-toastify/dist/ReactToastify.css';
 import '@/styles/toast.css';
 
 function ScrollToTop() {
-  const { pathname, search, hash } = useLocation();
+  const { pathname, hash } = useLocation();
+
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    const raf = requestAnimationFrame(() => {
-      window.scrollTo(0, 0);
+    // Only reset scroll to top on normal route transitions without a hash
+    if (!hash) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
-    });
-    return () => cancelAnimationFrame(raf);
-  }, [pathname, search, hash]);
+    }
+  }, [pathname, hash]);
+
   return null;
 }
 
@@ -123,13 +122,13 @@ export default function App() {
                   element={<BlogPostPage />}
                 />
 
-                {/* Certificate verification */}
+                {/* Certificate verification ..*/}
                 <Route
                   path="/verify-certificate"
                   element={<VerifyCertificatePage />}
                 />
 
-                {/* Instructor (dashboard redirects) .*/}
+                {/* Instructor (dashboard redirects) */}
                 <Route
                   path="/instructor"
                   element={
@@ -163,13 +162,13 @@ export default function App() {
 
             <ToastContainer
               position="top-right"
-              autoClose={3600}
+              autoClose={3500}
               hideProgressBar={false}
               newestOnTop
               closeOnClick
               pauseOnHover
               draggable
-              limit={1}
+              limit={4}
               theme="light"
               toastClassName="ms-toast-wrap"
             />

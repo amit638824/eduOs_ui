@@ -51,8 +51,7 @@ function DashboardShellInner({
     useOrgScope();
   const [collapsed, setCollapsed] = useState(() => {
     const stored = localStorage.getItem(COLLAPSE_KEY);
-    // Default: sidebar open (expanded)
-    return stored === null ? false : stored === '1';
+    return stored === '1';
   });
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -106,6 +105,7 @@ function DashboardShellInner({
         <DashboardTopBar
           profile={profile}
           role={role}
+          collapsed={collapsed}
           menuOpen={mobileOpen}
           onToggleMenu={handleToggleMenu}
         />

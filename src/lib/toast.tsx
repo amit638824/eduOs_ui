@@ -154,9 +154,10 @@ function push(tone: ToastTone, message: string, extra?: ToastExtra): void {
   if (!claim(text)) return;
   if (tone === 'success') lastSuccessAt = Date.now();
   const options: ToastOptions = {
-    autoClose: tone === 'error' ? 6500 : 3600,
-    toastId: `toast:${normalizeText(text).slice(0, 100)}`,
     position: extra?.position ?? 'top-right',
+    theme: 'light',
+    autoClose: tone === 'error' ? 5000 : 3600,
+    toastId: `toast:${normalizeText(text).slice(0, 100)}`,
   };
   const node = <ToastCard title={extra?.title} message={text} count={extra?.count} />;
   if (tone === 'success') toast.success(node, options);

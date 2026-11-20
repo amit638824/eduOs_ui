@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { FormError, PasswordInput, PasswordRequirementsChecklist } from '@/components/ui/FormField';
+import { FormError, PasswordInput } from '@/components/ui/FormField';
 import { parseApiError } from '@/lib/errors';
 import * as authService from '@/services/auth.service';
 import { resetPasswordSchema, type ResetPasswordFormValues } from '@/validators/schemas';
@@ -22,7 +22,6 @@ export default function ResetPasswordPage() {
     register,
     handleSubmit,
     setValue,
-    watch,
     formState: { errors },
   } = useForm<ResetPasswordFormValues>({
     resolver: yupResolver(resetPasswordSchema),
@@ -33,8 +32,6 @@ export default function ResetPasswordPage() {
       confirmPassword: '',
     },
   });
-
-  const passwordValue = watch('password') || '';
 
   useEffect(() => {
     if (tokenFromUrl) setValue('token', tokenFromUrl);
@@ -127,7 +124,6 @@ export default function ResetPasswordPage() {
                       disabled={!tokenFromUrl || submitting}
                       {...register('password')}
                     />
-                    <PasswordRequirementsChecklist password={passwordValue} />
                     <FormError message={errors.password?.message} />
                   </div>
 

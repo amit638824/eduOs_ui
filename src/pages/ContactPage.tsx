@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { FiMapPin, FiPhone, FiMail, FiSend } from 'react-icons/fi';
 import PageBanner from '@/components/eduleb/PageBanner';
 import { siteContent } from '@/data/siteContent';
 import { notify } from '@/lib/toast';
@@ -7,7 +8,7 @@ import { parseApiError } from '@/lib/errors';
 import type { ApiResponse } from '@/types/api';
 
 // Target email address where contact messages are sent.
-const CONTACT_RECIPIENT_EMAIL = 'Vivek@techwagger.com';
+const CONTACT_RECIPIENT_EMAIL = 'vivek@techwagger.com';
 
 export default function ContactPage() {
   const { contact } = siteContent;
@@ -279,13 +280,7 @@ export default function ContactPage() {
     setErrors(validationErrors);
     setTouched({ name: true, email: true, subject: true, message: true });
 
-    if (wordCount > 300) {
-      notify.warning(`Message exceeds the 300-word limit (currently ${wordCount} words). Please shorten your message.`);
-      return;
-    }
-
-    if (nameErr || emailErr || subjectErr || messageErr) {
-      notify.warning('Please fix the errors in the form before submitting.');
+    if (wordCount > 300 || nameErr || emailErr || subjectErr || messageErr) {
       return;
     }
 
@@ -329,30 +324,33 @@ export default function ContactPage() {
   return (
     <>
       <PageBanner
-        title="Contact"
+        title="Contact Us"
         crumb="Contact"
         tone="soft"
-        subtitle="Have a question about exams, courses, or institute onboarding? Reach out and our team will get back to you shortly."
+        subtitle="Have questions about exams, tests or institute onboarding? Reach out and our team will assist you."
       />
       <section className="contact_area section-padding eduleb-contact eduleb-page-merge">
-        <div className="container">
-          <div className="row align-items-start">
-            <div className="col-lg-5 col-sm-12 col-xs-12">
+        <div className="container" style={{ maxWidth: '1060px' }}>
+          <div className="row align-items-stretch g-4">
+            <div className="col-lg-5 col-md-12 d-flex flex-column">
               <div className="contact_info">
-                <h4>Contact Info</h4>
-                <p style={{ marginBottom: '28px', color: '#64748b', lineHeight: 1.6 }}>
-                  Have a question about exams, courses, or institute onboarding? Reach out and our
-                  team will get back to you shortly.
+                <h4>Contact Details</h4>
+                <p style={{ marginBottom: '22px', color: '#64748b', fontSize: '0.88rem', lineHeight: 1.5 }}>
+                  Feel free to connect with us for inquiries, platform demonstrations, or institutional onboarding.
                 </p>
-                <div className="sf_contact" style={{ marginBottom: '16px' }}>
-                  <span className="ti-map" />
+
+                <div className="sf_contact">
+                  <span className="sf_contact_icon">
+                    <FiMapPin size={18} />
+                  </span>
                   <p>
+                    <strong className="sf_contact_title">Office Address</strong>
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`}
                       target="_blank"
                       rel="noreferrer"
                       style={{ color: 'inherit', textDecoration: 'none' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = '#2563eb')}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#3156d8')}
                       onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
                       title="View location on Google Maps"
                     >
@@ -360,13 +358,17 @@ export default function ContactPage() {
                     </a>
                   </p>
                 </div>
-                <div className="sf_contact" style={{ marginBottom: '16px' }}>
-                  <span className="ti-mobile" />
+
+                <div className="sf_contact">
+                  <span className="sf_contact_icon">
+                    <FiPhone size={18} />
+                  </span>
                   <p>
+                    <strong className="sf_contact_title">Phone Number</strong>
                     <a
                       href={`tel:${contact.phone.replace(/[^\d+]/g, '')}`}
                       style={{ color: 'inherit', textDecoration: 'none' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = '#2563eb')}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#3156d8')}
                       onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
                       title="Call us directly"
                     >
@@ -374,13 +376,17 @@ export default function ContactPage() {
                     </a>
                   </p>
                 </div>
+
                 <div className="sf_contact">
-                  <span className="ti-email" />
+                  <span className="sf_contact_icon">
+                    <FiMail size={18} />
+                  </span>
                   <p>
+                    <strong className="sf_contact_title">Email Address</strong>
                     <a
                       href={`mailto:${contact.email}`}
                       style={{ color: 'inherit', textDecoration: 'none' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = '#2563eb')}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = '#3156d8')}
                       onMouseLeave={(e) => (e.currentTarget.style.color = 'inherit')}
                       title="Send us an email"
                     >
@@ -390,12 +396,27 @@ export default function ContactPage() {
                 </div>
               </div>
             </div>
-            <div className="col-lg-7 col-sm-12 col-xs-12">
+
+            <div className="col-lg-7 col-md-12 d-flex flex-column">
               <div className="contact eduleb-contact-form">
                 <form onSubmit={handleSubmit} noValidate>
                   <div className="row">
-                    <div className="form-group col-md-6 mb-3">
+                    <div className="form-group col-md-6 mb-2">
+                      <label
+                        htmlFor="contact-name"
+                        className="eduleb-contact-label"
+                        style={{
+                          display: 'block',
+                          marginBottom: '4px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                        }}
+                      >
+                        Name <span style={{ color: '#ef4444', fontWeight: 700, marginLeft: '3px' }}>*</span>
+                      </label>
                       <input
+                        id="contact-name"
                         type="text"
                         name="name"
                         value={formData.name}
@@ -403,57 +424,111 @@ export default function ContactPage() {
                         onBlur={handleBlur}
                         maxLength={50}
                         className={`form-control eduleb-contact-input ${(touched.name || formData.name.trim().length > 30) && errors.name ? 'is-invalid' : ''}`}
-                        placeholder="Name *"
+                        placeholder="Enter your name"
                         required
                         disabled={status === 'loading'}
-                        style={(touched.name || formData.name.trim().length > 30) && errors.name ? { borderColor: '#ef4444' } : {}}
+                        style={{
+                          margin: 0,
+                          marginBottom: 0,
+                          ...((touched.name || formData.name.trim().length > 30) && errors.name ? { borderColor: '#ef4444' } : {}),
+                        }}
                       />
                       {(touched.name || formData.name.trim().length > 30) && errors.name && (
-                        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+                        <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', paddingLeft: '3px', fontWeight: 500, lineHeight: 1.2, textAlign: 'left' }}>
                           {errors.name}
                         </div>
                       )}
                     </div>
-                    <div className="form-group col-md-6 mb-3">
+                    <div className="form-group col-md-6 mb-2">
+                      <label
+                        htmlFor="contact-email"
+                        className="eduleb-contact-label"
+                        style={{
+                          display: 'block',
+                          marginBottom: '4px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                        }}
+                      >
+                        Email Address <span style={{ color: '#ef4444', fontWeight: 700, marginLeft: '3px' }}>*</span>
+                      </label>
                       <input
+                        id="contact-email"
                         type="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
                         onBlur={handleBlur}
                         className={`form-control eduleb-contact-input ${touched.email && errors.email ? 'is-invalid' : ''}`}
-                        placeholder="Email *"
+                        placeholder="Enter your email address"
                         required
                         disabled={status === 'loading'}
-                        style={touched.email && errors.email ? { borderColor: '#ef4444' } : {}}
+                        style={{
+                          margin: 0,
+                          marginBottom: 0,
+                          ...(touched.email && errors.email ? { borderColor: '#ef4444' } : {}),
+                        }}
                       />
                       {touched.email && errors.email && (
-                        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+                        <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', paddingLeft: '3px', fontWeight: 500, lineHeight: 1.2, textAlign: 'left' }}>
                           {errors.email}
                         </div>
                       )}
                     </div>
-                    <div className="form-group col-md-12 mb-3">
+                    <div className="form-group col-md-12 mb-2">
+                      <label
+                        htmlFor="contact-subject"
+                        className="eduleb-contact-label"
+                        style={{
+                          display: 'block',
+                          marginBottom: '4px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                        }}
+                      >
+                        Subject <span style={{ color: '#ef4444', fontWeight: 700, marginLeft: '3px' }}>*</span>
+                      </label>
                       <input
+                        id="contact-subject"
                         type="text"
                         name="subject"
                         value={formData.subject}
                         onChange={handleChange}
                         onBlur={handleBlur}
                         className={`form-control eduleb-contact-input ${touched.subject && errors.subject ? 'is-invalid' : ''}`}
-                        placeholder="Subject *"
+                        placeholder="Enter subject"
                         required
                         disabled={status === 'loading'}
-                        style={touched.subject && errors.subject ? { borderColor: '#ef4444' } : {}}
+                        style={{
+                          margin: 0,
+                          marginBottom: 0,
+                          ...(touched.subject && errors.subject ? { borderColor: '#ef4444' } : {}),
+                        }}
                       />
                       {touched.subject && errors.subject && (
-                        <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '4px' }}>
+                        <div style={{ color: '#ef4444', fontSize: '11px', marginTop: '6px', paddingLeft: '3px', fontWeight: 500, lineHeight: 1.2, textAlign: 'left' }}>
                           {errors.subject}
                         </div>
                       )}
                     </div>
                     <div className="form-group col-md-12 mb-2">
+                      <label
+                        htmlFor="contact-message"
+                        className="eduleb-contact-label"
+                        style={{
+                          display: 'block',
+                          marginBottom: '4px',
+                          fontSize: '0.82rem',
+                          fontWeight: 600,
+                          color: '#1e293b',
+                        }}
+                      >
+                        Message <span style={{ color: '#ef4444', fontWeight: 700, marginLeft: '3px' }}>*</span>
+                      </label>
                       <textarea
+                        id="contact-message"
                         name="message"
                         value={formData.message}
                         onChange={handleChange}
@@ -461,36 +536,39 @@ export default function ContactPage() {
                         onPaste={handleMessagePaste}
                         onBlur={handleBlur}
                         className={`form-control eduleb-contact-input eduleb-contact-textarea ${((touched.message && errors.message) || wordCount >= 300) ? 'is-invalid' : ''}`}
-                        rows={6}
-                        placeholder="Message (max 300 words) *"
+                        rows={3}
+                        placeholder="Write your message here (up to 300 words)..."
                         required
                         disabled={status === 'loading'}
-                        style={wordCount >= 300 ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.15)' } : (touched.message && errors.message) ? { borderColor: '#ef4444' } : {}}
+                        style={{
+                          margin: 0,
+                          marginBottom: 0,
+                          ...(wordCount >= 300 ? { borderColor: '#ef4444', boxShadow: '0 0 0 2px rgba(239, 68, 68, 0.15)' } : (touched.message && errors.message) ? { borderColor: '#ef4444' } : {}),
+                        }}
                       />
-                      <div className="d-flex justify-content-between align-items-center mt-1 flex-wrap" style={{ gap: '6px' }}>
+                      <div className="d-flex justify-content-between align-items-center mt-2 flex-wrap" style={{ gap: '6px', paddingLeft: '2px' }}>
                         <div>
                           {wordCount >= 300 ? (
-                            <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                               <i className="ti-alert" />
-                              Maximum limit of 300 words reached. Typing is disabled until words are removed.
+                              Maximum limit of 300 words reached.
                             </span>
                           ) : touched.message && errors.message ? (
-                            <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: 600 }}>
+                            <div style={{ color: '#ef4444', fontSize: '11px', fontWeight: 500, lineHeight: 1.2, textAlign: 'left' }}>
                               {errors.message}
-                            </span>
+                            </div>
                           ) : null}
                         </div>
                         <div
                           style={{
-                            fontSize: '12px',
+                            fontSize: '11px',
                             fontWeight: 700,
                             color: wordCount >= 300 ? '#ef4444' : wordCount >= 280 ? '#b45309' : '#64748b',
                             marginLeft: 'auto',
-                            padding: '2px 8px',
+                            padding: '1px 7px',
                             borderRadius: '4px',
                             backgroundColor: wordCount >= 300 ? '#fee2e2' : wordCount >= 280 ? '#fef3c7' : '#f1f5f9',
                             border: wordCount >= 300 ? '1px solid #fca5a5' : '1px solid transparent',
-                            transition: 'all 0.2s ease',
                           }}
                         >
                           {wordCount} / 300 words {wordCount >= 300 ? '(Limit Reached)' : ''}
@@ -525,7 +603,7 @@ export default function ContactPage() {
                           </>
                         ) : (
                           <>
-                            Send Message <i className="ti-arrow-top-right" />
+                            Send Message <FiSend size={14} style={{ marginLeft: '6px' }} />
                           </>
                         )}
                       </button>
