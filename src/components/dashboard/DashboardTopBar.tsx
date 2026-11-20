@@ -104,11 +104,10 @@ export default function DashboardTopBar({
         >
           {menuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
         </button>
-      </div>
-
-      <div className="sca-db-header__center">
         <OrgSwitcher />
       </div>
+
+      <div className="sca-db-header__center" />
 
       <div className="sca-db-header__right">
         <Link
