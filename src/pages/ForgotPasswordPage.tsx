@@ -14,17 +14,25 @@ export default function ForgotPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!apiError && !message) return;
+    if (!apiError) return;
     const timer = window.setTimeout(() => {
       setApiError('');
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [apiError]);
+
+  useEffect(() => {
+    if (!message) return;
+    const timer = window.setTimeout(() => {
       setMessage('');
     }, 5000);
     return () => window.clearTimeout(timer);
-  }, [apiError, message]);
+  }, [message]);
 
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<ForgotPasswordFormValues>({
     resolver: yupResolver(forgotPasswordSchema),
@@ -33,15 +41,20 @@ export default function ForgotPasswordPage() {
   });
 
   const onInvalid = () => {
-    setApiError('Please enter a registered email address.');
+    setApiError('');
+    setTimeout(() => {
+      setApiError('Please enter a registered email address.');
+    }, 10);
   };
 
   const onSubmit = async (values: ForgotPasswordFormValues) => {
+    const emailToSubmit = values.email;
+    reset({ email: '' });
     setApiError('');
     setMessage('');
     setSubmitting(true);
     try {
-      const result = await authService.forgotPassword(values.email);
+      const result = await authService.forgotPassword(emailToSubmit);
       const resMsg = (result?.message as string) || '';
       if (!resMsg || resMsg.includes('If the email exists') || resMsg.includes('If an account exists')) {
         setMessage('Email sent successfully');
@@ -58,7 +71,7 @@ export default function ForgotPasswordPage() {
         errMessage.toLowerCase().includes('validation failed') ||
         errMessage.toLowerCase().includes('validation')
       ) {
-        setApiError('Please enter a registered email address.');
+        setApiError('Please enter a valid email address.');
       } else if (
         errMessage.toLowerCase().includes('not registered') ||
         errMessage.toLowerCase().includes('not found') ||

@@ -1001,6 +1001,10 @@ i[class*="icon"],
   width: 100%;
 }
 
+.mad-v3-bottom-row--two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 @media (max-width: 1024px) {
   .mad-v3-bottom-row {
     grid-template-columns: 1fr;

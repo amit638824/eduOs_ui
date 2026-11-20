@@ -271,8 +271,8 @@ export default function HomePage() {
                 Perform with <span>confidence.</span>
               </h1>
               <p className="intro">
-                Bring online exams, mock tests and assessments together with MindSprint. A convenient digital
-                examination experience for schools, coaching institutes and learners across India.
+                Bring online examinations, mock tests, and assessments together with MindSprint. A convenient digital
+                examination platform for schools, coaching institutes, and learners across India.
               </p>
               <div className="actions">
                 <a className="btn primary" href="#contact" onClick={(e) => scrollToSection(e, '#contact')}>
@@ -333,14 +333,14 @@ export default function HomePage() {
           <div className="wrap">
             <div className="heading">
               <div className="eyebrow">Who can use MindSprint?</div>
-              <h2>Made for India's learning ecosystem</h2>
+              <h2>Made for India's Learning Ecosystem</h2>
               <p>Support your institution's examination needs with an online platform for assessments and practice.</p>
             </div>
             <div className="audience">
               <article className="card">
                 <div className="ico">🏫</div>
                 <h3>Schools & Colleges</h3>
-                <p>Conduct academic assessments and organise online examinations for your students.</p>
+                <p>Conduct academic assessments and organize online examinations for your students.</p>
               </article>
               <article className="card">
                 <div className="ico">🎓</div>
@@ -350,7 +350,7 @@ export default function HomePage() {
               <article className="card">
                 <div className="ico">📖</div>
                 <h3>Students & Aspirants</h3>
-                <p>Access online tests and practise in a digital examination environment.</p>
+                <p>Access online tests and practice in a digital examination environment.</p>
               </article>
             </div>
           </div>
@@ -360,7 +360,7 @@ export default function HomePage() {
           <div className="wrap feature-grid">
             <div className="left">
               <div className="eyebrow">A focused exam experience</div>
-              <h2>Everything starts with a better assessment experience.</h2>
+              <h2>Everything Starts with a Better Assessment Experience.</h2>
               <p>
                 MindSprint is designed around the core needs of online examinations, mock tests and assessments. Give
                 your learners and institution a clear digital space for testing and practice.
@@ -378,7 +378,7 @@ export default function HomePage() {
               <div className="feature">
                 <span className="symbol">🎯</span>
                 <b>Mock Tests</b>
-                <small>Support practice and exam preparation.</small>
+                <small>Support effective practice and exam preparation.</small>
               </div>
               <div className="feature">
                 <span className="symbol">📋</span>
@@ -387,7 +387,7 @@ export default function HomePage() {
               </div>
               <div className="feature">
                 <span className="symbol">🏢</span>
-                <b>Institution Use</b>
+                <b>Institutional Use</b>
                 <small>Designed for schools and coaching institutes.</small>
               </div>
             </div>
@@ -398,19 +398,19 @@ export default function HomePage() {
           <div className="wrap">
             <div className="heading">
               <div className="eyebrow">Simple to get started</div>
-              <h2>Take your assessments online</h2>
+              <h2>Take Your Assessments Online</h2>
               <p>Start a conversation with our team to explore how MindSprint can fit your examination process.</p>
             </div>
             <div className="steps">
               <article className="step">
                 <span className="num">01</span>
                 <h3>Share Your Requirements</h3>
-                <p>Tell us about your school, coaching institute or assessment needs.</p>
+                <p>Tell us about your school, coaching institute, or assessment requirements.</p>
               </article>
               <article className="step">
                 <span className="num">02</span>
                 <h3>Explore the Platform</h3>
-                <p>Connect with our team for a walkthrough of the MindSprint portal.</p>
+                <p>Connect with our team to schedule a walkthrough of the MindSprint portal.</p>
               </article>
               <article className="step">
                 <span className="num">03</span>
@@ -631,7 +631,7 @@ export default function HomePage() {
                 <img src="/img/logo/mindsprint-logo.png" alt="MindSprint" />
               </a>
               <p>
-                Online exams, mock tests and assessments — bringing a smarter digital examination experience to
+                Online exams, mock tests, and assessments — delivering a smarter digital examination experience for
                 India's learning community.
               </p>
             </div>
@@ -653,7 +653,7 @@ export default function HomePage() {
               <h4>Get Started</h4>
               <div className="footlinks">
                 <Link to="/login" onClick={handleLoginClick}>
-                  Login to Portal
+                  Log in to the Portal
                 </Link>
                 <a href="#contact" onClick={(e) => scrollToSection(e, '#contact')}>
                   Request a Demo

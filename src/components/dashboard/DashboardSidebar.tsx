@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { FiChevronDown, FiMenu } from 'react-icons/fi';
 import { siteContent } from '@/data/siteContent';
 import type { DashboardNavSection, DashboardNavItem } from '@/types/dashboard';
@@ -26,6 +26,7 @@ export default function DashboardSidebar({
 }: DashboardSidebarProps) {
   const { brand } = siteContent;
   const location = useLocation();
+  const navigate = useNavigate();
 
   const isItemActive = (item: DashboardNavItem, currentPath: string): boolean => {
     if (item.href === currentPath) return true;

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
@@ -72,9 +72,18 @@ function usernameFromEmail(email: string) {
 }
 
 export default function DashboardProfilePage() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const { organization, branches, loading: orgLoading } = useOrganization();
   const [editing, setEditing] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [previewAvatar, setPreviewAvatar] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
+  const [photoMenuOpen, setPhotoMenuOpen] = useState(false);
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'overview' | 'security' | 'permissions' | 'audit'>('overview');
   const [activityFilter, setActivityFilter] = useState<'all' | 'exams' | 'logins' | 'security'>('all');
   const [studentStats, setStudentStats] = useState<StudentStats | null>(null);
@@ -85,6 +94,184 @@ export default function DashboardProfilePage() {
   const [loading, setLoading] = useState(true);
 
   const layoutRole = user ? resolveLayoutRole(user.roles) : 'student';
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      notify.error('Please select an image file (JPEG, PNG, WebP).');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      notify.error('File size exceeds 10MB. Please choose a smaller image.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = async () => {
+        try {
+          setUploadingAvatar(true);
+          const canvas = document.createElement('canvas');
+          const targetSize = 180;
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return;
+
+          // Center crop to a square
+          const minSide = Math.min(img.width, img.height);
+          const sx = (img.width - minSide) / 2;
+          const sy = (img.height - minSide) / 2;
+          ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, targetSize, targetSize);
+
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
+          // Instant preview so user immediately sees their photo
+          setPreviewAvatar(dataUrl);
+          setImageError(false);
+
+          if (user?.id) {
+            localStorage.setItem(`mindsprint_avatar_${user.id}`, dataUrl);
+          }
+
+          await examinationService.updateProfile({
+            avatarUrl: dataUrl,
+          });
+          await refreshUser();
+          notify.success('Profile picture updated successfully.');
+        } catch (err: unknown) {
+          console.error('Failed to update avatar:', err);
+          const msg =
+            (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+            (err instanceof Error ? err.message : 'Please check your connection or server.');
+          notify.error(`Failed to save profile picture: ${msg}`);
+        } finally {
+          setUploadingAvatar(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleStartCamera = async () => {
+    setPhotoMenuOpen(false);
+    setCameraError(null);
+    setCameraModalOpen(true);
+
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error('Camera is not supported on this browser or device.');
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 640 }, facingMode: 'user' },
+      });
+      mediaStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err: unknown) {
+      console.error('Camera access failed:', err);
+      const msg = err instanceof Error ? err.message : 'Unable to access camera';
+      setCameraError(msg);
+    }
+  };
+
+  const handleStopCamera = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+    }
+    setCameraModalOpen(false);
+    setCameraError(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (cameraModalOpen && videoRef.current && mediaStreamRef.current) {
+      videoRef.current.srcObject = mediaStreamRef.current;
+    }
+  }, [cameraModalOpen]);
+
+  const handleCapturePhoto = async () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      notify.error('Camera is not ready yet. Please wait a moment.');
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      const canvas = document.createElement('canvas');
+      const targetSize = 180;
+      canvas.width = targetSize;
+      canvas.height = targetSize;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // Selfie mirror
+      ctx.translate(targetSize, 0);
+      ctx.scale(-1, 1);
+
+      const minSide = Math.min(video.videoWidth, video.videoHeight);
+      const sx = (video.videoWidth - minSide) / 2;
+      const sy = (video.videoHeight - minSide) / 2;
+      ctx.drawImage(video, sx, sy, minSide, minSide, 0, 0, targetSize, targetSize);
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
+      handleStopCamera();
+      setPreviewAvatar(dataUrl);
+      setImageError(false);
+
+      if (user?.id) {
+        localStorage.setItem(`mindsprint_avatar_${user.id}`, dataUrl);
+      }
+
+      await examinationService.updateProfile({ avatarUrl: dataUrl });
+      await refreshUser();
+      notify.success('Profile picture updated successfully.');
+    } catch (err: unknown) {
+      console.error('Failed to capture photo:', err);
+      const msg =
+        (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+        (err instanceof Error ? err.message : 'Please check your connection or server.');
+      notify.error(`Failed to save profile picture: ${msg}`);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setPhotoMenuOpen(false);
+    try {
+      setUploadingAvatar(true);
+      setPreviewAvatar(null);
+      if (user?.id) {
+        localStorage.removeItem(`mindsprint_avatar_${user.id}`);
+      }
+      await examinationService.updateProfile({ avatarUrl: '__REMOVE__' });
+      await refreshUser();
+      notify.success('Profile picture removed.');
+    } catch (err: unknown) {
+      console.error('Failed to remove avatar:', err);
+      notify.error('Failed to remove profile picture.');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -119,8 +306,20 @@ export default function DashboardProfilePage() {
 
   useDashboardLoadingEffect(loading || orgLoading);
 
-  const avatarUrl = user ? resolveImageUrl(user.avatarUrl) : '';
-  const usePhotoAvatar = Boolean(avatarUrl);
+  useEffect(() => {
+    setImageError(false);
+  }, [user?.avatarUrl]);
+
+  useEffect(() => {
+    if (user?.avatarUrl && user?.id) {
+      localStorage.setItem(`mindsprint_avatar_${user.id}`, user.avatarUrl);
+    }
+  }, [user?.id, user?.avatarUrl]);
+
+  const serverAvatarUrl = user ? resolveImageUrl(user.avatarUrl) : '';
+  const cachedAvatarUrl = user ? (localStorage.getItem(`mindsprint_avatar_${user.id}`) || '') : '';
+  const avatarUrl = previewAvatar || serverAvatarUrl || (cachedAvatarUrl ? resolveImageUrl(cachedAvatarUrl) : '');
+  const usePhotoAvatar = Boolean(avatarUrl) && !imageError;
 
   const organizationName = useMemo(() => {
     if (organization?.name) return organization.name;
@@ -302,16 +501,228 @@ export default function DashboardProfilePage() {
         
         <div className="edtp-profile-hero-body">
           <div className="edtp-profile-hero-top">
-            {/* Avatar with Green Online Dot */}
-            <div className="edtp-profile-avatar-wrapper">
+            {/* Hidden File Input for Avatar Upload / Camera */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleAvatarChange}
+            />
+            {/* Profile Photo Options Action Modal */}
+            {photoMenuOpen && (
+              <div className="edtp-avatar-modal-backdrop" onClick={() => setPhotoMenuOpen(false)}>
+                <div className="edtp-avatar-modal-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="edtp-avatar-modal-header">
+                    <h3 className="edtp-avatar-modal-title">Profile Picture</h3>
+                    <button
+                      type="button"
+                      className="edtp-avatar-modal-close"
+                      onClick={() => setPhotoMenuOpen(false)}
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="edtp-avatar-options-list">
+                    <button
+                      type="button"
+                      className="edtp-avatar-option-btn"
+                      onClick={() => {
+                        setPhotoMenuOpen(false);
+                        fileInputRef.current?.click();
+                      }}
+                    >
+                      <div className="edtp-avatar-option-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                          <polyline points="17 8 12 3 7 8" />
+                          <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="edtp-avatar-option-title">Upload from Device</span>
+                        <span className="edtp-avatar-option-desc">Choose a JPEG, PNG, or WebP image from your files</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="edtp-avatar-option-btn"
+                      onClick={handleStartCamera}
+                    >
+                      <div className="edtp-avatar-option-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                          <circle cx="12" cy="13" r="4" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="edtp-avatar-option-title">Take Photo</span>
+                        <span className="edtp-avatar-option-desc">Use your device webcam or camera to snap a live photo</span>
+                      </div>
+                    </button>
+
+                    {usePhotoAvatar && (
+                      <button
+                        type="button"
+                        className="edtp-avatar-option-btn"
+                        onClick={handleRemovePhoto}
+                      >
+                        <div className="edtp-avatar-option-icon is-danger">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="3 6 5 6 21 6" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            <line x1="10" y1="11" x2="10" y2="17" />
+                            <line x1="14" y1="11" x2="14" y2="17" />
+                          </svg>
+                        </div>
+                        <div>
+                          <span className="edtp-avatar-option-title" style={{ color: '#dc2626' }}>Remove Photo</span>
+                          <span className="edtp-avatar-option-desc">Reset back to default initials circle</span>
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Live Camera Viewfinder Modal */}
+            {cameraModalOpen && (
+              <div className="edtp-avatar-modal-backdrop" onClick={handleStopCamera}>
+                <div className="edtp-avatar-modal-card" onClick={(e) => e.stopPropagation()}>
+                  <div className="edtp-avatar-modal-header">
+                    <h3 className="edtp-avatar-modal-title">Take Profile Photo</h3>
+                    <button
+                      type="button"
+                      className="edtp-avatar-modal-close"
+                      onClick={handleStopCamera}
+                      aria-label="Close"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="edtp-cam-view-wrap">
+                    {cameraError ? (
+                      <div className="edtp-cam-error">
+                        <p style={{ margin: 0, fontWeight: 600 }}>{cameraError}</p>
+                        <p style={{ margin: '8px 0 0', fontSize: '0.8rem' }}>
+                          Please check your browser camera permissions or upload an image file instead.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="edtp-cam-circle-guide">
+                          <video
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            className="edtp-cam-video"
+                          />
+                        </div>
+                        <p className="edtp-cam-hint">
+                          Position your face inside the circle and click <strong>Capture Photo</strong>.
+                        </p>
+                      </>
+                    )}
+                  </div>
+
+                  <div className="edtp-cam-footer">
+                    <button
+                      type="button"
+                      className="edtp-btn edtp-btn--secondary"
+                      onClick={handleStopCamera}
+                    >
+                      Cancel
+                    </button>
+                    {!cameraError && (
+                      <button
+                        type="button"
+                        className="edtp-btn edtp-btn--primary"
+                        onClick={handleCapturePhoto}
+                        disabled={uploadingAvatar}
+                      >
+                        {uploadingAvatar ? (
+                          <>
+                            <span className="edtp-avatar-spinner" style={{ marginRight: 6 }} />
+                            Saving…
+                          </>
+                        ) : (
+                          <>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6 }}>
+                              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                              <circle cx="12" cy="13" r="4" />
+                            </svg>
+                            Capture Photo
+                          </>
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+
+            {/* Avatar with Camera Badge */}
+            <div
+              className="edtp-profile-avatar-wrapper edtp-profile-avatar-interactive"
+              onClick={() => setPhotoMenuOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setPhotoMenuOpen(true);
+                }
+              }}
+              title="Click to change profile picture"
+              role="button"
+              tabIndex={0}
+            >
               {usePhotoAvatar ? (
-                <img src={avatarUrl} alt={fullName} className="edtp-profile-avatar-img" />
+                <img
+                  src={avatarUrl}
+                  alt={fullName}
+                  className="edtp-profile-avatar-img"
+                  onError={() => setImageError(true)}
+                />
               ) : (
                 <div className="edtp-profile-avatar-initials" aria-hidden="true">
                   {initials(user.firstName || user.email, user.lastName || '')}
                 </div>
               )}
-              <span className="edtp-profile-online-dot" title="Active Online" />
+              {/* Hover overlay with Camera Icon */}
+              <div className="edtp-profile-avatar-hover-overlay" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                  <circle cx="12" cy="13" r="4" />
+                </svg>
+                <span>{uploadingAvatar ? 'Saving…' : 'Change'}</span>
+              </div>
+
+              {/* Camera Badge Button at bottom right */}
+              <button
+                type="button"
+                className="edtp-profile-avatar-cam-badge"
+                title="Upload or take photo"
+                aria-label="Upload or take photo"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPhotoMenuOpen(true);
+                }}
+              >
+                {uploadingAvatar ? (
+                  <span className="edtp-avatar-spinner" />
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                )}
+              </button>
             </div>
 
             {/* Uncrowded, Non-Overlapping Identity Details */}
