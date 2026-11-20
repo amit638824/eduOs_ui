@@ -4,7 +4,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
 import { parseApiError } from '@/lib/errors';
 import { examinationService } from '@/services';
-import type { AdminDashboardData, ExamResult, StudentStats } from '@/types/examination';
+import type { AdminDashboardData, ExamResult, ExamTest, StudentStats } from '@/types/examination';
 import type { DashboardRole } from '@/types/dashboard';
 
 interface ModernAdminDashboardProps {
@@ -242,6 +242,8 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
   const [dash, setDash] = useState<AdminDashboardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recentTests, setRecentTests] = useState<ExamTest[]>([]);
+  const [recentTestsLoading, setRecentTestsLoading] = useState(false);
 
   useDashboardLoadingEffect(loading);
 
@@ -270,6 +272,27 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
       mounted = false;
     };
   }, [role]);
+
+  useEffect(() => {
+    let isMounted = true;
+    setRecentTestsLoading(true);
+    examinationService
+      .listTests(1, 5)
+      .then((res) => {
+        if (!isMounted) return;
+        const items = res?.data || (Array.isArray(res) ? (res as unknown as ExamTest[]) : []);
+        setRecentTests(items.slice(0, 5));
+      })
+      .catch((err) => {
+        console.error('Failed to load recent assessments:', err);
+      })
+      .finally(() => {
+        if (isMounted) setRecentTestsLoading(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.organizationId]);
 
   const displayName = user?.firstName
     ? `${user.firstName} ${user.lastName || ''}`.trim()
@@ -961,6 +984,106 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
           </div>
   );
 
+  const renderRecentTestsTable = () => (
+    <div className="mad-v3-bottom-card mad-v3-recent-tests-card">
+      <div className="mad-v3-card-header">
+        <div className="mad-v3-card-title-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14 2 14 8 20 8" />
+            <line x1="16" y1="13" x2="8" y2="13" />
+            <line x1="16" y1="17" x2="8" y2="17" />
+            <polyline points="10 9 9 9 8 9" />
+          </svg>
+          <h4>Recent Assessments</h4>
+        </div>
+        <Link to="/dashboard/admin-course" className="mad-v3-view-all">
+          View All &gt;
+        </Link>
+      </div>
+
+      <div className="mad-v3-table-wrapper">
+        {recentTestsLoading ? (
+          <div className="mad-v3-table-loading">
+            <div className="mad-v3-spinner" />
+            <span>Loading assessments...</span>
+          </div>
+        ) : recentTests.length === 0 ? (
+          <div className="mad-v3-table-empty">
+            <p>No assessments created yet.</p>
+            <Link to="/dashboard/create-test" className="mad-v3-empty-btn">
+              + Create Assessment
+            </Link>
+          </div>
+        ) : (
+          <table className="mad-v3-table">
+            <thead>
+              <tr>
+                <th style={{ width: '40%' }}>Assessment</th>
+                <th style={{ width: '18%' }}>Duration</th>
+                <th style={{ width: '18%' }}>Total Marks</th>
+                <th style={{ width: '14%' }}>Status</th>
+                <th style={{ width: '10%', textAlign: 'right' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentTests.map((t) => {
+                const statusStr = String(t.status || 'draft').toLowerCase();
+                const isPublished = statusStr === 'published';
+                const isArchived = statusStr === 'archived';
+                const badgeClass = isPublished
+                  ? 'mad-v3-status-badge--published'
+                  : isArchived
+                  ? 'mad-v3-status-badge--archived'
+                  : 'mad-v3-status-badge--draft';
+
+                return (
+                  <tr key={t.id}>
+                    <td>
+                      <div className="mad-v3-test-title-cell" title={t.title}>
+                        <span className="mad-v3-test-title-text">{t.title}</span>
+                        {t.description && (
+                          <span className="mad-v3-test-sub-text" title={t.description}>
+                            {t.description}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td>
+                      <span className="mad-v3-meta-val">{t.duration_minutes} min</span>
+                    </td>
+                    <td>
+                      <span className="mad-v3-meta-val">
+                        {t.total_marks != null ? `${t.total_marks} pts` : '—'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={`mad-v3-status-badge ${badgeClass}`}>
+                        {statusStr}
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right' }}>
+                      <Link
+                        to={`/dashboard/admin-course`}
+                        className="mad-v3-table-action-btn"
+                        title="View details"
+                      >
+                        <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                        </svg>
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+
   const renderPerformanceCard = () => (
     <div className="mad-v3-bottom-card">
           <div className="mad-v3-card-header">
@@ -1152,7 +1275,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
       {/* ── ROW 3: Middle Row ── */}
       <div className={`mad-v3-top-grid mad-v3-mid-grid ${role === 'student' ? 'mad-v3-top-grid--student' : ''}`}>
         <div className="mad-v3-left-col">
-          {role === 'admin' ? renderPerformanceCard() : renderStepperCard()}
+          {role === 'admin' ? renderRecentTestsTable() : renderStepperCard()}
         </div>
         <div className="mad-v3-right-col">
           {renderActivityCard()}
@@ -1160,18 +1283,11 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
       </div>
 
       {/* ── ROW 4: Bottom Cards Row ── */}
-      {role === 'admin' ? (
-        <div className="mad-v3-bottom-row mad-v3-bottom-row--two">
-          {renderTopStudentsCard()}
-          {renderSubjectPerformanceCard()}
-        </div>
-      ) : (
-        <div className="mad-v3-bottom-row">
-          {renderPerformanceCard()}
-          {renderTopStudentsCard()}
-          {renderSubjectPerformanceCard()}
-        </div>
-      )}
+      <div className="mad-v3-bottom-row">
+        {renderPerformanceCard()}
+        {renderTopStudentsCard()}
+        {renderSubjectPerformanceCard()}
+      </div>
     </div>
   );
 }

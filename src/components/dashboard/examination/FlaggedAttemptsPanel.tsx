@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useMemo } from 'react';
 import { Pagination } from '@/components/ui/Pagination';
 import { useServerList } from '@/hooks/useServerList';
 import { Link } from 'react-router-dom';
@@ -16,6 +16,7 @@ import {
   FiSearch,
   FiEye,
   FiCalendar,
+  FiRotateCcw,
 } from 'react-icons/fi';
 import { TableEmptyState } from '@/components/ui/TableEmptyState';
 import '@/styles/organizations.css';
@@ -40,12 +41,22 @@ type FlaggedRow = {
 
 export function FlaggedAttemptsPanel() {
   const [filter, setFilter] = useState('pending');
-  const [testId, setTestId] = useState('');
+  const [testInput, setTestInput] = useState('');
+  const [appliedTestId, setAppliedTestId] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [severity, setSeverity] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [timeline, setTimeline] = useState<{ event: string; at: string }[]>([]);
+
+  const handleSearch = () => {
+    setAppliedTestId(testInput.trim());
+  };
+
+  const handleReset = () => {
+    setTestInput('');
+    setAppliedTestId('');
+  };
 
   const {
     items: rows,
@@ -60,16 +71,70 @@ export function FlaggedAttemptsPanel() {
   } = useServerList<FlaggedRow>({
     fetcher: async ({ page: p, limit: l }) => {
       const res = await examinationService.listFlaggedAttempts(p, l, filter, {
-        testId: testId || undefined,
+        testId: appliedTestId || undefined,
         dateFrom: dateFrom || undefined,
         dateTo: dateTo || undefined,
         severity: severity ? (severity as 'low' | 'medium' | 'high') : undefined,
       });
       return { data: res.data as unknown as FlaggedRow[], pagination: res.pagination };
     },
-    deps: [filter, testId, dateFrom, dateTo, severity],
+    deps: [filter, appliedTestId, dateFrom, dateTo, severity],
     defaultLimit: 10,
   });
+
+  type FlaggedSortField = 'student' | 'test' | 'violations' | 'score' | 'status';
+  const [sortField, setSortField] = useState<FlaggedSortField>('violations');
+  const [sortAsc, setSortAsc] = useState(false);
+
+  const handleSort = (field: FlaggedSortField) => {
+    if (sortField === field) {
+      setSortAsc((prev) => !prev);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const renderSortIcon = (field: FlaggedSortField) => {
+    if (sortField !== field) {
+      return (
+        <span style={{ opacity: 0.35, marginLeft: 6, fontSize: '0.72rem', display: 'inline-block' }}>
+          ↕
+        </span>
+      );
+    }
+    return (
+      <span style={{ color: '#93c5fd', marginLeft: 6, fontSize: '0.78rem', display: 'inline-block', fontWeight: 'bold' }}>
+        {sortAsc ? '▲' : '▼'}
+      </span>
+    );
+  };
+
+  const sortedRows = useMemo(() => {
+    const list = [...rows];
+    list.sort((a, b) => {
+      let comparison = 0;
+      if (sortField === 'student') {
+        const nameA = [a.first_name, a.last_name].filter(Boolean).join(' ') || a.email || '';
+        const nameB = [b.first_name, b.last_name].filter(Boolean).join(' ') || b.email || '';
+        comparison = nameA.localeCompare(nameB);
+      } else if (sortField === 'test') {
+        comparison = (a.test_title || '').localeCompare(b.test_title || '');
+      } else if (sortField === 'violations') {
+        const vA = a.total_violations ?? a.proctoring_summary?.total_events ?? 0;
+        const vB = b.total_violations ?? b.proctoring_summary?.total_events ?? 0;
+        comparison = vA - vB;
+      } else if (sortField === 'score') {
+        const sA = a.percentage ?? 0;
+        const sB = b.percentage ?? 0;
+        comparison = sA - sB;
+      } else if (sortField === 'status') {
+        comparison = (a.proctoring_review_status || '').localeCompare(b.proctoring_review_status || '');
+      }
+      return sortAsc ? comparison : -comparison;
+    });
+    return list;
+  }, [rows, sortField, sortAsc]);
 
   useDashboardLoadingEffect(loading);
 
@@ -154,26 +219,52 @@ export function FlaggedAttemptsPanel() {
               <option value="high">High severity</option>
             </select>
 
-            {/* Test ID Filter */}
-            <div className="org-search-box" style={{ width: 180 }}>
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Filter by Test ID…"
-                value={testId}
-                onChange={(e) => setTestId(e.target.value)}
-              />
-              {testId && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={() => setTestId('')}
-                  aria-label="Clear filter"
-                >
-                  <FiX />
-                </button>
-              )}
+            {/* Test ID Filter with Search & Reset */}
+            <div className="org-search-group">
+              <div className="org-search-box" style={{ width: 180 }}>
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Filter by Test ID…"
+                  value={testInput}
+                  onChange={(e) => setTestInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                />
+                {testInput && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={handleReset}
+                    aria-label="Clear filter"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={handleSearch}
+                title="Search"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={handleReset}
+                title="Reset"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
           </div>
         </div>
@@ -261,32 +352,82 @@ export function FlaggedAttemptsPanel() {
           <table className="org-table">
             <thead>
               <tr>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Student</th>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Test</th>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Violations</th>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Score</th>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Status</th>
-                <th className="edtp-th-actions">ACTIONS</th>
+                <th style={{ width: '25%', minWidth: 160, cursor: 'pointer' }} onClick={() => handleSort('student')}>
+                  Student {renderSortIcon('student')}
+                </th>
+                <th style={{ width: '25%', minWidth: 160, cursor: 'pointer' }} onClick={() => handleSort('test')}>
+                  Test {renderSortIcon('test')}
+                </th>
+                <th style={{ width: '20%', minWidth: 130, cursor: 'pointer' }} onClick={() => handleSort('violations')}>
+                  Violations {renderSortIcon('violations')}
+                </th>
+                <th style={{ width: '10%', minWidth: 80, cursor: 'pointer' }} onClick={() => handleSort('score')}>
+                  Score {renderSortIcon('score')}
+                </th>
+                <th style={{ width: '10%', minWidth: 80, cursor: 'pointer' }} onClick={() => handleSort('status')}>
+                  Status {renderSortIcon('status')}
+                </th>
+                <th className="edtp-th-actions" style={{ width: '10%', minWidth: 110 }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => {
+              {sortedRows.map((row: FlaggedRow) => {
                 const name = [row.first_name, row.last_name].filter(Boolean).join(' ') || row.email;
                 const s = row.proctoring_summary;
                 return (
                   <Fragment key={row.id}>
                     <tr>
                       <td>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <strong style={{ color: '#0f172a', fontWeight: 600 }}>{name}</strong>
-                          <span style={{ color: '#64748b', fontSize: '0.8rem' }}>{row.email}</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+                          <strong
+                            style={{
+                              color: '#0f172a',
+                              fontWeight: 600,
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'block',
+                              maxWidth: '100%',
+                            }}
+                            title={name}
+                          >
+                            {name}
+                          </strong>
+                          <span
+                            style={{
+                              color: '#64748b',
+                              fontSize: '0.8rem',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'block',
+                              maxWidth: '100%',
+                            }}
+                            title={row.email}
+                          >
+                            {row.email}
+                          </span>
                         </div>
                       </td>
                       <td>
-                        <strong style={{ color: '#0f172a' }}>{row.test_title ?? row.test_id}</strong>
-                        <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block' }}>
-                          {formatDateTime(row.started_at)}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+                          <strong
+                            style={{
+                              color: '#0f172a',
+                              whiteSpace: 'nowrap',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              display: 'block',
+                              maxWidth: '100%',
+                            }}
+                            title={row.test_title ?? row.test_id}
+                          >
+                            {row.test_title ?? row.test_id}
+                          </strong>
+                          <span style={{ color: '#94a3b8', fontSize: '0.75rem', display: 'block', whiteSpace: 'nowrap' }}>
+                            {formatDateTime(row.started_at)}
+                          </span>
+                        </div>
                       </td>
                       <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>

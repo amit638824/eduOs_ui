@@ -61,6 +61,7 @@ import {
   FiClock,
   FiCheckSquare,
   FiBarChart2,
+  FiRotateCcw,
 } from 'react-icons/fi';
 import { TableEmptyState } from '@/components/ui/TableEmptyState';
 
@@ -136,13 +137,15 @@ export function QuestionBankPanel() {
     setError,
     setSearchQuery: setQuestionSearch,
     clearSearch,
+    executeSearch: executeQuestionSearch,
+    resetSearch: resetQuestionSearch,
     onPageChange,
     onLimitChange,
     refresh: loadQuestions,
   } = useServerList<Question>({
     fetcher: ({ page: p, limit: l, search }) =>
       examinationService.listQuestions(p, l, undefined, search || undefined, { skipToast: true }),
-    defaultLimit: 50,
+    defaultLimit: 10,
   });
 
   // Master data for filters & drawer
@@ -1101,25 +1104,52 @@ export function QuestionBankPanel() {
           </div>
 
           <div className="org-controls-row">
-            {/* Search Box */}
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search questions by text, department, topic…"
-                value={questionSearch}
-                onChange={(e) => setQuestionSearch(e.target.value)}
-              />
-              {questionSearch && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={clearSearch}
-                >
-                  <FiX />
-                </button>
-              )}
+            {/* Search Box with Search & Reset Buttons */}
+            <div className="org-search-group">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search questions by text, department, topic…"
+                  value={questionSearch}
+                  onChange={(e) => setQuestionSearch(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      executeQuestionSearch();
+                    }
+                  }}
+                />
+                {questionSearch && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={() => executeQuestionSearch()}
+                title="Search questions"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={() => resetQuestionSearch()}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
 
             {/* Hidden CSV Input */}
@@ -1294,7 +1324,7 @@ export function QuestionBankPanel() {
           <table className="org-table">
             <thead>
               <tr>
-                <th className="org-table-check">
+                <th className="org-table-check" style={{ width: '4%' }}>
                   <input
                     type="checkbox"
                     className="form-check-input"
@@ -1315,13 +1345,13 @@ export function QuestionBankPanel() {
                     aria-label="Select all questions"
                   />
                 </th>
-                <th>Question</th>
-                <th>Department</th>
-                <th>Subject</th>
-                <th>Topic</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th className="edtp-th-actions">Actions</th>
+                <th style={{ width: '30%' }}>Question</th>
+                <th style={{ width: '14%' }}>Department</th>
+                <th style={{ width: '14%' }}>Subject</th>
+                <th style={{ width: '14%' }}>Topic</th>
+                <th style={{ width: '10%' }}>Type</th>
+                <th style={{ width: '7%' }}>Status</th>
+                <th className="edtp-th-actions" style={{ width: '7%' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -1342,12 +1372,62 @@ export function QuestionBankPanel() {
                         aria-label={`Select ${label}`}
                       />
                     </td>
-                    <td style={{ fontWeight: 600, color: '#0f172a', maxWidth: '340px' }}>
-                      <div style={{ wordBreak: 'break-word', lineHeight: 1.4 }}>{label}</div>
+                    <td style={{ fontWeight: 600, color: '#0f172a' }}>
+                      <div
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '300px',
+                          display: 'block',
+                        }}
+                        title={label}
+                      >
+                        {label}
+                      </div>
                     </td>
-                    <td>{q.department_name ?? '—'}</td>
-                    <td>{q.subject_name ?? '—'}</td>
-                    <td>{q.topic_name ?? '—'}</td>
+                    <td>
+                      <div
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '140px',
+                          display: 'block',
+                        }}
+                        title={q.department_name ?? '—'}
+                      >
+                        {q.department_name ?? '—'}
+                      </div>
+                    </td>
+                    <td>
+                      <div
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '140px',
+                          display: 'block',
+                        }}
+                        title={q.subject_name ?? '—'}
+                      >
+                        {q.subject_name ?? '—'}
+                      </div>
+                    </td>
+                    <td>
+                      <div
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '140px',
+                          display: 'block',
+                        }}
+                        title={q.topic_name ?? '—'}
+                      >
+                        {q.topic_name ?? '—'}
+                      </div>
+                    </td>
                     <td>
                       <span className="org-role-badge org-role-badge--student" style={{ fontSize: '0.72rem' }}>
                         {QUESTION_TYPE_LABELS[q.type as QuestionType] ?? q.type}
@@ -1954,6 +2034,8 @@ export function TestsListPanel({ title }: { title: string }) {
     setError,
     setSearchQuery: setSearchTerm,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh: load,
@@ -2144,25 +2226,51 @@ export function TestsListPanel({ title }: { title: string }) {
           </div>
 
           <div className="org-controls-row">
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search tests by title or status…"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={clearSearch}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
+            <div className="org-search-group">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search tests by title or status…"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      executeSearch();
+                    }
+                  }}
+                />
+                {searchTerm && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={() => executeSearch()}
+                title="Search tests"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={() => resetSearch()}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
           </div>
         </div>
@@ -2171,18 +2279,29 @@ export function TestsListPanel({ title }: { title: string }) {
           <table className="org-table">
             <thead>
               <tr>
-                <th>TITLE</th>
-                <th>STATUS</th>
-                <th>DURATION</th>
-                <th>MARKS</th>
-                <th className="edtp-th-actions">ACTIONS</th>
+                <th style={{ width: '38%' }}>TITLE</th>
+                <th style={{ width: '18%' }}>STATUS</th>
+                <th style={{ width: '16%' }}>DURATION</th>
+                <th style={{ width: '14%' }}>MARKS</th>
+                <th className="edtp-th-actions" style={{ width: '14%' }}>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               {tests.map((t) => (
                 <tr key={t.id}>
                   <td>
-                    <strong style={{ color: '#0f172a', fontWeight: 600 }}>{t.title}</strong>
+                    <div
+                      style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '340px',
+                        display: 'block',
+                      }}
+                      title={t.title}
+                    >
+                      <strong style={{ color: '#0f172a', fontWeight: 600 }}>{t.title}</strong>
+                    </div>
                   </td>
                   <td>{statusBadge(t.status)}</td>
                   <td style={{ color: '#475569' }}>{t.duration_minutes} min</td>
@@ -3229,6 +3348,8 @@ export function AttemptsListPanel({
     error,
     setSearchQuery: setSearchTerm,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
   } = useServerList<TestAttempt>({
@@ -3257,25 +3378,51 @@ export function AttemptsListPanel({
 
       {/* Search Toolbar on Left */}
       <div className="sca-results-toolbar">
-        <div className="org-search-box sca-results-search-box">
-          <FiSearch className="org-search-icon" />
-          <input
-            type="text"
-            className="org-search-input"
-            placeholder="Search attempts by test title or status…"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              className="org-search-clear"
-              onClick={clearSearch}
-              aria-label="Clear search"
-            >
-              <FiX />
-            </button>
-          )}
+        <div className="org-search-group">
+          <div className="org-search-box sca-results-search-box">
+            <FiSearch className="org-search-icon" />
+            <input
+              type="text"
+              className="org-search-input"
+              placeholder="Search attempts by test title or status…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  executeSearch();
+                }
+              }}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="org-search-clear"
+                onClick={clearSearch}
+                aria-label="Clear search"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            className="org-btn-search"
+            onClick={() => executeSearch()}
+            title="Search attempts"
+          >
+            <FiSearch size={13} />
+            <span>Search</span>
+          </button>
+          <button
+            type="button"
+            className="org-btn-reset"
+            onClick={() => resetSearch()}
+            title="Reset search"
+          >
+            <FiRotateCcw size={13} />
+            <span>Reset</span>
+          </button>
         </div>
       </div>
 
@@ -3285,20 +3432,32 @@ export function AttemptsListPanel({
           <table className="org-table">
             <thead>
               <tr>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Test</th>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Status</th>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Score</th>
-                <th style={{ textTransform: 'none', color: '#ffffff' }}>Started</th>
-                {!readOnly && <th className="edtp-th-actions" style={{ textTransform: 'none', color: '#ffffff' }}>Actions</th>}
+                <th style={{ width: '38%', textTransform: 'none', color: '#ffffff' }}>Test</th>
+                <th style={{ width: '18%', textTransform: 'none', color: '#ffffff' }}>Status</th>
+                <th style={{ width: '16%', textTransform: 'none', color: '#ffffff' }}>Score</th>
+                <th style={{ width: '16%', textTransform: 'none', color: '#ffffff' }}>Started</th>
+                {!readOnly && <th className="edtp-th-actions" style={{ width: '12%', textTransform: 'none', color: '#ffffff' }}>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {attempts.map((a) => (
                 <tr key={a.id}>
                   <td>
-                    <strong style={{ color: '#0f172a', fontWeight: 600 }}>
-                      {a.test_title ?? a.test_id}
-                    </strong>
+                    <div
+                      style={{
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '280px',
+                        display: 'inline-block',
+                        verticalAlign: 'middle',
+                      }}
+                      title={a.test_title ?? a.test_id}
+                    >
+                      <strong style={{ color: '#0f172a', fontWeight: 600 }}>
+                        {a.test_title ?? a.test_id}
+                      </strong>
+                    </div>
                     {a.proctoring_flagged ? (
                       <span
                         className="org-status-badge"
@@ -3407,9 +3566,19 @@ export function AttemptsListPanel({
 
 export function ResultsPanel() {
   const [results, setResults] = useState<ExamResult[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const handleSearch = () => {
+    setAppliedSearch(searchInput.trim());
+  };
+
+  const handleReset = () => {
+    setSearchInput('');
+    setAppliedSearch('');
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -3455,12 +3624,12 @@ export function ResultsPanel() {
   }, [results]);
 
   const filteredResults = useMemo(() => {
-    if (!searchTerm.trim()) return results;
-    const q = searchTerm.toLowerCase();
+    if (!appliedSearch.trim()) return results;
+    const q = appliedSearch.toLowerCase();
     return results.filter(
       (r) => r.test_title && r.test_title.toLowerCase().includes(q),
     );
-  }, [results, searchTerm]);
+  }, [results, appliedSearch]);
 
   return (
     <div className="org-panel-page">
@@ -3545,25 +3714,51 @@ export function ResultsPanel() {
 
       {/* Search Toolbar on Left */}
       <div className="sca-results-toolbar">
-        <div className="org-search-box sca-results-search-box">
-          <FiSearch className="org-search-icon" />
-          <input
-            type="text"
-            className="org-search-input"
-            placeholder="Search by test name…"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              className="org-search-clear"
-              onClick={() => setSearchTerm('')}
-              aria-label="Clear search"
-            >
-              <FiX />
-            </button>
-          )}
+        <div className="org-search-group">
+          <div className="org-search-box sca-results-search-box">
+            <FiSearch className="org-search-icon" />
+            <input
+              type="text"
+              className="org-search-input"
+              placeholder="Search by test name…"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleSearch();
+                }
+              }}
+            />
+            {searchInput && (
+              <button
+                type="button"
+                className="org-search-clear"
+                onClick={handleReset}
+                aria-label="Clear search"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            className="org-btn-search"
+            onClick={handleSearch}
+            title="Search results"
+          >
+            <FiSearch size={13} />
+            <span>Search</span>
+          </button>
+          <button
+            type="button"
+            className="org-btn-reset"
+            onClick={handleReset}
+            title="Reset search"
+          >
+            <FiRotateCcw size={13} />
+            <span>Reset</span>
+          </button>
         </div>
       </div>
 
@@ -3573,14 +3768,14 @@ export function ResultsPanel() {
           <table className="org-table">
             <thead>
               <tr>
-                <th>Test Name</th>
-                <th>Score</th>
-                <th>Percentage</th>
-                <th>Rank</th>
-                <th>Percentile</th>
-                <th>Date & Time</th>
-                <th>Status</th>
-                <th className="edtp-th-actions">Actions</th>
+                <th style={{ width: '28%' }}>Test Name</th>
+                <th style={{ width: '12%' }}>Score</th>
+                <th style={{ width: '12%' }}>Percentage</th>
+                <th style={{ width: '10%' }}>Rank</th>
+                <th style={{ width: '10%' }}>Percentile</th>
+                <th style={{ width: '14%' }}>Date & Time</th>
+                <th style={{ width: '7%' }}>Status</th>
+                <th className="edtp-th-actions" style={{ width: '7%' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -3664,11 +3859,11 @@ export function ResultsPanel() {
                       : 'No exam results match your search query.'
                   }
                   action={
-                    searchTerm ? (
+                    appliedSearch ? (
                       <button
                         type="button"
                         className="sca-assignments-reset-filter"
-                        onClick={() => setSearchTerm('')}
+                        onClick={handleReset}
                       >
                         Reset search
                       </button>
@@ -3689,7 +3884,7 @@ export function ResultsPanel() {
               <button
                 type="button"
                 className="sca-assignments-reset-filter"
-                onClick={() => setSearchTerm('')}
+                onClick={handleReset}
               >
                 View all results
               </button>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Pagination } from '@/components/ui/Pagination';
 import { useServerList } from '@/hooks/useServerList';
 import {
@@ -9,6 +9,7 @@ import {
   FiLogIn,
   FiEdit3,
   FiTrash2,
+  FiRotateCcw,
 } from 'react-icons/fi';
 import { HiOfficeBuilding } from 'react-icons/hi';
 import { organizationService } from '@/services';
@@ -59,6 +60,8 @@ export function OrganizationsPanel() {
     setError,
     setSearchQuery,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh,
@@ -303,7 +306,55 @@ export function OrganizationsPanel() {
     showSuccess('Organization Switched', `Switched active organization to ${org.name}.`);
   };
 
-  const filteredOrgs = orgs;
+  type OrgSortField = 'name' | 'users' | 'createdAt' | 'status';
+  const [sortField, setSortField] = useState<OrgSortField>('createdAt');
+  const [sortAsc, setSortAsc] = useState(false);
+
+  const handleSort = (field: OrgSortField) => {
+    if (sortField === field) {
+      setSortAsc((prev) => !prev);
+    } else {
+      setSortField(field);
+      setSortAsc(true);
+    }
+  };
+
+  const renderSortIcon = (field: OrgSortField) => {
+    if (sortField !== field) {
+      return (
+        <span style={{ opacity: 0.35, marginLeft: 6, fontSize: '0.72rem', display: 'inline-block' }}>
+          ↕
+        </span>
+      );
+    }
+    return (
+      <span style={{ color: '#93c5fd', marginLeft: 6, fontSize: '0.78rem', display: 'inline-block', fontWeight: 'bold' }}>
+        {sortAsc ? '▲' : '▼'}
+      </span>
+    );
+  };
+
+  const sortedOrgs = useMemo(() => {
+    const list = [...orgs];
+    list.sort((a, b) => {
+      let comparison = 0;
+      if (sortField === 'name') {
+        comparison = (a.name || '').localeCompare(b.name || '');
+      } else if (sortField === 'users') {
+        const uA = (a as any).usersCount ?? (a as any).userCount ?? 0;
+        const uB = (b as any).usersCount ?? (b as any).userCount ?? 0;
+        comparison = uA - uB;
+      } else if (sortField === 'status') {
+        comparison = (a.isActive ? 1 : 0) - (b.isActive ? 1 : 0);
+      } else if (sortField === 'createdAt') {
+        const d1 = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const d2 = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        comparison = d1 - d2;
+      }
+      return sortAsc ? comparison : -comparison;
+    });
+    return list;
+  }, [orgs, sortField, sortAsc]);
 
   return (
     <div className="org-panel-root">
@@ -348,27 +399,53 @@ export function OrganizationsPanel() {
           </div>
 
           <div className="org-controls-row">
-            {/* Search Box */}
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search organizations..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search organizations"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={clearSearch}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
+            {/* Search Box with Search & Reset Buttons */}
+            <div className="org-search-group">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search organizations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      executeSearch();
+                    }
+                  }}
+                  aria-label="Search organizations"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={() => executeSearch()}
+                title="Search"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={() => resetSearch()}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
 
             {/* Status Filter Pills */}
@@ -399,7 +476,7 @@ export function OrganizationsPanel() {
         </div>
 
         {/* Table Content */}
-        {filteredOrgs.length === 0 && !loading ? (
+        {sortedOrgs.length === 0 && !loading ? (
           <TableEmptyState
             icon={HiOfficeBuilding}
             title={searchQuery || statusFilter !== 'all' ? 'No matching organizations' : 'No organizations found'}
@@ -414,19 +491,27 @@ export function OrganizationsPanel() {
             <table className="org-table">
               <thead>
                 <tr>
-                  <th>Organization</th>
-                  <th>Total users</th>
-                  <th>Created date</th>
-                  <th>Status</th>
-                  <th className="edtp-th-actions">Actions</th>
+                  <th style={{ width: '32%', minWidth: 200, cursor: 'pointer' }} onClick={() => handleSort('name')}>
+                    Organization {renderSortIcon('name')}
+                  </th>
+                  <th style={{ width: '16%', minWidth: 100, cursor: 'pointer' }} onClick={() => handleSort('users')}>
+                    Total users {renderSortIcon('users')}
+                  </th>
+                  <th style={{ width: '18%', minWidth: 120, cursor: 'pointer' }} onClick={() => handleSort('createdAt')}>
+                    Created date {renderSortIcon('createdAt')}
+                  </th>
+                  <th style={{ width: '16%', minWidth: 100, cursor: 'pointer' }} onClick={() => handleSort('status')}>
+                    Status {renderSortIcon('status')}
+                  </th>
+                  <th className="edtp-th-actions" style={{ width: '18%', minWidth: 120 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredOrgs.map((org) => (
+                {sortedOrgs.map((org: Organization) => (
                   <tr key={org.id}>
                     {/* Organization Cell */}
                     <td>
-                      <div className="org-cell-flex" style={{ whiteSpace: 'nowrap' }}>
+                      <div className="org-cell-flex">
                         <div className="org-avatar-badge">
                           {org.logoUrl ? (
                             <img src={org.logoUrl} alt={org.name} />
@@ -434,8 +519,8 @@ export function OrganizationsPanel() {
                             getInitials(org.name)
                           )}
                         </div>
-                        <div className="org-name-meta" style={{ whiteSpace: 'nowrap' }}>
-                          <span className="org-name-text" style={{ whiteSpace: 'nowrap' }}>{org.name}</span>
+                        <div className="org-name-meta">
+                          <span className="org-name-text" title={org.name}>{org.name}</span>
                           {typeof org.settings?.contactEmail === 'string' && org.settings.contactEmail ? (
                             <span
                               className="org-sub-meta"

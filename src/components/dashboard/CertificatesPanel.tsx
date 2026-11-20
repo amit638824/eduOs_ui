@@ -28,6 +28,7 @@ import {
   FiTrendingUp,
   FiCheckCircle,
   FiShield,
+  FiRotateCcw,
 } from 'react-icons/fi';
 import '@/styles/organizations.css';
 
@@ -51,6 +52,8 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
     error,
     setSearchQuery: setSearchTerm,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh: load,
@@ -254,25 +257,51 @@ export function CertificatesPanel({ mode = 'mine' }: { mode?: 'mine' | 'org' }) 
 
       {/* Toolbar with Search and Verification Link */}
       <div className="sca-certificates-toolbar">
-        <div className="org-search-box sca-cert-search-box">
-          <FiSearch className="org-search-icon" />
-          <input
-            type="text"
-            className="org-search-input"
-            placeholder="Search by certificate no., test name, code…"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              className="org-search-clear"
-              onClick={clearSearch}
-              aria-label="Clear search"
-            >
-              <FiX />
-            </button>
-          )}
+        <div className="org-search-group">
+          <div className="org-search-box sca-cert-search-box">
+            <FiSearch className="org-search-icon" />
+            <input
+              type="text"
+              className="org-search-input"
+              placeholder="Search by certificate no., test name, code…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  executeSearch();
+                }
+              }}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="org-search-clear"
+                onClick={clearSearch}
+                aria-label="Clear search"
+              >
+                <FiX />
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            className="org-btn-search"
+            onClick={() => executeSearch()}
+            title="Search certificates"
+          >
+            <FiSearch size={13} />
+            <span>Search</span>
+          </button>
+          <button
+            type="button"
+            className="org-btn-reset"
+            onClick={() => resetSearch()}
+            title="Reset search"
+          >
+            <FiRotateCcw size={13} />
+            <span>Reset</span>
+          </button>
         </div>
 
         <Link

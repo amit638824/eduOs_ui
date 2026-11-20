@@ -117,6 +117,10 @@ export interface ExamTest {
   result_percentage?: number | null;
 
   submitted_attempt_count?: number | null;
+
+  created_at?: string;
+
+  updated_at?: string;
 }
 
 export type ScoringPolicy = 'latest' | 'highest';

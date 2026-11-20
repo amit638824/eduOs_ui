@@ -291,6 +291,9 @@ export default function DashboardSidebar({
             return null;
           }
 
+          const singleChild = isCollapsible && section.items?.length === 1 ? section.items[0] : null;
+          const isSingleChildActive = singleChild ? isItemActive(singleChild, location.pathname) : false;
+
           return (
             <div
               key={sectionKey}
@@ -306,8 +309,16 @@ export default function DashboardSidebar({
                     type="button"
                     className={`sca-db-sidebar__section-header${
                       isOpen ? ' sca-db-sidebar__section-header--open' : ''
-                    }`}
-                    onClick={() => toggleSection(sectionKey)}
+                    }${isSingleChildActive ? ' sca-db-sidebar__section-header--active' : ''}`}
+                    onClick={() => {
+                      if (singleChild) {
+                        navigate(singleChild.href);
+                        if (!isOpen) setOpenSectionKey(sectionKey);
+                        if (onNavigate) onNavigate();
+                      } else {
+                        toggleSection(sectionKey);
+                      }
+                    }}
                     aria-expanded={isOpen}
                     aria-controls={`section-panel-${sectionKey}`}
                     title={`${isOpen ? 'Collapse' : 'Expand'} ${section.title}`}
@@ -321,13 +332,15 @@ export default function DashboardSidebar({
                           {section.countBadge}
                         </span>
                       )}
-                      <FiChevronDown
-                        size={14}
-                        className={`sca-db-sidebar__chevron${
-                          isOpen ? ' sca-db-sidebar__chevron--open' : ''
-                        }`}
-                        aria-hidden="true"
-                      />
+                      {!singleChild && (
+                        <FiChevronDown
+                          size={14}
+                          className={`sca-db-sidebar__chevron${
+                            isOpen ? ' sca-db-sidebar__chevron--open' : ''
+                          }`}
+                          aria-hidden="true"
+                        />
+                      )}
                     </div>
                   </button>
                 ) : (

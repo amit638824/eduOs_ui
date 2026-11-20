@@ -1556,6 +1556,10 @@ body.dark_mode .edtp-badge--practice,
   font-size: 0.9375rem;
   font-weight: 600;
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 280px;
 }
 
 .sca-assignment-subtitle {
@@ -3984,4 +3988,15 @@ body.dark_mode .swal2-styled.swal2-cancel:hover,
   font-weight: 500 !important;
   line-height: 1.45 !important;
   box-shadow: 0 1px 3px rgba(22, 163, 74, 0.08) !important;
+}
+
+
+/* Single child active section header */
+.sca-db-sidebar__section-header--active {
+  color: #2563eb !important;
+  font-weight: 700 !important;
+}
+
+.sca-dashboard--dark .sca-db-sidebar__section-header--active {
+  color: #60a5fa !important;
 }

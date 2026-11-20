@@ -28,6 +28,7 @@ import {
   FiInfo,
   FiAward,
   FiHelpCircle,
+  FiRotateCcw,
 } from 'react-icons/fi';
 import { HiOfficeBuilding } from 'react-icons/hi';
 import { TableEmptyState } from '@/components/ui/TableEmptyState';
@@ -86,6 +87,8 @@ export function NotificationsPanel() {
     error,
     setSearchQuery: setSearchTerm,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh,
@@ -401,25 +404,51 @@ export function NotificationsPanel() {
             ))}
           </div>
 
-          <div className="org-search-box" style={{ maxWidth: 320, width: '100%' }}>
-            <FiSearch className="org-search-icon" style={{ opacity: loading && !initialLoading ? 0.4 : 1, transition: 'opacity 0.15s ease' }} />
-            <input
-              type="text"
-              className="org-search-input"
-              placeholder="Search notifications…"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                className="org-search-clear"
-                onClick={clearSearch}
-                aria-label="Clear search"
-              >
-                <FiX />
-              </button>
-            )}
+          <div className="org-search-group">
+            <div className="org-search-box" style={{ maxWidth: 320, width: '100%' }}>
+              <FiSearch className="org-search-icon" style={{ opacity: loading && !initialLoading ? 0.4 : 1, transition: 'opacity 0.15s ease' }} />
+              <input
+                type="text"
+                className="org-search-input"
+                placeholder="Search notifications…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    executeSearch();
+                  }
+                }}
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  className="org-search-clear"
+                  onClick={clearSearch}
+                  aria-label="Clear search"
+                >
+                  <FiX />
+                </button>
+              )}
+            </div>
+            <button
+              type="button"
+              className="org-btn-search"
+              onClick={() => executeSearch()}
+              title="Search notifications"
+            >
+              <FiSearch size={13} />
+              <span>Search</span>
+            </button>
+            <button
+              type="button"
+              className="org-btn-reset"
+              onClick={() => resetSearch()}
+              title="Reset search"
+            >
+              <FiRotateCcw size={13} />
+              <span>Reset</span>
+            </button>
           </div>
         </div>
 
@@ -583,6 +612,8 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
     setError,
     setSearchQuery,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh,
@@ -806,27 +837,53 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
           </div>
 
           <div className="org-controls-row">
-            {/* Search Box */}
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search user, email, amount..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search payments"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={clearSearch}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
+            {/* Search Box with Search & Reset Buttons */}
+            <div className="org-search-group">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search user, email, amount..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      executeSearch();
+                    }
+                  }}
+                  aria-label="Search payments"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={() => executeSearch()}
+                title="Search payments"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={() => resetSearch()}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
 
             {/* Filter Pills */}
@@ -1196,6 +1253,8 @@ export function UsersManagementPanel({
     setError,
     setSearchQuery,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh,
@@ -1216,7 +1275,7 @@ export function UsersManagementPanel({
       );
     },
     deps: [lockedRole, filterTab, selectedOrg?.id, selectedOrg?.isActive],
-    defaultLimit: 50,
+    defaultLimit: 10,
   });
 
   const withLoader = useDashboardLoader();
@@ -1429,6 +1488,56 @@ export function UsersManagementPanel({
       return true;
     });
   }, [users, branchFilter, deptFilter, getStudentAffiliation, allDepartments]);
+
+  type UserSortField = 'name' | 'email' | 'role' | 'status';
+  const [userSortField, setUserSortField] = useState<UserSortField>('name');
+  const [userSortAsc, setUserSortAsc] = useState(true);
+
+  const handleUserSort = (field: UserSortField) => {
+    if (userSortField === field) {
+      setUserSortAsc((prev) => !prev);
+    } else {
+      setUserSortField(field);
+      setUserSortAsc(true);
+    }
+  };
+
+  const renderUserSortIcon = (field: UserSortField) => {
+    if (userSortField !== field) {
+      return (
+        <span style={{ opacity: 0.35, marginLeft: 6, fontSize: '0.72rem', display: 'inline-block' }}>
+          ↕
+        </span>
+      );
+    }
+    return (
+      <span style={{ color: '#93c5fd', marginLeft: 6, fontSize: '0.78rem', display: 'inline-block', fontWeight: 'bold' }}>
+        {userSortAsc ? '▲' : '▼'}
+      </span>
+    );
+  };
+
+  const sortedDisplayedUsers = useMemo(() => {
+    const list = [...displayedUsers];
+    list.sort((a, b) => {
+      let comparison = 0;
+      if (userSortField === 'name') {
+        const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim();
+        const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim();
+        comparison = nameA.localeCompare(nameB);
+      } else if (userSortField === 'email') {
+        comparison = (a.email || '').localeCompare(b.email || '');
+      } else if (userSortField === 'role') {
+        const roleA = (a.roles as string[])[0] || '';
+        const roleB = (b.roles as string[])[0] || '';
+        comparison = roleA.localeCompare(roleB);
+      } else if (userSortField === 'status') {
+        comparison = (a.status || '').localeCompare(b.status || '');
+      }
+      return userSortAsc ? comparison : -comparison;
+    });
+    return list;
+  }, [displayedUsers, userSortField, userSortAsc]);
 
   useEffect(() => {
     if (editingId || !showEnrollmentField) return;
@@ -1698,27 +1807,53 @@ export function UsersManagementPanel({
           </div>
 
           <div className="org-controls-row">
-            {/* Search Box */}
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder={`Search ${heading.toLowerCase()}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label={`Search ${heading.toLowerCase()}`}
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={clearSearch}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
+            {/* Search Box with Search & Reset Buttons */}
+            <div className="org-search-group">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder={`Search ${heading.toLowerCase()}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      executeSearch();
+                    }
+                  }}
+                  aria-label={`Search ${heading.toLowerCase()}`}
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={() => executeSearch()}
+                title="Search"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={() => resetSearch()}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
 
             {/* Branch Filter Dropdown */}
@@ -1835,16 +1970,26 @@ export function UsersManagementPanel({
             <table className="org-table">
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  {lockedRole === 'student' && <th>Enrollment</th>}
-                  {!lockedRole && <th>Roles</th>}
-                  <th>Status</th>
-                  <th className="org-th-actions">Actions</th>
+                  <th style={{ width: '30%', minWidth: 180, cursor: 'pointer' }} onClick={() => handleUserSort('name')}>
+                    Name {renderUserSortIcon('name')}
+                  </th>
+                  <th style={{ width: '25%', minWidth: 160, cursor: 'pointer' }} onClick={() => handleUserSort('email')}>
+                    Email {renderUserSortIcon('email')}
+                  </th>
+                  {lockedRole === 'student' && <th style={{ width: '18%', minWidth: 110 }}>Enrollment</th>}
+                  {!lockedRole && (
+                    <th style={{ width: '18%', minWidth: 110, cursor: 'pointer' }} onClick={() => handleUserSort('role')}>
+                      Roles {renderUserSortIcon('role')}
+                    </th>
+                  )}
+                  <th style={{ width: '14%', minWidth: 90, cursor: 'pointer' }} onClick={() => handleUserSort('status')}>
+                    Status {renderUserSortIcon('status')}
+                  </th>
+                  <th className="org-th-actions" style={{ width: '13%', minWidth: 100 }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {displayedUsers.map((u) => {
+                {sortedDisplayedUsers.map((u) => {
                   const isActive = !isOrgSuspended && u.status === 'active';
                   const initials = getUserInitials(u.first_name, u.last_name, u.email);
                   const primaryRole = (u.roles as string[])[0] || 'student';
@@ -1861,7 +2006,7 @@ export function UsersManagementPanel({
                         <div className="org-cell-flex">
                           <div className="org-avatar-badge">{initials}</div>
                           <div className="org-name-meta">
-                            <span className="org-name-text">
+                            <span className="org-name-text" title={formatFullName(u.first_name, u.last_name)}>
                               {formatFullName(u.first_name, u.last_name)}
                             </span>
                             {affiliationText ? (
@@ -1874,7 +2019,7 @@ export function UsersManagementPanel({
                               </span>
                             ) : null}
                             {u.enrollment_no && lockedRole !== 'student' && (
-                              <span className="org-sub-meta">
+                              <span className="org-sub-meta" title={u.enrollment_no}>
                                 <span className="org-slug-tag">{u.enrollment_no}</span>
                               </span>
                             )}
@@ -1884,7 +2029,20 @@ export function UsersManagementPanel({
 
                       {/* Email Cell */}
                       <td>
-                        <span style={{ color: '#475569', fontSize: '0.875rem' }}>{u.email}</span>
+                        <span
+                          style={{
+                            color: '#475569',
+                            fontSize: '0.875rem',
+                            display: 'block',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                            maxWidth: '100%',
+                          }}
+                          title={u.email}
+                        >
+                          {u.email}
+                        </span>
                       </td>
 
                       {/* Enrollment Cell if Student */}
@@ -2883,6 +3041,8 @@ export function AuditLogPanel() {
     error,
     setSearchQuery,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh,
@@ -2945,26 +3105,53 @@ export function AuditLogPanel() {
 
           <div className="org-controls-row">
             {/* Search Box */}
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search action, resource, user..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search audit logs"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={clearSearch}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
+            {/* Search Box with Search & Reset Buttons */}
+            <div className="org-search-group">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search action, resource, user..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      executeSearch();
+                    }
+                  }}
+                  aria-label="Search audit logs"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={() => executeSearch()}
+                title="Search audit logs"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={() => resetSearch()}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
 
             {/* Filter Pills */}
@@ -3137,9 +3324,19 @@ export function SessionsSecurityPanel() {
   const [copiedMfaCode, setCopiedMfaCode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'revoked'>('all');
   const withLoader = useDashboardLoader();
+
+  const handleSearch = () => {
+    setAppliedSearch(searchInput.trim());
+  };
+
+  const handleReset = () => {
+    setSearchInput('');
+    setAppliedSearch('');
+  };
 
   const load = async () => {
     setLoading(true);
@@ -3207,15 +3404,15 @@ export function SessionsSecurityPanel() {
       if (statusFilter === 'active' && !s.is_active) return false;
       if (statusFilter === 'revoked' && s.is_active) return false;
 
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
+      if (appliedSearch.trim()) {
+        const q = appliedSearch.toLowerCase().trim();
         const ip = String(s.ip_address ?? '').toLowerCase();
         const dev = JSON.stringify(s.device_info ?? '').toLowerCase();
         return ip.includes(q) || dev.includes(q);
       }
       return true;
     });
-  }, [sessions, statusFilter, searchQuery]);
+  }, [sessions, statusFilter, appliedSearch]);
 
   return (
     <div className="org-panel-root">
@@ -3464,27 +3661,53 @@ export function SessionsSecurityPanel() {
           </div>
 
           <div className="org-controls-row">
-            {/* Search Box */}
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search IP, device, browser..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search sessions"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={() => setSearchQuery('')}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
+            {/* Search Box with Search & Reset Buttons */}
+            <div className="org-search-group">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search IP, device, browser..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                  aria-label="Search sessions"
+                />
+                {searchInput && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={handleReset}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={handleSearch}
+                title="Search sessions"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={handleReset}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
 
             {/* Filter Pills */}
@@ -3518,9 +3741,9 @@ export function SessionsSecurityPanel() {
         {filteredSessions.length === 0 && !loading ? (
           <TableEmptyState
             icon={FiSmartphone}
-            title={searchQuery || statusFilter !== 'all' ? 'No matching device sessions' : 'No login sessions found'}
+            title={appliedSearch || statusFilter !== 'all' ? 'No matching device sessions' : 'No login sessions found'}
             description={
-              searchQuery || statusFilter !== 'all'
+              appliedSearch || statusFilter !== 'all'
                 ? 'No device sessions match the current filter.'
                 : 'No active or historical login sessions recorded.'
             }
@@ -3684,6 +3907,8 @@ export function OrgStructurePanel() {
     setError,
     setSearchQuery,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh: reloadDepartments,
@@ -3896,27 +4121,53 @@ export function OrgStructurePanel() {
               </div>
             )}
 
-            {/* Search Box */}
-            <div className="org-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search departments..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                aria-label="Search departments"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={clearSearch}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
+            {/* Search Box with Search & Reset Buttons */}
+            <div className="org-search-group">
+              <div className="org-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search departments..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      executeSearch();
+                    }
+                  }}
+                  aria-label="Search departments"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={clearSearch}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={() => executeSearch()}
+                title="Search departments"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={() => resetSearch()}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
           </div>
         </div>

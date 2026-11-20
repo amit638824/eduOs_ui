@@ -17,7 +17,7 @@ import { confirmDelete } from '@/lib/swal';
 import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import { useOrgScope } from '@/context/OrgScopeContext';
-import { FiSearch, FiX, FiZap, FiEye, FiPlay, FiCheck, FiClock, FiFileText } from 'react-icons/fi';
+import { FiSearch, FiX, FiZap, FiEye, FiPlay, FiCheck, FiClock, FiFileText, FiRotateCcw } from 'react-icons/fi';
 import { TableEmptyState } from '@/components/ui/TableEmptyState';
 import '@/styles/organizations.css';
 import {
@@ -397,9 +397,19 @@ export function DashboardAssignmentsContent() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [startingId, setStartingId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [filterTab, setFilterTab] = useState<string>('all');
   const [nowTick, setNowTick] = useState(() => Date.now());
+
+  const handleSearch = () => {
+    setAppliedSearch(searchInput.trim());
+  };
+
+  const handleReset = () => {
+    setSearchInput('');
+    setAppliedSearch('');
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -508,8 +518,8 @@ export function DashboardAssignmentsContent() {
 
   const filteredRows = useMemo(() => {
     return rows.filter((row) => {
-      if (searchTerm.trim()) {
-        const q = searchTerm.toLowerCase();
+      if (appliedSearch.trim()) {
+        const q = appliedSearch.toLowerCase();
         const match =
           row.title.toLowerCase().includes(q) || (row.status && row.status.toLowerCase().includes(q));
         if (!match) return false;
@@ -533,7 +543,7 @@ export function DashboardAssignmentsContent() {
       }
       return true;
     });
-  }, [rows, searchTerm, isStudent, filterTab]);
+  }, [rows, appliedSearch, isStudent, filterTab]);
 
   const handleStartTest = async (testId: string) => {
     try {
@@ -696,25 +706,51 @@ export function DashboardAssignmentsContent() {
           </div>
 
           <div className="sca-assignments-search-wrap">
-            <div className="org-search-box sca-assignments-search-box">
-              <FiSearch className="org-search-icon" />
-              <input
-                type="text"
-                className="org-search-input"
-                placeholder="Search assignments…"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  className="org-search-clear"
-                  onClick={() => setSearchTerm('')}
-                  aria-label="Clear search"
-                >
-                  <FiX />
-                </button>
-              )}
+            <div className="org-search-group">
+              <div className="org-search-box sca-assignments-search-box">
+                <FiSearch className="org-search-icon" />
+                <input
+                  type="text"
+                  className="org-search-input"
+                  placeholder="Search assignments…"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                />
+                {searchInput && (
+                  <button
+                    type="button"
+                    className="org-search-clear"
+                    onClick={handleReset}
+                    aria-label="Clear search"
+                  >
+                    <FiX />
+                  </button>
+                )}
+              </div>
+              <button
+                type="button"
+                className="org-btn-search"
+                onClick={handleSearch}
+                title="Search assignments"
+              >
+                <FiSearch size={13} />
+                <span>Search</span>
+              </button>
+              <button
+                type="button"
+                className="org-btn-reset"
+                onClick={handleReset}
+                title="Reset search"
+              >
+                <FiRotateCcw size={13} />
+                <span>Reset</span>
+              </button>
             </div>
           </div>
         </div>
@@ -849,26 +885,26 @@ export function DashboardAssignmentsContent() {
                   colSpan={6}
                   icon={FiFileText}
                   title={
-                    searchTerm || filterTab !== 'all'
+                    appliedSearch || filterTab !== 'all'
                       ? 'No assignments match filter'
                       : isStudent
                         ? 'No tests assigned yet'
                         : 'No tests found'
                   }
                   description={
-                    searchTerm || filterTab !== 'all'
+                    appliedSearch || filterTab !== 'all'
                       ? 'No assignments match your search query or filter.'
                       : isStudent
                         ? 'You do not have any assigned tests at the moment.'
                         : 'No tests found. Create and assign a test from Test Builder.'
                   }
                   action={
-                    searchTerm || filterTab !== 'all' ? (
+                    appliedSearch || filterTab !== 'all' ? (
                       <button
                         type="button"
                         className="sca-assignments-reset-filter"
                         onClick={() => {
-                          setSearchTerm('');
+                          handleReset();
                           setFilterTab('all');
                         }}
                       >
@@ -891,7 +927,7 @@ export function DashboardAssignmentsContent() {
               <button
                 type="button"
                 className="sca-assignments-reset-filter"
-                onClick={() => { setSearchTerm(''); setFilterTab('all'); }}
+                onClick={() => { handleReset(); setFilterTab('all'); }}
               >
                 View all assignments
               </button>

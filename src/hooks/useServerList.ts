@@ -13,6 +13,8 @@ interface UseServerListOptions<T> {
   fetcher: ServerListFetcher<T>;
   defaultLimit?: number;
   debounceMs?: number;
+  /** When true (default), search triggers only on button click or Enter, NOT on input change */
+  manualSearch?: boolean;
   /** Extra deps that should reset page and refetch (e.g. role, status filter) */
   deps?: unknown[];
   enabled?: boolean;
@@ -22,6 +24,7 @@ export function useServerList<T>({
   fetcher,
   defaultLimit = DEFAULT_PAGE_LIMIT,
   debounceMs = 350,
+  manualSearch = true,
   deps = [],
   enabled = true,
 }: UseServerListOptions<T>) {
@@ -45,12 +48,13 @@ export function useServerList<T>({
   fetcherRef.current = fetcher;
 
   useEffect(() => {
+    if (manualSearch) return;
     const t = window.setTimeout(() => {
       setSearch(searchInput.trim());
       setPage(1);
     }, debounceMs);
     return () => window.clearTimeout(t);
-  }, [searchInput, debounceMs]);
+  }, [searchInput, debounceMs, manualSearch]);
 
   const depsKey = JSON.stringify(deps);
   const prevDepsKey = useRef(depsKey);
@@ -109,6 +113,18 @@ export function useServerList<T>({
     setSearchInput(value);
   };
 
+  const executeSearch = (val?: string) => {
+    const term = (val !== undefined ? val : searchInput).trim();
+    setSearch(term);
+    setPage(1);
+  };
+
+  const resetSearch = () => {
+    setSearchInput('');
+    setSearch('');
+    setPage(1);
+  };
+
   const clearSearch = () => {
     setSearchInput('');
     setSearch('');
@@ -130,6 +146,8 @@ export function useServerList<T>({
     setError,
     setSearchQuery,
     clearSearch,
+    executeSearch,
+    resetSearch,
     onPageChange,
     onLimitChange,
     refresh,
