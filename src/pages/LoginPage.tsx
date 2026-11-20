@@ -359,7 +359,7 @@ export default function LoginPage() {
 
           {/* RIGHT FLOATING LOGIN CARD */}
           <div className="ms-login-card">
-            <h2>Login to Mindsprint</h2>
+            <h2>Log In to MindSprint</h2>
             <p className="ms-login-card-sub">
               Access your dashboard to manage examinations and monitor performance.
             </p>

@@ -21,9 +21,18 @@ export default function ForgotPasswordPage() {
     return () => window.clearTimeout(timer);
   }, [apiError]);
 
+  useEffect(() => {
+    if (!message) return;
+    const timer = window.setTimeout(() => {
+      setMessage('');
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
   const {
     register,
     handleSubmit,
+    reset,
     formState: { errors },
   } = useForm<ForgotPasswordFormValues>({
     resolver: yupResolver(forgotPasswordSchema),
@@ -36,11 +45,13 @@ export default function ForgotPasswordPage() {
   };
 
   const onSubmit = async (values: ForgotPasswordFormValues) => {
+    const emailToSubmit = values.email;
+    reset({ email: '' });
     setApiError('');
     setMessage('');
     setSubmitting(true);
     try {
-      const result = await authService.forgotPassword(values.email);
+      const result = await authService.forgotPassword(emailToSubmit);
       const resMsg = (result?.message as string) || '';
       if (!resMsg || resMsg.includes('If the email exists') || resMsg.includes('If an account exists')) {
         setMessage('Email sent successfully');
@@ -63,7 +74,7 @@ export default function ForgotPasswordPage() {
         errMessage.toLowerCase().includes('not found') ||
         errMessage.toLowerCase() === 'user'
       ) {
-        setApiError('This email id is not registered with us');
+        setApiError('This email address is not registered. Please enter a registered email address.');
       } else {
         setApiError(errMessage);
       }
@@ -113,7 +124,12 @@ export default function ForgotPasswordPage() {
                       className={inputClassName('common__login__input', !!errors.email)}
                       placeholder="you@example.com"
                       autoComplete="email"
-                      {...register('email')}
+                      {...register('email', {
+                        onChange: () => {
+                          if (apiError) setApiError('');
+                          if (message) setMessage('');
+                        },
+                      })}
                     />
                   </div>
                   <div className="login__button">
