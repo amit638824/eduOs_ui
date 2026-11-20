@@ -19,6 +19,7 @@ import { setSelectedOrganizationId } from '@/lib/orgScope';
 import { confirmAction, confirmDelete, showSuccess } from '@/lib/swal';
 import type { Organization } from '@/types/api';
 import { FormError } from '@/components/ui/FormField';
+import { TableEmptyState } from '@/components/ui/TableEmptyState';
 import { validateName } from '@/validators/schemas';
 import { formatDate } from '@/utils/dateFormat';
 import '@/styles/organizations.css';
@@ -372,14 +373,15 @@ export function OrganizationsPanel() {
 
         {/* Table Content */}
         {filteredOrgs.length === 0 && !loading ? (
-          <div className="org-empty-state">
-            <HiOfficeBuilding className="org-empty-icon" />
-            <p className="org-empty-text">
-              {searchQuery || statusFilter !== 'all'
-                ? 'No organizations match the current filter.'
-                : 'No organizations found. Click "+ Add Organization" to onboard your first vendor.'}
-            </p>
-          </div>
+          <TableEmptyState
+            icon={HiOfficeBuilding}
+            title={searchQuery || statusFilter !== 'all' ? 'No matching organizations' : 'No organizations found'}
+            description={
+              searchQuery || statusFilter !== 'all'
+                ? 'No organizations match your current search or status filter.'
+                : 'No organizations found. Click "+ Add Organization" to onboard your first vendor.'
+            }
+          />
         ) : (
           <div className="org-table-wrap">
             <table className="org-table">

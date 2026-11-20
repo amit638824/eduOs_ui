@@ -6,6 +6,7 @@ import type { AiGenerateInput, AiJob } from '@/services/examination.service';
 import * as examinationService from '@/services/examination.service';
 import '@/styles/organizations.css';
 import { FiZap, FiRefreshCw, FiCpu } from 'react-icons/fi';
+import { TableEmptyState } from '@/components/ui/TableEmptyState';
 
 const TYPES = [
   ['mcq', 'MCQ'],
@@ -506,11 +507,12 @@ export function AiBuildPanel() {
                 </tr>
               ))}
               {jobs.length === 0 ? (
-                <tr>
-                  <td colSpan={7} style={{ textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
-                    No generation history yet.
-                  </td>
-                </tr>
+                <TableEmptyState
+                  colSpan={7}
+                  icon={FiCpu}
+                  title="No generation history yet"
+                  description="AI-generated question batches will appear here once you generate questions."
+                />
               ) : null}
             </tbody>
           </table>

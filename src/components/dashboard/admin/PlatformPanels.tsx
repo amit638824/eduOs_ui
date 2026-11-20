@@ -26,8 +26,11 @@ import {
   FiEye,
   FiBell,
   FiInfo,
+  FiAward,
+  FiHelpCircle,
 } from 'react-icons/fi';
 import { HiOfficeBuilding } from 'react-icons/hi';
+import { TableEmptyState } from '@/components/ui/TableEmptyState';
 import '@/styles/organizations.css';
 import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -529,17 +532,16 @@ export function NotificationsPanel() {
                 </tr>
               ))}
               {filteredItems.length === 0 && (
-                <tr>
-                  <td colSpan={5}>
-                    <div className="org-empty-state">
-                      <FiBell className="org-empty-icon" />
-                      <p className="org-empty-title">No notifications found</p>
-                      <p className="org-empty-desc">
-                        {searchTerm ? 'No notifications match your search query.' : 'You are all caught up! When updates arrive, they will appear here.'}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
+                <TableEmptyState
+                  colSpan={5}
+                  icon={FiBell}
+                  title="No notifications found"
+                  description={
+                    searchTerm
+                      ? 'No notifications match your search query.'
+                      : 'You are all caught up! When updates arrive, they will appear here.'
+                  }
+                />
               )}
             </tbody>
           </table>
@@ -856,14 +858,15 @@ export function PaymentsPanel({ allowTopUp = false }: { allowTopUp?: boolean }) 
 
         {/* Table Content */}
         {payments.length === 0 && !loading ? (
-          <div className="org-empty-state">
-            <FiCreditCard className="org-empty-icon" />
-            <p className="org-empty-text">
-              {searchQuery || statusFilter !== 'all'
+          <TableEmptyState
+            icon={FiCreditCard}
+            title={searchQuery || statusFilter !== 'all' ? 'No matching payments' : 'No payments found'}
+            description={
+              searchQuery || statusFilter !== 'all'
                 ? 'No transactions match the current filter.'
-                : 'No payments recorded in this period.'}
-            </p>
-          </div>
+                : 'No payments recorded in this period.'
+            }
+          />
         ) : (
           <div className="org-table-wrap">
             <table className="org-table">
@@ -1782,26 +1785,33 @@ export function UsersManagementPanel({
         </div>
 
         {displayedUsers.length === 0 ? (
-          <div className="org-empty-state">
-            <FiUsers className="org-empty-icon" />
-            <p className="org-empty-text">
-              {hasActiveFilters
+          <TableEmptyState
+            icon={FiUsers}
+            title={
+              hasActiveFilters || searchQuery || filterTab !== 'all'
+                ? `No matching ${heading.toLowerCase()}`
+                : `No ${heading.toLowerCase()} found`
+            }
+            description={
+              hasActiveFilters
                 ? 'No students found matching the selected branch and department filters.'
                 : searchQuery || filterTab !== 'all'
                   ? 'No members match the current filter.'
-                  : `No ${heading.toLowerCase()} found. Click "${addBtnLabel}" to add the first one.`}
-            </p>
-            {hasActiveFilters && (
-              <button
-                type="button"
-                className="org-filter-reset-btn"
-                onClick={resetFilters}
-                style={{ marginTop: '8px' }}
-              >
-                <FiRefreshCw /> Reset filters
-              </button>
-            )}
-          </div>
+                  : `No ${heading.toLowerCase()} found. Click "${addBtnLabel}" to add the first one.`
+            }
+            action={
+              hasActiveFilters ? (
+                <button
+                  type="button"
+                  className="org-filter-reset-btn"
+                  onClick={resetFilters}
+                  style={{ marginTop: '4px' }}
+                >
+                  <FiRefreshCw /> Reset filters
+                </button>
+              ) : undefined
+            }
+          />
         ) : (
           <div className="org-table-wrap">
             <table className="org-table">
@@ -2619,9 +2629,12 @@ export function ReportsPanel() {
                     );
                   })}
                   {questionAnalytics.questions.length === 0 ? (
-                    <tr>
-                      <td colSpan={8}>No graded answers yet for this test.</td>
-                    </tr>
+                    <TableEmptyState
+                      colSpan={8}
+                      icon={FiHelpCircle}
+                      title="No graded answers yet"
+                      description="No student attempts have been submitted or graded for this test."
+                    />
                   ) : null}
                 </tbody>
               </table>
@@ -2713,9 +2726,11 @@ export function ReportsPanel() {
               </div>
 
               {results.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '36px 20px', color: '#64748b', background: '#f8fafc', borderRadius: 8 }}>
-                  No submitted results for this test yet. Assign students and wait for attempts.
-                </div>
+                <TableEmptyState
+                  icon={FiAward}
+                  title="No results found"
+                  description="No submitted results for this test yet. Assign students and wait for attempts."
+                />
               ) : (
                 <div className="org-table-wrap">
                   <table className="org-table">
@@ -2929,14 +2944,15 @@ export function AuditLogPanel() {
         </div>
 
         {logs.length === 0 && !loading ? (
-          <div className="org-empty-state">
-            <FiActivity className="org-empty-icon" />
-            <p className="org-empty-text">
-              {searchQuery || actionFilter !== 'all'
+          <TableEmptyState
+            icon={FiActivity}
+            title={searchQuery || actionFilter !== 'all' ? 'No matching audit logs' : 'No audit logs found'}
+            description={
+              searchQuery || actionFilter !== 'all'
                 ? 'No audit logs match the current filter.'
-                : 'No audit logs recorded yet.'}
-            </p>
-          </div>
+                : 'No audit activity has been recorded yet.'
+            }
+          />
         ) : (
           <div className="org-table-wrap">
             <table className="org-table">
@@ -3442,14 +3458,15 @@ export function SessionsSecurityPanel() {
 
         {/* Table Content */}
         {filteredSessions.length === 0 && !loading ? (
-          <div className="org-empty-state">
-            <FiSmartphone className="org-empty-icon" />
-            <p className="org-empty-text">
-              {searchQuery || statusFilter !== 'all'
+          <TableEmptyState
+            icon={FiSmartphone}
+            title={searchQuery || statusFilter !== 'all' ? 'No matching device sessions' : 'No login sessions found'}
+            description={
+              searchQuery || statusFilter !== 'all'
                 ? 'No device sessions match the current filter.'
-                : 'No login sessions found.'}
-            </p>
-          </div>
+                : 'No active or historical login sessions recorded.'
+            }
+          />
         ) : (
           <div className="org-table-wrap">
             <table className="org-table">
@@ -3806,14 +3823,15 @@ export function OrgStructurePanel() {
         </div>
 
         {departments.length === 0 ? (
-          <div className="org-empty-state">
-            <HiOfficeBuilding className="org-empty-icon" />
-            <p className="org-empty-text">
-              {searchQuery
+          <TableEmptyState
+            icon={HiOfficeBuilding}
+            title={searchQuery ? 'No matching departments' : 'No departments found'}
+            description={
+              searchQuery
                 ? 'No departments match the search query.'
-                : 'No departments added under this branch yet. Click "Add Department" to create one.'}
-            </p>
-          </div>
+                : 'No departments added under this branch yet. Click "Add Department" to create one.'
+            }
+          />
         ) : (
           <div className="org-table-wrap">
             <table className="org-table">
@@ -5198,20 +5216,24 @@ export function TestBuilderPanel() {
                     );
                   })}
                   {availableQuestions.length === 0 && (
-                    <tr>
-                      <td colSpan={4}>
-                        <div className="org-empty-state">
-                          <FiLayers className="org-empty-icon" />
-                          <p className="org-empty-title">
-                            {qSearch
-                              ? 'No questions match your search.'
-                              : bankQuestions.length === 0
-                              ? 'No approved questions in bank.'
-                              : 'All available questions are already in this test.'}
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    <TableEmptyState
+                      colSpan={4}
+                      icon={FiLayers}
+                      title={
+                        qSearch
+                          ? 'No matching questions'
+                          : bankQuestions.length === 0
+                            ? 'No approved questions in bank'
+                            : 'All questions already added'
+                      }
+                      description={
+                        qSearch
+                          ? 'No questions match your search query.'
+                          : bankQuestions.length === 0
+                            ? 'No approved questions in question bank.'
+                            : 'All available questions are already in this test.'
+                      }
+                    />
                   )}
                 </tbody>
               </table>
@@ -5557,25 +5579,24 @@ export function TestBuilderPanel() {
                     );
                   })}
                   {unassignedStudents.length === 0 && (
-                    <tr>
-                      <td colSpan={4}>
-                        <div className="org-empty-state">
-                          <FiUsers className="org-empty-icon" />
-                          <p className="org-empty-title">
-                            {sSearch
-                              ? 'No candidates match your search filter'
-                              : students.length === 0
-                              ? 'No active students found in this organization'
-                              : 'All eligible students are already assigned'}
-                          </p>
-                          <p className="org-empty-desc">
-                            {sSearch
-                              ? 'Try clearing the search or changing the department filter.'
-                              : 'Review the enrolled list below.'}
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    <TableEmptyState
+                      colSpan={4}
+                      icon={FiUsers}
+                      title={
+                        sSearch
+                          ? 'No matching candidates'
+                          : students.length === 0
+                            ? 'No active students found'
+                            : 'All students assigned'
+                      }
+                      description={
+                        sSearch
+                          ? 'Try clearing the search or changing the department filter.'
+                          : students.length === 0
+                            ? 'No active students found in this organization.'
+                            : 'All eligible students are already assigned to this test.'
+                      }
+                    />
                   )}
                 </tbody>
               </table>
@@ -5665,28 +5686,20 @@ export function TestBuilderPanel() {
                     );
                   })}
                   {assignments.length === 0 && (
-                    <tr>
-                      <td colSpan={3}>
-                        <div className="org-empty-state">
-                          <FiUsers className="org-empty-icon" />
-                          <p className="org-empty-title">No students assigned yet</p>
-                          <p className="org-empty-desc">
-                            Select students from the available list above and click "Assign Selected" to grant test access.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
+                    <TableEmptyState
+                      colSpan={3}
+                      icon={FiUsers}
+                      title="No students assigned yet"
+                      description="Select students from the available list above and click 'Assign Selected' to grant test access."
+                    />
                   )}
                   {assignments.length > 0 && filteredAssignments.length === 0 && (
-                    <tr>
-                      <td colSpan={3}>
-                        <div className="org-empty-state">
-                          <FiSearch className="org-empty-icon" />
-                          <p className="org-empty-title">No matching students</p>
-                          <p className="org-empty-desc">No enrolled students match your search query.</p>
-                        </div>
-                      </td>
-                    </tr>
+                    <TableEmptyState
+                      colSpan={3}
+                      icon={FiSearch}
+                      title="No matching students"
+                      description="No enrolled students match your search query."
+                    />
                   )}
                 </tbody>
               </table>

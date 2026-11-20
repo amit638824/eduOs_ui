@@ -17,7 +17,8 @@ import { confirmDelete } from '@/lib/swal';
 import { formatCountdown, msUntil } from '@/utils/countdown';
 import { ProfileSettingsApiForm } from '@/components/dashboard/examination/ExaminationPanels';
 import { useOrgScope } from '@/context/OrgScopeContext';
-import { FiSearch, FiX, FiZap, FiEye, FiPlay, FiCheck, FiClock } from 'react-icons/fi';
+import { FiSearch, FiX, FiZap, FiEye, FiPlay, FiCheck, FiClock, FiFileText } from 'react-icons/fi';
+import { TableEmptyState } from '@/components/ui/TableEmptyState';
 import '@/styles/organizations.css';
 import {
   becomeTeacherSchema,
@@ -124,6 +125,9 @@ export function DashboardFeedbackTable({
                     </td>
                   </tr>
                 ))}
+                {rows.length === 0 && (
+                  <TableEmptyState colSpan={3} title="No courses found" description="No enrolled courses available yet." />
+                )}
               </tbody>
             </table>
           </div>
@@ -352,6 +356,9 @@ export function DashboardQuizAttemptsContent({ title }: { title: string }) {
                     </td>
                   </tr>
                 ))}
+                {quizAttempts.length === 0 && (
+                  <TableEmptyState colSpan={6} title="No quiz attempts found" description="No quiz attempts recorded yet." />
+                )}
               </tbody>
             </table>
           </div>
@@ -838,26 +845,38 @@ export function DashboardAssignmentsContent() {
                 </tr>
               ))}
               {filteredRows.length === 0 && (
-                <tr>
-                  <td colSpan={6} style={{ textAlign: 'center', padding: '48px 20px', color: '#64748b' }}>
-                    <div style={{ fontSize: '1rem', fontWeight: 500, marginBottom: 4 }}>
-                      {searchTerm || filterTab !== 'all'
-                        ? 'No assignments match your search or filter.'
-                        : isStudent
-                          ? 'No tests assigned yet.'
-                          : 'No tests found. Create and assign a test from Test Builder.'}
-                    </div>
-                    {(searchTerm || filterTab !== 'all') && (
+                <TableEmptyState
+                  colSpan={6}
+                  icon={FiFileText}
+                  title={
+                    searchTerm || filterTab !== 'all'
+                      ? 'No assignments match filter'
+                      : isStudent
+                        ? 'No tests assigned yet'
+                        : 'No tests found'
+                  }
+                  description={
+                    searchTerm || filterTab !== 'all'
+                      ? 'No assignments match your search query or filter.'
+                      : isStudent
+                        ? 'You do not have any assigned tests at the moment.'
+                        : 'No tests found. Create and assign a test from Test Builder.'
+                  }
+                  action={
+                    searchTerm || filterTab !== 'all' ? (
                       <button
                         type="button"
                         className="sca-assignments-reset-filter"
-                        onClick={() => { setSearchTerm(''); setFilterTab('all'); }}
+                        onClick={() => {
+                          setSearchTerm('');
+                          setFilterTab('all');
+                        }}
                       >
                         Reset filters
                       </button>
-                    )}
-                  </td>
-                </tr>
+                    ) : undefined
+                  }
+                />
               )}
             </tbody>
           </table>
@@ -921,6 +940,9 @@ export function DashboardReviewsContent() {
                     </td>
                   </tr>
                 ))}
+                {reviewsReceived.length === 0 && (
+                  <TableEmptyState colSpan={3} title="No reviews found" description="No student feedback recorded yet." />
+                )}
               </tbody>
             </table>
           </div>
@@ -966,6 +988,9 @@ export function DashboardOrderHistoryContent() {
                     </td>
                   </tr>
                 ))}
+                {orderHistory.length === 0 && (
+                  <TableEmptyState colSpan={5} title="No orders found" description="No payment or order history recorded yet." />
+                )}
               </tbody>
             </table>
           </div>
@@ -1021,6 +1046,9 @@ export function DashboardAnnouncementsContent() {
                     </td>
                   </tr>
                 ))}
+                {announcements.length === 0 && (
+                  <TableEmptyState colSpan={4} title="No announcements found" description="No announcements posted yet." />
+                )}
               </tbody>
             </table>
           </div>
