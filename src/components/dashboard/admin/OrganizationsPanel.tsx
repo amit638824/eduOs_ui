@@ -280,7 +280,7 @@ export function OrganizationsPanel() {
   const remove = async (org: Organization) => {
     const ok = await confirmDelete({
       title: 'Delete Organization?',
-      text: `Are you sure you want to delete ${org.name}? This action will permanently remove the organization and restrict access for all associated users.`,
+      text: `Are you sure you want to delete ${org.name}? This action will permanently remove the organization and restrict access to all associated users.`,
       confirmText: 'Yes, Delete It!',
     });
     if (!ok) return;

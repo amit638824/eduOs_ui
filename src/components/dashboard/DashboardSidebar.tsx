@@ -46,53 +46,62 @@ export default function DashboardSidebar({
     return section.items.some((item) => isItemActive(item, currentPath));
   };
 
+  // Find the collapsible section that contains the currently active route
+  const activeSection = sections.find(
+    (sec) => sec.collapsible && sectionHasActive(sec, location.pathname)
+  );
+  const activeSectionKey = activeSection
+    ? sectionKeyOf(activeSection, sections.indexOf(activeSection))
+    : null;
+
   // Single-open accordion state: null means all collapsible sections are closed.
-  // By default all are collapsed so only top-level Dashboard is visible.
   const [openSectionKey, setOpenSectionKey] = useState<string | null>(() => {
-    const isDashboardRoute =
-      location.pathname === '/dashboard' ||
-      location.pathname === '/dashboard/admin-dashboard' ||
-      location.pathname === '/dashboard/teacher-dashboard' ||
-      location.pathname === '/dashboard/student-dashboard';
-
-    if (isDashboardRoute) return null;
-
-    const activeSec = sections.find(
-      (sec) => sec.collapsible && sectionHasActive(sec, location.pathname)
-    );
-    if (activeSec) {
-      return sectionKeyOf(activeSec, sections.indexOf(activeSec));
+    if (activeSection) {
+      return sectionKeyOf(activeSection, sections.indexOf(activeSection));
     }
     return null;
   });
 
-  // Automatically keep only the current route's section open when navigating;
-  // If navigating back to Dashboard, close all collapsible sections.
+  // Track the last open or active section key so when toggling between collapse and expand,
+  // we always know which group should remain open
+  const [lastOpenSectionKey, setLastOpenSectionKey] = useState<string | null>(
+    () => activeSectionKey || null
+  );
+
   useEffect(() => {
-    const isDashboardRoute =
-      location.pathname === '/dashboard' ||
-      location.pathname === '/dashboard/admin-dashboard' ||
-      location.pathname === '/dashboard/teacher-dashboard' ||
-      location.pathname === '/dashboard/student-dashboard';
-
-    if (isDashboardRoute) {
-      setOpenSectionKey(null);
-      return;
+    if (openSectionKey) {
+      setLastOpenSectionKey(openSectionKey);
     }
+  }, [openSectionKey]);
 
+  // Automatically keep only the current route's section open when navigating
+  useEffect(() => {
     const activeSec = sections.find(
       (sec) => sec.collapsible && sectionHasActive(sec, location.pathname)
     );
     if (activeSec) {
       const key = sectionKeyOf(activeSec, sections.indexOf(activeSec));
       setOpenSectionKey(key);
+      setLastOpenSectionKey(key);
     }
   }, [location.pathname, sections]);
+
+  // When expanding sidebar: ensure the group that was open or active stays open
+  useEffect(() => {
+    if (!collapsed) {
+      if (!openSectionKey && (activeSectionKey || lastOpenSectionKey)) {
+        setOpenSectionKey(activeSectionKey || lastOpenSectionKey);
+      }
+    }
+  }, [collapsed, openSectionKey, activeSectionKey, lastOpenSectionKey]);
 
   // Toggle single section: opens clicked one & closes any other open section; clicking the open one collapses it.
   const toggleSection = (key: string) => {
     setOpenSectionKey((prev) => (prev === key ? null : key));
   };
+
+  // The active or open group key for collapsed mode
+  const currentGroupKey = openSectionKey || activeSectionKey || lastOpenSectionKey;
 
   const renderNavItem = (item: DashboardNavItem) => {
     if (item.action === 'logout') {
@@ -266,6 +275,20 @@ export default function DashboardSidebar({
           const sectionKey = sectionKeyOf(section, index);
           const isCollapsible = Boolean(section.collapsible && section.title);
           const isOpen = isCollapsible ? openSectionKey === sectionKey : true;
+
+          // When collapsed:
+          // 1. Dashboard group is ALWAYS shown in rail (home icon)
+          // 2. The active / open group is shown in rail
+          // 3. All other inactive groups are hidden in rail
+          if (
+            collapsed &&
+            isCollapsible &&
+            sectionKey !== currentGroupKey &&
+            section.id !== 'dashboard' &&
+            section.id !== 'overview'
+          ) {
+            return null;
+          }
 
           return (
             <div

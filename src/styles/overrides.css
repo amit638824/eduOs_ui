@@ -3469,6 +3469,13 @@ body.dark_mode .sca-db-org-switcher__status.is-active {
   padding-top: 4px;
 }
 
+.sca-db-sidebar__group--collapsible:first-of-type,
+.sca-db-sidebar__group:first-child.sca-db-sidebar__group--collapsible {
+  border-top: none !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
 .sca-db-sidebar__section-header {
   padding: 10px 16px 8px 20px !important;
   cursor: pointer !important;
@@ -3628,6 +3635,8 @@ body.dark_mode .sca-db-org-switcher__status.is-active {
 /* Confirm Button: Filled Color Button with Smooth Hover & Shadow */
 .swal2-styled.swal2-confirm,
 .ms-swal-confirm {
+  background: #10b981 !important;
+  background-color: #10b981 !important;
   border: none !important;
   color: #ffffff !important;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25) !important;
@@ -3682,4 +3691,52 @@ body.dark_mode .swal2-styled.swal2-cancel:hover,
   background-color: #1e293b !important;
   border-color: #475569 !important;
   color: #f8fafc !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Auth Alert Error Message Box (Login, Forgot Password, Reset Password)
+   Soft pink background, red border with prominent left accent stripe
+   ══════════════════════════════════════════════════════════════════ */
+.auth-alert,
+.auth-alert--error,
+.ms-login-error {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 16px !important;
+  margin: 0 0 16px 0 !important;
+  border-radius: 10px !important;
+  background: #fef2f2 !important;
+  background-color: #fef2f2 !important;
+  border: 1px solid #fca5a5 !important;
+  border-left: 5px solid #dc2626 !important;
+  color: #991b1b !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08) !important;
+}
+
+.auth-alert--success {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 10px 16px !important;
+  margin: 0 0 16px 0 !important;
+  border-radius: 10px !important;
+  background: #f0fdf4 !important;
+  background-color: #f0fdf4 !important;
+  border: 1px solid #86efac !important;
+  border-left: 5px solid #16a34a !important;
+  color: #166534 !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  line-height: 1.45 !important;
+  box-shadow: 0 1px 3px rgba(22, 163, 74, 0.08) !important;
 }
