@@ -35,6 +35,15 @@ export default function LoginPage() {
   const [mfaCode, setMfaCode] = useState('');
   const [rememberMe, setRememberMe] = useState(() => Boolean(remembered));
 
+  // Auto-dismiss error after 5 seconds
+  useEffect(() => {
+    if (!apiError) return;
+    const timer = window.setTimeout(() => {
+      setApiError('');
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [apiError]);
+
   const {
     register: registerLogin,
     handleSubmit: handleLoginSubmit,

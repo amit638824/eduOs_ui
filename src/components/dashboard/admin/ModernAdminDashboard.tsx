@@ -33,17 +33,17 @@ const COPY: Record<DashboardRole, {
     stepperHint: 'Step-by-step progress from question bank to student assignment',
     footer: 'Follow the five steps from left to right.',
     steps: [
-      { title: 'Question Bank', desc: 'Add questions', href: '/dashboard/admin-question-bank' },
-      { title: 'Exam Details', desc: 'Name, time, rules', href: '/dashboard/create-test' },
-      { title: 'Add Questions', desc: 'Build the paper', href: '/dashboard/admin-course' },
-      { title: 'Publish', desc: 'Make it available', href: '/dashboard/admin-course' },
-      { title: 'Assign', desc: 'Students can start', href: '/dashboard/admin-course' },
+      { title: 'Question Bank', desc: 'Add Questions', href: '/dashboard/admin-question-bank' },
+      { title: 'Exam Details', desc: 'Name, Duration & Rules', href: '/dashboard/create-test' },
+      { title: 'Add Questions', desc: 'Create the Exam Paper', href: '/dashboard/admin-course' },
+      { title: 'Publish', desc: 'Make the Exam Available', href: '/dashboard/admin-course' },
+      { title: 'Assign', desc: 'Allow Students to Start', href: '/dashboard/admin-course' },
     ],
     banner: [
-      { href: '/dashboard/create-test', title: 'Create Tests', hint: 'Build custom assessments' },
-      { href: '/dashboard/admin-students', title: 'Manage Students', hint: 'Track progress & performance' },
-      { href: '/dashboard/admin-reviews', title: 'View Reports', hint: 'Get detailed insights' },
-      { href: '/dashboard/admin-question-bank', title: 'Question Bank', hint: 'Organize & reuse questions' },
+      { href: '/dashboard/create-test', title: 'Create Tests', hint: 'Build Custom Assessments' },
+      { href: '/dashboard/admin-students', title: 'Manage Students', hint: 'Track Progress & Performance' },
+      { href: '/dashboard/admin-reviews', title: 'View Reports', hint: 'Get Detailed Insights' },
+      { href: '/dashboard/admin-question-bank', title: 'Question Bank', hint: 'Organize & Reuse Questions' },
     ],
     primary: { href: '/dashboard/create-test', label: 'Create New Test' },
     quick: [
@@ -62,17 +62,17 @@ const COPY: Record<DashboardRole, {
     stepperHint: 'Build a paper, publish it, then assign it to students',
     footer: 'Follow the five steps from left to right.',
     steps: [
-      { title: 'Question Bank', desc: 'Add questions', href: '/dashboard/admin-question-bank' },
-      { title: 'Exam Details', desc: 'Name, time, rules', href: '/dashboard/create-test' },
-      { title: 'Add Questions', desc: 'Build the paper', href: '/dashboard/teacher-course' },
-      { title: 'Publish', desc: 'Make it available', href: '/dashboard/teacher-course' },
-      { title: 'Assign', desc: 'Students can start', href: '/dashboard/teacher-assignments' },
+      { title: 'Question Bank', desc: 'Add Questions', href: '/dashboard/admin-question-bank' },
+      { title: 'Exam Details', desc: 'Name, Duration & Rules', href: '/dashboard/create-test' },
+      { title: 'Add Questions', desc: 'Create the Exam Paper', href: '/dashboard/teacher-course' },
+      { title: 'Publish', desc: 'Make the Exam Available', href: '/dashboard/teacher-course' },
+      { title: 'Assign', desc: 'Allow Students to Start', href: '/dashboard/teacher-assignments' },
     ],
     banner: [
-      { href: '/dashboard/create-test', title: 'Create Tests', hint: 'Build custom assessments' },
+      { href: '/dashboard/create-test', title: 'Create Tests', hint: 'Build Custom Assessments' },
       { href: '/dashboard/teacher-course', title: 'Tests', hint: 'Review and publish papers' },
       { href: '/dashboard/teacher-reviews', title: 'View Reports', hint: 'See student scores' },
-      { href: '/dashboard/admin-question-bank', title: 'Question Bank', hint: 'Organize & reuse questions' },
+      { href: '/dashboard/admin-question-bank', title: 'Question Bank', hint: 'Organize & Reuse Questions' },
     ],
     primary: { href: '/dashboard/create-test', label: 'Create New Test' },
     quick: [
@@ -237,7 +237,7 @@ function tagColor(tag: string): string {
 
 export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAdminDashboardProps) {
   const { user } = useAuth();
-  const [timeFilter, setTimeFilter] = useState<'Last 7 days' | 'Last 30 days' | 'This Month'>('Last 7 days');
+  const [timeFilter, setTimeFilter] = useState<'All' | 'Last 7 Days' | 'Last 30 Days'>('All');
   const [subjectMonth, setSubjectMonth] = useState<'This Month' | 'Last Month' | 'All Time'>('This Month');
   const [dash, setDash] = useState<AdminDashboardData | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -300,7 +300,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
     return open === -1 ? 5 : open + 1;
   }, [dash]);
 
-  const performanceKey = timeFilter === 'Last 30 days' ? 'last30' : timeFilter === 'This Month' ? 'month' : 'last7';
+  const performanceKey = timeFilter === 'Last 7 Days' ? 'last7' : timeFilter === 'Last 30 Days' ? 'last30' : 'month';
   const performance = dash?.performance[performanceKey] ?? [];
   const chart = chartGeometry(performance.map((point) => point.value));
   const chartBadge = performance.length
@@ -514,7 +514,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
           <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
             <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
           </svg>
-          <span>{trends.tests}%</span> <span className="trend-lbl">from last month</span>
+          <span>{trends.tests}%</span> <span className="trend-lbl">Compared to Last Month</span>
         </div>
       </div>
 
@@ -560,7 +560,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
           <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
             <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
           </svg>
-          <span>{trends.students}%</span> <span className="trend-lbl">from last month</span>
+          <span>{trends.students}%</span> <span className="trend-lbl">Compared to Last Month</span>
         </div>
       </div>
 
@@ -606,7 +606,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
           <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
             <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
           </svg>
-          <span>{trends.attempts}%</span> <span className="trend-lbl">from last month</span>
+          <span>{trends.attempts}%</span> <span className="trend-lbl">Compared to Last Month</span>
         </div>
       </div>
 
@@ -653,7 +653,7 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
           <svg viewBox="0 0 16 16" fill="currentColor" width="12" height="12" className="trend-arrow">
             <path d="M8 2.5l4.5 4.5-1.1 1.1L8.8 5.5v8H7.2v-8L4.6 8.1 3.5 7 8 2.5z" />
           </svg>
-          <span>{trends.averageScore}%</span> <span className="trend-lbl">from last month</span>
+          <span>{trends.averageScore}%</span> <span className="trend-lbl">Compared to Last Month</span>
         </div>
       </div>
     </div>
@@ -1009,9 +1009,9 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
                 className="mad-v3-select"
                 aria-label="Filter timeline"
               >
-                <option value="Last 7 days">Last 7 days</option>
-                <option value="Last 30 days">Last 30 days</option>
-                <option value="This Month">This Month</option>
+                <option value="All">All</option>
+                <option value="Last 7 Days">Last 7 Days</option>
+                <option value="Last 30 Days">Last 30 Days</option>
               </select>
               <svg viewBox="0 0 20 20" fill="currentColor" width="12" height="12" className="mad-v3-select-chevron">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />

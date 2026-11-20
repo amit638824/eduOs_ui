@@ -12,15 +12,17 @@ export async function confirmDelete(options?: {
   title?: string;
   text?: string;
   confirmText?: string;
+  confirmColor?: string;
+  cancelColor?: string;
 }): Promise<boolean> {
   const result = await base.fire({
     title: options?.title ?? 'Are you sure?',
     text: options?.text ?? "You won't be able to revert this!",
     icon: 'warning',
     showCancelButton: true,
-    confirmButtonColor: '#3085d6',
-    cancelButtonColor: '#d33',
-    confirmButtonText: options?.confirmText ?? 'Yes, delete it!',
+    confirmButtonColor: options?.confirmColor ?? '#10b981',
+    cancelButtonColor: options?.cancelColor ?? '#ef4444',
+    confirmButtonText: options?.confirmText ?? 'Yes, Delete It!',
     cancelButtonText: 'Cancel',
   });
   return result.isConfirmed;

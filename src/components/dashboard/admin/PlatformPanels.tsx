@@ -3651,12 +3651,27 @@ export function OrgStructurePanel() {
   const { selectedOrg } = useOrgScope();
   const [branchId, setBranchId] = useState('');
   const [deptName, setDeptName] = useState('');
+  const [deptNameError, setDeptNameError] = useState('');
   const [editingDeptId, setEditingDeptId] = useState<string | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isAddingBranch, setIsAddingBranch] = useState(false);
   const [newBranchName, setNewBranchName] = useState('');
   const [branchError, setBranchError] = useState('');
   const withLoader = useDashboardLoader();
+
+  // Helper: capitalize first letter and convert remaining letters to lowercase
+  const formatSentenceCase = (text: string) => {
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  };
+
+  // Always keep "Main Campus" as first option in list
+  const sortedBranches = useMemo(() => {
+    if (!branches || branches.length === 0) return [];
+    const main = branches.filter((b) => /main campus/i.test(b.name));
+    const others = branches.filter((b) => !/main campus/i.test(b.name));
+    return [...main, ...others];
+  }, [branches]);
 
   const {
     items: departments,
@@ -3680,9 +3695,14 @@ export function OrgStructurePanel() {
     enabled: Boolean(branchId),
   });
 
+  // Automatically select Main Campus by default on load
   useEffect(() => {
-    if (branches[0] && !branchId) setBranchId(branches[0].id);
-  }, [branches, branchId]);
+    if (sortedBranches.length > 0) {
+      if (!branchId || !sortedBranches.some((b) => b.id === branchId)) {
+        setBranchId(sortedBranches[0].id);
+      }
+    }
+  }, [sortedBranches, branchId]);
 
   useDashboardLoadingEffect(orgLoading || deptLoading);
 
@@ -3700,6 +3720,7 @@ export function OrgStructurePanel() {
   const openAddDrawer = () => {
     setEditingDeptId(null);
     setDeptName('');
+    setDeptNameError('');
     setIsAddingBranch(false);
     setNewBranchName('');
     setBranchError('');
@@ -3710,6 +3731,7 @@ export function OrgStructurePanel() {
     setIsDrawerOpen(false);
     setEditingDeptId(null);
     setDeptName('');
+    setDeptNameError('');
     setIsAddingBranch(false);
     setNewBranchName('');
     setBranchError('');
@@ -3746,26 +3768,45 @@ export function OrgStructurePanel() {
   const startEditDept = (d: { id: string; name: string }) => {
     setEditingDeptId(d.id);
     setDeptName(d.name);
+    setDeptNameError('');
     setIsDrawerOpen(true);
   };
 
   const saveDept = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!branchId || !deptName.trim()) return;
+    setDeptNameError('');
+    if (isAddingBranch) {
+      setBranchError('Please complete or cancel adding the new branch first.');
+      return;
+    }
+    const trimmed = deptName.trim();
+    if (!trimmed) {
+      setDeptNameError('Department name is required.');
+      return;
+    }
+    if (trimmed.length < 2) {
+      setDeptNameError('Department name must be at least 2 characters.');
+      return;
+    }
+    if (!branchId) {
+      setDeptNameError('Please select a branch or campus.');
+      return;
+    }
     setError('');
     await withLoader(async () => {
       try {
         if (editingDeptId) {
-          await platformService.updateDepartment(editingDeptId, { name: deptName.trim() });
+          await platformService.updateDepartment(editingDeptId, { name: trimmed });
           showSuccess('Updated', 'Department updated successfully.');
         } else {
-          await platformService.createDepartment(branchId, { name: deptName.trim() });
+          await platformService.createDepartment(branchId, { name: trimmed });
           showSuccess('Created', 'Department added successfully.');
         }
         closeDrawer();
         await reloadDepartments();
       } catch (err) {
         setError(parseApiError(err));
+        setDeptNameError(parseApiError(err));
       }
     });
   };
@@ -3799,7 +3840,7 @@ export function OrgStructurePanel() {
         <div className="org-top-text">
           <h1 className="org-page-title">Departments</h1>
           <p className="org-page-desc">
-            Organize institutional branches, academic departments, division faculties, and curriculum structures.
+            Manage institutional branches, academic departments, divisions, faculties, and curriculum structures.
           </p>
         </div>
 
@@ -3831,14 +3872,14 @@ export function OrgStructurePanel() {
               </span>
             </div>
             <p className="org-card-subtitle">
-              Campus: <strong>{selectedBranchName}</strong> · Manage division curriculums and subject faculties
+              Campus: <strong>{selectedBranchName}</strong> · Manage academic divisions, curricula, and subject faculties
             </p>
           </div>
 
           <div className="org-controls-row">
             {/* Branch Switcher if multiple branches */}
-            {branches.length > 1 && (
-              <div >
+            {sortedBranches.length > 1 && (
+              <div>
                 <select
                   className="org-form-select"
                   style={{ padding: '6px 12px', fontSize: '0.8125rem' }}
@@ -3846,7 +3887,7 @@ export function OrgStructurePanel() {
                   onChange={(e) => setBranchId(e.target.value)}
                   aria-label="Select Branch"
                 >
-                  {branches.map((b) => (
+                  {sortedBranches.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name}
                     </option>
@@ -3987,12 +4028,12 @@ export function OrgStructurePanel() {
             </div>
             <div>
               <h3 className="org-drawer-title">
-                {editingDeptId ? 'Edit Department' : 'Add Department'}
+                {editingDeptId ? 'Edit Department' : 'Create Department'}
               </h3>
               <p className="org-drawer-desc">
                 {editingDeptId
                   ? 'Update academic division details and curriculum assignment.'
-                  : 'Add a new department to organize courses and faculties.'}
+                  : 'Create a new department to organize courses and faculty members.'}
               </p>
             </div>
           </div>
@@ -4037,13 +4078,13 @@ export function OrgStructurePanel() {
                     value={branchId}
                     onChange={(e) => setBranchId(e.target.value)}
                   >
-                    {branches.map((b) => (
+                    {sortedBranches.map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.name}
                       </option>
                     ))}
                   </select>
-                  <span className="org-form-hint">Selected campus branch for this department.</span>
+                  <span className="org-form-hint">Select a branch or campus for this department.</span>
                 </>
               ) : (
                 <div style={{
@@ -4076,8 +4117,15 @@ export function OrgStructurePanel() {
                     placeholder="e.g. North Campus, Second Branch..."
                     value={newBranchName}
                     onChange={(e) => {
-                      setNewBranchName(e.target.value);
+                      setNewBranchName(formatSentenceCase(e.target.value));
                       if (branchError) setBranchError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        void saveNewBranch();
+                      }
                     }}
                     autoFocus
                   />
@@ -4086,19 +4134,11 @@ export function OrgStructurePanel() {
                       {branchError}
                     </span>
                   )}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <button
-                      type="button"
-                      className="org-add-btn"
-                      style={{ height: 32, padding: '0 14px', fontSize: '0.8rem', borderRadius: 6 }}
-                      onClick={() => void saveNewBranch()}
-                    >
-                      Save Branch
-                    </button>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, marginTop: 4 }}>
                     <button
                       type="button"
                       className="org-drawer-cancel"
-                      style={{ height: 32, padding: '0 12px', fontSize: '0.8rem', borderRadius: 6 }}
+                      style={{ height: 36, padding: '0 16px', fontSize: '0.825rem', borderRadius: 6, minWidth: 90 }}
                       onClick={() => {
                         setIsAddingBranch(false);
                         setBranchError('');
@@ -4106,33 +4146,55 @@ export function OrgStructurePanel() {
                     >
                       Cancel
                     </button>
+                    <button
+                      type="button"
+                      className="org-add-btn"
+                      style={{ height: 36, padding: '0 16px', fontSize: '0.825rem', borderRadius: 6, minWidth: 100 }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        void saveNewBranch();
+                      }}
+                    >
+                      Save Branch
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
             <div className="org-form-field">
-              <label className="org-form-label">
+              <label className="org-form-label" htmlFor="drawerDeptName">
                 Department Name <span className="org-required-star">*</span>
               </label>
               <input
+                id="drawerDeptName"
                 className="org-form-input"
                 placeholder="e.g. Computer Science & Engineering"
                 value={deptName}
-                onChange={(e) => setDeptName(e.target.value)}
+                onChange={(e) => {
+                  setDeptName(formatSentenceCase(e.target.value));
+                  if (deptNameError) setDeptNameError('');
+                }}
+                required
                 autoFocus
               />
+              {deptNameError && (
+                <span style={{ color: '#dc2626', fontSize: '0.8rem', fontWeight: 500, marginTop: 4, display: 'block' }}>
+                  {deptNameError}
+                </span>
+              )}
               <span className="org-form-hint">E.g. Electrical Engineering, Business Management, Mathematics.</span>
             </div>
           </div>
 
-          {/* Drawer Footer (Cancel & Submit 50-50 width) */}
+          {/* Drawer Footer (Cancel & Submit with uniform size and sequence) */}
           <div className="org-drawer-footer">
-            <button type="button" className="org-drawer-cancel" onClick={closeDrawer}>
+            <button type="button" className="org-drawer-cancel" onClick={closeDrawer} style={{ height: 42, minWidth: 120 }}>
               Cancel
             </button>
-            <button type="submit" className="org-drawer-submit">
-              {editingDeptId ? 'Save Changes' : 'Create'}
+            <button type="submit" className="org-drawer-submit" style={{ height: 42, minWidth: 160 }}>
+              {editingDeptId ? 'Update Department' : 'Create Department'}
             </button>
           </div>
         </form>

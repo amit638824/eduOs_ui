@@ -279,9 +279,9 @@ export function OrganizationsPanel() {
 
   const remove = async (org: Organization) => {
     const ok = await confirmDelete({
-      title: 'Delete organization?',
-      text: `“${org.name}” will be soft-deleted. You won’t be able to revert this easily.`,
-      confirmText: 'Yes, delete it!',
+      title: 'Delete Organization?',
+      text: `Are you sure you want to delete ${org.name}? This action will permanently remove the organization and restrict access for all associated users.`,
+      confirmText: 'Yes, Delete It!',
     });
     if (!ok) return;
     setError('');
@@ -312,8 +312,7 @@ export function OrganizationsPanel() {
         <div className="org-top-text">
           <h1 className="org-page-title">Organizations</h1>
           <p className="org-page-desc">
-            Multi-vendor control — add vendors, approve access, then switch org in the top bar to manage
-            their students, teachers, exams and results.
+            Multi-vendor management — add organizations, review and approve access requests, and switch between organizations using the top navigation bar to manage their students, teachers, examinations, and results.
           </p>
         </div>
 
@@ -342,10 +341,10 @@ export function OrganizationsPanel() {
             <div className="org-title-row">
               <h3 className="org-card-title">All Organizations</h3>
               <span className="org-count-badge">
-                {pagination.total} {pagination.total === 1 ? 'Vendor' : 'Vendors'}
+                {pagination.total} {pagination.total === 1 ? 'Organization' : 'Organizations'}
               </span>
             </div>
-            <p className="org-card-subtitle">Manage and monitor platform vendor organizations</p>
+            <p className="org-card-subtitle">Manage, monitor, and oversee all registered organizations on the platform.</p>
           </div>
 
           <div className="org-controls-row">
@@ -416,8 +415,8 @@ export function OrganizationsPanel() {
               <thead>
                 <tr>
                   <th>Organization</th>
-                  <th>Users</th>
-                  <th>Created Date</th>
+                  <th>Total users</th>
+                  <th>Created date</th>
                   <th>Status</th>
                   <th className="edtp-th-actions">Actions</th>
                 </tr>
@@ -427,7 +426,7 @@ export function OrganizationsPanel() {
                   <tr key={org.id}>
                     {/* Organization Cell */}
                     <td>
-                      <div className="org-cell-flex">
+                      <div className="org-cell-flex" style={{ whiteSpace: 'nowrap' }}>
                         <div className="org-avatar-badge">
                           {org.logoUrl ? (
                             <img src={org.logoUrl} alt={org.name} />
@@ -435,8 +434,8 @@ export function OrganizationsPanel() {
                             getInitials(org.name)
                           )}
                         </div>
-                        <div className="org-name-meta">
-                          <span className="org-name-text">{org.name}</span>
+                        <div className="org-name-meta" style={{ whiteSpace: 'nowrap' }}>
+                          <span className="org-name-text" style={{ whiteSpace: 'nowrap' }}>{org.name}</span>
                           {typeof org.settings?.contactEmail === 'string' && org.settings.contactEmail ? (
                             <span
                               className="org-sub-meta"
@@ -559,12 +558,12 @@ export function OrganizationsPanel() {
             </div>
             <div>
               <h3 className="org-drawer-title">
-                {editingId ? 'Edit Organization' : 'Create Organization'}
+                {editingId ? 'Update Organization' : 'Create Organization'}
               </h3>
               <p className="org-drawer-desc">
                 {editingId
-                  ? 'Update details and save changes'
-                  : 'Onboard a new vendor organization'}
+                  ? 'Modify the organization details and save your changes.'
+                  : 'Register a new organization on the platform.'}
               </p>
             </div>
           </div>
@@ -643,8 +642,8 @@ export function OrganizationsPanel() {
             <FormError message={emailError} />
             <span className="org-form-hint">
               {editingId
-                ? 'Used for superadmin communication and notifications.'
-                : 'Org admin will use this email to log in and receive the password setup link.'}
+                ? 'Used for communication and notifications from the Super Administrator.'
+                : 'The organization administrator will use this email address to access the platform and receive the password setup link.'}
             </span>
           </div>
 
@@ -704,12 +703,12 @@ export function OrganizationsPanel() {
           <div className="org-toggle-card">
             <div className="org-toggle-info">
               <span className="org-toggle-title">
-                {activateNow ? 'Activated' : 'Suspended'}
+                Activate Organization
               </span>
               <span className="org-toggle-desc">
-                {activateNow
-                  ? 'Organization can access platform immediately.'
-                  : 'Organization stays inactive until activated.'}
+                {editingId
+                  ? 'Allow the organization to access the platform immediately.'
+                  : 'Enable immediate platform access for the organization.'}
               </span>
             </div>
             <button
@@ -735,7 +734,7 @@ export function OrganizationsPanel() {
             onClick={() => void save()}
             id="btnSubmitOrgDrawer"
           >
-            {editingId ? 'Save Changes' : 'Create'}
+            {editingId ? 'Update Organization' : 'Create Organization'}
           </button>
         </div>
       </aside>

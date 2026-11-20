@@ -20,7 +20,6 @@ import InstructorPage from '@/pages/InstructorPage';
 import InstructorDetailsPage from '@/pages/InstructorDetailsPage';
 import EdulebPricingPage from '@/pages/EdulebPricingPage';
 import EdulebNotFoundPage from '@/pages/EdulebNotFoundPage';
-import ExamsPage from '@/pages/ExamsPage';
 import ExamSlugPage from '@/pages/ExamSlugPage';
 import HelpPage from '@/pages/HelpPage';
 import PrivacyPage from '@/pages/PrivacyPage';
@@ -101,8 +100,6 @@ export default function App() {
                 />
                 <Route path="/pricing" element={<EdulebPricingPage />} />
                 <Route path="/not-found-demo" element={<EdulebNotFoundPage />} />
-
-                <Route path="/exams" element={<ExamsPage />} />
 
                 <Route
                   path="/exams/:slug"
