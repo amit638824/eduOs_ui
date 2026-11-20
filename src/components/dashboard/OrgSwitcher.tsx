@@ -57,20 +57,21 @@ export default function OrgSwitcher() {
     if (!nonAdminOrgName || nonAdminOrgName === 'Loading…') return null;
 
     return (
-      <div className="sca-db-org-switcher" title="Active Organization">
+      <div className="sca-db-org-switcher sca-db-org-switcher--readonly" title={nonAdminOrgName}>
         <span className="sca-db-org-switcher__icon" aria-hidden>
-          <i className="icofont-building-alt" />
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+            <rect x="3" y="2" width="14" height="16" rx="2" />
+            <path d="M7 6h2M11 6h2M7 10h2M11 10h2M7 14h2M11 14h2" />
+          </svg>
         </span>
-        <div className="sca-db-org-switcher__control">
+        <div className="sca-db-org-switcher__text">
           <span className="sca-db-org-switcher__label">Organization</span>
-          <span
-            className="sca-db-org-switcher__value"
-            style={{ fontWeight: 600, padding: '2px 0', fontSize: '0.85rem' }}
-          >
-            {nonAdminOrgName}
-          </span>
+          <span className="sca-db-org-switcher__name">{nonAdminOrgName}</span>
         </div>
-        <span className="sca-db-org-switcher__status is-active">Active</span>
+        <span className="sca-db-org-switcher__status is-active">
+          <span className="sca-db-org-switcher__status-dot" />
+          Active
+        </span>
       </div>
     );
   }
@@ -80,40 +81,56 @@ export default function OrgSwitcher() {
   return (
     <div
       ref={rootRef}
-      className={`sca-db-org-switcher${open ? ' is-open' : ''}`}
-      title="Switch organization context"
+      className={`sca-db-org-switcher-wrap${open ? ' is-open' : ''}`}
     >
-      <span className="sca-db-org-switcher__icon" aria-hidden>
-        <i className="icofont-building-alt" />
-      </span>
-      <div className="sca-db-org-switcher__control">
-        <span className="sca-db-org-switcher__label" id={`${listId}-label`}>
-          Organization
+      <button
+        type="button"
+        id="sca-org-scope-select"
+        className={`sca-db-org-switcher${open ? ' is-open' : ''}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={listId}
+        disabled={disabled}
+        onClick={() => setOpen((prev) => !prev)}
+        title={currentName}
+      >
+        <span className="sca-db-org-switcher__icon" aria-hidden>
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+            <rect x="3" y="2" width="14" height="16" rx="2" />
+            <path d="M7 6h2M11 6h2M7 10h2M11 10h2M7 14h2M11 14h2" />
+          </svg>
         </span>
-        <button
-          type="button"
-          id="sca-org-scope-select"
-          className="sca-db-org-switcher__trigger"
-          aria-haspopup="listbox"
-          aria-expanded={open}
-          aria-controls={listId}
-          aria-labelledby={`${listId}-label`}
-          disabled={disabled}
-          onClick={() => setOpen((prev) => !prev)}
+
+        <div className="sca-db-org-switcher__text">
+          <span className="sca-db-org-switcher__label">Organization</span>
+          <span className="sca-db-org-switcher__name">{currentName}</span>
+        </div>
+
+        {selectedOrg && (
+          <span
+            className={`sca-db-org-switcher__status ${
+              selectedOrg.isActive ? 'is-active' : 'is-pending'
+            }`}
+          >
+            <span className="sca-db-org-switcher__status-dot" />
+            {selectedOrg.isActive ? 'Active' : 'Pending'}
+          </span>
+        )}
+
+        <svg
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          width="14"
+          height="14"
+          className={`sca-db-org-switcher__chevron${open ? ' is-open' : ''}`}
         >
-          <span className="sca-db-org-switcher__value">{currentName}</span>
-          <i className={`icofont-simple-down sca-db-org-switcher__chevron${open ? ' is-open' : ''}`} />
-        </button>
-      </div>
-      {selectedOrg && (
-        <span
-          className={`sca-db-org-switcher__status ${
-            selectedOrg.isActive ? 'is-active' : 'is-pending'
-          }`}
-        >
-          {selectedOrg.isActive ? 'Active' : 'Pending'}
-        </span>
-      )}
+          <path
+            fillRule="evenodd"
+            d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            clipRule="evenodd"
+          />
+        </svg>
+      </button>
 
       <ul
         id={listId}
@@ -122,6 +139,10 @@ export default function OrgSwitcher() {
         aria-labelledby={`${listId}-label`}
         aria-hidden={!open}
       >
+        <li className="sca-db-org-switcher__menu-head" role="presentation">
+          <span>Select Organization</span>
+          <span className="sca-db-org-switcher__menu-count">{organizations.length} total</span>
+        </li>
         {organizations.length === 0 ? (
           <li className="sca-db-org-switcher__empty" role="presentation">
             {loading ? 'Loading…' : 'No organizations'}
@@ -142,14 +163,31 @@ export default function OrgSwitcher() {
                     setOpen(false);
                   }}
                 >
-                  <span className="sca-db-org-switcher__option-name">{org.name}</span>
-                  <span
-                    className={`sca-db-org-switcher__option-badge ${
-                      org.isActive ? 'is-active' : 'is-pending'
-                    }`}
-                  >
-                    {org.isActive ? 'Active' : 'Pending'}
+                  <span className="sca-db-org-switcher__option-left">
+                    <span className="sca-db-org-switcher__option-icon">
+                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
+                        <rect x="3" y="2" width="14" height="16" rx="2" />
+                        <path d="M7 6h2M11 6h2M7 10h2M11 10h2M7 14h2M11 14h2" />
+                      </svg>
+                    </span>
+                    <span className="sca-db-org-switcher__option-name" title={org.name}>
+                      {org.name}
+                    </span>
                   </span>
+                  <div className="sca-db-org-switcher__option-right">
+                    <span
+                      className={`sca-db-org-switcher__option-badge ${
+                        org.isActive ? 'is-active' : 'is-pending'
+                      }`}
+                    >
+                      {org.isActive ? 'Active' : 'Pending'}
+                    </span>
+                    {selected && (
+                      <svg viewBox="0 0 20 20" fill="currentColor" width="16" height="16" className="sca-db-org-switcher__option-check">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
                 </button>
               </li>
             );

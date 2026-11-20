@@ -593,7 +593,7 @@ export default function HomePage() {
                         name="message"
                         rows={3}
                         maxLength={300}
-                        placeholder="Tell us about student count, types of exams, or preferred demo timings."
+                        placeholder="Tell us about student count, types of exams, or preferred demo timings... (Max 300 characters)"
                         value={formData.message}
                         onChange={handleChange}
                         onBlur={handleBlur}
