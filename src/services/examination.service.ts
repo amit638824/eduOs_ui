@@ -1003,6 +1003,7 @@ export async function updateProfile(input: {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  avatarUrl?: string | null;
 }) {
   suppressRealtimeNotification(/profile/i, 8000);
   suppressToast(/profile/i, 8000);

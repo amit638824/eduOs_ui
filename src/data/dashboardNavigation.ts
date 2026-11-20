@@ -26,6 +26,8 @@ export function buildDashboardProfile(
   role: DashboardRole,
 ): DashboardProfile {
   const name = fullName(user);
+  const cachedAvatar = typeof window !== 'undefined' && user?.id ? (localStorage.getItem(`mindsprint_avatar_${user.id}`) || '') : '';
+  const resolvedAvatar = resolveImageUrl(user.avatarUrl) || resolveImageUrl(cachedAvatar);
 
   const profiles: Record<
     DashboardRole,
@@ -33,7 +35,7 @@ export function buildDashboardProfile(
   > = {
     student: {
       role: 'student',
-      image: resolveImageUrl(user.avatarUrl) || defaultImages.student,
+      image: resolvedAvatar || defaultImages.student,
       innerClass: 'student__dashboard__inner',
       stats: [
         {
@@ -54,7 +56,7 @@ export function buildDashboardProfile(
     teacher: {
       role: 'teacher',
       greeting: 'Hello',
-      image: resolveImageUrl(user.avatarUrl) || defaultImages.teacher,
+      image: resolvedAvatar || defaultImages.teacher,
       showRating: true,
       cta: {
         label: 'Create Test',
@@ -65,7 +67,7 @@ export function buildDashboardProfile(
     admin: {
       role: 'admin',
       greeting: 'Hello',
-      image: resolveImageUrl(user.avatarUrl) || defaultImages.admin,
+      image: resolvedAvatar || defaultImages.admin,
       innerClass: 'admin__dashboard__inner',
       showRating: true,
       cta: {
@@ -115,10 +117,12 @@ export function buildDashboardNavigation(
     if (superAdmin) {
       return [
         {
-          id: 'overview',
+          id: 'dashboard',
+          title: 'Dashboard',
+          collapsible: true,
           items: [
             {
-              label: 'Dashboard',
+              label: 'Overview',
               href: `${base}/admin-dashboard`,
               icon: 'home',
             },
@@ -247,10 +251,12 @@ export function buildDashboardNavigation(
     if (staffOnly) {
       return [
         {
-          id: 'overview',
+          id: 'dashboard',
+          title: 'Dashboard',
+          collapsible: true,
           items: [
             {
-              label: 'Dashboard',
+              label: 'Overview',
               href: `${base}/admin-dashboard`,
               icon: 'home',
             },
@@ -341,10 +347,12 @@ export function buildDashboardNavigation(
      */
     return [
       {
-        id: 'overview',
+        id: 'dashboard',
+        title: 'Dashboard',
+        collapsible: true,
         items: [
           {
-            label: 'Dashboard',
+            label: 'Overview',
             href: `${base}/admin-dashboard`,
             icon: 'home',
           },
@@ -468,10 +476,12 @@ export function buildDashboardNavigation(
   if (role === 'teacher') {
     return [
       {
-        id: 'overview',
+        id: 'dashboard',
+        title: 'Dashboard',
+        collapsible: true,
         items: [
           {
-            label: 'Dashboard',
+            label: 'Overview',
             href: `${base}/teacher-dashboard`,
             icon: 'home',
           },
@@ -540,10 +550,12 @@ export function buildDashboardNavigation(
    */
   return [
     {
-      id: 'overview',
+      id: 'dashboard',
+      title: 'Dashboard',
+      collapsible: true,
       items: [
         {
-          label: 'Dashboard',
+          label: 'Overview',
           href: `${base}/student-dashboard`,
           icon: 'home',
         },

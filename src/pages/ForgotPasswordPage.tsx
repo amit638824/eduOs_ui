@@ -14,13 +14,12 @@ export default function ForgotPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!apiError && !message) return;
+    if (!apiError) return;
     const timer = window.setTimeout(() => {
       setApiError('');
-      setMessage('');
     }, 5000);
     return () => window.clearTimeout(timer);
-  }, [apiError, message]);
+  }, [apiError]);
 
   useEffect(() => {
     if (!message) return;
@@ -42,7 +41,10 @@ export default function ForgotPasswordPage() {
   });
 
   const onInvalid = () => {
-    setApiError('Please enter a registered email address.');
+    setApiError('');
+    setTimeout(() => {
+      setApiError('Please enter a valid email address.');
+    }, 10);
   };
 
   const onSubmit = async (values: ForgotPasswordFormValues) => {
@@ -69,14 +71,14 @@ export default function ForgotPasswordPage() {
         errMessage.toLowerCase().includes('validation failed') ||
         errMessage.toLowerCase().includes('validation')
       ) {
-        setApiError('Please enter a registered email address.');
+        setApiError('Please enter a valid email address.');
       } else if (
         errMessage.toLowerCase().includes('not registered') ||
         errMessage.toLowerCase().includes('not found') ||
         errMessage.toLowerCase() === 'user' ||
         errMessage.toLowerCase().includes('does not exist')
       ) {
-        setApiError('This email address is not registered. Please enter a registered email address.');
+        setApiError('This email id is not registered with us.');
       } else {
         setApiError(errMessage);
       }

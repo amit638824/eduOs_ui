@@ -729,38 +729,9 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
     </div>
   );
 
-  return (
-    <div className="mad-v3-root">
-      {pageError && (
-        <div className="mad-alert-error" role="alert">
-          <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
-            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-          </svg>
-          <span>{pageError}</span>
-        </div>
-      )}
 
-      {/* ── ROW 1: Hero Welcome Banner (Full width for student, Left 72% for admin/teacher) + Quick Actions (Right 28% for admin/teacher) ── */}
-      {role === 'student' ? (
-        renderWelcomeBanner(true)
-      ) : (
-        <div className="mad-v3-top-grid mad-v3-banner-row">
-          <div className="mad-v3-left-col">
-            {renderWelcomeBanner(false)}
-          </div>
-          <div className="mad-v3-right-col">
-            {renderQuickActions()}
-          </div>
-        </div>
-      )}
-
-      {/* ── ROW 2: 4 Stat Metric Cards (Full width 100% across page for ALL roles) ── */}
-      {renderStatsRow()}
-
-      {/* ── ROW 3: Workflow Guide (Left 72%) + Recent Activity (Right 28%) ── */}
-      <div className={`mad-v3-top-grid mad-v3-mid-grid ${role === 'student' ? 'mad-v3-top-grid--student' : ''}`}>
-        <div className="mad-v3-left-col">
-          <div className="mad-v3-stepper-card">
+  const renderStepperCard = () => (
+    <div className="mad-v3-stepper-card">
             <div className="mad-v3-stepper-head">
               <div className="mad-v3-stepper-title-wrap">
                 <div className="mad-v3-stepper-badge-icon">
@@ -922,9 +893,10 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
               </Link>
             </div>
           </div>
-        </div>
-        <div className="mad-v3-right-col">
-          <div className="mad-v3-activity-card">
+  );
+
+  const renderActivityCard = () => (
+    <div className="mad-v3-activity-card">
             <div className="mad-v3-activity-head">
               <div className="mad-v3-act-title-wrap">
                 <svg viewBox="0 0 20 20" fill="none" stroke="#64748B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18" className="mad-v3-clock-icon">
@@ -987,13 +959,10 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
               ))}
             </div>
           </div>
-        </div>
-      </div>
+  );
 
-      {/* ── BOTTOM 3-CARD ROW (FULL WIDTH: 100%) ── */}
-      <div className="mad-v3-bottom-row">
-        {/* Bottom Card 1: Performance Overview */}
-        <div className="mad-v3-bottom-card">
+  const renderPerformanceCard = () => (
+    <div className="mad-v3-bottom-card">
           <div className="mad-v3-card-header">
             <div className="mad-v3-card-title-wrap">
               <svg viewBox="0 0 20 20" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
@@ -1042,9 +1011,10 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
             </svg>
           </div>
         </div>
+  );
 
-        {/* Bottom Card 2: Top Performing Students */}
-        <div className="mad-v3-bottom-card">
+  const renderTopStudentsCard = () => (
+    <div className="mad-v3-bottom-card">
           <div className="mad-v3-card-header">
             <div className="mad-v3-card-title-wrap">
               <svg viewBox="0 0 20 20" fill="#F59E0B" width="18" height="18" className="mad-v3-trophy-icon">
@@ -1077,9 +1047,10 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
             ))}
           </div>
         </div>
+  );
 
-        {/* Bottom Card 3: Subject-wise Performance */}
-        <div className="mad-v3-bottom-card">
+  const renderSubjectPerformanceCard = () => (
+    <div className="mad-v3-bottom-card">
           <div className="mad-v3-card-header">
             <div className="mad-v3-card-title-wrap">
               <svg viewBox="0 0 20 20" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="18" height="18">
@@ -1149,7 +1120,58 @@ export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAd
             </div>
           </div>
         </div>
+  );
+  return (
+    <div className="mad-v3-root">
+      {pageError && (
+        <div className="mad-alert-error" role="alert">
+          <svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
+            <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+          </svg>
+          <span>{pageError}</span>
+        </div>
+      )}
+
+      {/* ── ROW 1: Hero Welcome Banner (Full width for student, Left 72% for admin/teacher) + Quick Actions (Right 28% for admin/teacher) ── */}
+      {role === 'student' ? (
+        renderWelcomeBanner(true)
+      ) : (
+        <div className="mad-v3-top-grid mad-v3-banner-row">
+          <div className="mad-v3-left-col">
+            {renderWelcomeBanner(false)}
+          </div>
+          <div className="mad-v3-right-col">
+            {renderQuickActions()}
+          </div>
+        </div>
+      )}
+
+      {/* ── ROW 2: 4 Stat Metric Cards (Hidden on Admin dashboard) ── */}
+      {role !== 'admin' && renderStatsRow()}
+
+      {/* ── ROW 3: Middle Row ── */}
+      <div className={`mad-v3-top-grid mad-v3-mid-grid ${role === 'student' ? 'mad-v3-top-grid--student' : ''}`}>
+        <div className="mad-v3-left-col">
+          {role === 'admin' ? renderPerformanceCard() : renderStepperCard()}
+        </div>
+        <div className="mad-v3-right-col">
+          {renderActivityCard()}
+        </div>
       </div>
+
+      {/* ── ROW 4: Bottom Cards Row ── */}
+      {role === 'admin' ? (
+        <div className="mad-v3-bottom-row mad-v3-bottom-row--two">
+          {renderTopStudentsCard()}
+          {renderSubjectPerformanceCard()}
+        </div>
+      ) : (
+        <div className="mad-v3-bottom-row">
+          {renderPerformanceCard()}
+          {renderTopStudentsCard()}
+          {renderSubjectPerformanceCard()}
+        </div>
+      )}
     </div>
   );
 }
