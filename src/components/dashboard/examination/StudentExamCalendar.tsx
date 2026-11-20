@@ -11,6 +11,7 @@ import { examinationService } from '@/services';
 import '@/styles/organizations.css';
 import type { ExamTest } from '@/types/examination';
 import { parseApiError } from '@/lib/errors';
+import { formatDate, formatDateTime } from '@/utils/dateFormat';
 
 function getScheduledStart(test: ExamTest): string | null {
   return (
@@ -37,23 +38,6 @@ function getScheduledEnd(test: ExamTest, start: string): string {
     startTime + durationMinutes * 60 * 1000;
 
   return new Date(endTime).toISOString();
-}
-
-function formatDateTime(value: string | null): string {
-  if (!value) {
-    return 'Not scheduled';
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Invalid date';
-  }
-
-  return date.toLocaleString([], {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-  });
 }
 
 export default function StudentExamCalendar() {
@@ -241,13 +225,7 @@ export default function StudentExamCalendar() {
                   <span>Date</span>
 
                   <strong>
-                    {new Date(
-                      selectedStart,
-                    ).toLocaleDateString([], {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
+                    {formatDate(selectedStart)}
                   </strong>
                 </div>
               )}

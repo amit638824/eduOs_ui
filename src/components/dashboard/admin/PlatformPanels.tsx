@@ -5389,18 +5389,44 @@ export function TestBuilderPanel() {
                         <label className="org-form-label">Go Live At</label>
                         <input
                           type="datetime-local"
-                          className="org-form-input"
+                          className="org-form-input org-date-input"
                           value={scheduleStart}
                           onChange={(e) => setScheduleStart(e.target.value)}
+                          onClick={(e) => {
+                            try {
+                              e.currentTarget.showPicker?.();
+                            } catch {}
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key !== 'Tab' && e.key !== 'Escape') {
+                              e.preventDefault();
+                              try {
+                                e.currentTarget.showPicker?.();
+                              } catch {}
+                            }
+                          }}
                         />
                       </div>
                       <div className="org-form-field">
                         <label className="org-form-label">End At</label>
                         <input
                           type="datetime-local"
-                          className="org-form-input"
+                          className="org-form-input org-date-input"
                           value={scheduleEnd}
                           onChange={(e) => setScheduleEnd(e.target.value)}
+                          onClick={(e) => {
+                            try {
+                              e.currentTarget.showPicker?.();
+                            } catch {}
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key !== 'Tab' && e.key !== 'Escape') {
+                              e.preventDefault();
+                              try {
+                                e.currentTarget.showPicker?.();
+                              } catch {}
+                            }
+                          }}
                         />
                       </div>
                     </>

@@ -7,23 +7,13 @@ import {
   getCertificate,
   type Certificate,
 } from '@/services/examination.service';
+import { formatDate } from '@/utils/dateFormat';
 
 function formatCertificateDate(value?: string): string {
   if (!value) {
     return '—';
   }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return date.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
+  return formatDate(value);
 }
 
 export default function CertificatePage() {

@@ -201,8 +201,21 @@ export function FlaggedAttemptsPanel() {
               type="date"
               value={dateFrom}
               onChange={(e) => setDateFrom(e.target.value)}
-              className="org-form-input"
-              style={{ width: 145, height: 32, padding: '2px 8px', fontSize: '0.8rem' }}
+              className="org-form-input org-date-input"
+              style={{ width: 145, height: 32, padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
+              onClick={(e) => {
+                try {
+                  e.currentTarget.showPicker?.();
+                } catch {}
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Tab' && e.key !== 'Escape') {
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.showPicker?.();
+                  } catch {}
+                }
+              }}
             />
           </label>
           <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6, margin: 0 }}>
@@ -211,8 +224,21 @@ export function FlaggedAttemptsPanel() {
               type="date"
               value={dateTo}
               onChange={(e) => setDateTo(e.target.value)}
-              className="org-form-input"
-              style={{ width: 145, height: 32, padding: '2px 8px', fontSize: '0.8rem' }}
+              className="org-form-input org-date-input"
+              style={{ width: 145, height: 32, padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}
+              onClick={(e) => {
+                try {
+                  e.currentTarget.showPicker?.();
+                } catch {}
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== 'Tab' && e.key !== 'Escape') {
+                  e.preventDefault();
+                  try {
+                    e.currentTarget.showPicker?.();
+                  } catch {}
+                }
+              }}
             />
           </label>
           {(dateFrom || dateTo) && (

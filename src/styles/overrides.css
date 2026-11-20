@@ -3330,3 +3330,28 @@ body.dark_mode .sca-student-exam-countdown-box > strong,
   color: #fef3c7 !important;
 }
 
+/* =========================================================
+   UNIVERSAL DATE & DATETIME-LOCAL PICKER (CLICK ANYWHERE TO OPEN)
+   ========================================================= */
+input[type="date"],
+input[type="datetime-local"] {
+  position: relative !important;
+  cursor: pointer !important;
+  user-select: none !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  color: transparent !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  z-index: 2 !important;
+}
+

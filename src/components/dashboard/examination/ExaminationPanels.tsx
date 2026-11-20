@@ -21,7 +21,7 @@ import AdminExamGuide, { ExamStepper } from '@/components/dashboard/AdminExamGui
 import { FieldHint } from '@/components/ui/FieldHint';
 import { EdtpBtn, EdtpSelect } from '@/components/ui/CrudUI';
 import { confirmAction, confirmDelete, showError, showSuccess } from '@/lib/swal';
-import { formatDateTime } from '@/utils/dateFormat';
+import { formatDate, formatTime, formatDateTime } from '@/utils/dateFormat';
 import { normalizePositiveIntInput, parsePositiveIntInput } from '@/utils/positiveIntInput';
 import { extract10DigitPhone } from '@/utils/normalize';
 import { getOptionText, getQuestionText } from '@/utils/questionContent';
@@ -2932,16 +2932,7 @@ export function StudentTestsPanel() {
                         </span>
 
                         <strong>
-                          {new Date(
-                            scheduledStart,
-                          ).toLocaleDateString(
-                            'en-IN',
-                            {
-                              day: '2-digit',
-                              month: 'long',
-                              year: 'numeric',
-                            },
-                          )}
+                          {formatDate(scheduledStart)}
                         </strong>
                       </div>
 
@@ -2951,16 +2942,7 @@ export function StudentTestsPanel() {
                         </span>
 
                         <strong>
-                          {new Date(
-                            scheduledStart,
-                          ).toLocaleTimeString(
-                            'en-IN',
-                            {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                            },
-                          )}
+                          {formatTime(scheduledStart)}
                         </strong>
                       </div>
                     </div>
