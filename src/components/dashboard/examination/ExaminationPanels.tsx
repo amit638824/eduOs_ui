@@ -27,6 +27,7 @@ import { extract10DigitPhone } from '@/utils/normalize';
 import { getOptionText, getQuestionText } from '@/utils/questionContent';
 import { QuestionPreviewModal } from '@/components/dashboard/QuestionPreviewModal';
 import { BulkImportCsvModal } from './BulkImportCsvModal';
+import { validateQuestionText, validateOptionText, validateSingleAnswer } from './AddQuestionDrawer';
 import {
   CertificatePreviewModal,
   type CertificateTemplate,
@@ -194,10 +195,30 @@ export function QuestionBankPanel() {
   const csvFileRef = useRef<HTMLInputElement>(null);
   const drawerBodyRef = useRef<HTMLDivElement>(null);
   const questionTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const optionInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const opt1InputRef = useRef<HTMLInputElement>(null);
+
+  const [questionTextError, setQuestionTextError] = useState<string | null>(null);
+  const [questionTextTouched, setQuestionTextTouched] = useState(false);
+  const [optionErrors, setOptionErrors] = useState<(string | null)[]>([null, null, null, null, null]);
+  const [optionsTouched, setOptionsTouched] = useState<boolean[]>([false, false, false, false, false]);
+  const [opt1Error, setOpt1Error] = useState<string | null>(null);
+  const [opt1Touched, setOpt1Touched] = useState(false);
+
+  const resetValidation = () => {
+    setQuestionTextError(null);
+    setQuestionTextTouched(false);
+    setOptionErrors([null, null, null, null, null]);
+    setOptionsTouched([false, false, false, false, false]);
+    setOpt1Error(null);
+    setOpt1Touched(false);
+  };
+
   const withLoader = useDashboardLoader();
 
   const openAddDrawer = () => {
     resetQuestionFields();
+    resetValidation();
     setDepartmentId('');
     setSubjectId('');
     setTopicId('');
@@ -221,6 +242,7 @@ export function QuestionBankPanel() {
     setSubjects([]);
     setTopics([]);
     resetQuestionFields();
+    resetValidation();
   };
 
   useEffect(() => {
@@ -552,6 +574,7 @@ export function QuestionBankPanel() {
     setOptionTexts([...DEFAULT_OPTION_TEXTS]);
     setOpt1('');
     setCorrect('1');
+    resetValidation();
   };
 
   const handleOptionCountChange = (count: McqOptionCount) => {
@@ -559,14 +582,74 @@ export function QuestionBankPanel() {
     if (Number(correct) > count) {
       setCorrect('1');
     }
+    const activeTexts = optionTexts.slice(0, count);
+    const nextErrors = [...optionErrors];
+    for (let i = 0; i < count; i++) {
+      if (optionsTouched[i]) {
+        nextErrors[i] = validateOptionText(optionTexts[i] ?? '', i, activeTexts);
+      }
+    }
+    setOptionErrors(nextErrors);
+  };
+
+  const handleQuestionTextChange = (value: string) => {
+    const limited = value.slice(0, 50);
+    setNewQ(limited);
+    if (questionTextTouched || questionTextError) {
+      setQuestionTextError(validateQuestionText(limited));
+    }
+  };
+
+  const handleQuestionTextBlur = () => {
+    setQuestionTextTouched(true);
+    setQuestionTextError(validateQuestionText(newQ));
   };
 
   const handleOptionTextChange = (index: number, value: string) => {
-    setOptionTexts((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
+    const limited = value.slice(0, 20);
+    const nextTexts = [...optionTexts];
+    nextTexts[index] = limited;
+    setOptionTexts(nextTexts);
+
+    if (optionsTouched[index] || optionErrors[index]) {
+      const activeTexts = nextTexts.slice(0, optionCount);
+      const nextErrors = [...optionErrors];
+      nextErrors[index] = validateOptionText(limited, index, activeTexts);
+      for (let i = 0; i < optionCount; i++) {
+        if (i !== index && optionsTouched[i]) {
+          nextErrors[i] = validateOptionText(nextTexts[i] ?? '', i, activeTexts);
+        }
+      }
+      setOptionErrors(nextErrors);
+    }
+  };
+
+  const handleOptionBlur = (index: number) => {
+    const nextTouched = [...optionsTouched];
+    nextTouched[index] = true;
+    setOptionsTouched(nextTouched);
+
+    const activeTexts = optionTexts.slice(0, optionCount);
+    const nextErrors = [...optionErrors];
+    nextErrors[index] = validateOptionText(optionTexts[index] ?? '', index, activeTexts);
+    for (let i = 0; i < optionCount; i++) {
+      if (i !== index && nextTouched[i]) {
+        nextErrors[i] = validateOptionText(optionTexts[i] ?? '', i, activeTexts);
+      }
+    }
+    setOptionErrors(nextErrors);
+  };
+
+  const handleOpt1Change = (value: string) => {
+    setOpt1(value);
+    if (opt1Touched || opt1Error) {
+      setOpt1Error(validateSingleAnswer(questionType, value));
+    }
+  };
+
+  const handleOpt1Blur = () => {
+    setOpt1Touched(true);
+    setOpt1Error(validateSingleAnswer(questionType, opt1));
   };
 
   const buildOptions = () => {
@@ -577,13 +660,14 @@ export function QuestionBankPanel() {
       ];
     }
     if (questionType === 'fill_blank') {
-      return [{ content: { text: opt1 }, isCorrect: true }];
+      return [{ content: { text: opt1.trim() }, isCorrect: true }];
     }
     if (questionType === 'integer' || questionType === 'numerical') {
-      return [{ content: { value: Number(opt1) || 0 }, isCorrect: true }];
+      const num = Number(opt1.trim());
+      return [{ content: { text: opt1.trim(), value: isNaN(num) ? undefined : num }, isCorrect: true }];
     }
     return optionTexts.slice(0, optionCount).map((text, index) => ({
-      content: { text },
+      content: { text: text.trim() },
       isCorrect: correct === String(index + 1),
     }));
   };
@@ -794,21 +878,74 @@ export function QuestionBankPanel() {
     setError('');
     if (!departmentId || !subjectId || !topicId) {
       setError('Select department, subject, and topic before saving a question.');
+      drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     const marks = parseMarksInput(marksInput);
     if (marks == null || marks < 1) {
       setError('Marks per question must be at least 1.');
+      drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     const difficulty = Number(difficultyInput);
     if (!Number.isInteger(difficulty) || difficulty < 1 || difficulty > 5) {
       setError('Difficulty must be an integer from 1 to 5.');
+      drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     const negativeMarks = Number(negativeMarksInput);
     if (!Number.isFinite(negativeMarks) || negativeMarks < 0) {
       setError('Negative marks must be 0 or more.');
+      drawerBodyRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Validate Question Text
+    const qErr = validateQuestionText(newQ);
+    setQuestionTextTouched(true);
+    setQuestionTextError(qErr);
+
+    let hasValidationError = Boolean(qErr);
+    let firstInvalidElement: HTMLElement | null = null;
+
+    if (qErr && !firstInvalidElement) {
+      firstInvalidElement = questionTextareaRef.current;
+    }
+
+    // Validate options
+    if (needsTwoOptions(questionType)) {
+      const activeTexts = optionTexts.slice(0, optionCount);
+      const newOptionErrors: (string | null)[] = [null, null, null, null, null];
+      for (let i = 0; i < optionCount; i++) {
+        const err = validateOptionText(optionTexts[i] ?? '', i, activeTexts);
+        newOptionErrors[i] = err;
+        if (err) {
+          hasValidationError = true;
+          if (!firstInvalidElement) {
+            firstInvalidElement = optionInputRefs.current[i];
+          }
+        }
+      }
+      setOptionsTouched([true, true, true, true, true]);
+      setOptionErrors(newOptionErrors);
+    } else if (needsAnswerOnly(questionType)) {
+      const singleErr = validateSingleAnswer(questionType, opt1);
+      setOpt1Touched(true);
+      setOpt1Error(singleErr);
+      if (singleErr) {
+        hasValidationError = true;
+        if (!firstInvalidElement) {
+          firstInvalidElement = opt1InputRef.current;
+        }
+      }
+    }
+
+    if (hasValidationError) {
+      setError('Please fix the highlighted validation errors before saving.');
+      if (firstInvalidElement) {
+        firstInvalidElement.focus();
+        firstInvalidElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       return;
     }
     const payload = {
@@ -1628,10 +1765,25 @@ export function QuestionBankPanel() {
                 rows={3}
                 placeholder="Enter the complete question text..."
                 value={newQ}
-                onChange={(e) => setNewQ(e.target.value)}
-                style={{ height: '96px', minHeight: '96px', maxHeight: '96px', resize: 'none' }}
+                onChange={(e) => handleQuestionTextChange(e.target.value)}
+                onBlur={handleQuestionTextBlur}
+                maxLength={50}
+                style={{
+                  height: '96px',
+                  minHeight: '96px',
+                  maxHeight: '96px',
+                  resize: 'none',
+                  borderColor: questionTextError ? '#ef4444' : undefined,
+                  boxShadow: questionTextError ? '0 0 0 1px #ef4444' : undefined,
+                }}
+                aria-invalid={Boolean(questionTextError)}
                 required
               />
+              {questionTextError && (
+                <div style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span>{questionTextError}</span>
+                </div>
+              )}
             </div>
 
             {/* True/False Answer */}
@@ -1653,15 +1805,28 @@ export function QuestionBankPanel() {
             {needsAnswerOnly(questionType) && (
               <div className="org-form-field">
                 <label className="org-form-label">
-                  {questionType === 'fill_blank' ? 'Correct Answer Text' : 'Correct Value'}
+                  {questionType === 'fill_blank' ? 'Correct Answer Text' : 'Correct Value'} <span className="org-required-star">*</span>
                 </label>
                 <input
+                  ref={opt1InputRef}
                   className="org-form-input"
                   placeholder={questionType === 'fill_blank' ? 'Answer text' : 'Numeric value'}
                   value={opt1}
-                  onChange={(e) => setOpt1(e.target.value)}
+                  onChange={(e) => handleOpt1Change(e.target.value)}
+                  onBlur={handleOpt1Blur}
+                  maxLength={questionType === 'fill_blank' ? 20 : undefined}
+                  style={{
+                    borderColor: opt1Error ? '#ef4444' : undefined,
+                    boxShadow: opt1Error ? '0 0 0 1px #ef4444' : undefined,
+                  }}
+                  aria-invalid={Boolean(opt1Error)}
                   required
                 />
+                {opt1Error && (
+                  <div style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span>{opt1Error}</span>
+                  </div>
+                )}
               </div>
             )}
 
@@ -1669,18 +1834,36 @@ export function QuestionBankPanel() {
             {needsTwoOptions(questionType) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <label className="org-form-label">Options &amp; Correct Answer</label>
-                {Array.from({ length: optionCount }, (_, index) => (
-                  <div key={index} className="org-form-field">
-                    <label className="org-form-hint">Option {index + 1}</label>
-                    <input
-                      className="org-form-input"
-                      placeholder={`Enter text for Option ${index + 1}`}
-                      value={optionTexts[index] ?? ''}
-                      onChange={(e) => handleOptionTextChange(index, e.target.value)}
-                      required
-                    />
-                  </div>
-                ))}
+                {Array.from({ length: optionCount }, (_, index) => {
+                  const err = optionErrors[index];
+                  return (
+                    <div key={index} className="org-form-field">
+                      <label className="org-form-hint">Option {index + 1} <span className="org-required-star">*</span></label>
+                      <input
+                        ref={(el) => {
+                          optionInputRefs.current[index] = el;
+                        }}
+                        className="org-form-input"
+                        placeholder={`Enter text for Option ${index + 1}`}
+                        value={optionTexts[index] ?? ''}
+                        onChange={(e) => handleOptionTextChange(index, e.target.value)}
+                        onBlur={() => handleOptionBlur(index)}
+                        maxLength={20}
+                        style={{
+                          borderColor: err ? '#ef4444' : undefined,
+                          boxShadow: err ? '0 0 0 1px #ef4444' : undefined,
+                        }}
+                        aria-invalid={Boolean(err)}
+                        required
+                      />
+                      {err && (
+                        <div style={{ color: '#ef4444', fontSize: '0.78rem', marginTop: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span>{err}</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
 
                 <div className="org-form-field" style={{ marginTop: '4px' }}>
                   <label className="org-form-label">Select Correct Option</label>

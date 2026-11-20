@@ -130,7 +130,6 @@ export function buildDashboardNavigation(
       return [
         {
           id: 'core',
-          title: 'CORE',
           collapsible: false,
           items: [
             {
@@ -282,7 +281,7 @@ export function buildDashboardNavigation(
             {
               label: 'Notifications',
               href: `${base}/admin-message`,
-              icon: 'message',
+              icon: 'bell',
               badgeVariant: 'danger',
             },
             logoutItem,
@@ -300,7 +299,6 @@ export function buildDashboardNavigation(
       return [
         {
           id: 'core',
-          title: 'CORE',
           collapsible: false,
           items: [
             {
@@ -422,7 +420,7 @@ export function buildDashboardNavigation(
             {
               label: 'Notifications',
               href: `${base}/admin-message`,
-              icon: 'message',
+              icon: 'bell',
               badgeVariant: 'danger',
             },
             logoutItem,
@@ -439,7 +437,6 @@ export function buildDashboardNavigation(
     return [
       {
         id: 'core',
-        title: 'CORE',
         collapsible: false,
         items: [
           {
@@ -566,7 +563,7 @@ export function buildDashboardNavigation(
           {
             label: 'Notifications',
             href: `${base}/admin-message`,
-            icon: 'message',
+            icon: 'bell',
           },
           logoutItem,
         ],
@@ -583,7 +580,6 @@ export function buildDashboardNavigation(
     return [
       {
         id: 'core',
-        title: 'CORE',
         collapsible: false,
         items: [
           {
@@ -674,7 +670,7 @@ export function buildDashboardNavigation(
           {
             label: 'Notifications',
             href: `${base}/teacher-message`,
-            icon: 'message',
+            icon: 'bell',
           },
           logoutItem,
         ],
@@ -742,7 +738,7 @@ export function buildDashboardNavigation(
         {
           label: 'Notifications',
           href: `${base}/student-message`,
-          icon: 'message',
+          icon: 'bell',
         },
 
         {

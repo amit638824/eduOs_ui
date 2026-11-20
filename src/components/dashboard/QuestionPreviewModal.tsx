@@ -70,7 +70,7 @@ export function QuestionPreviewModal({
 
   if (!questionId) return null;
 
-  const text = getQuestionText(question?.content);
+  const text = getQuestionText(question?.content ?? question);
   const options = question?.options ?? [];
 
   return (
@@ -122,7 +122,7 @@ export function QuestionPreviewModal({
                         <span className="edtp-preview-options__letter">
                           {String.fromCharCode(65 + i)}
                         </span>
-                        <span>{getOptionText(opt.content)}</span>
+                        <span>{getOptionText(opt.content ?? opt)}</span>
                         {correct ? <span className="edtp-preview-options__tag">Correct</span> : null}
                       </li>
                     );

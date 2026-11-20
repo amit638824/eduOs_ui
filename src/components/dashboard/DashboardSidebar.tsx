@@ -338,9 +338,6 @@ export default function DashboardSidebar({
           const sectionKey = sectionKeyOf(section, index);
           const isCollapsible = Boolean(section.collapsible && !collapsed);
           const isOpen = isCollapsible ? expandedSectionKey === sectionKey : true;
-          const countBadge =
-            section.countBadge ||
-            (isCollapsible ? String(section.items.length) : undefined);
 
           return (
             <div
@@ -351,7 +348,7 @@ export default function DashboardSidebar({
                 section.className ? ` ${section.className}` : ''
               }`}
             >
-              {section.title && !collapsed && (
+              {section.title && section.title.trim().toUpperCase() !== 'CORE' && !collapsed && (
                 isCollapsible ? (
                   <button
                     type="button"
@@ -365,9 +362,6 @@ export default function DashboardSidebar({
                       {section.title}
                     </span>
                     <span className="sca-db-sidebar__section-meta">
-                      {!isOpen && countBadge && (
-                        <span className="sca-db-sidebar__count-badge">{countBadge}</span>
-                      )}
                       <svg
                         className={`sca-db-sidebar__chevron${
                           isOpen ? ' sca-db-sidebar__chevron--open' : ''
