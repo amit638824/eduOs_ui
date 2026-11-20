@@ -1365,15 +1365,12 @@ function PasswordChangeForm({ onCancel }: { onCancel?: () => void } = {}) {
     register,
     handleSubmit,
     reset,
-    watch,
     formState: { errors },
   } = useForm<PasswordChangeFormValues>({
     resolver: yupResolver(passwordChangeSchema),
     mode: 'onChange',
     defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
   });
-
-  const newPasswordValue = watch('newPassword') || '';
 
   const onSubmit = async (values: PasswordChangeFormValues) => {
     setApiError('');

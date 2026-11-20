@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { useDashboardLoadingEffect } from '@/context/DashboardLoadingContext';
-import { useOrganization } from '@/hooks/useOrganization';
 import { parseApiError } from '@/lib/errors';
 import { examinationService } from '@/services';
 import type { AdminDashboardData, ExamResult, StudentStats } from '@/types/examination';
@@ -238,7 +237,6 @@ function tagColor(tag: string): string {
 
 export default function ModernAdminDashboard({ error, role = 'admin' }: ModernAdminDashboardProps) {
   const { user } = useAuth();
-  const { organization } = useOrganization();
   const [timeFilter, setTimeFilter] = useState<'Last 7 days' | 'Last 30 days' | 'This Month'>('Last 7 days');
   const [subjectMonth, setSubjectMonth] = useState<'This Month' | 'Last Month' | 'All Time'>('This Month');
   const [dash, setDash] = useState<AdminDashboardData | null>(null);
